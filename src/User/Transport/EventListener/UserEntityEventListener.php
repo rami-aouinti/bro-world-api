@@ -48,6 +48,7 @@ class UserEntityEventListener
 
         // Valid user so lets change password
         if ($user instanceof User) {
+            $user->ensureGeneratedPhoto();
             $this->changePassword($user);
         }
     }

@@ -73,6 +73,8 @@ class User extends RestDto
     #[ToolAppAssert\Timezone]
     protected string $timezone = LocalizationServiceInterface::DEFAULT_TIMEZONE;
 
+    protected string $photo = '';
+
     /**
      * @var UserGroupEntity[]|array<int, UserGroupEntity>
      */
@@ -183,6 +185,20 @@ class User extends RestDto
         return $this;
     }
 
+    public function getPhoto(): string
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(string $photo): self
+    {
+        $this->setVisited('photo');
+
+        $this->photo = $photo;
+
+        return $this;
+    }
+
     /**
      * @return array<int, UserGroupEntity>
      */
@@ -234,6 +250,7 @@ class User extends RestDto
             $this->language = $entity->getLanguage();
             $this->locale = $entity->getLocale();
             $this->timezone = $entity->getTimezone();
+            $this->photo = $entity->getPhoto();
             /** @var array<int, UserGroupEntity> $groups */
             $groups = $entity->getUserGroups()->toArray();
             $this->userGroups = $groups;

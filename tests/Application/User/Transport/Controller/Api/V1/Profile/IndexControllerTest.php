@@ -57,6 +57,8 @@ class IndexControllerTest extends WebTestCase
         self::assertEquals($userEntity->getLocale()->value, $responseData['locale']);
         self::assertArrayHasKey('timezone', $responseData);
         self::assertEquals($userEntity->getTimezone(), $responseData['timezone']);
+        self::assertArrayHasKey('photo', $responseData);
+        self::assertEquals($userEntity->getPhoto(), $responseData['photo']);
         self::assertArrayHasKey('roles', $responseData);
         self::assertIsArray($responseData['roles']);
         self::assertCount(count($roleService->getInheritedRoles($userEntity->getRoles())), $responseData['roles']);

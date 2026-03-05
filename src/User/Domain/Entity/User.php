@@ -26,6 +26,9 @@ use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use Throwable;
 
+use function rawurlencode;
+use function str_replace;
+
 /**
  * @package App\User
  */
@@ -217,6 +220,24 @@ class User implements EntityInterface, UserInterface, UserGroupAwareInterface
     private string $timezone = LocalizationServiceInterface::DEFAULT_TIMEZONE;
 
     #[ORM\Column(
+        name: 'photo',
+        type: Types::STRING,
+        length: 255,
+        nullable: false,
+        options: [
+            'comment' => 'User profile photo URL',
+        ],
+    )]
+    #[Groups([
+        'User',
+        'User.photo',
+
+        self::SET_USER_PROFILE,
+        self::SET_USER_BASIC,
+    ])]
+    private string $photo = '';
+
+    #[ORM\Column(
         name: 'password',
         type: Types::STRING,
         length: 255,
@@ -339,6 +360,28 @@ class User implements EntityInterface, UserInterface, UserGroupAwareInterface
     public function setTimezone(string $timezone): self
     {
         $this->timezone = $timezone;
+
+        return $this;
+    }
+
+    public function getPhoto(): string
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(string $photo): self
+    {
+        $this->photo = $photo;
+
+        return $this;
+    }
+
+    public function ensureGeneratedPhoto(): self
+    {
+        if ($this->photo === '') {
+            $name = rawurlencode($this->firstName . ' ' . $this->lastName);
+            $this->photo = 'https://ui-avatars.com/api/?name=' . str_replace('%20', '+', $name);
+        }
 
         return $this;
     }
