@@ -80,6 +80,7 @@ class AttachUserControllerTest extends WebTestCase
             self::assertArrayHasKey('language', $user);
             self::assertArrayHasKey('locale', $user);
             self::assertArrayHasKey('timezone', $user);
+            self::assertArrayHasKey('photo', $user);
         }
 
         // let's check that inside database we have the same data as in response above

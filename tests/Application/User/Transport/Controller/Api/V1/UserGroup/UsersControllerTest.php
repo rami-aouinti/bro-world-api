@@ -91,5 +91,6 @@ class UsersControllerTest extends WebTestCase
         self::assertArrayHasKey('language', $responseData);
         self::assertArrayHasKey('locale', $responseData);
         self::assertArrayHasKey('timezone', $responseData);
+        self::assertArrayHasKey('photo', $responseData);
     }
 }

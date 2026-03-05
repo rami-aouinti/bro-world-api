@@ -82,6 +82,7 @@ class DeleteUserControllerTest extends WebTestCase
         self::assertArrayHasKey('language', $responseData);
         self::assertArrayHasKey('locale', $responseData);
         self::assertArrayHasKey('timezone', $responseData);
+        self::assertArrayHasKey('photo', $responseData);
         self::assertEquals($this->user->getId(), $responseData['id']);
 
         // let's check that row deleted inside db.

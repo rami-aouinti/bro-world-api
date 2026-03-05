@@ -175,6 +175,7 @@ class UserControllerTest extends WebTestCase
         self::assertEquals($userEntity->getLanguage()->value, $responseData['language']);
         self::assertEquals($userEntity->getLocale()->value, $responseData['locale']);
         self::assertEquals($userEntity->getTimezone(), $responseData['timezone']);
+        self::assertEquals($userEntity->getPhoto(), $responseData['photo']);
     }
 
     /**
@@ -215,6 +216,7 @@ class UserControllerTest extends WebTestCase
         $responseData = JSON::decode($content, true);
         $this->checkBasicFieldsInResponse($responseData);
         $this->checkThatRequestEqualsResponseData($requestData, $responseData);
+        self::assertStringContainsString('https://ui-avatars.com/api/?name=Name+Last+name', $responseData['photo']);
     }
 
     /**
@@ -357,6 +359,7 @@ class UserControllerTest extends WebTestCase
         self::assertArrayHasKey('language', $responseData);
         self::assertArrayHasKey('locale', $responseData);
         self::assertArrayHasKey('timezone', $responseData);
+        self::assertArrayHasKey('photo', $responseData);
     }
 
     /**
