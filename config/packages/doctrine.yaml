@@ -58,6 +58,12 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Log/Domain/Entity'
                         prefix: 'App\Log\Domain\Entity'
                         alias: Log
+                    Platform:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Platform/Domain/Entity'
+                        prefix: 'App\Platform\Domain\Entity'
+                        alias: Platform
                     Role:
                         type: attribute
                         is_bundle: false
