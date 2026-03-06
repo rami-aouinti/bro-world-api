@@ -91,7 +91,17 @@ class PrivateApplicationListControllerTest extends WebTestCase
 
         $responseData = JSON::decode($content, true);
         self::assertIsArray($responseData);
-        self::assertCount(2, $responseData);
+        self::assertCount(3, $responseData);
+
+        $titles = array_column($responseData, 'title');
+        self::assertSame(
+            [
+                'CRM Growth App',
+                'John User Private App',
+                'Shop Ops App',
+            ],
+            $titles,
+        );
 
         foreach ($responseData as $application) {
             self::assertArrayHasKey('description', $application);
@@ -105,6 +115,12 @@ class PrivateApplicationListControllerTest extends WebTestCase
             self::assertArrayHasKey('lastName', $application['author']);
             self::assertArrayHasKey('photo', $application['author']);
             self::assertArrayHasKey('isOwner', $application);
+
+            if ($application['title'] === 'John User Private App') {
+                self::assertTrue($application['isOwner']);
+                continue;
+            }
+
             self::assertFalse($application['isOwner']);
         }
     }

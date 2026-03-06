@@ -33,6 +33,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
      *     description: non-empty-string,
      *     status: PlatformStatus,
      *     private: bool,
+     *     ownerReference: non-empty-string,
      *     platformReference: non-empty-string,
      *     appConfigurations: array<int, array{uuid: non-empty-string, key: non-empty-string, value: array<string, mixed>}>,
      *     plugins: array<int, array{uuid: non-empty-string, reference: non-empty-string, configurations: array<int, array{uuid: non-empty-string, key: non-empty-string, value: array<string, mixed>}>}>
@@ -46,6 +47,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'description' => 'Application CRM pour la croissance commerciale.',
             'status' => PlatformStatus::ACTIVE,
             'private' => false,
+            'ownerReference' => 'User-john-root',
             'platformReference' => 'Platform-CR-CRM 1',
             'appConfigurations' => [
                 [
@@ -91,6 +93,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'description' => 'Application de gestion des operations e-commerce.',
             'status' => PlatformStatus::MAINTENANCE,
             'private' => false,
+            'ownerReference' => 'User-john-root',
             'platformReference' => 'Platform-SH-Shop Principal',
             'appConfigurations' => [
                 [
@@ -120,6 +123,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'description' => 'Application privee pour le recrutement interne.',
             'status' => PlatformStatus::DISABLED,
             'private' => true,
+            'ownerReference' => 'User-john-root',
             'platformReference' => 'Platform-RE-Recruit Principal',
             'appConfigurations' => [
                 [
@@ -142,6 +146,36 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                 ],
             ],
         ],
+        [
+            'uuid' => '60000000-0000-1000-8000-000000000004',
+            'key' => 'john-user-private-app',
+            'title' => 'John User Private App',
+            'description' => 'Application privee de l\'utilisateur authentifie john-user.',
+            'status' => PlatformStatus::ACTIVE,
+            'private' => true,
+            'ownerReference' => 'User-john-user',
+            'platformReference' => 'Platform-CR-CRM 1',
+            'appConfigurations' => [
+                [
+                    'uuid' => '60000000-0000-1000-8000-000000000105',
+                    'key' => 'application.john-user.notifications',
+                    'value' => ['email' => true, 'push' => false],
+                ],
+            ],
+            'plugins' => [
+                [
+                    'uuid' => '60000000-0000-1000-8000-000000000205',
+                    'reference' => 'Plugin-CRM-Assistant',
+                    'configurations' => [
+                        [
+                            'uuid' => '60000000-0000-1000-8000-000000000305',
+                            'key' => 'plugin.crm-assistant.private-mode',
+                            'value' => ['enabled' => true],
+                        ],
+                    ],
+                ],
+            ],
+        ]
     ];
 
     /**
@@ -150,10 +184,10 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
     #[Override]
     public function load(ObjectManager $manager): void
     {
-        /** @var User $owner */
-        $owner = $this->getReference('User-john-root', User::class);
-
         foreach (self::DATA as $item) {
+            /** @var User $owner */
+            $owner = $this->getReference($item['ownerReference'], User::class);
+
             /** @var Platform $platform */
             $platform = $this->getReference($item['platformReference'], Platform::class);
 
