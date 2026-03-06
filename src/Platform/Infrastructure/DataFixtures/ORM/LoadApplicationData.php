@@ -30,6 +30,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
      *     uuid: non-empty-string,
      *     key: non-empty-string,
      *     title: non-empty-string,
+     *     description: non-empty-string,
      *     status: PlatformStatus,
      *     private: bool,
      *     platformReference: non-empty-string,
@@ -42,6 +43,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'uuid' => '60000000-0000-1000-8000-000000000001',
             'key' => 'crm-growth-app',
             'title' => 'CRM Growth App',
+            'description' => 'Application CRM pour la croissance commerciale.',
             'status' => PlatformStatus::ACTIVE,
             'private' => false,
             'platformReference' => 'Platform-CR-CRM 1',
@@ -86,6 +88,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'uuid' => '60000000-0000-1000-8000-000000000002',
             'key' => 'shop-ops-app',
             'title' => 'Shop Ops App',
+            'description' => 'Application de gestion des operations e-commerce.',
             'status' => PlatformStatus::MAINTENANCE,
             'private' => false,
             'platformReference' => 'Platform-SH-Shop Principal',
@@ -114,6 +117,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'uuid' => '60000000-0000-1000-8000-000000000003',
             'key' => 'recruit-lite-app',
             'title' => 'Recruit Lite App',
+            'description' => 'Application privee pour le recrutement interne.',
             'status' => PlatformStatus::DISABLED,
             'private' => true,
             'platformReference' => 'Platform-RE-Recruit Principal',
@@ -157,6 +161,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                 ->setUser($owner)
                 ->setPlatform($platform)
                 ->setTitle($item['title'])
+                ->setDescription($item['description'])
                 ->setStatus($item['status'])
                 ->setPrivate($item['private']);
 

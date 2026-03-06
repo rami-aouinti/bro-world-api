@@ -45,11 +45,22 @@ class PrivateApplicationListController
                         properties: [
                             new Property(property: 'id', type: 'string'),
                             new Property(property: 'title', type: 'string'),
+                            new Property(property: 'description', type: 'string'),
                             new Property(property: 'status', type: 'string'),
                             new Property(property: 'private', type: 'boolean'),
                             new Property(property: 'platformId', type: 'string'),
                             new Property(property: 'platformName', type: 'string'),
-                            new Property(property: 'ownerId', type: 'string', nullable: true),
+                            new Property(
+                                property: 'author',
+                                properties: [
+                                    new Property(property: 'id', type: 'string', nullable: true),
+                                    new Property(property: 'firstName', type: 'string'),
+                                    new Property(property: 'lastName', type: 'string'),
+                                    new Property(property: 'photo', type: 'string'),
+                                ],
+                                type: 'object',
+                            ),
+                            new Property(property: 'createdAt', type: 'string', nullable: true),
                             new Property(property: 'isOwner', type: 'boolean'),
                         ],
                         type: 'object',
@@ -71,7 +82,9 @@ class PrivateApplicationListController
             ->getRepository(Application::class)
             ->createQueryBuilder('application')
             ->leftJoin('application.platform', 'platform')
+            ->leftJoin('application.user', 'user')
             ->addSelect('platform')
+            ->addSelect('user')
             ->where('application.private = :publicApplication')
             ->orWhere('application.user = :loggedInUser')
             ->setParameter('publicApplication', false)
@@ -87,11 +100,18 @@ class PrivateApplicationListController
             $output[] = [
                 'id' => $application->getId(),
                 'title' => $application->getTitle(),
+                'description' => $application->getDescription(),
                 'status' => $application->getStatus()->value,
                 'private' => $application->isPrivate(),
                 'platformId' => $application->getPlatform()?->getId(),
                 'platformName' => $application->getPlatform()?->getName(),
-                'ownerId' => $application->getUser()?->getId(),
+                'author' => [
+                    'id' => $application->getUser()?->getId(),
+                    'firstName' => $application->getUser()?->getFirstName() ?? '',
+                    'lastName' => $application->getUser()?->getLastName() ?? '',
+                    'photo' => $application->getUser()?->getPhoto() ?? '',
+                ],
+                'createdAt' => $application->getCreatedAt()?->format(DATE_ATOM),
                 'isOwner' => $application->getUser()?->getId() === $loggedInUser?->getId(),
             ];
         }

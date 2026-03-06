@@ -60,6 +60,16 @@ class PrivateApplicationListControllerTest extends WebTestCase
         );
 
         foreach ($responseData as $application) {
+            self::assertArrayHasKey('description', $application);
+            self::assertArrayHasKey('platformName', $application);
+            self::assertArrayHasKey('author', $application);
+            self::assertArrayHasKey('createdAt', $application);
+
+            self::assertIsArray($application['author']);
+            self::assertArrayHasKey('id', $application['author']);
+            self::assertArrayHasKey('firstName', $application['author']);
+            self::assertArrayHasKey('lastName', $application['author']);
+            self::assertArrayHasKey('photo', $application['author']);
             self::assertArrayHasKey('isOwner', $application);
             self::assertTrue($application['isOwner']);
         }
@@ -84,6 +94,16 @@ class PrivateApplicationListControllerTest extends WebTestCase
         self::assertCount(2, $responseData);
 
         foreach ($responseData as $application) {
+            self::assertArrayHasKey('description', $application);
+            self::assertArrayHasKey('platformName', $application);
+            self::assertArrayHasKey('author', $application);
+            self::assertArrayHasKey('createdAt', $application);
+
+            self::assertIsArray($application['author']);
+            self::assertArrayHasKey('id', $application['author']);
+            self::assertArrayHasKey('firstName', $application['author']);
+            self::assertArrayHasKey('lastName', $application['author']);
+            self::assertArrayHasKey('photo', $application['author']);
             self::assertArrayHasKey('isOwner', $application);
             self::assertFalse($application['isOwner']);
         }

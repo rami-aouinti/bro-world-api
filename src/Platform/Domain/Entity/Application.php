@@ -48,6 +48,10 @@ class Application implements EntityInterface
     #[Assert\Length(min: 2, max: 255)]
     private string $title = '';
 
+    #[ORM\Column(name: 'description', type: Types::TEXT, options: ['default' => ''])]
+    #[Assert\NotNull]
+    private string $description = '';
+
     #[ORM\Column(name: 'status', type: Types::STRING, length: 25, enumType: PlatformStatus::class, options: ['default' => PlatformStatus::ACTIVE->value])]
     #[Assert\NotNull]
     private PlatformStatus $status = PlatformStatus::ACTIVE;
@@ -126,6 +130,18 @@ class Application implements EntityInterface
     public function setStatus(PlatformStatus|string $status): self
     {
         $this->status = $status instanceof PlatformStatus ? $status : PlatformStatus::from($status);
+
+        return $this;
+    }
+
+    public function getDescription(): string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(string $description): self
+    {
+        $this->description = $description;
 
         return $this;
     }
