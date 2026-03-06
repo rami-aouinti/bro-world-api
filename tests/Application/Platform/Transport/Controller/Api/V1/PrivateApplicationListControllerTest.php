@@ -58,5 +58,34 @@ class PrivateApplicationListControllerTest extends WebTestCase
             ],
             $titles,
         );
+
+        foreach ($responseData as $application) {
+            self::assertArrayHasKey('isOwner', $application);
+            self::assertTrue($application['isOwner']);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('Test that `GET /v1/application/private` indicates ownership for non owner authenticated users.')]
+    public function testThatPrivateListOwnershipIsFalseForNonOwner(): void
+    {
+        $client = $this->getTestClient('john-user', 'password-user');
+
+        $client->request('GET', $this->baseUrl);
+        $response = $client->getResponse();
+        $content = $response->getContent();
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:\n" . $response);
+
+        $responseData = JSON::decode($content, true);
+        self::assertIsArray($responseData);
+        self::assertCount(2, $responseData);
+
+        foreach ($responseData as $application) {
+            self::assertArrayHasKey('isOwner', $application);
+            self::assertFalse($application['isOwner']);
+        }
     }
 }

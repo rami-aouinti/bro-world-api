@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Platform\Transport\Controller\Api\V1\Application;
 
 use App\Platform\Domain\Entity\Application;
-use App\Security\Application\Voter\AuthenticatedVoter;
 use App\User\Application\Security\UserTypeIdentification;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
@@ -51,6 +50,7 @@ class PrivateApplicationListController
                             new Property(property: 'platformId', type: 'string'),
                             new Property(property: 'platformName', type: 'string'),
                             new Property(property: 'ownerId', type: 'string', nullable: true),
+                            new Property(property: 'isOwner', type: 'boolean'),
                         ],
                         type: 'object',
                     ),
@@ -58,7 +58,7 @@ class PrivateApplicationListController
             ),
         ],
     )]
-    #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     /**
      * @throws Throwable
      */
@@ -92,6 +92,7 @@ class PrivateApplicationListController
                 'platformId' => $application->getPlatform()?->getId(),
                 'platformName' => $application->getPlatform()?->getName(),
                 'ownerId' => $application->getUser()?->getId(),
+                'isOwner' => $application->getUser()?->getId() === $loggedInUser?->getId(),
             ];
         }
 
