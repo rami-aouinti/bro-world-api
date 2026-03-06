@@ -9,4 +9,8 @@ namespace App\Platform\Domain\Repository\Interfaces;
  */
 interface PlatformRepositoryInterface
 {
+    /**
+     * @return array<int, \App\Platform\Domain\Entity\Platform>
+     */
+    public function findPublicEnabled(): array;
 }
