@@ -57,7 +57,6 @@ class ApplicationCreateController
                 'platformId' => '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e70',
                 'title' => 'My Ecommerce App',
                 'description' => 'Application description',
-                'photo' => 'https://example.com/images/my-app.png',
                 'status' => 'active',
                 'private' => false,
                 'configurations' => [
@@ -89,7 +88,6 @@ class ApplicationCreateController
                 new Property(property: 'platformId', type: 'string'),
                 new Property(property: 'title', type: 'string'),
                 new Property(property: 'description', type: 'string'),
-                new Property(property: 'photo', type: 'string'),
                 new Property(property: 'status', type: 'string'),
                 new Property(property: 'private', type: 'boolean'),
             ],
@@ -104,7 +102,6 @@ class ApplicationCreateController
         $platformId = $payload['platformId'] ?? null;
         $title = $payload['title'] ?? null;
         $description = $payload['description'] ?? '';
-        $photo = $payload['photo'] ?? '';
         $status = $payload['status'] ?? PlatformStatus::ACTIVE->value;
         $private = $payload['private'] ?? false;
 
@@ -118,10 +115,6 @@ class ApplicationCreateController
 
         if (!is_string($description)) {
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "description" must be a string.');
-        }
-
-        if (!is_string($photo)) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "photo" must be a string.');
         }
 
         if (!is_string($status)) {
@@ -139,7 +132,6 @@ class ApplicationCreateController
             ->setPlatform($platform)
             ->setTitle($title)
             ->setDescription(trim($description))
-            ->setPhoto(trim($photo))
             ->setStatus($status)
             ->setPrivate($private);
 
@@ -205,7 +197,6 @@ class ApplicationCreateController
             'platformId' => $application->getPlatform()?->getId(),
             'title' => $application->getTitle(),
             'description' => $application->getDescription(),
-            'photo' => $application->getPhoto(),
             'status' => $application->getStatus()->value,
             'private' => $application->isPrivate(),
         ], JsonResponse::HTTP_CREATED);
