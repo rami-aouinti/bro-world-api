@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\User\Transport\Controller\Api\V1\Profile;
 
+use App\General\Application\Service\PhotoUploaderService;
 use App\User\Application\Resource\UserResource;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use OpenApi\Attributes\JsonContent;
 use OpenApi\Attributes\Property;
-use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,12 +20,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-use function bin2hex;
-use function exif_imagetype;
-use function function_exists;
-use function random_bytes;
-use function str_starts_with;
-
 /**
  * @package App\User
  */
@@ -35,8 +29,7 @@ class UploadPhotoController
 {
     public function __construct(
         private readonly UserResource $userResource,
-        private readonly Filesystem $filesystem,
-        private readonly string $projectDir,
+        private readonly PhotoUploaderService $photoUploaderService,
     ) {
     }
 
@@ -84,23 +77,7 @@ class UploadPhotoController
             throw new HttpException(Response::HTTP_BAD_REQUEST, 'Missing "photo" file.');
         }
 
-        if (!$photo->isValid()) {
-            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Invalid uploaded file.');
-        }
-
-        if (!$this->isImageFile($photo)) {
-            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Uploaded file must be an image.');
-        }
-
-        $extension = $photo->guessExtension() ?? 'bin';
-        $fileName = bin2hex(random_bytes(16)) . '.' . $extension;
-        $relativeDirectory = '/uploads/profile';
-        $targetDirectory = $this->projectDir . '/public' . $relativeDirectory;
-
-        $this->filesystem->mkdir($targetDirectory);
-        $photo->move($targetDirectory, $fileName);
-
-        $photoUrl = $request->getSchemeAndHttpHost() . $relativeDirectory . '/' . $fileName;
+        $photoUrl = $this->photoUploaderService->upload($request, $photo, '/uploads/profile');
         $loggedInUser->setPhoto($photoUrl);
         $this->userResource->save($loggedInUser);
 
@@ -109,20 +86,4 @@ class UploadPhotoController
         ]);
     }
 
-    private function isImageFile(UploadedFile $photo): bool
-    {
-        if (str_starts_with((string) $photo->getMimeType(), 'image/')) {
-            return true;
-        }
-
-        if (str_starts_with((string) $photo->getClientMimeType(), 'image/')) {
-            return true;
-        }
-
-        if (function_exists('exif_imagetype')) {
-            return false !== exif_imagetype($photo->getPathname());
-        }
-
-        return false;
-    }
 }

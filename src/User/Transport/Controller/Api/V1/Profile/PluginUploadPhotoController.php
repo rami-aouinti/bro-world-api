@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace App\User\Transport\Controller\Api\V1\Profile;
 
 use App\General\Application\Service\PhotoUploaderService;
-use App\Platform\Domain\Entity\Application;
-use App\User\Domain\Entity\User;
+use App\Platform\Domain\Entity\Plugin;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use OpenApi\Attributes\JsonContent;
@@ -21,10 +20,9 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-
 #[AsController]
 #[OA\Tag(name: 'Profile')]
-class ApplicationUploadPhotoController
+class PluginUploadPhotoController
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -33,7 +31,7 @@ class ApplicationUploadPhotoController
     }
 
     #[Route(
-        path: '/v1/profile/applications/{application}/photo',
+        path: '/v1/profile/plugins/{plugin}/photo',
         methods: [Request::METHOD_POST],
     )]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
@@ -52,14 +50,14 @@ class ApplicationUploadPhotoController
     )]
     #[OA\Response(
         response: 200,
-        description: 'Uploaded application photo URL',
+        description: 'Uploaded plugin photo URL',
         content: new JsonContent(
             properties: [
                 new Property(property: 'photo', description: 'Uploaded photo URL', type: 'string'),
             ],
             type: 'object',
             example: [
-                'photo' => 'https://localhost/uploads/applications/0af6fe1514bdbce22f637d970a6e6042.jpg',
+                'photo' => 'https://localhost/uploads/plugins/0af6fe1514bdbce22f637d970a6e6042.jpg',
             ],
         ),
     )]
@@ -67,11 +65,7 @@ class ApplicationUploadPhotoController
         response: 400,
         description: 'File upload error',
     )]
-    #[OA\Response(
-        response: 404,
-        description: 'Application not found for current user',
-    )]
-    public function __invoke(Request $request, User $loggedInUser, Application $application): JsonResponse
+    public function __invoke(Request $request, Plugin $plugin): JsonResponse
     {
         /** @var UploadedFile|null $photo */
         $photo = $request->files->get('photo');
@@ -80,8 +74,8 @@ class ApplicationUploadPhotoController
             throw new HttpException(Response::HTTP_BAD_REQUEST, 'Missing "photo" file.');
         }
 
-        $photoUrl = $this->photoUploaderService->upload($request, $photo, '/uploads/applications');
-        $application->setPhoto($photoUrl);
+        $photoUrl = $this->photoUploaderService->upload($request, $photo, '/uploads/plugins');
+        $plugin->setPhoto($photoUrl);
         $this->entityManager->flush();
 
         return new JsonResponse([
