@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Platform\Transport\Controller\Api\V1\Application;
 
 use App\Platform\Domain\Entity\Application;
+use App\Security\Application\Voter\AuthenticatedVoter;
+use App\User\Application\Security\UserTypeIdentification;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use OpenApi\Attributes\JsonContent;
@@ -13,6 +15,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Throwable;
 
 /**
@@ -20,23 +23,23 @@ use Throwable;
  */
 #[AsController]
 #[OA\Tag(name: 'Application')]
-class PublicApplicationListController
+class PrivateApplicationListController
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
+        private readonly UserTypeIdentification $userTypeIdentification,
     ) {
     }
 
     #[Route(
-        path: '/v1/application/public',
+        path: '/v1/application/private',
         methods: [Request::METHOD_GET],
     )]
     #[OA\Get(
-        security: [],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'List public applications.',
+                description: 'List all public applications and authenticated user applications (public or private).',
                 content: new JsonContent(
                     type: 'array',
                     items: new OA\Items(
@@ -55,11 +58,14 @@ class PublicApplicationListController
             ),
         ],
     )]
+    #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
     /**
      * @throws Throwable
      */
     public function __invoke(): JsonResponse
     {
+        $loggedInUser = $this->userTypeIdentification->getUser();
+
         /** @var array<int, Application> $applications */
         $applications = $this->entityManager
             ->getRepository(Application::class)
@@ -67,7 +73,9 @@ class PublicApplicationListController
             ->leftJoin('application.platform', 'platform')
             ->addSelect('platform')
             ->where('application.private = :publicApplication')
+            ->orWhere('application.user = :loggedInUser')
             ->setParameter('publicApplication', false)
+            ->setParameter('loggedInUser', $loggedInUser)
             ->orderBy('application.title', 'ASC')
             ->addOrderBy('application.id', 'ASC')
             ->getQuery()
