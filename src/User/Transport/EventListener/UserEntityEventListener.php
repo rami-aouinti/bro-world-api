@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\User\Transport\EventListener;
 
+use App\Configuration\Domain\Entity\Configuration;
+use App\Configuration\Domain\Enum\ConfigurationScope;
 use App\User\Application\Security\SecurityUser;
 use App\User\Domain\Entity\User;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
@@ -17,6 +19,38 @@ use function strlen;
  */
 class UserEntityEventListener
 {
+    private const string USER_NOTIFICATION_PREFERENCES_KEY = 'user.notifications.preferences';
+
+    /**
+     * @var array<int, array{switchState: bool, text: string}>
+     */
+    private const array DEFAULT_USER_NOTIFICATION_PREFERENCES = [
+        [
+            'switchState' => true,
+            'text' => 'Email me when someone follows me',
+        ],
+        [
+            'switchState' => false,
+            'text' => 'Email me when someone answers on...',
+        ],
+        [
+            'switchState' => true,
+            'text' => 'Email me when someone mentions me...',
+        ],
+        [
+            'switchState' => false,
+            'text' => 'New launches and projects',
+        ],
+        [
+            'switchState' => true,
+            'text' => 'Monthly product updates',
+        ],
+        [
+            'switchState' => false,
+            'text' => 'Subscribe to newsletter',
+        ],
+    ];
+
     public function __construct(
         private readonly UserPasswordHasherInterface $userPasswordHasher,
     ) {
@@ -28,6 +62,12 @@ class UserEntityEventListener
     public function prePersist(LifecycleEventArgs $event): void
     {
         $this->process($event);
+
+        $user = $event->getObject();
+
+        if ($user instanceof User) {
+            $this->createDefaultUserConfigurations($event, $user);
+        }
     }
 
     /**
@@ -51,6 +91,19 @@ class UserEntityEventListener
             $user->ensureGeneratedPhoto();
             $this->changePassword($user);
         }
+    }
+
+    private function createDefaultUserConfigurations(LifecycleEventArgs $event, User $user): void
+    {
+        $configuration = new Configuration();
+        $configuration
+            ->setConfigurationKey(self::USER_NOTIFICATION_PREFERENCES_KEY)
+            ->setUser($user)
+            ->setConfigurationValue(self::DEFAULT_USER_NOTIFICATION_PREFERENCES)
+            ->setScope(ConfigurationScope::USER)
+            ->setPrivate(true);
+
+        $event->getObjectManager()->persist($configuration);
     }
 
     /**
