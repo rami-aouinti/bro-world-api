@@ -70,6 +70,53 @@ class ConfigurationControllerTest extends WebTestCase
         self::assertFalse($responseData['configurationValue'][0]['switchState']);
     }
 
+
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('Test that profile configuration create endpoint creates a user scoped configuration.')]
+    public function testThatPostProfileConfigurationReturnsCreatedResponse(): void
+    {
+        $client = $this->getTestClient('john-user', 'password-user');
+        $createPayload = [
+            'configurationKey' => 'user.profile.test.preferences',
+            'configurationValue' => [
+                'theme' => 'dark',
+                'compact' => true,
+            ],
+        ];
+
+        $client->request(
+            method: 'POST',
+            uri: self::API_URL_PREFIX . '/v1/profile/configuration',
+            content: JSON::encode($createPayload),
+        );
+
+        $response = $client->getResponse();
+        $content = $response->getContent();
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode(), "Response:
+" . $response);
+
+        $responseData = JSON::decode($content, true);
+        self::assertSame($createPayload['configurationKey'], $responseData['configurationKey']);
+        self::assertSame('user', $responseData['scope']);
+        self::assertSame($createPayload['configurationValue']['theme'], $responseData['configurationValue']['theme']);
+
+        $userResource = static::getContainer()->get(UserResource::class);
+        $configurationResource = static::getContainer()->get(ConfigurationResource::class);
+        $user = $userResource->findOneBy(['username' => 'john-user']);
+        self::assertInstanceOf(User::class, $user);
+
+        $createdConfiguration = $configurationResource->findOneBy([
+            'configurationKey' => $createPayload['configurationKey'],
+            'user' => $user,
+        ]);
+        self::assertInstanceOf(Configuration::class, $createdConfiguration);
+        self::assertSame('user', $createdConfiguration->getScopeValue());
+    }
+
     /**
      * @throws Throwable
      */
