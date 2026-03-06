@@ -39,4 +39,12 @@ class PlatformResource extends RestResource
     ) {
         parent::__construct($repository);
     }
+
+    /**
+     * @return array<int, Entity>
+     */
+    public function findPublicEnabled(): array
+    {
+        return $this->getRepository()->findPublicEnabled();
+    }
 }

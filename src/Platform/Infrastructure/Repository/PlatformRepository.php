@@ -46,4 +46,21 @@ class PlatformRepository extends BaseRepository implements PlatformRepositoryInt
         protected ManagerRegistry $managerRegistry,
     ) {
     }
+
+    /**
+     * @return array<int, Entity>
+     */
+    public function findPublicEnabled(): array
+    {
+        return $this->findBy(
+            criteria: [
+                'enabled' => true,
+                'private' => false,
+            ],
+            orderBy: [
+                'name' => 'ASC',
+                'id' => 'ASC',
+            ],
+        );
+    }
 }
