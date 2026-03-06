@@ -60,6 +60,17 @@ class PrivateApplicationListControllerTest extends WebTestCase
         );
 
         foreach ($responseData as $application) {
+            self::assertArrayHasKey('description', $application);
+            self::assertArrayHasKey('photo', $application);
+            self::assertArrayHasKey('platformName', $application);
+            self::assertArrayHasKey('author', $application);
+            self::assertArrayHasKey('createdAt', $application);
+
+            self::assertIsArray($application['author']);
+            self::assertArrayHasKey('id', $application['author']);
+            self::assertArrayHasKey('firstName', $application['author']);
+            self::assertArrayHasKey('lastName', $application['author']);
+            self::assertArrayHasKey('photo', $application['author']);
             self::assertArrayHasKey('isOwner', $application);
             self::assertTrue($application['isOwner']);
         }
@@ -81,10 +92,37 @@ class PrivateApplicationListControllerTest extends WebTestCase
 
         $responseData = JSON::decode($content, true);
         self::assertIsArray($responseData);
-        self::assertCount(2, $responseData);
+        self::assertCount(3, $responseData);
+
+        $titles = array_column($responseData, 'title');
+        self::assertSame(
+            [
+                'CRM Growth App',
+                'John User Private App',
+                'Shop Ops App',
+            ],
+            $titles,
+        );
 
         foreach ($responseData as $application) {
+            self::assertArrayHasKey('description', $application);
+            self::assertArrayHasKey('photo', $application);
+            self::assertArrayHasKey('platformName', $application);
+            self::assertArrayHasKey('author', $application);
+            self::assertArrayHasKey('createdAt', $application);
+
+            self::assertIsArray($application['author']);
+            self::assertArrayHasKey('id', $application['author']);
+            self::assertArrayHasKey('firstName', $application['author']);
+            self::assertArrayHasKey('lastName', $application['author']);
+            self::assertArrayHasKey('photo', $application['author']);
             self::assertArrayHasKey('isOwner', $application);
+
+            if ($application['title'] === 'John User Private App') {
+                self::assertTrue($application['isOwner']);
+                continue;
+            }
+
             self::assertFalse($application['isOwner']);
         }
     }

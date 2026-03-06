@@ -20,6 +20,9 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Throwable;
 
+use function rawurlencode;
+use function str_replace;
+
 #[ORM\Entity]
 #[ORM\Table(name: 'platform_application')]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
@@ -47,6 +50,20 @@ class Application implements EntityInterface
     #[Assert\NotNull]
     #[Assert\Length(min: 2, max: 255)]
     private string $title = '';
+
+    #[ORM\Column(name: 'description', type: Types::TEXT, options: ['default' => ''])]
+    #[Assert\NotNull]
+    private string $description = '';
+
+    #[ORM\Column(
+        name: 'photo',
+        type: Types::STRING,
+        length: 255,
+        options: [
+            'comment' => 'Application photo URL',
+        ],
+    )]
+    private string $photo = '';
 
     #[ORM\Column(name: 'status', type: Types::STRING, length: 25, enumType: PlatformStatus::class, options: ['default' => PlatformStatus::ACTIVE->value])]
     #[Assert\NotNull]
@@ -126,6 +143,40 @@ class Application implements EntityInterface
     public function setStatus(PlatformStatus|string $status): self
     {
         $this->status = $status instanceof PlatformStatus ? $status : PlatformStatus::from($status);
+
+        return $this;
+    }
+
+    public function getDescription(): string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(string $description): self
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    public function getPhoto(): string
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(string $photo): self
+    {
+        $this->photo = $photo;
+
+        return $this;
+    }
+
+    public function ensureGeneratedPhoto(): self
+    {
+        if ($this->photo === '') {
+            $title = rawurlencode($this->title);
+            $this->photo = 'https://ui-avatars.com/api/?name=' . str_replace('%20', '+', $title);
+        }
 
         return $this;
     }
