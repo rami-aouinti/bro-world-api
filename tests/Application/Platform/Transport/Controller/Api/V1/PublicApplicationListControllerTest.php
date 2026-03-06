@@ -10,17 +10,12 @@ use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-/**
- * @package App\Tests
- */
 class PublicApplicationListControllerTest extends WebTestCase
 {
     private string $baseUrl = self::API_URL_PREFIX . '/v1/application/public';
 
-    /**
-     * @throws Throwable
-     */
-    #[TestDox('Test that `GET /v1/application/public` without authentication returns all public applications only.')]
+    /** @throws Throwable */
+    #[TestDox('Test that `GET /v1/application/public` without authentication returns paginated public applications only.')]
     public function testThatPublicListWorksWithoutAuthentication(): void
     {
         $client = $this->getTestClient();
@@ -33,40 +28,46 @@ class PublicApplicationListControllerTest extends WebTestCase
 
         $responseData = JSON::decode($content, true);
         self::assertIsArray($responseData);
-        self::assertCount(2, $responseData);
+        self::assertArrayHasKey('items', $responseData);
+        self::assertArrayHasKey('pagination', $responseData);
+        self::assertArrayHasKey('filters', $responseData);
 
-        $titles = array_column($responseData, 'title');
-        self::assertSame(
-            [
-                'CRM Growth App',
-                'Shop Ops App',
-            ],
-            $titles,
-        );
+        self::assertCount(2, $responseData['items']);
+        self::assertSame(2, $responseData['pagination']['totalItems']);
 
-        foreach ($responseData as $application) {
+        $titles = array_column($responseData['items'], 'title');
+        self::assertSame(['CRM Growth App', 'Shop Ops App'], $titles);
+
+        foreach ($responseData['items'] as $application) {
             self::assertIsArray($application);
-            self::assertArrayHasKey('id', $application);
             self::assertArrayHasKey('title', $application);
             self::assertArrayHasKey('description', $application);
-            self::assertArrayHasKey('photo', $application);
-            self::assertArrayHasKey('status', $application);
-            self::assertArrayHasKey('private', $application);
-            self::assertArrayHasKey('platformId', $application);
             self::assertArrayHasKey('platformName', $application);
             self::assertArrayHasKey('platformKey', $application);
-            self::assertArrayHasKey('pluginKeys', $application);
-            self::assertArrayHasKey('author', $application);
-            self::assertArrayHasKey('createdAt', $application);
-
-            self::assertIsArray($application['author']);
-            self::assertArrayHasKey('id', $application['author']);
-            self::assertArrayHasKey('firstName', $application['author']);
-            self::assertArrayHasKey('lastName', $application['author']);
-            self::assertArrayHasKey('photo', $application['author']);
+            self::assertArrayHasKey('isOwner', $application);
             self::assertFalse($application['private']);
-            self::assertIsString($application['platformKey']);
-            self::assertIsArray($application['pluginKeys']);
         }
+    }
+
+    /** @throws Throwable */
+    #[TestDox('Test that `GET /v1/application/public` supports filters and pagination.')]
+    public function testThatPublicListSupportsFiltersAndPagination(): void
+    {
+        $client = $this->getTestClient();
+
+        $client->request('GET', $this->baseUrl . '?title=shop&platformKey=shop&page=1&limit=1');
+        $response = $client->getResponse();
+        $content = $response->getContent();
+
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:\n" . $response);
+
+        $responseData = JSON::decode($content, true);
+        self::assertIsArray($responseData);
+        self::assertCount(1, $responseData['items']);
+        self::assertSame('Shop Ops App', $responseData['items'][0]['title']);
+        self::assertSame('shop', $responseData['filters']['platformKey']);
+        self::assertSame(1, $responseData['pagination']['page']);
+        self::assertSame(1, $responseData['pagination']['limit']);
     }
 }
