@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace App\Platform\Transport\Controller\Api\V1\Application;
 
-use App\Platform\Domain\Entity\Application;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Platform\Application\Service\ApplicationListService;
 use OpenApi\Attributes as OA;
 use OpenApi\Attributes\JsonContent;
 use OpenApi\Attributes\Property;
@@ -15,118 +14,92 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 use Throwable;
 
-/**
- * @package App\Platform
- */
 #[AsController]
 #[OA\Tag(name: 'Application')]
 class PublicApplicationListController
 {
-    public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-    ) {
+    public function __construct(private readonly ApplicationListService $applicationListService)
+    {
     }
 
-    #[Route(
-        path: '/v1/application/public',
-        methods: [Request::METHOD_GET],
-    )]
+    #[Route(path: '/v1/application/public', methods: [Request::METHOD_GET])]
     #[OA\Get(
         security: [],
+        summary: 'Liste des applications publiques',
+        description: 'Endpoint paginé avec filtres sur title, description, platformName et platformKey.',
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, default: 1), example: 1),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 20), example: 20),
+            new OA\Parameter(name: 'title', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'shop'),
+            new OA\Parameter(name: 'description', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'growth'),
+            new OA\Parameter(name: 'platformName', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'Shop'),
+            new OA\Parameter(name: 'platformKey', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'shop'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'List public applications.',
+                description: 'Liste des applications publiques filtrée et paginée.',
                 content: new JsonContent(
-                    type: 'array',
-                    items: new OA\Items(
-                        properties: [
-                            new Property(property: 'id', type: 'string'),
-                            new Property(property: 'title', type: 'string'),
-                            new Property(property: 'slug', type: 'string'),
-                            new Property(property: 'description', type: 'string'),
-                            new Property(property: 'photo', type: 'string'),
-                            new Property(property: 'status', type: 'string'),
-                            new Property(property: 'private', type: 'boolean'),
-                            new Property(property: 'platformId', type: 'string'),
-                            new Property(property: 'platformName', type: 'string'),
-                            new Property(property: 'platformKey', type: 'string', nullable: true),
-                            new Property(property: 'pluginKeys', type: 'array', items: new OA\Items(type: 'string')),
-                            new Property(
-                                property: 'author',
+                    properties: [
+                        new Property(
+                            property: 'items',
+                            type: 'array',
+                            items: new OA\Items(
                                 properties: [
-                                    new Property(property: 'id', type: 'string', nullable: true),
-                                    new Property(property: 'firstName', type: 'string'),
-                                    new Property(property: 'lastName', type: 'string'),
-                                    new Property(property: 'photo', type: 'string'),
+                                    new Property(property: 'id', type: 'string', example: 'fcb1f1e0-5f6f-4f5b-b7f2-4f5c64f42ea9'),
+                                    new Property(property: 'title', type: 'string', example: 'Shop Ops App'),
+                                    new Property(property: 'slug', type: 'string', example: 'shop-ops-app'),
+                                    new Property(property: 'description', type: 'string', example: 'Application operations for shop teams'),
+                                    new Property(property: 'photo', type: 'string', nullable: true),
+                                    new Property(property: 'status', type: 'string', example: 'active'),
+                                    new Property(property: 'private', type: 'boolean', example: false),
+                                    new Property(property: 'platformId', type: 'string'),
+                                    new Property(property: 'platformName', type: 'string', example: 'Shop'),
+                                    new Property(property: 'platformKey', type: 'string', example: 'shop'),
+                                    new Property(property: 'pluginKeys', type: 'array', items: new OA\Items(type: 'string', example: 'analytics')),
+                                    new Property(
+                                        property: 'author',
+                                        type: 'object',
+                                        properties: [
+                                            new Property(property: 'id', type: 'string', nullable: true),
+                                            new Property(property: 'firstName', type: 'string'),
+                                            new Property(property: 'lastName', type: 'string'),
+                                            new Property(property: 'photo', type: 'string'),
+                                        ],
+                                    ),
+                                    new Property(property: 'createdAt', type: 'string', nullable: true, example: '2026-03-06T09:00:00+00:00'),
+                                    new Property(property: 'isOwner', type: 'boolean', example: false),
                                 ],
                                 type: 'object',
                             ),
-                            new Property(property: 'createdAt', type: 'string', nullable: true),
-                        ],
-                        type: 'object',
-                    ),
+                        ),
+                        new Property(
+                            property: 'pagination',
+                            type: 'object',
+                            properties: [
+                                new Property(property: 'page', type: 'integer', example: 1),
+                                new Property(property: 'limit', type: 'integer', example: 20),
+                                new Property(property: 'totalItems', type: 'integer', example: 2),
+                                new Property(property: 'totalPages', type: 'integer', example: 1),
+                            ],
+                        ),
+                        new Property(
+                            property: 'filters',
+                            type: 'object',
+                            properties: [
+                                new Property(property: 'title', type: 'string', example: 'shop'),
+                                new Property(property: 'platformKey', type: 'string', example: 'shop'),
+                            ],
+                        ),
+                    ],
+                    type: 'object',
                 ),
             ),
         ],
     )]
-    /**
-     * @throws Throwable
-     */
-    public function __invoke(): JsonResponse
+    /** @throws Throwable */
+    public function __invoke(Request $request): JsonResponse
     {
-        /** @var array<int, Application> $applications */
-        $applications = $this->entityManager
-            ->getRepository(Application::class)
-            ->createQueryBuilder('application')
-            ->leftJoin('application.platform', 'platform')
-            ->leftJoin('application.user', 'user')
-            ->leftJoin('application.applicationPlugins', 'applicationPlugin')
-            ->leftJoin('applicationPlugin.plugin', 'plugin')
-            ->addSelect('platform')
-            ->addSelect('user')
-            ->addSelect('applicationPlugin')
-            ->addSelect('plugin')
-            ->where('application.private = :publicApplication')
-            ->setParameter('publicApplication', false)
-            ->orderBy('application.title', 'ASC')
-            ->addOrderBy('application.id', 'ASC')
-            ->getQuery()
-            ->getResult();
-
-        $output = [];
-
-        foreach ($applications as $application) {
-            $pluginKeys = [];
-            foreach ($application->getApplicationPlugins() as $applicationPlugin) {
-                $pluginKey = $applicationPlugin->getPlugin()?->getPluginKeyValue();
-                if ($pluginKey !== null) {
-                    $pluginKeys[$pluginKey] = true;
-                }
-            }
-
-            $output[] = [
-                'id' => $application->getId(),
-                'title' => $application->getTitle(),
-                'slug' => $application->getSlug(),
-                'description' => $application->getDescription(),
-                'photo' => $application->getPhoto(),
-                'status' => $application->getStatus()->value,
-                'private' => $application->isPrivate(),
-                'platformId' => $application->getPlatform()?->getId(),
-                'platformName' => $application->getPlatform()?->getName(),
-                'platformKey' => $application->getPlatform()?->getPlatformKeyValue(),
-                'pluginKeys' => array_keys($pluginKeys),
-                'author' => [
-                    'id' => $application->getUser()?->getId(),
-                    'firstName' => $application->getUser()?->getFirstName() ?? '',
-                    'lastName' => $application->getUser()?->getLastName() ?? '',
-                    'photo' => $application->getUser()?->getPhoto() ?? '',
-                ],
-                'createdAt' => $application->getCreatedAt()?->format(DATE_ATOM),
-            ];
-        }
-
-        return new JsonResponse($output);
+        return new JsonResponse($this->applicationListService->getPublicList($request));
     }
 }
