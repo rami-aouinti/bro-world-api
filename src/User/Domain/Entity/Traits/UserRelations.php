@@ -6,6 +6,7 @@ namespace App\User\Domain\Entity\Traits;
 
 use App\Log\Domain\Entity\LogLogin;
 use App\Log\Domain\Entity\LogLoginFailure;
+use App\Configuration\Domain\Entity\Configuration;
 use App\Log\Domain\Entity\LogRequest;
 use App\User\Domain\Entity\User;
 use App\User\Domain\Entity\UserGroup;
@@ -68,6 +69,19 @@ trait UserRelations
     ])]
     protected Collection | ArrayCollection $logsLoginFailure;
 
+
+    /**
+     * @var Collection<int, Configuration>|ArrayCollection<int, Configuration>
+     */
+    #[ORM\OneToMany(
+        targetEntity: Configuration::class,
+        mappedBy: 'user',
+    )]
+    #[Groups([
+        'User.configurations',
+    ])]
+    protected Collection | ArrayCollection $configurations;
+
     /**
      * Getter for roles.
      *
@@ -129,6 +143,36 @@ trait UserRelations
     public function getLogsLoginFailure(): Collection | ArrayCollection
     {
         return $this->logsLoginFailure;
+    }
+
+
+    /**
+     * Getter for user configurations collection.
+     *
+     * @return Collection<int, Configuration>|ArrayCollection<int, Configuration>
+     */
+    public function getConfigurations(): Collection | ArrayCollection
+    {
+        return $this->configurations;
+    }
+
+    public function addConfiguration(Configuration $configuration): self
+    {
+        if ($this->configurations->contains($configuration) === false) {
+            $this->configurations->add($configuration);
+            $configuration->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeConfiguration(Configuration $configuration): self
+    {
+        if ($this->configurations->removeElement($configuration) && $configuration->getUser() === $this) {
+            $configuration->setUser(null);
+        }
+
+        return $this;
     }
 
     /**

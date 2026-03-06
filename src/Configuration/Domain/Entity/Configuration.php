@@ -8,6 +8,7 @@ use App\Configuration\Domain\Enum\ConfigurationScope;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use App\User\Domain\Entity\User;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
@@ -23,9 +24,9 @@ use Throwable;
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'configuration')]
-#[ORM\UniqueConstraint(name: 'uq_configuration_key', columns: ['configuration_key'])]
+#[ORM\UniqueConstraint(name: 'uq_configuration_user_key', columns: ['user_id', 'configuration_key'])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
-#[AssertCollection\UniqueEntity('configurationKey')]
+#[AssertCollection\UniqueEntity(fields: ['user', 'configurationKey'])]
 class Configuration implements EntityInterface
 {
     use Timestampable;
@@ -35,6 +36,11 @@ class Configuration implements EntityInterface
     #[ORM\Column(name: 'id', type: UuidBinaryOrderedTimeType::NAME, unique: true)]
     #[Groups(['Configuration', 'Configuration.id'])]
     private UuidInterface $id;
+
+
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'configurations')]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    private ?User $user = null;
 
     #[ORM\Column(name: 'configuration_key', type: Types::STRING, length: 255)]
     #[Groups(['Configuration', 'Configuration.configurationKey'])]
@@ -80,6 +86,19 @@ class Configuration implements EntityInterface
     public function getId(): string
     {
         return $this->id->toString();
+    }
+
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
+
+        return $this;
     }
 
     public function getConfigurationKey(): string
