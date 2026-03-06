@@ -1,18 +1,3 @@
 body {
     background-color: skyblue;
 }
-
-/* Center primary navigation links in common header/navbar layouts. */
-header nav,
-header .nav,
-header .navbar-nav,
-.navbar .navbar-nav,
-.navbar .nav {
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* Bootstrap-like navbar support: keep center alignment for collapsed content area. */
-.navbar .navbar-collapse {
-    justify-content: center;
-}
