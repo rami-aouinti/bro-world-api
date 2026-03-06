@@ -51,7 +51,9 @@ class PluginViewControllerTest extends WebTestCase
         self::assertArrayHasKey('name', $responseData);
         self::assertArrayHasKey('description', $responseData);
         self::assertArrayHasKey('photo', $responseData);
+        self::assertArrayHasKey('pluginKey', $responseData);
         self::assertSame(LoadPluginData::getUuidByKey('CRM Assistant'), $responseData['id']);
         self::assertStringStartsWith('https://ui-avatars.com/api/?name=', $responseData['photo']);
+        self::assertContains($responseData['pluginKey'], ['calendar', 'chat', 'blog', 'language']);
     }
 }

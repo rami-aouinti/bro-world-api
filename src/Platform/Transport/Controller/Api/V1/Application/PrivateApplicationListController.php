@@ -51,6 +51,8 @@ class PrivateApplicationListController
                             new Property(property: 'private', type: 'boolean'),
                             new Property(property: 'platformId', type: 'string'),
                             new Property(property: 'platformName', type: 'string'),
+                            new Property(property: 'platformKey', type: 'string', nullable: true),
+                            new Property(property: 'pluginKeys', type: 'array', items: new OA\Items(type: 'string')),
                             new Property(
                                 property: 'author',
                                 properties: [
@@ -82,8 +84,12 @@ class PrivateApplicationListController
             ->createQueryBuilder('application')
             ->leftJoin('application.platform', 'platform')
             ->leftJoin('application.user', 'user')
+            ->leftJoin('application.applicationPlugins', 'applicationPlugin')
+            ->leftJoin('applicationPlugin.plugin', 'plugin')
             ->addSelect('platform')
             ->addSelect('user')
+            ->addSelect('applicationPlugin')
+            ->addSelect('plugin')
             ->where('application.private = :publicApplication')
             ->orWhere('application.user = :loggedInUser')
             ->setParameter('publicApplication', false)
@@ -96,6 +102,14 @@ class PrivateApplicationListController
         $output = [];
 
         foreach ($applications as $application) {
+            $pluginKeys = [];
+            foreach ($application->getApplicationPlugins() as $applicationPlugin) {
+                $pluginKey = $applicationPlugin->getPlugin()?->getPluginKeyValue();
+                if ($pluginKey !== null) {
+                    $pluginKeys[$pluginKey] = true;
+                }
+            }
+
             $output[] = [
                 'id' => $application->getId(),
                 'title' => $application->getTitle(),
@@ -106,6 +120,8 @@ class PrivateApplicationListController
                 'private' => $application->isPrivate(),
                 'platformId' => $application->getPlatform()?->getId(),
                 'platformName' => $application->getPlatform()?->getName(),
+                'platformKey' => $application->getPlatform()?->getPlatformKeyValue(),
+                'pluginKeys' => array_keys($pluginKeys),
                 'author' => [
                     'id' => $application->getUser()?->getId(),
                     'firstName' => $application->getUser()?->getFirstName() ?? '',

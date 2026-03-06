@@ -47,7 +47,7 @@ class PublicPlatformListController
                     items: new OA\Items(
                         ref: new Model(
                             type: Platform::class,
-                            groups: ['Platform.id', 'Platform.name', 'Platform.description', 'Platform.photo'],
+                            groups: ['Platform.id', 'Platform.name', 'Platform.description', 'Platform.platformKey', 'Platform.photo'],
                         ),
                     ),
                 ),
@@ -61,7 +61,7 @@ class PublicPlatformListController
             data: $this->platformResource->findPublicEnabled(),
             restResource: $this->platformResource,
             context: [
-                'groups' => ['Platform.id', 'Platform.name', 'Platform.description', 'Platform.photo'],
+                'groups' => ['Platform.id', 'Platform.name', 'Platform.description', 'Platform.platformKey', 'Platform.photo'],
             ],
         );
     }

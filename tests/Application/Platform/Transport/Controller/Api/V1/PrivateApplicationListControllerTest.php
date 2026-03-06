@@ -63,6 +63,8 @@ class PrivateApplicationListControllerTest extends WebTestCase
             self::assertArrayHasKey('description', $application);
             self::assertArrayHasKey('photo', $application);
             self::assertArrayHasKey('platformName', $application);
+            self::assertArrayHasKey('platformKey', $application);
+            self::assertArrayHasKey('pluginKeys', $application);
             self::assertArrayHasKey('author', $application);
             self::assertArrayHasKey('createdAt', $application);
 
@@ -72,6 +74,8 @@ class PrivateApplicationListControllerTest extends WebTestCase
             self::assertArrayHasKey('lastName', $application['author']);
             self::assertArrayHasKey('photo', $application['author']);
             self::assertArrayHasKey('isOwner', $application);
+            self::assertIsString($application['platformKey']);
+            self::assertIsArray($application['pluginKeys']);
             self::assertTrue($application['isOwner']);
         }
     }
@@ -108,6 +112,8 @@ class PrivateApplicationListControllerTest extends WebTestCase
             self::assertArrayHasKey('description', $application);
             self::assertArrayHasKey('photo', $application);
             self::assertArrayHasKey('platformName', $application);
+            self::assertArrayHasKey('platformKey', $application);
+            self::assertArrayHasKey('pluginKeys', $application);
             self::assertArrayHasKey('author', $application);
             self::assertArrayHasKey('createdAt', $application);
 
@@ -117,6 +123,8 @@ class PrivateApplicationListControllerTest extends WebTestCase
             self::assertArrayHasKey('lastName', $application['author']);
             self::assertArrayHasKey('photo', $application['author']);
             self::assertArrayHasKey('isOwner', $application);
+            self::assertIsString($application['platformKey']);
+            self::assertIsArray($application['pluginKeys']);
 
             if ($application['title'] === 'John User Private App') {
                 self::assertTrue($application['isOwner']);

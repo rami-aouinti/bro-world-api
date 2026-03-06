@@ -98,6 +98,7 @@ class PluginPatchControllerTest extends WebTestCase
         $requestData = [
             'description' => 'Patched description for knowledge base connector',
             'enabled' => false,
+            'pluginKey' => 'calendar',
         ];
 
         $client->request(
@@ -113,8 +114,10 @@ class PluginPatchControllerTest extends WebTestCase
         self::assertArrayHasKey('id', $responseData);
         self::assertArrayHasKey('description', $responseData);
         self::assertArrayHasKey('enabled', $responseData);
+        self::assertArrayHasKey('pluginKey', $responseData);
         self::assertSame($requestData['description'], $responseData['description']);
         self::assertSame($requestData['enabled'], $responseData['enabled']);
+        self::assertSame($requestData['pluginKey'], $responseData['pluginKey']);
     }
 
     /**

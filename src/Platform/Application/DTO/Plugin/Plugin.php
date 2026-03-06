@@ -7,6 +7,7 @@ namespace App\Platform\Application\DTO\Plugin;
 use App\General\Application\DTO\Interfaces\RestDtoInterface;
 use App\General\Application\DTO\RestDto;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
+use App\Platform\Domain\Enum\PluginKey;
 use App\Platform\Domain\Entity\Plugin as Entity;
 use Override;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -27,6 +28,16 @@ class Plugin extends RestDto
 
     #[Assert\NotNull]
     protected string $description = '';
+
+
+    #[Assert\NotNull]
+    #[Assert\Choice(choices: [
+        PluginKey::CALENDAR->value,
+        PluginKey::CHAT->value,
+        PluginKey::BLOG->value,
+        PluginKey::LANGUAGE->value,
+    ])]
+    protected string $pluginKey = PluginKey::CHAT->value;
 
     #[Assert\NotNull]
     protected bool $private = false;
@@ -58,6 +69,20 @@ class Plugin extends RestDto
     {
         $this->setVisited('description');
         $this->description = $description;
+
+        return $this;
+    }
+
+
+    public function getPluginKey(): string
+    {
+        return $this->pluginKey;
+    }
+
+    public function setPluginKey(string $pluginKey): self
+    {
+        $this->setVisited('pluginKey');
+        $this->pluginKey = $pluginKey;
 
         return $this;
     }
@@ -113,6 +138,7 @@ class Plugin extends RestDto
             $this->id = $entity->getId();
             $this->name = $entity->getName();
             $this->description = $entity->getDescription();
+            $this->pluginKey = $entity->getPluginKeyValue();
             $this->private = $entity->isPrivate();
             $this->photo = $entity->getPhoto();
             $this->enabled = $entity->isEnabled();

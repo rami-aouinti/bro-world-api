@@ -50,6 +50,7 @@ class PluginUpdateControllerTest extends WebTestCase
             'description' => 'Updated plugin description',
             'enabled' => true,
             'private' => false,
+            'pluginKey' => 'calendar',
         ];
 
         $client->request(
@@ -103,6 +104,7 @@ class PluginUpdateControllerTest extends WebTestCase
             'description' => 'Updated analytics plugin description',
             'enabled' => false,
             'private' => true,
+            'pluginKey' => 'language',
         ];
 
         $client->request(
@@ -122,6 +124,7 @@ class PluginUpdateControllerTest extends WebTestCase
         self::assertSame($requestData['description'], $responseData['description']);
         self::assertSame($requestData['enabled'], $responseData['enabled']);
         self::assertSame($requestData['private'], $responseData['private']);
+        self::assertSame($requestData['pluginKey'], $responseData['pluginKey']);
     }
 
     /**

@@ -6,6 +6,7 @@ namespace App\Platform\Domain\Entity;
 
 use App\Configuration\Domain\Entity\Configuration;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
+use App\Platform\Domain\Enum\PluginKey;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -73,6 +74,20 @@ class Plugin implements EntityInterface
     ])]
     #[Assert\NotNull]
     private string $description = '';
+
+
+    #[ORM\Column(
+        name: 'plugin_key',
+        type: Types::STRING,
+        length: 25,
+        enumType: PluginKey::class,
+    )]
+    #[Groups([
+        'Plugin',
+        'Plugin.pluginKey',
+    ])]
+    #[Assert\NotNull]
+    private PluginKey $pluginKey = PluginKey::CHAT;
 
     #[ORM\Column(
         name: 'private',
@@ -168,6 +183,24 @@ class Plugin implements EntityInterface
     public function setDescription(string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+
+    public function getPluginKey(): PluginKey
+    {
+        return $this->pluginKey;
+    }
+
+    public function getPluginKeyValue(): string
+    {
+        return $this->pluginKey->value;
+    }
+
+    public function setPluginKey(PluginKey|string $pluginKey): self
+    {
+        $this->pluginKey = $pluginKey instanceof PluginKey ? $pluginKey : PluginKey::from($pluginKey);
 
         return $this;
     }

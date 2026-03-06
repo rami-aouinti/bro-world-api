@@ -55,5 +55,6 @@ class PluginListControllerTest extends WebTestCase
         self::assertArrayHasKey('enabled', $responseData[0]);
         self::assertArrayHasKey('private', $responseData[0]);
         self::assertArrayHasKey('photo', $responseData[0]);
+        self::assertArrayHasKey('pluginKey', $responseData[0]);
     }
 }

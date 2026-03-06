@@ -30,12 +30,13 @@ final class LoadPluginData extends Fixture implements OrderedFixtureInterface
     ];
 
     /**
-     * @var array<int, array{uuid: non-empty-string, key: non-empty-string, name: non-empty-string, enabled: bool, private: bool, description: non-empty-string}>
+     * @var array<int, array{uuid: non-empty-string, key: non-empty-string, pluginKey: non-empty-string, name: non-empty-string, enabled: bool, private: bool, description: non-empty-string}>
      */
     private const array DATA = [
         [
             'uuid' => '50000000-0000-1000-8000-000000000001',
             'key' => 'CRM-Assistant',
+            'pluginKey' => 'chat',
             'name' => 'CRM Assistant',
             'enabled' => true,
             'private' => false,
@@ -44,6 +45,7 @@ final class LoadPluginData extends Fixture implements OrderedFixtureInterface
         [
             'uuid' => '50000000-0000-1000-8000-000000000002',
             'key' => 'Analytics-Booster',
+            'pluginKey' => 'calendar',
             'name' => 'Analytics Booster',
             'enabled' => true,
             'private' => false,
@@ -52,6 +54,7 @@ final class LoadPluginData extends Fixture implements OrderedFixtureInterface
         [
             'uuid' => '50000000-0000-1000-8000-000000000003',
             'key' => 'Private-Beta-Plugin',
+            'pluginKey' => 'blog',
             'name' => 'Private Beta Plugin',
             'enabled' => true,
             'private' => true,
@@ -60,6 +63,7 @@ final class LoadPluginData extends Fixture implements OrderedFixtureInterface
         [
             'uuid' => '50000000-0000-1000-8000-000000000004',
             'key' => 'Disabled-Public-Plugin',
+            'pluginKey' => 'language',
             'name' => 'Disabled Public Plugin',
             'enabled' => false,
             'private' => false,
@@ -68,6 +72,7 @@ final class LoadPluginData extends Fixture implements OrderedFixtureInterface
         [
             'uuid' => '50000000-0000-1000-8000-000000000005',
             'key' => 'Knowledge-Base-Connector',
+            'pluginKey' => 'blog',
             'name' => 'Knowledge Base Connector',
             'enabled' => true,
             'private' => false,
@@ -85,6 +90,7 @@ final class LoadPluginData extends Fixture implements OrderedFixtureInterface
             $entity = new Plugin()
                 ->setName($item['name'])
                 ->setDescription($item['description'])
+                ->setPluginKey($item['pluginKey'])
                 ->setEnabled($item['enabled'])
                 ->setPrivate($item['private'])
                 ->ensureGeneratedPhoto();

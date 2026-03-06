@@ -54,6 +54,8 @@ class PublicApplicationListControllerTest extends WebTestCase
             self::assertArrayHasKey('private', $application);
             self::assertArrayHasKey('platformId', $application);
             self::assertArrayHasKey('platformName', $application);
+            self::assertArrayHasKey('platformKey', $application);
+            self::assertArrayHasKey('pluginKeys', $application);
             self::assertArrayHasKey('author', $application);
             self::assertArrayHasKey('createdAt', $application);
 
@@ -63,6 +65,8 @@ class PublicApplicationListControllerTest extends WebTestCase
             self::assertArrayHasKey('lastName', $application['author']);
             self::assertArrayHasKey('photo', $application['author']);
             self::assertFalse($application['private']);
+            self::assertIsString($application['platformKey']);
+            self::assertIsArray($application['pluginKeys']);
         }
     }
 }

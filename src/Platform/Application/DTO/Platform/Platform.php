@@ -7,6 +7,7 @@ namespace App\Platform\Application\DTO\Platform;
 use App\General\Application\DTO\Interfaces\RestDtoInterface;
 use App\General\Application\DTO\RestDto;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
+use App\Platform\Domain\Enum\PlatformKey;
 use App\Platform\Domain\Enum\PlatformStatus;
 use App\Platform\Domain\Entity\Platform as Entity;
 use Override;
@@ -28,6 +29,16 @@ class Platform extends RestDto
 
     #[Assert\NotNull]
     protected string $description = '';
+
+
+    #[Assert\NotNull]
+    #[Assert\Choice(choices: [
+        PlatformKey::CRM->value,
+        PlatformKey::SCHOOL->value,
+        PlatformKey::SHOP->value,
+        PlatformKey::RECRUIT->value,
+    ])]
+    protected string $platformKey = PlatformKey::CRM->value;
 
     #[Assert\NotNull]
     protected bool $private = false;
@@ -67,6 +78,20 @@ class Platform extends RestDto
     {
         $this->setVisited('description');
         $this->description = $description;
+
+        return $this;
+    }
+
+
+    public function getPlatformKey(): string
+    {
+        return $this->platformKey;
+    }
+
+    public function setPlatformKey(string $platformKey): self
+    {
+        $this->setVisited('platformKey');
+        $this->platformKey = $platformKey;
 
         return $this;
     }
@@ -135,6 +160,7 @@ class Platform extends RestDto
             $this->id = $entity->getId();
             $this->name = $entity->getName();
             $this->description = $entity->getDescription();
+            $this->platformKey = $entity->getPlatformKeyValue();
             $this->private = $entity->isPrivate();
             $this->photo = $entity->getPhoto();
             $this->enabled = $entity->isEnabled();

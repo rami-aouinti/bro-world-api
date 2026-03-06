@@ -32,6 +32,7 @@ class PluginCreateControllerTest extends WebTestCase
             'description' => 'A plugin for tests',
             'enabled' => true,
             'private' => false,
+            'pluginKey' => 'chat',
         ];
 
         $client->request(method: 'POST', uri: $this->baseUrl, content: JSON::encode($requestData));
@@ -77,6 +78,7 @@ class PluginCreateControllerTest extends WebTestCase
             'description' => 'Plugin created without photo payload',
             'enabled' => true,
             'private' => false,
+            'pluginKey' => 'chat',
         ];
 
         $client->request(method: 'POST', uri: $this->baseUrl, content: JSON::encode($requestData));
@@ -91,9 +93,11 @@ class PluginCreateControllerTest extends WebTestCase
         self::assertArrayHasKey('enabled', $responseData);
         self::assertArrayHasKey('private', $responseData);
         self::assertArrayHasKey('photo', $responseData);
+        self::assertArrayHasKey('pluginKey', $responseData);
         self::assertSame($requestData['name'], $responseData['name']);
         self::assertSame($requestData['description'], $responseData['description']);
         self::assertStringStartsWith('https://ui-avatars.com/api/?name=', $responseData['photo']);
+        self::assertSame($requestData['pluginKey'], $responseData['pluginKey']);
     }
 
     /**
@@ -107,6 +111,7 @@ class PluginCreateControllerTest extends WebTestCase
                 'description' => 'Plugin description',
                 'enabled' => true,
                 'private' => false,
+            'pluginKey' => 'chat',
             ],
             'This value should not be blank.',
         ];
@@ -116,6 +121,7 @@ class PluginCreateControllerTest extends WebTestCase
                 'description' => 'Plugin description',
                 'enabled' => true,
                 'private' => false,
+            'pluginKey' => 'chat',
             ],
             'This value is too short.',
         ];

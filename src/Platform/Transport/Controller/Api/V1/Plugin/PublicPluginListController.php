@@ -47,7 +47,7 @@ class PublicPluginListController
                     items: new OA\Items(
                         ref: new Model(
                             type: Plugin::class,
-                            groups: ['Plugin.id', 'Plugin.name', 'Plugin.description', 'Plugin.photo'],
+                            groups: ['Plugin.id', 'Plugin.name', 'Plugin.description', 'Plugin.pluginKey', 'Plugin.photo'],
                         ),
                     ),
                 ),
@@ -61,7 +61,7 @@ class PublicPluginListController
             data: $this->pluginResource->findPublicEnabled(),
             restResource: $this->pluginResource,
             context: [
-                'groups' => ['Plugin.id', 'Plugin.name', 'Plugin.description', 'Plugin.photo'],
+                'groups' => ['Plugin.id', 'Plugin.name', 'Plugin.description', 'Plugin.pluginKey', 'Plugin.photo'],
             ],
         );
     }

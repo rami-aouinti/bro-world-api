@@ -41,9 +41,11 @@ class PublicPluginListControllerTest extends WebTestCase
             self::assertArrayHasKey('name', $plugin);
             self::assertArrayHasKey('description', $plugin);
             self::assertArrayHasKey('photo', $plugin);
+            self::assertArrayHasKey('pluginKey', $plugin);
             self::assertArrayNotHasKey('private', $plugin);
             self::assertArrayNotHasKey('enabled', $plugin);
             self::assertStringStartsWith('https://ui-avatars.com/api/?name=', $plugin['photo']);
+            self::assertContains($plugin['pluginKey'], ['calendar', 'chat', 'blog', 'language']);
         }
 
         $names = array_column($responseData, 'name');
