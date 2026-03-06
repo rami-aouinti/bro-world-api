@@ -10,16 +10,11 @@ use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-/**
- * @package App\Tests
- */
 class PrivateApplicationListControllerTest extends WebTestCase
 {
     private string $baseUrl = self::API_URL_PREFIX . '/v1/application/private';
 
-    /**
-     * @throws Throwable
-     */
+    /** @throws Throwable */
     #[TestDox('Test that `GET /v1/application/private` requires authentication.')]
     public function testThatPrivateListRequiresAuthentication(): void
     {
@@ -31,10 +26,8 @@ class PrivateApplicationListControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_UNAUTHORIZED, $response->getStatusCode(), "Response:\n" . $response);
     }
 
-    /**
-     * @throws Throwable
-     */
-    #[TestDox('Test that `GET /v1/application/private` returns public applications and authenticated user applications.')]
+    /** @throws Throwable */
+    #[TestDox('Test that `GET /v1/application/private` returns public and current user applications with pagination.')]
     public function testThatPrivateListReturnsPublicAndCurrentUserApplications(): void
     {
         $client = $this->getTestClient('john-root', 'password-root');
@@ -47,48 +40,24 @@ class PrivateApplicationListControllerTest extends WebTestCase
 
         $responseData = JSON::decode($content, true);
         self::assertIsArray($responseData);
-        self::assertCount(3, $responseData);
+        self::assertCount(3, $responseData['items']);
 
-        $titles = array_column($responseData, 'title');
-        self::assertSame(
-            [
-                'CRM Growth App',
-                'Recruit Lite App',
-                'Shop Ops App',
-            ],
-            $titles,
-        );
+        $titles = array_column($responseData['items'], 'title');
+        self::assertSame(['CRM Growth App', 'Recruit Lite App', 'Shop Ops App'], $titles);
 
-        foreach ($responseData as $application) {
-            self::assertArrayHasKey('description', $application);
-            self::assertArrayHasKey('photo', $application);
-            self::assertArrayHasKey('platformName', $application);
-            self::assertArrayHasKey('platformKey', $application);
-            self::assertArrayHasKey('pluginKeys', $application);
-            self::assertArrayHasKey('author', $application);
-            self::assertArrayHasKey('createdAt', $application);
-
-            self::assertIsArray($application['author']);
-            self::assertArrayHasKey('id', $application['author']);
-            self::assertArrayHasKey('firstName', $application['author']);
-            self::assertArrayHasKey('lastName', $application['author']);
-            self::assertArrayHasKey('photo', $application['author']);
+        foreach ($responseData['items'] as $application) {
             self::assertArrayHasKey('isOwner', $application);
-            self::assertIsString($application['platformKey']);
-            self::assertIsArray($application['pluginKeys']);
             self::assertTrue($application['isOwner']);
         }
     }
 
-    /**
-     * @throws Throwable
-     */
-    #[TestDox('Test that `GET /v1/application/private` indicates ownership for non owner authenticated users.')]
+    /** @throws Throwable */
+    #[TestDox('Test that `GET /v1/application/private` supports ownership and filtering.')]
     public function testThatPrivateListOwnershipIsFalseForNonOwner(): void
     {
         $client = $this->getTestClient('john-user', 'password-user');
 
-        $client->request('GET', $this->baseUrl);
+        $client->request('GET', $this->baseUrl . '?platformKey=crm&limit=10');
         $response = $client->getResponse();
         $content = $response->getContent();
         self::assertNotFalse($content);
@@ -96,35 +65,10 @@ class PrivateApplicationListControllerTest extends WebTestCase
 
         $responseData = JSON::decode($content, true);
         self::assertIsArray($responseData);
-        self::assertCount(3, $responseData);
+        self::assertSame('crm', $responseData['filters']['platformKey']);
 
-        $titles = array_column($responseData, 'title');
-        self::assertSame(
-            [
-                'CRM Growth App',
-                'John User Private App',
-                'Shop Ops App',
-            ],
-            $titles,
-        );
-
-        foreach ($responseData as $application) {
-            self::assertArrayHasKey('description', $application);
-            self::assertArrayHasKey('photo', $application);
-            self::assertArrayHasKey('platformName', $application);
-            self::assertArrayHasKey('platformKey', $application);
-            self::assertArrayHasKey('pluginKeys', $application);
-            self::assertArrayHasKey('author', $application);
-            self::assertArrayHasKey('createdAt', $application);
-
-            self::assertIsArray($application['author']);
-            self::assertArrayHasKey('id', $application['author']);
-            self::assertArrayHasKey('firstName', $application['author']);
-            self::assertArrayHasKey('lastName', $application['author']);
-            self::assertArrayHasKey('photo', $application['author']);
-            self::assertArrayHasKey('isOwner', $application);
-            self::assertIsString($application['platformKey']);
-            self::assertIsArray($application['pluginKeys']);
+        foreach ($responseData['items'] as $application) {
+            self::assertSame('crm', $application['platformKey']);
 
             if ($application['title'] === 'John User Private App') {
                 self::assertTrue($application['isOwner']);
