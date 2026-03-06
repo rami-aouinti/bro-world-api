@@ -31,10 +31,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[OA\Tag(name: 'Plugin Management')]
 class PluginController extends Controller
 {
-    use Actions\Admin\CountAction;
-    use Actions\Admin\FindAction;
-    use Actions\Admin\FindOneAction;
-    use Actions\Admin\IdsAction;
+    use Actions\Root\CountAction;
+    use Actions\Root\FindAction;
+    use Actions\Root\FindOneAction;
+    use Actions\Root\IdsAction;
     use Actions\Root\CreateAction;
     use Actions\Root\DeleteAction;
     use Actions\Root\PatchAction;

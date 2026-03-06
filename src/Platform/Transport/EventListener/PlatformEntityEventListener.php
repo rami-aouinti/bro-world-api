@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Platform\Transport\EventListener;
 
 use App\Platform\Domain\Entity\Platform;
+use App\Platform\Domain\Entity\Plugin;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 
 /**
@@ -24,10 +25,10 @@ class PlatformEntityEventListener
 
     private function process(LifecycleEventArgs $event): void
     {
-        $platform = $event->getObject();
+        $entity = $event->getObject();
 
-        if ($platform instanceof Platform) {
-            $platform->ensureGeneratedPhoto();
+        if ($entity instanceof Platform || $entity instanceof Plugin) {
+            $entity->ensureGeneratedPhoto();
         }
     }
 }
