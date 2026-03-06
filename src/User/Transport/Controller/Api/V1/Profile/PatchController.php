@@ -40,7 +40,6 @@ class PatchController
         'email',
         'language',
         'locale',
-        'timezone',
     ];
 
     public function __construct(
@@ -141,7 +140,6 @@ class PatchController
             'firstName' => $loggedInUser->setFirstName($value),
             'lastName' => $loggedInUser->setLastName($value),
             'email' => $loggedInUser->setEmail($value),
-            'timezone' => $loggedInUser->setTimezone($value),
             'language' => $loggedInUser->setLanguage(
                 Language::tryFrom($value) ?? throw new HttpException(
                     JsonResponse::HTTP_BAD_REQUEST,
