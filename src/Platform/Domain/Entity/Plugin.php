@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Platform\Domain\Entity;
 
+use App\Configuration\Domain\Entity\Configuration;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
@@ -112,12 +115,30 @@ class Plugin implements EntityInterface
     #[Assert\NotNull]
     private bool $enabled = true;
 
+    #[ORM\ManyToOne(targetEntity: Platform::class, inversedBy: 'plugins')]
+    #[ORM\JoinColumn(name: 'platform_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    #[Groups([
+        'Plugin',
+        'Plugin.platform',
+    ])]
+    private ?Platform $platform = null;
+
+    /**
+     * @var Collection<int, Configuration>|ArrayCollection<int, Configuration>
+     */
+    #[ORM\OneToMany(targetEntity: Configuration::class, mappedBy: 'plugin')]
+    #[Groups([
+        'Plugin.configurations',
+    ])]
+    private Collection | ArrayCollection $configurations;
+
     /**
      * @throws Throwable
      */
     public function __construct()
     {
         $this->id = $this->createUuid();
+        $this->configurations = new ArrayCollection();
     }
 
     #[Override]
@@ -182,6 +203,45 @@ class Plugin implements EntityInterface
     public function setEnabled(bool $enabled): self
     {
         $this->enabled = $enabled;
+
+        return $this;
+    }
+
+    public function getPlatform(): ?Platform
+    {
+        return $this->platform;
+    }
+
+    public function setPlatform(?Platform $platform): self
+    {
+        $this->platform = $platform;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Configuration>|ArrayCollection<int, Configuration>
+     */
+    public function getConfigurations(): Collection | ArrayCollection
+    {
+        return $this->configurations;
+    }
+
+    public function addConfiguration(Configuration $configuration): self
+    {
+        if ($this->configurations->contains($configuration) === false) {
+            $this->configurations->add($configuration);
+            $configuration->setPlugin($this);
+        }
+
+        return $this;
+    }
+
+    public function removeConfiguration(Configuration $configuration): self
+    {
+        if ($this->configurations->removeElement($configuration) && $configuration->getPlugin() === $this) {
+            $configuration->setPlugin(null);
+        }
 
         return $this;
     }

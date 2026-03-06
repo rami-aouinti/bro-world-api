@@ -8,6 +8,10 @@ use App\Configuration\Domain\Enum\ConfigurationScope;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use App\Platform\Domain\Entity\Application;
+use App\Platform\Domain\Entity\ApplicationPlugin;
+use App\Platform\Domain\Entity\Platform;
+use App\Platform\Domain\Entity\Plugin;
 use App\User\Domain\Entity\User;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -25,8 +29,16 @@ use Throwable;
 #[ORM\Entity]
 #[ORM\Table(name: 'configuration')]
 #[ORM\UniqueConstraint(name: 'uq_configuration_user_key', columns: ['user_id', 'configuration_key'])]
+#[ORM\UniqueConstraint(name: 'uq_configuration_platform_key', columns: ['platform_id', 'configuration_key'])]
+#[ORM\UniqueConstraint(name: 'uq_configuration_plugin_key', columns: ['plugin_id', 'configuration_key'])]
+#[ORM\UniqueConstraint(name: 'uq_configuration_application_key', columns: ['application_id', 'configuration_key'])]
+#[ORM\UniqueConstraint(name: 'uq_configuration_application_plugin_key', columns: ['application_plugin_id', 'configuration_key'])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 #[AssertCollection\UniqueEntity(fields: ['user', 'configurationKey'])]
+#[AssertCollection\UniqueEntity(fields: ['platform', 'configurationKey'])]
+#[AssertCollection\UniqueEntity(fields: ['plugin', 'configurationKey'])]
+#[AssertCollection\UniqueEntity(fields: ['application', 'configurationKey'])]
+#[AssertCollection\UniqueEntity(fields: ['applicationPlugin', 'configurationKey'])]
 class Configuration implements EntityInterface
 {
     use Timestampable;
@@ -41,6 +53,22 @@ class Configuration implements EntityInterface
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'configurations')]
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?User $user = null;
+
+    #[ORM\ManyToOne(targetEntity: Platform::class, inversedBy: 'configurations')]
+    #[ORM\JoinColumn(name: 'platform_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    private ?Platform $platform = null;
+
+    #[ORM\ManyToOne(targetEntity: Plugin::class, inversedBy: 'configurations')]
+    #[ORM\JoinColumn(name: 'plugin_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    private ?Plugin $plugin = null;
+
+    #[ORM\ManyToOne(targetEntity: Application::class, inversedBy: 'configurations')]
+    #[ORM\JoinColumn(name: 'application_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    private ?Application $application = null;
+
+    #[ORM\ManyToOne(targetEntity: ApplicationPlugin::class, inversedBy: 'configurations')]
+    #[ORM\JoinColumn(name: 'application_plugin_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    private ?ApplicationPlugin $applicationPlugin = null;
 
     #[ORM\Column(name: 'configuration_key', type: Types::STRING, length: 255)]
     #[Groups(['Configuration', 'Configuration.configurationKey'])]
@@ -97,6 +125,54 @@ class Configuration implements EntityInterface
     public function setUser(?User $user): self
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    public function getPlatform(): ?Platform
+    {
+        return $this->platform;
+    }
+
+    public function setPlatform(?Platform $platform): self
+    {
+        $this->platform = $platform;
+
+        return $this;
+    }
+
+    public function getPlugin(): ?Plugin
+    {
+        return $this->plugin;
+    }
+
+    public function setPlugin(?Plugin $plugin): self
+    {
+        $this->plugin = $plugin;
+
+        return $this;
+    }
+
+    public function getApplication(): ?Application
+    {
+        return $this->application;
+    }
+
+    public function setApplication(?Application $application): self
+    {
+        $this->application = $application;
+
+        return $this;
+    }
+
+    public function getApplicationPlugin(): ?ApplicationPlugin
+    {
+        return $this->applicationPlugin;
+    }
+
+    public function setApplicationPlugin(?ApplicationPlugin $applicationPlugin): self
+    {
+        $this->applicationPlugin = $applicationPlugin;
 
         return $this;
     }

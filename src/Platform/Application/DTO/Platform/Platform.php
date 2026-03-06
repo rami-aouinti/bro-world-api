@@ -7,6 +7,7 @@ namespace App\Platform\Application\DTO\Platform;
 use App\General\Application\DTO\Interfaces\RestDtoInterface;
 use App\General\Application\DTO\RestDto;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
+use App\Platform\Domain\Enum\PlatformStatus;
 use App\Platform\Domain\Entity\Platform as Entity;
 use Override;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -35,6 +36,14 @@ class Platform extends RestDto
 
     #[Assert\NotNull]
     protected bool $enabled = true;
+
+    #[Assert\NotNull]
+    #[Assert\Choice(choices: [
+        PlatformStatus::ACTIVE->value,
+        PlatformStatus::MAINTENANCE->value,
+        PlatformStatus::DISABLED->value,
+    ])]
+    protected string $status = PlatformStatus::ACTIVE->value;
 
     public function getName(): string
     {
@@ -101,6 +110,19 @@ class Platform extends RestDto
         return $this;
     }
 
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): self
+    {
+        $this->setVisited('status');
+        $this->status = $status;
+
+        return $this;
+    }
+
     /**
      * {@inheritdoc}
      *
@@ -116,6 +138,7 @@ class Platform extends RestDto
             $this->private = $entity->isPrivate();
             $this->photo = $entity->getPhoto();
             $this->enabled = $entity->isEnabled();
+            $this->status = $entity->getStatusValue();
         }
 
         return $this;

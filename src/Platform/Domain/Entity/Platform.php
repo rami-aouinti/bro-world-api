@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace App\Platform\Domain\Entity;
 
+use App\Configuration\Domain\Entity\Configuration;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use App\Platform\Domain\Enum\PlatformStatus;
+use App\User\Domain\Entity\User;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
@@ -112,12 +117,56 @@ class Platform implements EntityInterface
     #[Assert\NotNull]
     private bool $enabled = true;
 
+    #[ORM\Column(
+        name: 'status',
+        type: Types::STRING,
+        length: 25,
+        enumType: PlatformStatus::class,
+        options: [
+            'default' => PlatformStatus::ACTIVE->value,
+        ],
+    )]
+    #[Groups([
+        'Platform',
+        'Platform.status',
+    ])]
+    #[Assert\NotNull]
+    private PlatformStatus $status = PlatformStatus::ACTIVE;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    #[Groups([
+        'Platform',
+        'Platform.user',
+    ])]
+    private ?User $user = null;
+
+    /**
+     * @var Collection<int, Configuration>|ArrayCollection<int, Configuration>
+     */
+    #[ORM\OneToMany(targetEntity: Configuration::class, mappedBy: 'platform')]
+    #[Groups([
+        'Platform.configurations',
+    ])]
+    private Collection | ArrayCollection $configurations;
+
+    /**
+     * @var Collection<int, Plugin>|ArrayCollection<int, Plugin>
+     */
+    #[ORM\OneToMany(targetEntity: Plugin::class, mappedBy: 'platform')]
+    #[Groups([
+        'Platform.plugins',
+    ])]
+    private Collection | ArrayCollection $plugins;
+
     /**
      * @throws Throwable
      */
     public function __construct()
     {
         $this->id = $this->createUuid();
+        $this->configurations = new ArrayCollection();
+        $this->plugins = new ArrayCollection();
     }
 
     #[Override]
@@ -182,6 +231,89 @@ class Platform implements EntityInterface
     public function setEnabled(bool $enabled): self
     {
         $this->enabled = $enabled;
+
+        return $this;
+    }
+
+    public function getStatus(): PlatformStatus
+    {
+        return $this->status;
+    }
+
+    public function getStatusValue(): string
+    {
+        return $this->status->value;
+    }
+
+    public function setStatus(PlatformStatus|string $status): self
+    {
+        $this->status = $status instanceof PlatformStatus ? $status : PlatformStatus::from($status);
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Configuration>|ArrayCollection<int, Configuration>
+     */
+    public function getConfigurations(): Collection | ArrayCollection
+    {
+        return $this->configurations;
+    }
+
+    public function addConfiguration(Configuration $configuration): self
+    {
+        if ($this->configurations->contains($configuration) === false) {
+            $this->configurations->add($configuration);
+            $configuration->setPlatform($this);
+        }
+
+        return $this;
+    }
+
+    public function removeConfiguration(Configuration $configuration): self
+    {
+        if ($this->configurations->removeElement($configuration) && $configuration->getPlatform() === $this) {
+            $configuration->setPlatform(null);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Plugin>|ArrayCollection<int, Plugin>
+     */
+    public function getPlugins(): Collection | ArrayCollection
+    {
+        return $this->plugins;
+    }
+
+    public function addPlugin(Plugin $plugin): self
+    {
+        if ($this->plugins->contains($plugin) === false) {
+            $this->plugins->add($plugin);
+            $plugin->setPlatform($this);
+        }
+
+        return $this;
+    }
+
+    public function removePlugin(Plugin $plugin): self
+    {
+        if ($this->plugins->removeElement($plugin) && $plugin->getPlatform() === $this) {
+            $plugin->setPlatform(null);
+        }
 
         return $this;
     }
