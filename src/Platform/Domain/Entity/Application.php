@@ -20,9 +20,15 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Throwable;
 
+use function iconv;
+use function is_string;
+use function preg_replace;
 use function rawurlencode;
 use function str_replace;
 use function str_starts_with;
+use function strtolower;
+use function substr;
+use function trim;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'platform_application')]
@@ -51,6 +57,10 @@ class Application implements EntityInterface
     #[Assert\NotNull]
     #[Assert\Length(min: 2, max: 255)]
     private string $title = '';
+
+    #[ORM\Column(name: 'slug', type: Types::STRING, length: 255, options: ['default' => ''])]
+    #[Assert\NotNull]
+    private string $slug = '';
 
     #[ORM\Column(name: 'description', type: Types::TEXT, options: ['default' => ''])]
     #[Assert\NotNull]
@@ -136,6 +146,11 @@ class Application implements EntityInterface
         return $this;
     }
 
+    public function getSlug(): string
+    {
+        return $this->slug;
+    }
+
     public function getStatus(): PlatformStatus
     {
         return $this->status;
@@ -183,6 +198,20 @@ class Application implements EntityInterface
 
         if (!str_starts_with($this->photo, 'http://') && !str_starts_with($this->photo, 'https://')) {
             $this->photo = '/uploads/applications/' . ltrim($this->photo, '/');
+        }
+
+        return $this;
+    }
+
+    public function ensureGeneratedSlug(): self
+    {
+        $normalizedTitle = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $this->title);
+        $base = is_string($normalizedTitle) ? $normalizedTitle : $this->title;
+        $slug = preg_replace('/[^a-z0-9]+/i', '-', strtolower($base));
+        $this->slug = trim($slug ?? '', '-');
+
+        if ($this->slug === '') {
+            $this->slug = 'app-' . substr($this->getId(), 0, 8);
         }
 
         return $this;

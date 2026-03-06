@@ -30,6 +30,10 @@ class PlatformEntityEventListener
 
         if ($entity instanceof Platform || $entity instanceof Plugin || $entity instanceof Application) {
             $entity->ensureGeneratedPhoto();
+
+            if ($entity instanceof Application) {
+                $entity->ensureGeneratedSlug();
+            }
         }
     }
 }

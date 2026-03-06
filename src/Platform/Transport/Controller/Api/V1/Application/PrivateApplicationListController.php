@@ -44,6 +44,7 @@ class PrivateApplicationListController
                         properties: [
                             new Property(property: 'id', type: 'string'),
                             new Property(property: 'title', type: 'string'),
+                            new Property(property: 'slug', type: 'string'),
                             new Property(property: 'description', type: 'string'),
                             new Property(property: 'photo', type: 'string'),
                             new Property(property: 'status', type: 'string'),
@@ -98,6 +99,7 @@ class PrivateApplicationListController
             $output[] = [
                 'id' => $application->getId(),
                 'title' => $application->getTitle(),
+                'slug' => $application->getSlug(),
                 'description' => $application->getDescription(),
                 'photo' => $application->getPhoto(),
                 'status' => $application->getStatus()->value,
