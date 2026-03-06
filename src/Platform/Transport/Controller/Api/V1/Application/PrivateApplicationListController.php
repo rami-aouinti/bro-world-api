@@ -26,10 +26,20 @@ class PrivateApplicationListController
 
     #[Route(path: '/v1/application/private', methods: [Request::METHOD_GET])]
     #[OA\Get(
+        summary: 'Liste des applications visibles par l’utilisateur',
+        description: 'Retourne les applications publiques + privées appartenant à l’utilisateur connecté, avec filtres et pagination.',
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, default: 1), example: 1),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 20), example: 10),
+            new OA\Parameter(name: 'title', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'crm'),
+            new OA\Parameter(name: 'description', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'lite'),
+            new OA\Parameter(name: 'platformName', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'CRM'),
+            new OA\Parameter(name: 'platformKey', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'crm'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'List all public applications and authenticated user applications with filters and pagination.',
+                description: 'Liste filtrée et paginée avec indicateur de propriété (isOwner).',
                 content: new JsonContent(
                     properties: [
                         new Property(property: 'items', type: 'array', items: new OA\Items(type: 'object')),
