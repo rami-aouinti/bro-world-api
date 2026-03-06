@@ -6,7 +6,7 @@ namespace App\Platform\Transport\Controller\Api\V1\Application;
 
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PlatformStatus;
-use App\User\Domain\Entity\User;
+use App\User\Application\Security\UserTypeIdentification;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use OpenApi\Attributes\JsonContent;
@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Core\Security;
+use Throwable;
 
 /**
  * @package App\Platform
@@ -26,7 +26,7 @@ class PublicApplicationListController
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly Security $security,
+        private readonly UserTypeIdentification $userTypeIdentification,
     ) {
     }
 
@@ -58,6 +58,9 @@ class PublicApplicationListController
             ),
         ],
     )]
+    /**
+     * @throws Throwable
+     */
     public function __invoke(): JsonResponse
     {
         $queryBuilder = $this->entityManager
@@ -76,9 +79,9 @@ class PublicApplicationListController
             ->setParameter('activeStatus', PlatformStatus::ACTIVE)
             ->setParameter('publicApplication', false);
 
-        $loggedInUser = $this->security->getUser();
+        $loggedInUser = $this->userTypeIdentification->getUser();
 
-        if ($loggedInUser instanceof User) {
+        if ($loggedInUser !== null) {
             $queryBuilder
                 ->orWhere('application.user = :loggedInUser')
                 ->setParameter('loggedInUser', $loggedInUser);
