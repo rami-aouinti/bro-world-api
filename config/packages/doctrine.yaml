@@ -70,6 +70,12 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Platform/Domain/Entity'
                         prefix: 'App\Platform\Domain\Entity'
                         alias: Platform
+                    Recruit:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Recruit/Domain/Entity'
+                        prefix: 'App\Recruit\Domain\Entity'
+                        alias: Recruit
                     Role:
                         type: attribute
                         is_bundle: false
