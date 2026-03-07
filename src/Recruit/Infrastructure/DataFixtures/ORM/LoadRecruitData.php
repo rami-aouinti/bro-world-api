@@ -7,6 +7,8 @@ namespace App\Recruit\Infrastructure\DataFixtures\ORM;
 use App\Recruit\Domain\Entity\Badge;
 use App\Recruit\Domain\Entity\Company;
 use App\Recruit\Domain\Entity\Job;
+use App\Platform\Domain\Entity\Application;
+use App\Recruit\Domain\Entity\Recruit;
 use App\Recruit\Domain\Entity\Salary;
 use App\Recruit\Domain\Entity\Tag;
 use App\Recruit\Domain\Enum\ContractType;
@@ -64,6 +66,18 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
     #[Override]
     public function load(ObjectManager $manager): void
     {
+        /** @var Application $application */
+        $application = $this->getReference('Application-recruit-lite-app', Application::class);
+
+        $recruit = $manager->getRepository(Recruit::class)->findOneBy([
+            'application' => $application,
+        ]);
+
+        if (!$recruit instanceof Recruit) {
+            $recruit = (new Recruit())->setApplication($application);
+            $manager->persist($recruit);
+        }
+
         $companies = [];
         foreach (self::COMPANIES as $item) {
             $company = (new Company())
@@ -102,6 +116,7 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
                 ->setPeriod('year');
 
             $job = (new Job())
+                ->setRecruit($recruit)
                 ->setTitle($title)
                 ->setCompany($company)
                 ->setSalary($salary)

@@ -10,17 +10,20 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Recruit Job')]
-class PublicJobListController
+#[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
+class PrivateJobListController
 {
     public function __construct(private readonly JobPublicListService $jobPublicListService)
     {
     }
 
-    #[Route(path: '/v1/recruit/public/{applicationSlug}/jobs', methods: [Request::METHOD_GET])]
-    #[OA\Get(security: [], summary: 'Liste publique des offres jobs, paginée et filtrable.')]
+    #[Route(path: '/v1/recruit/private/{applicationSlug}/jobs', methods: [Request::METHOD_GET])]
+    #[OA\Get(summary: 'Liste privée des offres jobs, paginée et filtrable.')]
     public function __invoke(Request $request, string $applicationSlug): JsonResponse
     {
         return new JsonResponse($this->jobPublicListService->getList($request, $applicationSlug));

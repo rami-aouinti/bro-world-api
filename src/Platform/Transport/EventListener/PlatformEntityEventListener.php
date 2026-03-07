@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Platform\Transport\EventListener;
 
+use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Entity\Platform;
 use App\Platform\Domain\Entity\Plugin;
-use App\Platform\Domain\Entity\Application;
+use App\Platform\Domain\Enum\PlatformKey;
+use App\Recruit\Domain\Entity\Recruit;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 
 /**
@@ -14,6 +17,10 @@ use Doctrine\Persistence\Event\LifecycleEventArgs;
  */
 class PlatformEntityEventListener
 {
+    public function __construct(private readonly EntityManagerInterface $entityManager)
+    {
+    }
+
     public function prePersist(LifecycleEventArgs $event): void
     {
         $this->process($event);
@@ -33,7 +40,28 @@ class PlatformEntityEventListener
 
             if ($entity instanceof Application) {
                 $entity->ensureGeneratedSlug();
+                $this->createRecruitWhenNeeded($entity);
             }
         }
+    }
+
+    private function createRecruitWhenNeeded(Application $application): void
+    {
+        if ($application->getPlatform()?->getPlatformKey() !== PlatformKey::RECRUIT) {
+            return;
+        }
+
+        $existingRecruit = $this->entityManager->getRepository(Recruit::class)->findOneBy([
+            'application' => $application,
+        ]);
+
+        if ($existingRecruit instanceof Recruit) {
+            return;
+        }
+
+        $recruit = (new Recruit())
+            ->setApplication($application);
+
+        $this->entityManager->persist($recruit);
     }
 }
