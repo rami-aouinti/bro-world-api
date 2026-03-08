@@ -41,15 +41,6 @@ class JobCreateFromApplicationController
     #[Route(path: '/v1/recruit/applications/{applicationSlug}/jobs', methods: [Request::METHOD_POST])]
     #[OA\Post(
         summary: 'Crée un job en résolvant automatiquement le recruit via applicationSlug.',
-        parameters: [
-            new OA\Parameter(
-                name: 'applicationSlug',
-                description: 'Slug de l\'application propriétaire de l\'offre.',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string'),
-            ),
-        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -70,6 +61,15 @@ class JobCreateFromApplicationController
                 ],
             ),
         ),
+        parameters: [
+            new OA\Parameter(
+                name: 'applicationSlug',
+                description: 'Slug de l\'application propriétaire de l\'offre.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+            ),
+        ],
         responses: [
             new OA\Response(response: 201, description: 'Job créé.'),
             new OA\Response(response: 400, description: 'Payload invalide.'),
@@ -92,10 +92,6 @@ class JobCreateFromApplicationController
         ]);
         if (!$application instanceof PlatformApplication) {
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "applicationSlug".');
-        }
-
-        if ($application->getUser()?->getId() !== $loggedInUser->getId()) {
-            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You cannot create a job for this application.');
         }
 
         $recruit = $this->entityManager->getRepository(Recruit::class)->findOneBy([
