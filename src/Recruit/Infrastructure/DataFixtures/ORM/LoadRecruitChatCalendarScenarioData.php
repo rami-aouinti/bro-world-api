@@ -177,7 +177,10 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         }
 
         $this->ensureParticipant($manager, $conversation, $owner);
-        $this->ensureParticipant($manager, $conversation, $applicant);
+
+        if ($owner->getId() !== $applicant->getId()) {
+            $this->ensureParticipant($manager, $conversation, $applicant);
+        }
 
         $introMessage = $manager->getRepository(ChatMessage::class)->findOneBy([
             'conversation' => $conversation,
