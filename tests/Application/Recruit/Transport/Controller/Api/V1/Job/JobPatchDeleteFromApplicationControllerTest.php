@@ -18,13 +18,13 @@ use Throwable;
 class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
 {
     /** @throws Throwable */
-    #[TestDox('Test that PATCH /v1/recruit/applications/{applicationId}/jobs/{jobId} updates job for owner.')]
+    #[TestDox('Test that PATCH /v1/recruit/applications/{applicationSlug}/jobs/{jobId} updates job for owner.')]
     public function testThatPatchFromApplicationUpdatesJob(): void
     {
-        [$applicationId, $jobId] = $this->getApplicationAndJobIdsForUsername('john-root');
+        [$applicationSlug, $jobId] = $this->getApplicationSlugAndJobIdForUsername('john-root');
 
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationId . '/jobs/' . $jobId, content: JSON::encode([
+        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs/' . $jobId, content: JSON::encode([
             'title' => 'Updated job title',
             'location' => 'Lyon',
             'workMode' => 'REMOTE',
@@ -40,13 +40,13 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
     }
 
     /** @throws Throwable */
-    #[TestDox('Test that PATCH /v1/recruit/applications/{applicationId}/jobs/{jobId} forbids non owner.')]
+    #[TestDox('Test that PATCH /v1/recruit/applications/{applicationSlug}/jobs/{jobId} forbids non owner.')]
     public function testThatPatchFromApplicationRejectsForeignApplication(): void
     {
-        [$applicationId, $jobId] = $this->getApplicationAndJobIdsForUsername('john-root');
+        [$applicationSlug, $jobId] = $this->getApplicationSlugAndJobIdForUsername('john-root');
 
         $client = $this->getTestClient('john-user', 'password-user');
-        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationId . '/jobs/' . $jobId, content: JSON::encode([
+        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs/' . $jobId, content: JSON::encode([
             'title' => 'Should fail',
         ]));
 
@@ -54,13 +54,13 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
     }
 
     /** @throws Throwable */
-    #[TestDox('Test that DELETE /v1/recruit/applications/{applicationId}/jobs/{jobId} deletes job for owner.')]
+    #[TestDox('Test that DELETE /v1/recruit/applications/{applicationSlug}/jobs/{jobId} deletes job for owner.')]
     public function testThatDeleteFromApplicationDeletesJob(): void
     {
-        [$applicationId, $jobId] = $this->createDedicatedJobForUser('john-root');
+        [$applicationSlug, $jobId] = $this->createDedicatedJobForUser('john-root');
 
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('DELETE', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationId . '/jobs/' . $jobId);
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs/' . $jobId);
 
         self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
 
@@ -72,7 +72,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
     }
 
     /** @return array{0: string, 1: string} */
-    private function getApplicationAndJobIdsForUsername(string $username): array
+    private function getApplicationSlugAndJobIdForUsername(string $username): array
     {
         self::bootKernel();
 
@@ -93,7 +93,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         $job = $entityManager->getRepository(Job::class)->findOneBy(['recruit' => $recruit]);
         self::assertInstanceOf(Job::class, $job);
 
-        return [$application->getId(), $job->getId()];
+        return [$application->getSlug(), $job->getId()];
     }
 
     /** @return array{0: string, 1: string} */
@@ -124,6 +124,6 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         $entityManager->persist($job);
         $entityManager->flush();
 
-        return [$application->getId(), $job->getId()];
+        return [$application->getSlug(), $job->getId()];
     }
 }
