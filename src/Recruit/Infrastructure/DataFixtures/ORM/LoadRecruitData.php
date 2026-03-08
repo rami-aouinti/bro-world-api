@@ -73,6 +73,18 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
     #[Override]
     public function load(ObjectManager $manager): void
     {
+        /** @var Application $application */
+        $application = $this->getReference('Application-recruit-lite-app', Application::class);
+
+        $recruit = $manager->getRepository(Recruit::class)->findOneBy([
+            'application' => $application,
+        ]);
+
+        if (!$recruit instanceof Recruit) {
+            $recruit = (new Recruit())->setApplication($application);
+            $manager->persist($recruit);
+        }
+
         $companies = [];
         foreach (self::COMPANIES as $item) {
             $company = (new Company())
