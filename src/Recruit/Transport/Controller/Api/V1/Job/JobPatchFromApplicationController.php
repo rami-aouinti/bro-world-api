@@ -42,10 +42,6 @@ class JobPatchFromApplicationController
     #[Route(path: '/v1/recruit/applications/{applicationId}/jobs/{jobId}', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(
         summary: 'Met à jour un job via applicationId et contrôle propriétaire.',
-        parameters: [
-            new OA\Parameter(name: 'applicationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
-            new OA\Parameter(name: 'jobId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
-        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -65,6 +61,10 @@ class JobPatchFromApplicationController
                 ],
             ),
         ),
+        parameters: [
+            new OA\Parameter(name: 'applicationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+            new OA\Parameter(name: 'jobId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+        ],
     )]
     public function __invoke(string $applicationId, string $jobId, Request $request, User $loggedInUser): JsonResponse
     {
