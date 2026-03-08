@@ -1,0 +1,71 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Application\User\Transport\Controller\Api\V1\Profile;
+
+use App\Calendar\Infrastructure\Repository\CalendarRepository;
+use App\General\Domain\Utils\JSON;
+use App\Platform\Application\Service\ApplicationPluginProvisioningService;
+use App\Platform\Domain\Entity\Application;
+use App\Platform\Domain\Enum\PluginKey;
+use App\Tests\TestCase\WebTestCase;
+use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\TestDox;
+use Symfony\Component\HttpFoundation\Response;
+use Throwable;
+
+class ApplicationCreateControllerTest extends WebTestCase
+{
+    private string $baseUrl = self::API_URL_PREFIX . '/v1/profile/applications';
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('Test that creating an application with calendar and chat plugins provisions default entities.')]
+    public function testThatPostApplicationWithCalendarAndChatPluginsProvisionDefaults(): void
+    {
+        $client = $this->getTestClient('john-user', 'password-user');
+        $payload = [
+            'platformId' => '40000000-0000-1000-8000-000000000001',
+            'title' => 'App with calendar and chat',
+            'description' => 'Provisioning integration test',
+            'plugins' => [
+                ['pluginId' => '50000000-0000-1000-8000-000000000001'],
+                ['pluginId' => '50000000-0000-1000-8000-000000000002'],
+            ],
+        ];
+
+        $client->request('POST', $this->baseUrl, content: JSON::encode($payload));
+        $response = $client->getResponse();
+        $content = $response->getContent();
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode(), "Response:\n" . $response);
+
+        $responseData = JSON::decode($content, true);
+        self::assertArrayHasKey('id', $responseData);
+
+        $container = static::getContainer();
+        $entityManager = $container->get(EntityManagerInterface::class);
+        $calendarRepository = $container->get(CalendarRepository::class);
+        $chatRepository = $container->get(\App\Chat\Infrastructure\Repository\ChatRepository::class);
+
+        $application = $entityManager->getRepository(Application::class)->find($responseData['id']);
+        self::assertInstanceOf(Application::class, $application);
+
+        $calendar = $calendarRepository->findOneByApplication($application);
+        $chat = $chatRepository->findOneByApplication($application);
+
+        self::assertNotNull($calendar);
+        self::assertSame('Default calendar', $calendar->getTitle());
+        self::assertNotNull($chat);
+        self::assertSame($application->getSlug(), $chat->getApplicationSlug());
+
+        $provisioningService = $container->get(ApplicationPluginProvisioningService::class);
+        $provisioningService->provision($application, [PluginKey::CALENDAR, PluginKey::CHAT]);
+        $entityManager->flush();
+
+        self::assertCount(1, $calendarRepository->findBy(['application' => $application]));
+        self::assertCount(1, $chatRepository->findBy(['application' => $application]));
+    }
+}

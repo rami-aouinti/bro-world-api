@@ -8,8 +8,10 @@ use App\Configuration\Domain\Entity\Configuration;
 use App\Configuration\Domain\Enum\ConfigurationScope;
 use App\Platform\Application\Resource\PlatformResource;
 use App\Platform\Application\Resource\PluginResource;
+use App\Platform\Application\Service\ApplicationPluginProvisioningService;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Entity\ApplicationPlugin;
+use App\Platform\Domain\Enum\PluginKey;
 use App\Platform\Domain\Enum\PlatformStatus;
 use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -25,6 +27,8 @@ use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Throwable;
 
+use function array_values;
+use function in_array;
 use function is_array;
 use function is_bool;
 use function is_string;
@@ -37,6 +41,7 @@ class ApplicationCreateController
     public function __construct(
         private readonly PlatformResource $platformResource,
         private readonly PluginResource $pluginResource,
+        private readonly ApplicationPluginProvisioningService $applicationPluginProvisioningService,
         private readonly EntityManagerInterface $entityManager,
     ) {
     }
@@ -156,6 +161,9 @@ class ApplicationCreateController
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "plugins" must be an array.');
         }
 
+        /** @var array<int, PluginKey> $detectedPluginKeys */
+        $detectedPluginKeys = [];
+
         foreach ($plugins as $pluginData) {
             if (!is_array($pluginData)) {
                 throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Each item in "plugins" must be an object.');
@@ -167,6 +175,14 @@ class ApplicationCreateController
             }
 
             $plugin = $this->pluginResource->findOne($pluginId, true);
+            $pluginKey = $plugin->getPluginKey();
+
+            if (
+                in_array($pluginKey, [PluginKey::CALENDAR, PluginKey::CHAT], true)
+                && in_array($pluginKey, $detectedPluginKeys, true) === false
+            ) {
+                $detectedPluginKeys[] = $pluginKey;
+            }
 
             $applicationPlugin = (new ApplicationPlugin())
                 ->setApplication($application)
@@ -191,6 +207,7 @@ class ApplicationCreateController
         }
 
         $this->entityManager->persist($application);
+        $this->applicationPluginProvisioningService->provision($application, array_values($detectedPluginKeys));
         $this->entityManager->flush();
 
         return new JsonResponse([

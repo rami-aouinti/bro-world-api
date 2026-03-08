@@ -7,6 +7,7 @@ namespace App\Chat\Infrastructure\Repository;
 use App\Chat\Domain\Entity\Chat as Entity;
 use App\Chat\Domain\Repository\Interfaces\ChatRepositoryInterface;
 use App\General\Infrastructure\Repository\BaseRepository;
+use App\Platform\Domain\Entity\Application;
 use Doctrine\DBAL\LockMode;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -25,5 +26,14 @@ class ChatRepository extends BaseRepository implements ChatRepositoryInterface
 
     public function __construct(protected ManagerRegistry $managerRegistry)
     {
+    }
+
+    public function findOneByApplication(Application $application): ?Entity
+    {
+        $chat = $this->findOneBy([
+            'application' => $application,
+        ]);
+
+        return $chat instanceof Entity ? $chat : null;
     }
 }

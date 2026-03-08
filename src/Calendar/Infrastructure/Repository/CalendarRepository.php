@@ -7,6 +7,7 @@ namespace App\Calendar\Infrastructure\Repository;
 use App\Calendar\Domain\Entity\Calendar as Entity;
 use App\Calendar\Domain\Repository\Interfaces\CalendarRepositoryInterface;
 use App\General\Infrastructure\Repository\BaseRepository;
+use App\Platform\Domain\Entity\Application;
 use Doctrine\DBAL\LockMode;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -25,5 +26,14 @@ class CalendarRepository extends BaseRepository implements CalendarRepositoryInt
 
     public function __construct(protected ManagerRegistry $managerRegistry)
     {
+    }
+
+    public function findOneByApplication(Application $application): ?Entity
+    {
+        $calendar = $this->findOneBy([
+            'application' => $application,
+        ]);
+
+        return $calendar instanceof Entity ? $calendar : null;
     }
 }

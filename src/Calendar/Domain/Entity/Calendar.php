@@ -7,6 +7,7 @@ namespace App\Calendar\Domain\Entity;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use App\Platform\Domain\Entity\Application;
 use App\User\Domain\Entity\User;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -39,6 +40,10 @@ class Calendar implements EntityInterface
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     #[Groups(['Calendar', 'Calendar.user'])]
     private ?User $user = null;
+
+    #[ORM\ManyToOne(targetEntity: Application::class)]
+    #[ORM\JoinColumn(name: 'application_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?Application $application = null;
 
     /** @var Collection<int, Event>|ArrayCollection<int, Event> */
     #[ORM\OneToMany(targetEntity: Event::class, mappedBy: 'calendar')]
@@ -80,6 +85,18 @@ class Calendar implements EntityInterface
     public function setUser(?User $user): self
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    public function getApplication(): ?Application
+    {
+        return $this->application;
+    }
+
+    public function setApplication(?Application $application): self
+    {
+        $this->application = $application;
 
         return $this;
     }
