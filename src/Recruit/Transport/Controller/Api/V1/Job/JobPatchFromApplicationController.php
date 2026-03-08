@@ -49,7 +49,6 @@ class JobPatchFromApplicationController
                     new OA\Property(property: 'summary', type: 'string'),
                     new OA\Property(property: 'missionTitle', type: 'string'),
                     new OA\Property(property: 'missionDescription', type: 'string'),
-                    new OA\Property(property: 'matchScore', type: 'integer'),
                     new OA\Property(property: 'contractType', type: 'string', enum: ['CDI', 'CDD', 'Freelance', 'Internship']),
                     new OA\Property(property: 'workMode', type: 'string', enum: ['Onsite', 'Remote', 'Hybrid']),
                     new OA\Property(property: 'schedule', type: 'string', enum: ['Vollzeit', 'Teilzeit', 'Contract']),
@@ -142,15 +141,6 @@ class JobPatchFromApplicationController
             }
 
             $job->setMissionDescription($missionDescription);
-        }
-
-        $matchScore = $payload['matchScore'] ?? null;
-        if ($matchScore !== null) {
-            if (!is_int($matchScore)) {
-                throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "matchScore" must be an integer.');
-            }
-
-            $job->setMatchScore($matchScore);
         }
 
         $contractType = $payload['contractType'] ?? null;
