@@ -445,7 +445,7 @@ class JobPublicListService
             ->innerJoin('applicant.user', 'user')
             ->andWhere('user = :user')
             ->andWhere('job.id IN (:jobIds)')
-            ->setParameter('user', $loggedInUser)
+            ->setParameter('user', $loggedInUser->getId(), UuidBinaryOrderedTimeType::NAME)
             ->setParameter('jobIds', $jobIds)
             ->getQuery()
             ->getResult();
