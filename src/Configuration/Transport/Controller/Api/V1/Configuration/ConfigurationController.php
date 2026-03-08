@@ -37,6 +37,51 @@ use Symfony\Component\Uid\Uuid;
 #[Route(path: '/v1/configuration')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 #[OA\Tag(name: 'Configuration Management')]
+#[OA\Get(
+    path: '/v1/configuration',
+    operationId: 'configuration_list',
+    summary: 'Lister les configurations',
+    tags: ['Configuration Management'],
+    parameters: [
+        new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, example: 1)),
+        new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, example: 20)),
+    ],
+    responses: [new OA\Response(response: 200, description: 'Liste de configurations'), new OA\Response(response: 403, description: 'Accès refusé')],
+)]
+#[OA\Post(
+    path: '/v1/configuration',
+    operationId: 'configuration_create',
+    summary: 'Créer une configuration',
+    tags: ['Configuration Management'],
+    requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['configurationKey','configurationValue','scope','private'], properties: [
+        new OA\Property(property: 'configurationKey', type: 'string', minLength: 2, maxLength: 255, example: 'mail.smtp.timeout'),
+        new OA\Property(property: 'configurationValue', type: 'object', example: ['seconds' => 30, 'retry' => 3]),
+        new OA\Property(property: 'scope', type: 'string', enum: ['system','user','platform','plugin','public'], example: 'system'),
+        new OA\Property(property: 'private', type: 'boolean', example: false),
+    ])),
+    responses: [new OA\Response(response: 202, description: 'Commande acceptée'), new OA\Response(response: 400, description: 'Payload invalide'), new OA\Response(response: 403, description: 'Accès refusé'), new OA\Response(response: 500, description: 'Erreur interne')],
+)]
+#[OA\Patch(
+    path: '/v1/configuration/{id}',
+    operationId: 'configuration_patch',
+    summary: 'Modifier partiellement une configuration',
+    tags: ['Configuration Management'],
+    parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))],
+    requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [
+        new OA\Property(property: 'configurationValue', type: 'object', example: ['seconds' => 45]),
+        new OA\Property(property: 'scope', type: 'string', enum: ['system','user','platform','plugin','public'], example: 'platform'),
+        new OA\Property(property: 'private', type: 'boolean', example: true),
+    ])),
+    responses: [new OA\Response(response: 202, description: 'Commande acceptée'), new OA\Response(response: 400, description: 'UUID ou payload invalide'), new OA\Response(response: 422, description: 'Règles métier invalides')],
+)]
+#[OA\Delete(
+    path: '/v1/configuration/{id}',
+    operationId: 'configuration_delete',
+    summary: 'Supprimer une configuration',
+    tags: ['Configuration Management'],
+    parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))],
+    responses: [new OA\Response(response: 202, description: 'Suppression asynchrone acceptée'), new OA\Response(response: 400, description: 'UUID invalide'), new OA\Response(response: 403, description: 'Accès refusé')],
+)]
 class ConfigurationController extends Controller
 {
     use Actions\Admin\CountAction;
