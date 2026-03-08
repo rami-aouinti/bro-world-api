@@ -6,8 +6,10 @@ namespace App\Recruit\Application\Service;
 
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\Platform\Domain\Entity\Application;
+use App\Recruit\Domain\Entity\Application as RecruitApplication;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
+use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
@@ -23,8 +25,10 @@ use Throwable;
 use function array_filter;
 use function array_map;
 use function array_unique;
+use function array_values;
 use function ceil;
 use function floor;
+use function in_array;
 use function is_array;
 use function is_string;
 use function json_encode;
@@ -49,7 +53,7 @@ class JobPublicListService
      * @return array<string, mixed>
      * @throws InvalidArgumentException
      */
-    public function getList(Request $request, string $applicationSlug): array
+    public function getList(Request $request, string $applicationSlug, ?User $loggedInUser = null): array
     {
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
@@ -71,10 +75,11 @@ class JobPublicListService
                 'limit' => $limit,
                 'filters' => $filters,
                 'applicationSlug' => $applicationSlug,
+                'userId' => $loggedInUser?->getId(),
             ], JSON_THROW_ON_ERROR));
 
         /** @var array<string, mixed> $result */
-        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($page, $limit, $filters, $applicationSlug): array {
+        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($page, $limit, $filters, $applicationSlug, $loggedInUser): array {
             $item->expiresAfter(120);
 
             $application = $this->entityManager->getRepository(Application::class)->findOneBy([
@@ -169,9 +174,12 @@ class JobPublicListService
             $totalItems = $paginator->count();
 
             $jobs = [];
+            $jobIds = [];
             /** @var Job $job */
             foreach ($paginator as $job) {
-                $jobs[] = [
+                $jobIds[] = $job->getId();
+                $ownerId = $job->getRecruit()?->getApplication()?->getUser()?->getId();
+                $jobPayload = [
                     'id' => $job->getId(),
                     'slug' => $job->getSlug(),
                     'title' => $job->getTitle(),
@@ -202,6 +210,26 @@ class JobPublicListService
                     'profile' => $job->getProfile(),
                     'benefits' => $job->getBenefits(),
                 ];
+
+                if ($loggedInUser instanceof User) {
+                    $jobPayload['owner'] = $ownerId !== null && $ownerId === $loggedInUser->getId();
+                }
+
+                $jobs[] = $jobPayload;
+            }
+
+            if ($loggedInUser instanceof User && $jobs !== []) {
+                $appliedJobIds = $this->getAppliedJobIds($loggedInUser, $jobIds);
+
+                $jobs = array_map(static function (array $job) use ($appliedJobIds): array {
+                    $isOwner = (bool) ($job['owner'] ?? false);
+                    $jobId = $job['id'] ?? '';
+
+                    $job['owner'] = $isOwner;
+                    $job['apply'] = in_array($jobId, $appliedJobIds, true);
+
+                    return $job;
+                }, $jobs);
             }
 
             return [
@@ -395,5 +423,39 @@ class JobPublicListService
                     ->setParameter('postedAtTo', $to);
             }
         }
+    }
+
+    /**
+     * @param list<string> $jobIds
+     *
+     * @return list<string>
+     */
+    private function getAppliedJobIds(User $loggedInUser, array $jobIds): array
+    {
+        if ($jobIds === []) {
+            return [];
+        }
+
+        /** @var list<RecruitApplication> $applications */
+        $applications = $this->entityManager
+            ->getRepository(RecruitApplication::class)
+            ->createQueryBuilder('application')
+            ->innerJoin('application.job', 'job')
+            ->innerJoin('application.applicant', 'applicant')
+            ->innerJoin('applicant.user', 'user')
+            ->andWhere('user = :user')
+            ->andWhere('job.id IN (:jobIds)')
+            ->setParameter('user', $loggedInUser)
+            ->setParameter('jobIds', $jobIds)
+            ->getQuery()
+            ->getResult();
+
+        /** @var list<string> $appliedJobIds */
+        $appliedJobIds = array_values(array_unique(array_filter(array_map(
+            static fn (RecruitApplication $application): string => $application->getJob()->getId(),
+            $applications,
+        ), static fn (mixed $id): bool => is_string($id) && $id !== '')));
+
+        return $appliedJobIds;
     }
 }
