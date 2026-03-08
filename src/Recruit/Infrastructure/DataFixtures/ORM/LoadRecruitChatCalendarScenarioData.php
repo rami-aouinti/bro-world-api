@@ -404,7 +404,7 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
     {
         static $conversationByChat = [];
 
-        $chatKey = $chat->getId()?->toRfc4122() ?? 'new-' . spl_object_id($chat);
+        $chatKey = $chat->getId();
 
         if (isset($conversationByChat[$chatKey]) && $conversationByChat[$chatKey] instanceof Conversation) {
             return $conversationByChat[$chatKey];
