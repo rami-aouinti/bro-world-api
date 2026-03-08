@@ -52,14 +52,14 @@ class ResumeCreateController
                 schema: new OA\Schema(
                     type: 'object',
                     properties: [
-                        new OA\Property(property: 'experiences', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
-                        new OA\Property(property: 'educations', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
-                        new OA\Property(property: 'skills', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
-                        new OA\Property(property: 'languages', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
-                        new OA\Property(property: 'certifications', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
-                        new OA\Property(property: 'projects', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
-                        new OA\Property(property: 'references', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
-                        new OA\Property(property: 'hobbies', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
+                        new OA\Property(property: 'experiences', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
+                        new OA\Property(property: 'educations', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
+                        new OA\Property(property: 'skills', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
+                        new OA\Property(property: 'languages', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
+                        new OA\Property(property: 'certifications', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
+                        new OA\Property(property: 'projects', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
+                        new OA\Property(property: 'references', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
+                        new OA\Property(property: 'hobbies', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
                     ],
                     example: [
                         'experiences' => [['title' => 'Backend Developer', 'description' => 'Symfony API']],
