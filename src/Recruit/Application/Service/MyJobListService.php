@@ -9,6 +9,7 @@ use App\Recruit\Domain\Entity\Job;
 use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 
+use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use function array_map;
 
 class MyJobListService
@@ -31,7 +32,7 @@ class MyJobListService
             ->innerJoin('platformApplication.user', 'owner')
             ->leftJoin('job.company', 'company')->addSelect('company')
             ->andWhere('owner = :owner')
-            ->setParameter('owner', $loggedInUser)
+            ->setParameter('owner', $loggedInUser->getId(), UuidBinaryOrderedTimeType::NAME)
             ->orderBy('job.createdAt', 'DESC')
             ->addOrderBy('job.id', 'DESC')
             ->getQuery()
