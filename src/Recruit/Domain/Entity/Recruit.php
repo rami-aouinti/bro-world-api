@@ -7,7 +7,7 @@ namespace App\Recruit\Domain\Entity;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
-use App\Platform\Domain\Entity\Application;
+use App\Platform\Domain\Entity\Application as PlatformApplication;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -28,9 +28,9 @@ class Recruit implements EntityInterface
     #[ORM\Column(name: 'id', type: UuidBinaryOrderedTimeType::NAME, unique: true)]
     private UuidInterface $id;
 
-    #[ORM\OneToOne(targetEntity: Application::class)]
+    #[ORM\OneToOne(targetEntity: PlatformApplication::class)]
     #[ORM\JoinColumn(name: 'application_id', referencedColumnName: 'id', nullable: false, unique: true, onDelete: 'CASCADE')]
-    private ?Application $application = null;
+    private ?PlatformApplication $application = null;
 
     /**
      * @var Collection<int, Job>|ArrayCollection<int, Job>
@@ -51,12 +51,12 @@ class Recruit implements EntityInterface
         return $this->id->toString();
     }
 
-    public function getApplication(): ?Application
+    public function getApplication(): ?PlatformApplication
     {
         return $this->application;
     }
 
-    public function setApplication(?Application $application): self
+    public function setApplication(?PlatformApplication $application): self
     {
         $this->application = $application;
 
