@@ -49,6 +49,53 @@ class PublicApplicationListControllerTest extends WebTestCase
         }
     }
 
+
+    /** @throws Throwable */
+    #[TestDox('Test that `GET /v1/application/public` paginates applications (not joined plugin rows) when an application has multiple plugins.')]
+    public function testThatPublicListPaginationIsStableWithMultiplePlugins(): void
+    {
+        $createClient = $this->getTestClient('john-user', 'password-user');
+        $createClient->request('POST', self::API_URL_PREFIX . '/v1/profile/applications', content: JSON::encode([
+            'platformId' => '40000000-0000-1000-8000-000000000001',
+            'title' => 'AA Multi Plugin App',
+            'description' => 'Pagination regression guard',
+            'plugins' => [
+                ['pluginId' => '50000000-0000-1000-8000-000000000001'],
+                ['pluginId' => '50000000-0000-1000-8000-000000000002'],
+            ],
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $createClient->getResponse()->getStatusCode());
+
+        $client = $this->getTestClient();
+        $client->request('GET', $this->baseUrl . '?page=1&limit=1');
+        $response = $client->getResponse();
+        $content = $response->getContent();
+
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:\n" . $response);
+
+        $responseData = JSON::decode($content, true);
+        self::assertIsArray($responseData);
+        self::assertCount(1, $responseData['items']);
+        self::assertSame('AA Multi Plugin App', $responseData['items'][0]['title']);
+        $pluginKeys = $responseData['items'][0]['pluginKeys'];
+        sort($pluginKeys);
+        self::assertSame(['calendar', 'chat'], $pluginKeys);
+        self::assertSame(3, $responseData['pagination']['totalItems']);
+
+        $client->request('GET', $this->baseUrl . '?page=2&limit=1');
+        $page2Response = $client->getResponse();
+        $page2Content = $page2Response->getContent();
+
+        self::assertNotFalse($page2Content);
+        self::assertSame(Response::HTTP_OK, $page2Response->getStatusCode(), "Response:\n" . $page2Response);
+
+        $page2Data = JSON::decode($page2Content, true);
+        self::assertIsArray($page2Data);
+        self::assertCount(1, $page2Data['items']);
+        self::assertSame('CRM Growth App', $page2Data['items'][0]['title']);
+    }
+
     /** @throws Throwable */
     #[TestDox('Test that `GET /v1/application/public` supports filters and pagination.')]
     public function testThatPublicListSupportsFiltersAndPagination(): void

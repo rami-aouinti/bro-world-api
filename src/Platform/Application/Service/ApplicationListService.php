@@ -8,7 +8,6 @@ use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Repository\Interfaces\ApplicationRepositoryInterface;
 use App\User\Domain\Entity\User;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -73,13 +72,11 @@ class ApplicationListService
             }
 
             $query = $this->applicationRepository->createListQuery($filters, $loggedInUser, $esIds, $page, $limit);
-
-            $paginator = new Paginator($query, true);
-            $totalItems = $paginator->count();
+            $totalItems = $this->applicationRepository->countList($filters, $loggedInUser, $esIds);
 
             $items = [];
             /** @var Application $application */
-            foreach ($paginator as $application) {
+            foreach ($query->toIterable() as $application) {
                 $pluginKeys = [];
                 foreach ($application->getApplicationPlugins() as $applicationPlugin) {
                     $pluginKey = $applicationPlugin->getPlugin()?->getPluginKeyValue();

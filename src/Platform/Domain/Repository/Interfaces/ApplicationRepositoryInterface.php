@@ -15,4 +15,10 @@ interface ApplicationRepositoryInterface
      * @param array<int, string>|null $esIds
      */
     public function createListQuery(array $filters, ?User $loggedInUser, ?array $esIds, int $page, int $limit): Query;
+
+    /**
+     * @param array<string, string> $filters
+     * @param array<int, string>|null $esIds
+     */
+    public function countList(array $filters, ?User $loggedInUser, ?array $esIds): int;
 }
