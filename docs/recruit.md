@@ -163,6 +163,19 @@ curl -X GET "http://localhost/api/v1/recruit/public/my-app/jobs?company=Acme&wor
   -H "Accept: application/json"
 ```
 
+### 2.2 Détail public d'un job (+ jobs similaires)
+`GET /v1/recruit/public/{applicationSlug}/jobs/{jobSlug}`
+
+Retourne:
+- `job`: détail d'une offre
+- `similarJobs`: liste des jobs similaires (indexés via Elasticsearch)
+
+Exemple:
+```bash
+curl -X GET "http://localhost/api/v1/recruit/public/my-app/jobs/backend-engineer-m-w-d-symfony-api-platform" \
+  -H "Accept: application/json"
+```
+
 ### 2.2 Liste privée des jobs d'une application
 `GET /v1/recruit/private/{applicationSlug}/jobs`
 

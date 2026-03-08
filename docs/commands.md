@@ -76,7 +76,7 @@ make logs-kibana                        # Shows logs from the kibana container. 
 make drop-migrate                       # Drops databases and runs all migrations for the main/test databases
 make migrate                            # Runs all migrations for the main/test databases
 make migrate-no-test                    # Runs all migrations for the main database
-make migrate-cron-jobs                  # Creates cron job tasks (cleanup logs, failed old messenger messages)
+make migrate-cron-jobs                  # Creates cron job tasks (cleanup logs, failed old messenger messages, recruit similar jobs indexing)
 
 make fixtures                           # Runs all fixtures for test database without --append option (tables will be dropped and recreated)
 
