@@ -24,4 +24,18 @@ class SchoolRepository extends BaseRepository
     public function __construct(protected ManagerRegistry $managerRegistry)
     {
     }
+
+    public function findOneByApplicationSlug(string $applicationSlug): ?Entity
+    {
+        $entity = $this->createQueryBuilder('module')
+            ->innerJoin('module.application', 'application')
+            ->addSelect('application')
+            ->where('application.slug = :applicationSlug')
+            ->setParameter('applicationSlug', $applicationSlug)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $entity instanceof Entity ? $entity : null;
+    }
 }
+

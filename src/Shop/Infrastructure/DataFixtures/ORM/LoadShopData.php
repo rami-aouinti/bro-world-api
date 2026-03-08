@@ -31,7 +31,8 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
     {
         foreach ($this->getApplicationsByPlatform(PlatformKey::SHOP) as $application) {
             $catalog = (new Shop())
-                ->setName($application->getTitle() . ' Catalog');
+                ->setName($application->getTitle() . ' Catalog')
+                ->setApplication($application);
             $manager->persist($catalog);
 
             $categories = [

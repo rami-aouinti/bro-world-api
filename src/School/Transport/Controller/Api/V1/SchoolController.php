@@ -6,12 +6,15 @@ namespace App\School\Transport\Controller\Api\V1;
 
 use App\General\Application\Message\EntityCreated;
 use App\General\Application\Message\EntityDeleted;
+use App\Platform\Domain\Entity\Application;
+use App\Platform\Domain\Enum\PlatformKey;
 use App\School\Application\Service\ExamListService;
 use App\School\Domain\Entity\Exam;
 use App\School\Domain\Entity\Grade;
 use App\School\Domain\Entity\SchoolClass;
 use App\School\Domain\Entity\Student;
 use App\School\Domain\Entity\Teacher;
+use App\School\Domain\Entity\School;
 use App\School\Infrastructure\Repository\ExamRepository;
 use App\School\Infrastructure\Repository\GradeRepository;
 use App\School\Infrastructure\Repository\SchoolClassRepository;
@@ -21,13 +24,16 @@ use App\School\Infrastructure\Repository\TeacherRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
+#[OA\Tag(name: 'School')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class SchoolController
 {
@@ -240,4 +246,58 @@ final readonly class SchoolController
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
+
+    #[Route('/v1/school/applications/{applicationSlug}/classes', methods: [Request::METHOD_GET])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'school-campus-core')]
+    #[OA\Response(response: 200, description: 'Classes list scoped to school application.')]
+    public function classesByApplication(string $applicationSlug): JsonResponse
+    {
+        $school = $this->resolveOrCreateSchoolByApplicationSlug($applicationSlug);
+        $items = array_map(static fn (SchoolClass $class): array => ['id' => $class->getId(), 'name' => $class->getName()], $this->classRepository->findBy(['school' => $school], ['createdAt' => 'DESC'], 200));
+
+        return new JsonResponse(['applicationSlug' => $applicationSlug, 'schoolId' => $school->getId(), 'items' => $items]);
+    }
+
+    #[Route('/v1/school/applications/{applicationSlug}/classes', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'school-campus-core')]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['name' => 'Classe C - Informatique']))]
+    #[OA\Response(response: 201, description: 'Class created under school application.', content: new OA\JsonContent(example: ['id' => 'uuid', 'schoolId' => 'uuid', 'applicationSlug' => 'school-campus-core']))]
+    public function createClassByApplication(string $applicationSlug, Request $request): JsonResponse
+    {
+        $school = $this->resolveOrCreateSchoolByApplicationSlug($applicationSlug);
+        $payload = (array) json_decode((string) $request->getContent(), true);
+
+        $class = (new SchoolClass())
+            ->setSchool($school)
+            ->setName((string) ($payload['name'] ?? ''));
+
+        $this->entityManager->persist($class);
+        $this->entityManager->flush();
+        $this->messageBus->dispatch(new EntityCreated('school_class', $class->getId(), context: ['applicationSlug' => $applicationSlug]));
+
+        return new JsonResponse(['id' => $class->getId(), 'schoolId' => $school->getId(), 'applicationSlug' => $applicationSlug], JsonResponse::HTTP_CREATED);
+    }
+
+    private function resolveOrCreateSchoolByApplicationSlug(string $applicationSlug): School
+    {
+        $school = $this->schoolRepository->findOneByApplicationSlug($applicationSlug);
+        if ($school instanceof School) {
+            return $school;
+        }
+
+        $application = $this->entityManager->getRepository(Application::class)->findOneBy(['slug' => $applicationSlug]);
+        if (!$application instanceof Application || $application->getPlatform()?->getPlatformKey() !== PlatformKey::SCHOOL) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "applicationSlug" for School platform.');
+        }
+
+        $school = (new School())
+            ->setApplication($application)
+            ->setName($application->getTitle() . ' Academy');
+
+        $this->entityManager->persist($school);
+        $this->entityManager->flush();
+
+        return $school;
+    }
+
 }

@@ -6,10 +6,13 @@ namespace App\Shop\Transport\Controller\Api\V1;
 
 use App\General\Application\Message\EntityCreated;
 use App\General\Application\Message\EntityDeleted;
+use App\Platform\Domain\Entity\Application;
+use App\Platform\Domain\Enum\PlatformKey;
 use App\Shop\Application\Service\ProductListService;
 use App\Shop\Domain\Entity\Category;
 use App\Shop\Domain\Entity\Product;
 use App\Shop\Domain\Entity\Tag;
+use App\Shop\Domain\Entity\Shop;
 use App\Shop\Infrastructure\Repository\CategoryRepository;
 use App\Shop\Infrastructure\Repository\ProductRepository;
 use App\Shop\Infrastructure\Repository\ShopRepository;
@@ -17,13 +20,16 @@ use App\Shop\Infrastructure\Repository\TagRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
+#[OA\Tag(name: 'Shop')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class ShopController
 {
@@ -159,4 +165,77 @@ final readonly class ShopController
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
+
+    #[Route('/v1/shop/applications/{applicationSlug}/products', methods: [Request::METHOD_GET])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'shop-ops-center')]
+    #[OA\Response(response: 200, description: 'Products list scoped to one application/shop.')]
+    public function productsByApplication(string $applicationSlug, Request $request): JsonResponse
+    {
+        $shop = $this->resolveOrCreateShopByApplicationSlug($applicationSlug);
+        $items = array_map(static fn (Product $product): array => [
+            'id' => $product->getId(),
+            'name' => $product->getName(),
+            'price' => $product->getPrice(),
+            'categoryId' => $product->getCategory()?->getId(),
+        ], $this->productRepository->findBy(['shop' => $shop], ['createdAt' => 'DESC'], max(1, min(200, $request->query->getInt('limit', 50)))));
+
+        return new JsonResponse(['applicationSlug' => $applicationSlug, 'shopId' => $shop->getId(), 'items' => $items]);
+    }
+
+    #[Route('/v1/shop/applications/{applicationSlug}/products', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'shop-ops-center')]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['name' => 'Clavier mecanique', 'price' => 129.9, 'categoryId' => null, 'tagIds' => []]))]
+    #[OA\Response(response: 201, description: 'Product created for the application shop.', content: new OA\JsonContent(example: ['id' => 'uuid', 'shopId' => 'uuid', 'applicationSlug' => 'shop-ops-center']))]
+    public function createProductByApplication(string $applicationSlug, Request $request): JsonResponse
+    {
+        $shop = $this->resolveOrCreateShopByApplicationSlug($applicationSlug);
+        $payload = (array) json_decode((string) $request->getContent(), true);
+
+        $product = (new Product())
+            ->setShop($shop)
+            ->setName((string) ($payload['name'] ?? ''))
+            ->setPrice((float) ($payload['price'] ?? 0));
+
+        if (is_string($payload['categoryId'] ?? null)) {
+            $category = $this->categoryRepository->find($payload['categoryId']);
+            if ($category instanceof Category && $category->getShop()?->getId() === $shop->getId()) {
+                $product->setCategory($category);
+            }
+        }
+
+        foreach ((array) ($payload['tagIds'] ?? []) as $tagId) {
+            if (is_string($tagId) && ($tag = $this->tagRepository->find($tagId)) instanceof Tag) {
+                $product->addTag($tag);
+            }
+        }
+
+        $this->entityManager->persist($product);
+        $this->entityManager->flush();
+        $this->messageBus->dispatch(new EntityCreated('shop_product', $product->getId(), context: ['applicationSlug' => $applicationSlug]));
+
+        return new JsonResponse(['id' => $product->getId(), 'shopId' => $shop->getId(), 'applicationSlug' => $applicationSlug], JsonResponse::HTTP_CREATED);
+    }
+
+    private function resolveOrCreateShopByApplicationSlug(string $applicationSlug): Shop
+    {
+        $shop = $this->shopRepository->findOneByApplicationSlug($applicationSlug);
+        if ($shop instanceof Shop) {
+            return $shop;
+        }
+
+        $application = $this->entityManager->getRepository(Application::class)->findOneBy(['slug' => $applicationSlug]);
+        if (!$application instanceof Application || $application->getPlatform()?->getPlatformKey() !== PlatformKey::SHOP) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "applicationSlug" for Shop platform.');
+        }
+
+        $shop = (new Shop())
+            ->setApplication($application)
+            ->setName($application->getTitle() . ' Catalog');
+
+        $this->entityManager->persist($shop);
+        $this->entityManager->flush();
+
+        return $shop;
+    }
+
 }

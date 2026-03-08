@@ -10,12 +10,14 @@ use App\Blog\Domain\Entity\BlogPost;
 use App\Blog\Domain\Entity\BlogReaction;
 use App\Blog\Domain\Entity\BlogTag;
 use App\Blog\Domain\Enum\BlogType;
-use Doctrine\Bundle\FixturesBundle\Fixture;
 use App\Platform\Domain\Entity\Application;
 use App\User\Domain\Entity\User;
+use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Override;
+
+use function sprintf;
 
 final class LoadBlogData extends Fixture implements OrderedFixtureInterface
 {
@@ -23,25 +25,72 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
     public function load(ObjectManager $manager): void
     {
         $johnRoot = $this->getReference('User-john-root', User::class);
-        $application = $this->getReference('Application-shop-ops-center', Application::class);
+        $johnAdmin = $this->getReference('User-john-admin', User::class);
+        $johnUser = $this->getReference('User-john-user', User::class);
 
-        $generalBlog = (new Blog())->setTitle('General Blog Root')->setOwner($johnRoot)->setType(BlogType::GENERAL);
-        $applicationBlog = (new Blog())->setTitle('Shop Blog')->setOwner($johnRoot)->setType(BlogType::APPLICATION)->setApplication($application);
-        $manager->persist($generalBlog); $manager->persist($applicationBlog);
+        $applications = [
+            $this->getReference('Application-shop-ops-center', Application::class),
+            $this->getReference('Application-crm-sales-hub', Application::class),
+            $this->getReference('Application-school-campus-core', Application::class),
+        ];
 
-        foreach ([$generalBlog, $applicationBlog] as $i => $blog) {
-            for ($p = 1; $p <= 4; ++$p) {
-                $post = (new BlogPost())->setBlog($blog)->setAuthor($johnRoot)->setContent(sprintf('Fixture post %d for %s', $p, $blog->getTitle()));
+        $generalBlog = (new Blog())
+            ->setTitle('General Blog Root')
+            ->setOwner($johnRoot)
+            ->setType(BlogType::GENERAL);
+        $manager->persist($generalBlog);
+
+        /** @var list<Blog> $blogs */
+        $blogs = [$generalBlog];
+        foreach ($applications as $index => $application) {
+            $blog = (new Blog())
+                ->setTitle(sprintf('Application Blog %d', $index + 1))
+                ->setOwner($johnRoot)
+                ->setType(BlogType::APPLICATION)
+                ->setApplication($application);
+            $manager->persist($blog);
+            $blogs[] = $blog;
+        }
+
+        $authors = [$johnRoot, $johnAdmin, $johnUser];
+        $reactionTypes = ['like', 'heart', 'laugh'];
+
+        foreach ($blogs as $blogIndex => $blog) {
+            for ($postIndex = 1; $postIndex <= 6; ++$postIndex) {
+                $author = $authors[($blogIndex + $postIndex) % count($authors)];
+
+                $post = (new BlogPost())
+                    ->setBlog($blog)
+                    ->setAuthor($author)
+                    ->setContent(sprintf('Fixture post %d for %s', $postIndex, $blog->getTitle()));
                 $manager->persist($post);
-                $tag = (new BlogTag())->setBlog($blog)->setLabel(sprintf('tag-%d-%d', $i + 1, $p));
-                $manager->persist($tag);
 
-                $parent = (new BlogComment())->setPost($post)->setAuthor($johnRoot)->setContent('Parent comment #' . $p);
-                $child = (new BlogComment())->setPost($post)->setAuthor($johnRoot)->setContent('Child comment #' . $p)->setParent($parent);
-                $manager->persist($parent); $manager->persist($child);
+                for ($tagIndex = 1; $tagIndex <= 2; ++$tagIndex) {
+                    $manager->persist((new BlogTag())
+                        ->setBlog($blog)
+                        ->setLabel(sprintf('tag-%d-%d-%d', $blogIndex + 1, $postIndex, $tagIndex)));
+                }
 
-                $manager->persist((new BlogReaction())->setComment($parent)->setAuthor($johnRoot)->setType('like'));
-                $manager->persist((new BlogReaction())->setComment($child)->setAuthor($johnRoot)->setType('heart'));
+                $parent = (new BlogComment())
+                    ->setPost($post)
+                    ->setAuthor($author)
+                    ->setContent('Parent comment #' . $postIndex);
+                $child = (new BlogComment())
+                    ->setPost($post)
+                    ->setAuthor($authors[($blogIndex + $postIndex + 1) % count($authors)])
+                    ->setContent('Child comment #' . $postIndex)
+                    ->setParent($parent);
+                $manager->persist($parent);
+                $manager->persist($child);
+
+                $manager->persist((new BlogReaction())
+                    ->setComment($parent)
+                    ->setAuthor($authors[($blogIndex + 1) % count($authors)])
+                    ->setType($reactionTypes[($blogIndex + $postIndex) % count($reactionTypes)]));
+                $manager->persist((new BlogReaction())
+                    ->setComment($child)
+                    ->setAuthor($authors[($blogIndex + 2) % count($authors)])
+                    ->setType($reactionTypes[($blogIndex + $postIndex + 1) % count($reactionTypes)]));
             }
         }
 

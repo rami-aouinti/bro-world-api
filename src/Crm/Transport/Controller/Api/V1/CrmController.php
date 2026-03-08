@@ -10,6 +10,7 @@ use App\Crm\Domain\Entity\Project;
 use App\Crm\Domain\Entity\Sprint;
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Domain\Entity\TaskRequest;
+use App\Crm\Domain\Entity\Crm;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\Crm\Infrastructure\Repository\CrmRepository;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
@@ -18,16 +19,21 @@ use App\Crm\Infrastructure\Repository\TaskRepository;
 use App\Crm\Infrastructure\Repository\TaskRequestRepository;
 use App\General\Application\Message\EntityCreated;
 use App\General\Application\Message\EntityDeleted;
+use App\Platform\Domain\Entity\Application;
+use App\Platform\Domain\Enum\PlatformKey;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
+#[OA\Tag(name: 'Crm')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class CrmController
 {
@@ -240,4 +246,55 @@ final readonly class CrmController
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
+
+    #[Route('/v1/crm/applications/{applicationSlug}/companies', methods: [Request::METHOD_GET])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'crm-sales-hub')]
+    #[OA\Response(response: 200, description: 'Companies list scoped to CRM application.')]
+    public function companiesByApplication(string $applicationSlug): JsonResponse
+    {
+        $crm = $this->resolveOrCreateCrmByApplicationSlug($applicationSlug);
+        $items = array_map(static fn (Company $company): array => ['id' => $company->getId(), 'name' => $company->getName()], $this->companyRepository->findBy(['crm' => $crm], ['createdAt' => 'DESC'], 200));
+
+        return new JsonResponse(['applicationSlug' => $applicationSlug, 'crmId' => $crm->getId(), 'items' => $items]);
+    }
+
+    #[Route('/v1/crm/applications/{applicationSlug}/companies', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'crm-sales-hub')]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['name' => 'Acme Europe']))]
+    #[OA\Response(response: 201, description: 'Company created under CRM application.', content: new OA\JsonContent(example: ['id' => 'uuid', 'crmId' => 'uuid', 'applicationSlug' => 'crm-sales-hub']))]
+    public function createCompanyByApplication(string $applicationSlug, Request $request): JsonResponse
+    {
+        $crm = $this->resolveOrCreateCrmByApplicationSlug($applicationSlug);
+        $payload = (array) json_decode((string) $request->getContent(), true);
+
+        $company = (new Company())
+            ->setCrm($crm)
+            ->setName((string) ($payload['name'] ?? ''));
+
+        $this->entityManager->persist($company);
+        $this->entityManager->flush();
+        $this->messageBus->dispatch(new EntityCreated('crm_company', $company->getId(), context: ['applicationSlug' => $applicationSlug]));
+
+        return new JsonResponse(['id' => $company->getId(), 'crmId' => $crm->getId(), 'applicationSlug' => $applicationSlug], JsonResponse::HTTP_CREATED);
+    }
+
+    private function resolveOrCreateCrmByApplicationSlug(string $applicationSlug): Crm
+    {
+        $crm = $this->crmRepository->findOneByApplicationSlug($applicationSlug);
+        if ($crm instanceof Crm) {
+            return $crm;
+        }
+
+        $application = $this->entityManager->getRepository(Application::class)->findOneBy(['slug' => $applicationSlug]);
+        if (!$application instanceof Application || $application->getPlatform()?->getPlatformKey() !== PlatformKey::CRM) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "applicationSlug" for CRM platform.');
+        }
+
+        $crm = (new Crm())->setApplication($application);
+        $this->entityManager->persist($crm);
+        $this->entityManager->flush();
+
+        return $crm;
+    }
+
 }
