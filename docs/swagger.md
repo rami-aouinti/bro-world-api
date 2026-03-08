@@ -84,3 +84,6 @@ curl -X GET "http://localhost/api/v1/application/private?title=recruit&page=2&li
   }
 }
 ```
+
+## Recruit endpoints (module Recruit)
+- Voir la documentation détaillée: [docs/recruit.md](./recruit.md)
