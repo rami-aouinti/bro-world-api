@@ -430,12 +430,23 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
 
     private function ensureParticipant(ObjectManager $manager, Conversation $conversation, User $user): void
     {
+        static $participantsByConversationAndUser = [];
+
+        $conversationKey = (string) ($conversation->getId() ?? 'new-' . spl_object_id($conversation));
+        $userKey = (string) ($user->getId() ?? 'new-' . spl_object_id($user));
+        $participantKey = $conversationKey . '::' . $userKey;
+
+        if (isset($participantsByConversationAndUser[$participantKey])) {
+            return;
+        }
+
         $existing = $manager->getRepository(ConversationParticipant::class)->findOneBy([
             'conversation' => $conversation,
             'user' => $user,
         ]);
 
         if ($existing instanceof ConversationParticipant) {
+            $participantsByConversationAndUser[$participantKey] = true;
             return;
         }
 
@@ -444,6 +455,7 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             ->setUser($user);
 
         $manager->persist($participant);
+        $participantsByConversationAndUser[$participantKey] = true;
     }
 
     #[Override]
