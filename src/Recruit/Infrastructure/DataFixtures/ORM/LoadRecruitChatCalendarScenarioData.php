@@ -200,7 +200,7 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         $johnAdmin = $this->getReference('User-john-admin', User::class);
 
         $johnRootRecruitApplication->setStatus(ApplicationStatus::WAITING);
-        $otherOwner = $johnRootRecruitApplication->getRecruit()?->getApplication()?->getUser();
+        $otherOwner = $johnRootRecruitApplication->getJob()->getOwner();
 
         if (!$otherOwner instanceof User) {
             return;
