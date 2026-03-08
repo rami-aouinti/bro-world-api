@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Recruit\Transport\Controller\Api\V1\Resume;
 
+use App\Recruit\Application\Service\ResumeDocumentUploaderService;
 use App\Recruit\Domain\Entity\Certification;
 use App\Recruit\Domain\Entity\Education;
 use App\Recruit\Domain\Entity\Experience;
@@ -16,6 +17,7 @@ use App\Recruit\Domain\Entity\Skill;
 use App\Recruit\Infrastructure\Repository\ResumeRepository;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -26,6 +28,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 use function is_array;
 use function is_string;
+use function json_decode;
 use function trim;
 
 #[AsController]
@@ -35,16 +38,83 @@ class ResumeCreateController
 {
     public function __construct(
         private readonly ResumeRepository $resumeRepository,
+        private readonly ResumeDocumentUploaderService $resumeDocumentUploaderService,
     ) {
     }
 
     #[Route(path: '/v1/recruit/resumes', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'Crée un CV et permet l’upload optionnel d’un PDF.')]
+    #[OA\RequestBody(
+        required: false,
+        content: [
+            new OA\MediaType(
+                mediaType: 'application/json',
+                schema: new OA\Schema(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'experiences', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
+                        new OA\Property(property: 'educations', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
+                        new OA\Property(property: 'skills', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
+                        new OA\Property(property: 'languages', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
+                        new OA\Property(property: 'certifications', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
+                        new OA\Property(property: 'projects', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
+                        new OA\Property(property: 'references', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
+                        new OA\Property(property: 'hobbies', type: 'array', items: new OA\Items(ref: '#/components/schemas/RecruitResumeSectionInput')),
+                    ],
+                    example: [
+                        'experiences' => [['title' => 'Backend Developer', 'description' => 'Symfony API']],
+                        'skills' => [['title' => 'PHP', 'description' => '8.x']],
+                    ],
+                ),
+            ),
+            new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'document', type: 'string', format: 'binary', description: 'Fichier CV PDF.'),
+                        new OA\Property(property: 'experiences', type: 'string', description: 'JSON stringifié: [{"title":"...","description":"..."}]'),
+                        new OA\Property(property: 'educations', type: 'string', description: 'JSON stringifié'),
+                        new OA\Property(property: 'skills', type: 'string', description: 'JSON stringifié'),
+                        new OA\Property(property: 'languages', type: 'string', description: 'JSON stringifié'),
+                        new OA\Property(property: 'certifications', type: 'string', description: 'JSON stringifié'),
+                        new OA\Property(property: 'projects', type: 'string', description: 'JSON stringifié'),
+                        new OA\Property(property: 'references', type: 'string', description: 'JSON stringifié'),
+                        new OA\Property(property: 'hobbies', type: 'string', description: 'JSON stringifié'),
+                    ],
+                ),
+            ),
+        ],
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'Resume created',
+        content: new OA\JsonContent(
+            type: 'object',
+            properties: [
+                new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+                new OA\Property(property: 'documentUrl', type: 'string', nullable: true),
+            ],
+            example: [
+                'id' => '0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9aa',
+                'documentUrl' => 'https://localhost/uploads/resumes/0af6fe1514bdbce22f637d970a6e6042.pdf',
+            ],
+        ),
+    )]
+    #[OA\Response(response: 400, description: 'Invalid payload or file format')]
+    #[OA\Response(response: 401, description: 'Authentication required')]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        /** @var array<string, mixed> $payload */
-        $payload = $request->toArray();
+        $payload = $this->extractPayload($request);
 
         $resume = (new Resume())->setOwner($loggedInUser);
+
+        /** @var UploadedFile|null $document */
+        $document = $request->files->get('document');
+        if ($document instanceof UploadedFile) {
+            $documentUrl = $this->resumeDocumentUploaderService->upload($request, $document, '/uploads/resumes');
+            $resume->setDocumentUrl($documentUrl);
+        }
 
         $this->hydrateSections($payload, 'experiences', static fn (): Experience => new Experience(), static fn (Resume $entity, Experience $item) => $entity->addExperience($item), $resume);
         $this->hydrateSections($payload, 'educations', static fn (): Education => new Education(), static fn (Resume $entity, Education $item) => $entity->addEducation($item), $resume);
@@ -57,7 +127,30 @@ class ResumeCreateController
 
         $this->resumeRepository->save($resume);
 
-        return new JsonResponse(['id' => $resume->getId()], JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $resume->getId(),
+            'documentUrl' => $resume->getDocumentUrl(),
+        ], JsonResponse::HTTP_CREATED);
+    }
+
+    /** @return array<string, mixed> */
+    private function extractPayload(Request $request): array
+    {
+        if ($request->request->count() > 0) {
+            /** @var array<string, mixed> $payload */
+            $payload = $request->request->all();
+
+            foreach (['experiences', 'educations', 'skills', 'languages', 'certifications', 'projects', 'references', 'hobbies'] as $field) {
+                if (is_string($payload[$field] ?? null)) {
+                    $decoded = json_decode($payload[$field], true);
+                    $payload[$field] = is_array($decoded) ? $decoded : [];
+                }
+            }
+
+            return $payload;
+        }
+
+        return $request->toArray();
     }
 
     /**
@@ -95,4 +188,17 @@ class ResumeCreateController
             $adder($resume, $section);
         }
     }
+}
+
+#[OA\Schema(
+    schema: 'RecruitResumeSectionInput',
+    type: 'object',
+    required: ['title'],
+    properties: [
+        new OA\Property(property: 'title', type: 'string', example: 'Backend Developer'),
+        new OA\Property(property: 'description', type: 'string', example: 'Symfony / API Platform'),
+    ],
+)]
+final class RecruitResumeSectionInputSchema
+{
 }

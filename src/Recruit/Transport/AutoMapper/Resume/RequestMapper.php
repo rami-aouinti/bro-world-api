@@ -18,5 +18,6 @@ class RequestMapper extends RestRequestMapper
         'projects',
         'references',
         'hobbies',
+        'documentUrl',
     ];
 }

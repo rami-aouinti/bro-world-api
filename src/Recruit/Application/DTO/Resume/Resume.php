@@ -22,6 +22,7 @@ class Resume extends RestDto
     protected array $projects = [];
     protected array $references = [];
     protected array $hobbies = [];
+    protected ?string $documentUrl = null;
 
     public function getOwner(): ?User { return $this->owner; }
     public function setOwner(User $owner): self { $this->setVisited('owner'); $this->owner = $owner; return $this; }
@@ -41,6 +42,8 @@ class Resume extends RestDto
     public function setReferences(array $references): self { $this->setVisited('references'); $this->references = $references; return $this; }
     public function getHobbies(): array { return $this->hobbies; }
     public function setHobbies(array $hobbies): self { $this->setVisited('hobbies'); $this->hobbies = $hobbies; return $this; }
+    public function getDocumentUrl(): ?string { return $this->documentUrl; }
+    public function setDocumentUrl(?string $documentUrl): self { $this->setVisited('documentUrl'); $this->documentUrl = $documentUrl; return $this; }
 
     #[Override]
     public function load(EntityInterface $entity): self
@@ -56,6 +59,7 @@ class Resume extends RestDto
             $this->projects = $this->mapSections($entity->getProjects());
             $this->references = $this->mapSections($entity->getReferences());
             $this->hobbies = $this->mapSections($entity->getHobbies());
+            $this->documentUrl = $entity->getDocumentUrl();
         }
 
         return $this;

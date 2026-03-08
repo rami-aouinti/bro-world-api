@@ -34,6 +34,9 @@ class Resume implements EntityInterface
     #[ORM\OneToOne(targetEntity: Applicant::class, mappedBy: 'resume')]
     private ?Applicant $applicant = null;
 
+    #[ORM\Column(name: 'document_url', type: 'string', length: 255, nullable: true)]
+    private ?string $documentUrl = null;
+
     /** @var Collection<int, Experience>|ArrayCollection<int, Experience> */
     #[ORM\OneToMany(targetEntity: Experience::class, mappedBy: 'resume', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection|ArrayCollection $experiences;
@@ -84,6 +87,8 @@ class Resume implements EntityInterface
     public function getOwner(): User { return $this->owner; }
     public function setOwner(User $owner): self { $this->owner = $owner; return $this; }
     public function getApplicant(): ?Applicant { return $this->applicant; }
+    public function getDocumentUrl(): ?string { return $this->documentUrl; }
+    public function setDocumentUrl(?string $documentUrl): self { $this->documentUrl = $documentUrl; return $this; }
 
     /** @return Collection<int, Experience>|ArrayCollection<int, Experience> */
     public function getExperiences(): Collection|ArrayCollection { return $this->experiences; }
