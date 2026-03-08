@@ -64,7 +64,7 @@ final readonly class CreateQuizQuestionCommandHandler
                 ->setApplication($application)
                 ->setConfigurationKey('quiz.module.configuration')
                 ->setConfigurationValue($command->configuration)
-                ->setScope(ConfigurationScope::APPLICATION)
+                ->setScope(ConfigurationScope::PLATFORM)
                 ->setPrivate(true);
             $this->configurationRepository->save($configuration);
             $quiz->setConfiguration($configuration);
