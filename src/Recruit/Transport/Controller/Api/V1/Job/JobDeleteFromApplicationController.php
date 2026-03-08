@@ -11,7 +11,6 @@ use App\Recruit\Infrastructure\Repository\JobRepository;
 use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
-use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -31,11 +30,11 @@ class JobDeleteFromApplicationController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/applications/{applicationId}/jobs/{jobId}', methods: [Request::METHOD_DELETE])]
+    #[Route(path: '/v1/recruit/applications/{applicationSlug}/jobs/{jobId}', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(
-        summary: 'Supprime un job via applicationId et contrôle propriétaire.',
+        summary: 'Supprime un job via applicationSlug et contrôle propriétaire.',
         parameters: [
-            new OA\Parameter(name: 'applicationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+            new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'jobId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
         ],
         responses: [
@@ -44,19 +43,13 @@ class JobDeleteFromApplicationController
             new OA\Response(response: 404, description: 'Job introuvable.'),
         ],
     )]
-    public function __invoke(string $applicationId, string $jobId, User $loggedInUser): JsonResponse
+    public function __invoke(string $applicationSlug, string $jobId, User $loggedInUser): JsonResponse
     {
-        if (!Uuid::isValid($applicationId)) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Route "applicationId" must be a valid UUID.');
-        }
-
-        if (!Uuid::isValid($jobId)) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Route "jobId" must be a valid UUID.');
-        }
-
-        $application = $this->entityManager->getRepository(PlatformApplication::class)->find($applicationId);
+        $application = $this->entityManager->getRepository(PlatformApplication::class)->findOneBy([
+            'slug' => $applicationSlug,
+        ]);
         if (!$application instanceof PlatformApplication) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "applicationId".');
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "applicationSlug".');
         }
 
         if ($application->getUser()?->getId() !== $loggedInUser->getId()) {
@@ -68,7 +61,7 @@ class JobDeleteFromApplicationController
         ]);
 
         if (!$recruit instanceof Recruit) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'No recruit found for the given "applicationId".');
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'No recruit found for the given "applicationSlug".');
         }
 
         $job = $this->jobRepository->find($jobId);
