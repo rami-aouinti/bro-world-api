@@ -22,7 +22,6 @@ use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 use function is_array;
-use function is_int;
 use function is_string;
 use function trim;
 
@@ -50,7 +49,6 @@ class JobCreateFromApplicationController
                     new OA\Property(property: 'summary', type: 'string', example: 'Build robust APIs'),
                     new OA\Property(property: 'missionTitle', type: 'string', example: 'Your mission'),
                     new OA\Property(property: 'missionDescription', type: 'string', example: 'Develop and maintain services'),
-                    new OA\Property(property: 'matchScore', type: 'integer', example: 85),
                     new OA\Property(property: 'contractType', type: 'string', enum: ['CDI', 'CDD', 'Freelance', 'Internship']),
                     new OA\Property(property: 'workMode', type: 'string', enum: ['Onsite', 'Remote', 'Hybrid']),
                     new OA\Property(property: 'schedule', type: 'string', enum: ['Vollzeit', 'Teilzeit', 'Contract']),
@@ -148,16 +146,6 @@ class JobCreateFromApplicationController
 
             $job->setMissionDescription($missionDescription);
         }
-
-        $matchScore = $payload['matchScore'] ?? null;
-        if ($matchScore !== null) {
-            if (!is_int($matchScore)) {
-                throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "matchScore" must be an integer.');
-            }
-
-            $job->setMatchScore($matchScore);
-        }
-
         $contractType = $payload['contractType'] ?? null;
         if ($contractType !== null) {
             if (!is_string($contractType) || ContractType::tryFrom($contractType) === null) {

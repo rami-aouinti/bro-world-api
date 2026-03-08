@@ -8,6 +8,7 @@ use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\Recruit\Domain\Entity\Application as RecruitApplication;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
+use App\Recruit\Domain\Entity\Resume;
 use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
@@ -26,6 +27,7 @@ use function array_map;
 use function array_unique;
 use function array_values;
 use function ceil;
+use function count;
 use function floor;
 use function in_array;
 use function is_array;
@@ -33,9 +35,14 @@ use function is_string;
 use function json_encode;
 use function mb_strtolower;
 use function md5;
+use function max;
 use function preg_match;
+use function preg_split;
+use function round;
 use function sprintf;
+use function strlen;
 use function strtolower;
+use function trim;
 
 class JobPublicListService
 {
@@ -150,6 +157,10 @@ class JobPublicListService
                     ->setParameter('esIds', $esIds);
             }
 
+            $userSkillKeywords = $loggedInUser instanceof User
+                ? $this->getUserResumeSkillKeywords($loggedInUser)
+                : [];
+
             $query = $qb
                 ->setFirstResult(($page - 1) * $limit)
                 ->setMaxResults($limit)
@@ -186,7 +197,9 @@ class JobPublicListService
                     ],
                     'postedAtLabel' => $this->buildPostedAtLabel($job->getCreatedAt()),
                     'summary' => $job->getSummary(),
-                    'matchScore' => $job->getMatchScore(),
+                    'matchScore' => $userSkillKeywords === []
+                        ? $job->getMatchScore()
+                        : $this->computeMatchScore($job, $userSkillKeywords),
                     'badges' => array_map(static fn ($badge): string => $badge->getLabel(), $job->getBadges()->toArray()),
                     'tags' => array_map(static fn ($tag): string => $tag->getLabel(), $job->getTags()->toArray()),
                     'missionTitle' => $job->getMissionTitle(),
@@ -443,6 +456,89 @@ class JobPublicListService
 
         return $appliedJobIds;
     }
+
+    /**
+     * @return list<string>
+     */
+    private function getUserResumeSkillKeywords(User $loggedInUser): array
+    {
+        $resume = $this->entityManager
+            ->getRepository(Resume::class)
+            ->createQueryBuilder('resume')
+            ->leftJoin('resume.skills', 'skill')->addSelect('skill')
+            ->andWhere('resume.owner = :owner')
+            ->setParameter('owner', $loggedInUser->getId(), UuidBinaryOrderedTimeType::NAME)
+            ->orderBy('resume.createdAt', 'DESC')
+            ->addOrderBy('resume.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if (!$resume instanceof Resume) {
+            return [];
+        }
+
+        $keywords = [];
+        foreach ($resume->getSkills() as $skill) {
+            $title = trim(mb_strtolower($skill->getTitle()));
+            if ($title === '') {
+                continue;
+            }
+
+            $keywords[] = $title;
+
+            $parts = preg_split('/[^\p{L}\p{N}]+/u', $title);
+            if (!is_array($parts)) {
+                continue;
+            }
+
+            foreach ($parts as $part) {
+                $word = trim($part);
+                if ($word !== '' && strlen($word) >= 3) {
+                    $keywords[] = $word;
+                }
+            }
+        }
+
+        /** @var list<string> $uniqueKeywords */
+        $uniqueKeywords = array_values(array_unique(array_filter($keywords, static fn (string $value): bool => $value !== '')));
+
+        return $uniqueKeywords;
+    }
+
+    /**
+     * @param list<string> $userSkillKeywords
+     */
+    private function computeMatchScore(Job $job, array $userSkillKeywords): int
+    {
+        if ($userSkillKeywords === []) {
+            return $job->getMatchScore();
+        }
+
+        $jobCorpusParts = [
+            mb_strtolower($job->getTitle()),
+            mb_strtolower($job->getSummary()),
+            mb_strtolower($job->getMissionDescription()),
+            mb_strtolower(implode(' ', $job->getProfile())),
+            mb_strtolower(implode(' ', $job->getResponsibilities())),
+        ];
+
+        foreach ($job->getTags() as $tag) {
+            $jobCorpusParts[] = mb_strtolower($tag->getLabel());
+        }
+
+        $jobCorpus = ' ' . implode(' ', $jobCorpusParts) . ' ';
+
+        $matchedSkills = 0;
+        foreach ($userSkillKeywords as $keyword) {
+            if ($keyword !== '' && str_contains($jobCorpus, ' ' . $keyword . ' ')) {
+                ++$matchedSkills;
+            }
+        }
+
+        return (int) max(0, min(100, round(($matchedSkills / count($userSkillKeywords)) * 100)));
+    }
+
     private function resolveRecruitByApplicationSlug(string $applicationSlug): Recruit
     {
         $recruit = $this->entityManager

@@ -15,20 +15,18 @@ use Throwable;
 
 class JobCreateFromApplicationControllerTest extends WebTestCase
 {
-    private string $baseUrl = self::API_URL_PREFIX . '/v1/recruit/jobs';
-
     /** @throws Throwable */
-    #[TestDox('Test that `POST /v1/recruit/jobs` creates a job from applicationId for the owner.')]
-    public function testThatCreateFromApplicationCreatesJob(): void
+    #[TestDox('Test that `POST /v1/recruit/applications/{applicationSlug}/jobs` creates a job for owner without requiring matchScore.')]
+    public function testThatCreateFromApplicationCreatesJobWithoutMatchScore(): void
     {
-        $applicationId = $this->getApplicationIdForUsername('john-root');
+        $applicationSlug = $this->getApplicationSlugForUsername('john-root');
 
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('POST', $this->baseUrl, content: JSON::encode([
-            'applicationId' => $applicationId,
+        $client->request('POST', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs', content: JSON::encode([
             'title' => 'Backend Engineer API',
             'location' => 'Paris',
             'contractType' => 'CDI',
+            'matchScore' => 'should-be-ignored',
         ]));
 
         $response = $client->getResponse();
@@ -40,25 +38,26 @@ class JobCreateFromApplicationControllerTest extends WebTestCase
         self::assertArrayHasKey('id', $payload);
         self::assertArrayHasKey('recruitId', $payload);
         self::assertArrayHasKey('slug', $payload);
+        self::assertArrayHasKey('applicationSlug', $payload);
+        self::assertSame($applicationSlug, $payload['applicationSlug']);
         self::assertSame('Backend Engineer API', $payload['title']);
     }
 
     /** @throws Throwable */
-    #[TestDox('Test that `POST /v1/recruit/jobs` returns forbidden if application is not owned by logged user.')]
+    #[TestDox('Test that `POST /v1/recruit/applications/{applicationSlug}/jobs` returns forbidden if application is not owned by logged user.')]
     public function testThatCreateFromApplicationRejectsForeignApplication(): void
     {
-        $applicationId = $this->getApplicationIdForUsername('john-root');
+        $applicationSlug = $this->getApplicationSlugForUsername('john-root');
 
         $client = $this->getTestClient('john-user', 'password-user');
-        $client->request('POST', $this->baseUrl, content: JSON::encode([
-            'applicationId' => $applicationId,
+        $client->request('POST', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs', content: JSON::encode([
             'title' => 'Should fail',
         ]));
 
         self::assertSame(Response::HTTP_FORBIDDEN, $client->getResponse()->getStatusCode());
     }
 
-    private function getApplicationIdForUsername(string $username): string
+    private function getApplicationSlugForUsername(string $username): string
     {
         self::bootKernel();
 
@@ -77,6 +76,6 @@ class JobCreateFromApplicationControllerTest extends WebTestCase
 
         self::assertInstanceOf(PlatformApplication::class, $application);
 
-        return $application->getId();
+        return $application->getSlug();
     }
 }
