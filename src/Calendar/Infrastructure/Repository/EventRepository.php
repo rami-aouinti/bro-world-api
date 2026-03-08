@@ -33,38 +33,81 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
     {
     }
 
-    public function findByUser(User $user): array
+    public function findByUser(User $user, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array
     {
-        return $this->createBaseQueryBuilder()
+        $offset = max(0, ($page - 1) * $limit);
+
+        return $this->applyListFilters($this->createBaseQueryBuilder(), $filters, $esIds)
             ->andWhere('event.user = :user OR calendar.user = :user')
             ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
             ->orderBy('event.startAt', 'ASC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
     }
 
-    public function findByApplicationSlug(string $applicationSlug): array
+    public function countByUser(User $user, array $filters = [], ?array $esIds = null): int
     {
-        return $this->createBaseQueryBuilder()
+        return (int) $this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds)
+            ->andWhere('event.user = :user OR calendar.user = :user')
+            ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function findByApplicationSlug(string $applicationSlug, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array
+    {
+        $offset = max(0, ($page - 1) * $limit);
+
+        return $this->applyListFilters($this->createBaseQueryBuilder(), $filters, $esIds)
             ->innerJoin('calendar.application', 'application')
             ->andWhere('application.slug = :applicationSlug')
             ->setParameter('applicationSlug', $applicationSlug)
             ->orderBy('event.startAt', 'ASC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
     }
 
-    public function findByApplicationSlugAndUser(string $applicationSlug, User $user): array
+    public function countByApplicationSlug(string $applicationSlug, array $filters = [], ?array $esIds = null): int
     {
-        return $this->createBaseQueryBuilder()
+        return (int) $this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds)
+            ->innerJoin('calendar.application', 'application')
+            ->andWhere('application.slug = :applicationSlug')
+            ->setParameter('applicationSlug', $applicationSlug)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function findByApplicationSlugAndUser(string $applicationSlug, User $user, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array
+    {
+        $offset = max(0, ($page - 1) * $limit);
+
+        return $this->applyListFilters($this->createBaseQueryBuilder(), $filters, $esIds)
             ->innerJoin('calendar.application', 'application')
             ->andWhere('application.slug = :applicationSlug')
             ->andWhere('event.user = :user OR calendar.user = :user')
             ->setParameter('applicationSlug', $applicationSlug)
             ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
             ->orderBy('event.startAt', 'ASC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
+    }
+
+    public function countByApplicationSlugAndUser(string $applicationSlug, User $user, array $filters = [], ?array $esIds = null): int
+    {
+        return (int) $this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds)
+            ->innerJoin('calendar.application', 'application')
+            ->andWhere('application.slug = :applicationSlug')
+            ->andWhere('event.user = :user OR calendar.user = :user')
+            ->setParameter('applicationSlug', $applicationSlug)
+            ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     private function createBaseQueryBuilder(): QueryBuilder
@@ -73,5 +116,41 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
             ->addSelect('calendar')
             ->leftJoin('event.calendar', 'calendar')
             ->distinct();
+    }
+
+    private function createCountQueryBuilder(): QueryBuilder
+    {
+        return $this->createQueryBuilder('event')
+            ->select('COUNT(DISTINCT event.id)')
+            ->leftJoin('event.calendar', 'calendar');
+    }
+
+    private function applyListFilters(QueryBuilder $queryBuilder, array $filters, ?array $esIds): QueryBuilder
+    {
+        if ($esIds !== null) {
+            return $queryBuilder
+                ->andWhere('event.id IN (:esIds)')
+                ->setParameter('esIds', $esIds);
+        }
+
+        if (($filters['title'] ?? '') !== '') {
+            $queryBuilder
+                ->andWhere('LOWER(event.title) LIKE LOWER(:title)')
+                ->setParameter('title', '%' . $filters['title'] . '%');
+        }
+
+        if (($filters['description'] ?? '') !== '') {
+            $queryBuilder
+                ->andWhere('LOWER(event.description) LIKE LOWER(:description)')
+                ->setParameter('description', '%' . $filters['description'] . '%');
+        }
+
+        if (($filters['location'] ?? '') !== '') {
+            $queryBuilder
+                ->andWhere('LOWER(event.location) LIKE LOWER(:location)')
+                ->setParameter('location', '%' . $filters['location'] . '%');
+        }
+
+        return $queryBuilder;
     }
 }

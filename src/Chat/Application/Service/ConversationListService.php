@@ -9,38 +9,173 @@ use App\Chat\Domain\Entity\ChatMessage;
 use App\Chat\Domain\Entity\ChatMessageReaction;
 use App\Chat\Domain\Entity\ConversationParticipant;
 use App\Chat\Domain\Repository\Interfaces\ConversationRepositoryInterface;
+use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\User\Domain\Entity\User;
+use Psr\Cache\InvalidArgumentException;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Throwable;
 
+use function array_filter;
 use function array_map;
 
-final class ConversationListService
+final readonly class ConversationListService
 {
-    public function __construct(private readonly ConversationRepositoryInterface $conversationRepository)
-    {
+    public function __construct(
+        private ConversationRepositoryInterface $conversationRepository,
+        private CacheInterface $cache,
+        private ElasticsearchServiceInterface $elasticsearchService,
+    ) {
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @param array<string, string> $filters
+     *
+     * @return array<string, mixed>
+     * @throws InvalidArgumentException
+     * @throws \JsonException
      */
-    public function getByUser(User $user): array
+    public function getByUser(User $user, array $filters = [], int $page = 1, int $limit = 20): array
     {
-        return $this->normalizeConversations($this->conversationRepository->findByUser($user));
+        return $this->getList('user', $filters, $page, $limit, $user, null);
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @param array<string, string> $filters
+     *
+     * @return array<string, mixed>
+     * @throws InvalidArgumentException
+     * @throws \JsonException
      */
-    public function getByChatId(string $chatId): array
+    public function getByChatId(string $chatId, array $filters = [], int $page = 1, int $limit = 20): array
     {
-        return $this->normalizeConversations($this->conversationRepository->findByChatId($chatId));
+        return $this->getList('chat_public', $filters, $page, $limit, null, $chatId);
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @param array<string, string> $filters
+     *
+     * @return array<string, mixed>
+     * @throws InvalidArgumentException
+     * @throws \JsonException
      */
-    public function getByChatIdAndUser(string $chatId, User $user): array
+    public function getByChatIdAndUser(string $chatId, User $user, array $filters = [], int $page = 1, int $limit = 20): array
     {
-        return $this->normalizeConversations($this->conversationRepository->findByChatIdAndUser($chatId, $user));
+        return $this->getList('chat_private', $filters, $page, $limit, $user, $chatId);
+    }
+
+    /**
+     * @param array<string, string> $filters
+     *
+     * @return array<string, mixed>
+     * @throws InvalidArgumentException
+     * @throws \JsonException
+     */
+    private function getList(string $accessContext, array $filters, int $page, int $limit, ?User $user, ?string $chatId): array
+    {
+        $page = max(1, $page);
+        $limit = max(1, min(100, $limit));
+
+        $filters = [
+            'message' => trim((string)($filters['message'] ?? '')),
+        ];
+
+        $cacheKey = 'conversation_list_' . md5((string) json_encode([
+            'accessContext' => $accessContext,
+            'userId' => $user?->getId(),
+            'chatId' => $chatId,
+            'page' => $page,
+            'limit' => $limit,
+            'filters' => $filters,
+        ], JSON_THROW_ON_ERROR));
+
+        /** @var array<string, mixed> $result */
+        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($accessContext, $user, $chatId, $filters, $page, $limit): array {
+            $item->expiresAfter(120);
+
+            $esIds = $this->searchIdsFromElastic($filters);
+            if ($esIds === []) {
+                return [
+                    'items' => [],
+                    'pagination' => [
+                        'page' => $page,
+                        'limit' => $limit,
+                        'totalItems' => 0,
+                        'totalPages' => 0,
+                    ],
+                ];
+            }
+
+            if ($accessContext === 'user') {
+                $conversations = $this->conversationRepository->findByUser($user, $filters, $page, $limit, $esIds);
+                $totalItems = $this->conversationRepository->countByUser($user, $filters, $esIds);
+            } elseif ($accessContext === 'chat_private') {
+                $conversations = $this->conversationRepository->findByChatIdAndUser($chatId, $user, $filters, $page, $limit, $esIds);
+                $totalItems = $this->conversationRepository->countByChatIdAndUser($chatId, $user, $filters, $esIds);
+            } else {
+                $conversations = $this->conversationRepository->findByChatId($chatId, $filters, $page, $limit, $esIds);
+                $totalItems = $this->conversationRepository->countByChatId($chatId, $filters, $esIds);
+            }
+
+            return [
+                'items' => $this->normalizeConversations($conversations),
+                'pagination' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'totalItems' => $totalItems,
+                    'totalPages' => $totalItems > 0 ? (int) ceil($totalItems / $limit) : 0,
+                ],
+            ];
+        });
+
+        $result['filters'] = array_filter($filters, static fn (string $value): bool => $value !== '');
+
+        return $result;
+    }
+
+    /**
+     * @param array<string, string> $filters
+     *
+     * @return array<int, string>|null
+     */
+    private function searchIdsFromElastic(array $filters): ?array
+    {
+        if ($filters['message'] === '') {
+            return null;
+        }
+
+        try {
+            $response = $this->elasticsearchService->search(
+                ElasticsearchServiceInterface::INDEX_PREFIX . '_*',
+                [
+                    'query' => [
+                        'bool' => [
+                            'must' => [
+                                ['match_phrase_prefix' => ['message' => $filters['message']]],
+                            ],
+                        ],
+                    ],
+                    '_source' => ['id'],
+                ],
+                0,
+                1000,
+            );
+
+            if (!is_array($response) || !isset($response['hits']['hits']) || !is_array($response['hits']['hits'])) {
+                return null;
+            }
+
+            $ids = [];
+            foreach ($response['hits']['hits'] as $hit) {
+                if (is_array($hit) && isset($hit['_source']['id']) && is_string($hit['_source']['id'])) {
+                    $ids[] = $hit['_source']['id'];
+                }
+            }
+
+            return array_values(array_unique($ids));
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     /**

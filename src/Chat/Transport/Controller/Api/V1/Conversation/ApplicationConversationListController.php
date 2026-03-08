@@ -20,10 +20,16 @@ class ApplicationConversationListController
     }
 
     #[Route(path: '/v1/chat/chats/{chatId}/conversations', methods: [Request::METHOD_GET])]
-    public function __invoke(string $chatId): JsonResponse
+    public function __invoke(string $chatId, Request $request): JsonResponse
     {
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = max(1, min(100, $request->query->getInt('limit', 20)));
+        $filters = [
+            'message' => trim((string) $request->query->get('message', '')),
+        ];
+
         return ConversationJsonResponseFactory::create(
-            $this->conversationListService->getByChatId($chatId)
+            $this->conversationListService->getByChatId($chatId, $filters, $page, $limit)
         );
     }
 }

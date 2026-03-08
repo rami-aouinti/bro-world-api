@@ -40,38 +40,81 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
         return $conversation;
     }
 
-    public function findByUser(User $user): array
+    public function findByUser(User $user, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array
     {
-        return $this->getConversationQueryBuilder()
+        $offset = max(0, ($page - 1) * $limit);
+
+        return $this->applyListFilters($this->getConversationQueryBuilder(), $filters, $esIds)
             ->innerJoin('conversation.participants', 'participant')
             ->andWhere('participant.user = :user')
             ->setParameter('user', $user)
             ->orderBy('conversation.createdAt', 'DESC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
     }
 
-    public function findByChatId(string $chatId): array
+    public function countByUser(User $user, array $filters = [], ?array $esIds = null): int
     {
-        return $this->getConversationQueryBuilder()
+        return (int) $this->applyListFilters($this->getConversationCountQueryBuilder(), $filters, $esIds)
+            ->innerJoin('conversation.participants', 'participant')
+            ->andWhere('participant.user = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function findByChatId(string $chatId, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array
+    {
+        $offset = max(0, ($page - 1) * $limit);
+
+        return $this->applyListFilters($this->getConversationQueryBuilder(), $filters, $esIds)
             ->andWhere('chat.id = :chatId')
             ->setParameter('chatId', $chatId, UuidBinaryOrderedTimeType::NAME)
             ->orderBy('conversation.createdAt', 'DESC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
     }
 
-    public function findByChatIdAndUser(string $chatId, User $user): array
+    public function countByChatId(string $chatId, array $filters = [], ?array $esIds = null): int
     {
-        return $this->getConversationQueryBuilder()
+        return (int) $this->applyListFilters($this->getConversationCountQueryBuilder(), $filters, $esIds)
+            ->andWhere('chat.id = :chatId')
+            ->setParameter('chatId', $chatId, UuidBinaryOrderedTimeType::NAME)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function findByChatIdAndUser(string $chatId, User $user, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array
+    {
+        $offset = max(0, ($page - 1) * $limit);
+
+        return $this->applyListFilters($this->getConversationQueryBuilder(), $filters, $esIds)
             ->innerJoin('conversation.participants', 'participant')
             ->andWhere('chat.id = :chatId')
             ->andWhere('participant.user = :user')
             ->setParameter('chatId', $chatId, UuidBinaryOrderedTimeType::NAME)
             ->setParameter('user', $user)
             ->orderBy('conversation.createdAt', 'DESC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
+    }
+
+    public function countByChatIdAndUser(string $chatId, User $user, array $filters = [], ?array $esIds = null): int
+    {
+        return (int) $this->applyListFilters($this->getConversationCountQueryBuilder(), $filters, $esIds)
+            ->innerJoin('conversation.participants', 'participant')
+            ->andWhere('chat.id = :chatId')
+            ->andWhere('participant.user = :user')
+            ->setParameter('chatId', $chatId, UuidBinaryOrderedTimeType::NAME)
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     private function getConversationQueryBuilder(): QueryBuilder
@@ -86,5 +129,30 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
             ->leftJoin('messages.reactions', 'reactions')
             ->leftJoin('reactions.user', 'reactionUser')
             ->distinct();
+    }
+
+    private function getConversationCountQueryBuilder(): QueryBuilder
+    {
+        return $this->createQueryBuilder('conversation')
+            ->select('COUNT(DISTINCT conversation.id)')
+            ->innerJoin('conversation.chat', 'chat')
+            ->leftJoin('conversation.messages', 'messages');
+    }
+
+    private function applyListFilters(QueryBuilder $queryBuilder, array $filters, ?array $esIds): QueryBuilder
+    {
+        if ($esIds !== null) {
+            return $queryBuilder
+                ->andWhere('conversation.id IN (:esIds)')
+                ->setParameter('esIds', $esIds);
+        }
+
+        if (($filters['message'] ?? '') !== '') {
+            $queryBuilder
+                ->andWhere('LOWER(messages.content) LIKE LOWER(:message)')
+                ->setParameter('message', '%' . $filters['message'] . '%');
+        }
+
+        return $queryBuilder;
     }
 }

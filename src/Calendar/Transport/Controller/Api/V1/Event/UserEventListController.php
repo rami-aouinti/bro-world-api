@@ -24,8 +24,16 @@ class UserEventListController
     }
 
     #[Route(path: '/v1/calendar/private/events', methods: [Request::METHOD_GET])]
-    public function __invoke(User $loggedInUser): JsonResponse
+    public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        return new JsonResponse($this->eventListService->getByUser($loggedInUser));
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = max(1, min(100, $request->query->getInt('limit', 20)));
+        $filters = [
+            'title' => trim((string) $request->query->get('title', '')),
+            'description' => trim((string) $request->query->get('description', '')),
+            'location' => trim((string) $request->query->get('location', '')),
+        ];
+
+        return new JsonResponse($this->eventListService->getByUser($loggedInUser, $filters, $page, $limit));
     }
 }
