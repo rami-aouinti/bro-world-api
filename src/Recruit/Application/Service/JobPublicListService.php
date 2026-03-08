@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Recruit\Application\Service;
 
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
-use App\Platform\Domain\Entity\Application;
 use App\Recruit\Domain\Entity\Application as RecruitApplication;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
@@ -82,21 +81,7 @@ class JobPublicListService
         $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($page, $limit, $filters, $applicationSlug, $loggedInUser): array {
             $item->expiresAfter(120);
 
-            $application = $this->entityManager->getRepository(Application::class)->findOneBy([
-                'slug' => $applicationSlug,
-            ]);
-
-            if (!$application instanceof Application) {
-                throw new NotFoundHttpException('Application not found.');
-            }
-
-            $recruit = $this->entityManager->getRepository(Recruit::class)->findOneBy([
-                'application' => $application,
-            ]);
-
-            if (!$recruit instanceof Recruit) {
-                throw new NotFoundHttpException('Recruit not found for this application.');
-            }
+            $recruit = $this->resolveRecruitByApplicationSlug($applicationSlug);
 
             $qb = $this->entityManager
                 ->getRepository(Job::class)
@@ -458,4 +443,23 @@ class JobPublicListService
 
         return $appliedJobIds;
     }
+    private function resolveRecruitByApplicationSlug(string $applicationSlug): Recruit
+    {
+        $recruit = $this->entityManager
+            ->getRepository(Recruit::class)
+            ->createQueryBuilder('recruit')
+            ->innerJoin('recruit.application', 'application')
+            ->addSelect('application')
+            ->where('application.slug = :applicationSlug')
+            ->setParameter('applicationSlug', $applicationSlug)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if (!$recruit instanceof Recruit) {
+            throw new NotFoundHttpException('Application not found.');
+        }
+
+        return $recruit;
+    }
+
 }

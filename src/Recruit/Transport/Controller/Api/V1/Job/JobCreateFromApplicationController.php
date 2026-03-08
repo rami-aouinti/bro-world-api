@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Recruit\Transport\Controller\Api\V1\Job;
 
-use App\Platform\Domain\Entity\Application as PlatformApplication;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
 use App\Recruit\Domain\Enum\ContractType;
@@ -87,19 +86,11 @@ class JobCreateFromApplicationController
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "title" is required and must be a non-empty string.');
         }
 
-        $application = $this->entityManager->getRepository(PlatformApplication::class)->findOneBy([
-            'slug' => $applicationSlug,
-        ]);
-        if (!$application instanceof PlatformApplication) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "applicationSlug".');
-        }
+        $recruit = $this->resolveRecruitByApplicationSlug($applicationSlug);
+        $application = $recruit->getApplication();
 
-        $recruit = $this->entityManager->getRepository(Recruit::class)->findOneBy([
-            'application' => $application,
-        ]);
-
-        if (!$recruit instanceof Recruit) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'No recruit found for the given "applicationId".');
+        if ($application?->getUser()?->getId() !== $loggedInUser->getId()) {
+            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You cannot create a job for this application.');
         }
 
         $job = (new Job())
@@ -113,7 +104,7 @@ class JobCreateFromApplicationController
         return new JsonResponse([
             'id' => $job->getId(),
             'recruitId' => $recruit->getId(),
-            'applicationSlug' => $application->getSlug(),
+            'applicationSlug' => $application?->getSlug() ?? '',
             'slug' => $job->getSlug(),
             'title' => $job->getTitle(),
         ], JsonResponse::HTTP_CREATED);
@@ -220,5 +211,24 @@ class JobCreateFromApplicationController
 
             $job->setBenefits($benefits);
         }
+    }
+
+    private function resolveRecruitByApplicationSlug(string $applicationSlug): Recruit
+    {
+        $recruit = $this->entityManager
+            ->getRepository(Recruit::class)
+            ->createQueryBuilder('recruit')
+            ->innerJoin('recruit.application', 'application')
+            ->addSelect('application')
+            ->where('application.slug = :applicationSlug')
+            ->setParameter('applicationSlug', $applicationSlug)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if (!$recruit instanceof Recruit) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "applicationSlug".');
+        }
+
+        return $recruit;
     }
 }

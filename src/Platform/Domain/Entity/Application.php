@@ -31,7 +31,7 @@ use function substr;
 use function trim;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'platform_application')]
+#[ORM\Table(name: 'platform_application', indexes: [new ORM\Index(name: 'idx_platform_application_slug', columns: ['slug'])])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class Application implements EntityInterface
 {
