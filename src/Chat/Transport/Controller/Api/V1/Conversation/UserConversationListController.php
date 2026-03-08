@@ -24,8 +24,14 @@ class UserConversationListController
     }
 
     #[Route(path: '/v1/chat/private/conversations', methods: [Request::METHOD_GET])]
-    public function __invoke(User $loggedInUser): JsonResponse
+    public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        return ConversationJsonResponseFactory::create($this->conversationListService->getByUser($loggedInUser));
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = max(1, min(100, $request->query->getInt('limit', 20)));
+        $filters = [
+            'message' => trim((string) $request->query->get('message', '')),
+        ];
+
+        return ConversationJsonResponseFactory::create($this->conversationListService->getByUser($loggedInUser, $filters, $page, $limit));
     }
 }

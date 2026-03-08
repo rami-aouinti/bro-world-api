@@ -24,8 +24,16 @@ class ApplicationUserEventListController
     }
 
     #[Route(path: '/v1/calendar/private/applications/{applicationSlug}/events', methods: [Request::METHOD_GET])]
-    public function __invoke(string $applicationSlug, User $loggedInUser): JsonResponse
+    public function __invoke(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
     {
-        return new JsonResponse($this->eventListService->getByApplicationSlugAndUser($applicationSlug, $loggedInUser));
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = max(1, min(100, $request->query->getInt('limit', 20)));
+        $filters = [
+            'title' => trim((string) $request->query->get('title', '')),
+            'description' => trim((string) $request->query->get('description', '')),
+            'location' => trim((string) $request->query->get('location', '')),
+        ];
+
+        return new JsonResponse($this->eventListService->getByApplicationSlugAndUser($applicationSlug, $loggedInUser, $filters, $page, $limit));
     }
 }

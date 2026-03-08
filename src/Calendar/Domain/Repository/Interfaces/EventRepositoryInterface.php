@@ -12,15 +12,21 @@ interface EventRepositoryInterface
     /**
      * @return array<int, Event>
      */
-    public function findByUser(User $user): array;
+    public function findByUser(User $user, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array;
+
+    public function countByUser(User $user, array $filters = [], ?array $esIds = null): int;
 
     /**
      * @return array<int, Event>
      */
-    public function findByApplicationSlug(string $applicationSlug): array;
+    public function findByApplicationSlug(string $applicationSlug, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array;
+
+    public function countByApplicationSlug(string $applicationSlug, array $filters = [], ?array $esIds = null): int;
 
     /**
      * @return array<int, Event>
      */
-    public function findByApplicationSlugAndUser(string $applicationSlug, User $user): array;
+    public function findByApplicationSlugAndUser(string $applicationSlug, User $user, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array;
+
+    public function countByApplicationSlugAndUser(string $applicationSlug, User $user, array $filters = [], ?array $esIds = null): int;
 }

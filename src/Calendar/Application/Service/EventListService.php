@@ -6,38 +6,180 @@ namespace App\Calendar\Application\Service;
 
 use App\Calendar\Domain\Entity\Event;
 use App\Calendar\Domain\Repository\Interfaces\EventRepositoryInterface;
+use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\User\Domain\Entity\User;
+use Psr\Cache\InvalidArgumentException;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Throwable;
 
+use function array_filter;
 use function array_map;
 
-final class EventListService
+final readonly class EventListService
 {
-    public function __construct(private readonly EventRepositoryInterface $eventRepository)
-    {
+    public function __construct(
+        private EventRepositoryInterface $eventRepository,
+        private CacheInterface $cache,
+        private ElasticsearchServiceInterface $elasticsearchService,
+    ) {
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @param array<string, string> $filters
+     *
+     * @return array<string, mixed>
+     * @throws InvalidArgumentException
+     * @throws \JsonException
      */
-    public function getByUser(User $user): array
+    public function getByUser(User $user, array $filters = [], int $page = 1, int $limit = 20): array
     {
-        return $this->normalizeEvents($this->eventRepository->findByUser($user));
+        return $this->getList('user', $filters, $page, $limit, $user, null);
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @param array<string, string> $filters
+     *
+     * @return array<string, mixed>
+     * @throws InvalidArgumentException
+     * @throws \JsonException
      */
-    public function getByApplicationSlug(string $applicationSlug): array
+    public function getByApplicationSlug(string $applicationSlug, array $filters = [], int $page = 1, int $limit = 20): array
     {
-        return $this->normalizeEvents($this->eventRepository->findByApplicationSlug($applicationSlug));
+        return $this->getList('application_public', $filters, $page, $limit, null, $applicationSlug);
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @param array<string, string> $filters
+     *
+     * @return array<string, mixed>
+     * @throws InvalidArgumentException
+     * @throws \JsonException
      */
-    public function getByApplicationSlugAndUser(string $applicationSlug, User $user): array
+    public function getByApplicationSlugAndUser(string $applicationSlug, User $user, array $filters = [], int $page = 1, int $limit = 20): array
     {
-        return $this->normalizeEvents($this->eventRepository->findByApplicationSlugAndUser($applicationSlug, $user));
+        return $this->getList('application_private', $filters, $page, $limit, $user, $applicationSlug);
+    }
+
+    /**
+     * @param array<string, string> $filters
+     *
+     * @return array<string, mixed>
+     * @throws InvalidArgumentException
+     * @throws \JsonException
+     */
+    private function getList(string $accessContext, array $filters, int $page, int $limit, ?User $user, ?string $applicationSlug): array
+    {
+        $page = max(1, $page);
+        $limit = max(1, min(100, $limit));
+
+        $filters = [
+            'title' => trim((string)($filters['title'] ?? '')),
+            'description' => trim((string)($filters['description'] ?? '')),
+            'location' => trim((string)($filters['location'] ?? '')),
+        ];
+
+        $cacheKey = 'event_list_' . md5((string) json_encode([
+            'accessContext' => $accessContext,
+            'userId' => $user?->getId(),
+            'applicationSlug' => $applicationSlug,
+            'page' => $page,
+            'limit' => $limit,
+            'filters' => $filters,
+        ], JSON_THROW_ON_ERROR));
+
+        /** @var array<string, mixed> $result */
+        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($accessContext, $user, $applicationSlug, $filters, $page, $limit): array {
+            $item->expiresAfter(120);
+
+            $esIds = $this->searchIdsFromElastic($filters);
+            if ($esIds === []) {
+                return [
+                    'items' => [],
+                    'pagination' => [
+                        'page' => $page,
+                        'limit' => $limit,
+                        'totalItems' => 0,
+                        'totalPages' => 0,
+                    ],
+                ];
+            }
+
+            if ($accessContext === 'user') {
+                $events = $this->eventRepository->findByUser($user, $filters, $page, $limit, $esIds);
+                $totalItems = $this->eventRepository->countByUser($user, $filters, $esIds);
+            } elseif ($accessContext === 'application_private') {
+                $events = $this->eventRepository->findByApplicationSlugAndUser($applicationSlug, $user, $filters, $page, $limit, $esIds);
+                $totalItems = $this->eventRepository->countByApplicationSlugAndUser($applicationSlug, $user, $filters, $esIds);
+            } else {
+                $events = $this->eventRepository->findByApplicationSlug($applicationSlug, $filters, $page, $limit, $esIds);
+                $totalItems = $this->eventRepository->countByApplicationSlug($applicationSlug, $filters, $esIds);
+            }
+
+            return [
+                'items' => $this->normalizeEvents($events),
+                'pagination' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'totalItems' => $totalItems,
+                    'totalPages' => $totalItems > 0 ? (int) ceil($totalItems / $limit) : 0,
+                ],
+            ];
+        });
+
+        $result['filters'] = array_filter($filters, static fn (string $value): bool => $value !== '');
+
+        return $result;
+    }
+
+    /**
+     * @param array<string, string> $filters
+     *
+     * @return array<int, string>|null
+     */
+    private function searchIdsFromElastic(array $filters): ?array
+    {
+        if ($filters['title'] === '' && $filters['description'] === '' && $filters['location'] === '') {
+            return null;
+        }
+
+        try {
+            $must = [];
+            if ($filters['title'] !== '') {
+                $must[] = ['match_phrase_prefix' => ['title' => $filters['title']]];
+            }
+            if ($filters['description'] !== '') {
+                $must[] = ['match_phrase_prefix' => ['description' => $filters['description']]];
+            }
+            if ($filters['location'] !== '') {
+                $must[] = ['match_phrase_prefix' => ['location' => $filters['location']]];
+            }
+
+            $response = $this->elasticsearchService->search(
+                ElasticsearchServiceInterface::INDEX_PREFIX . '_*',
+                [
+                    'query' => ['bool' => ['must' => $must]],
+                    '_source' => ['id'],
+                ],
+                0,
+                1000,
+            );
+
+            if (!is_array($response) || !isset($response['hits']['hits']) || !is_array($response['hits']['hits'])) {
+                return null;
+            }
+
+            $ids = [];
+            foreach ($response['hits']['hits'] as $hit) {
+                if (is_array($hit) && isset($hit['_source']['id']) && is_string($hit['_source']['id'])) {
+                    $ids[] = $hit['_source']['id'];
+                }
+            }
+
+            return array_values(array_unique($ids));
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     /**
