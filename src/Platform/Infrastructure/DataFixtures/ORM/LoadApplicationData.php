@@ -347,6 +347,11 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
 
             if (str_contains($item['platformReference'], 'Platform-RE-')) {
                 $this->addReference('Recruit-Application-' . $item['key'], $application);
+
+                // Backward compatibility for older recruit fixtures expecting this reference key.
+                if ($item['key'] === 'recruit-talent-hub') {
+                    $this->addReference('Application-recruit-lite-app', $application);
+                }
             }
         }
 
