@@ -106,7 +106,18 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Chat/Domain/Entity'
                         prefix: 'App\Chat\Domain\Entity'
                         alias: Chat
-
+                    Blog:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Blog/Domain/Entity'
+                        prefix: 'App\Blog\Domain\Entity'
+                        alias: Blog
+                    Quiz:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Quiz/Domain/Entity'
+                        prefix: 'App\Quiz\Domain\Entity'
+                        alias: Quiz
                 dql:
                     datetime_functions:
                         datesub: DoctrineExtensions\Query\Mysql\DateSub

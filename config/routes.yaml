@@ -78,3 +78,19 @@ chat-controllers:
     prefix: /api
     defaults:
         _format: json
+blog-controllers:
+    resource:
+        path: ../src/Blog/Transport/Controller/Api/
+        namespace: App\Blog\Transport\Controller\Api
+    type: attribute
+    prefix: /api
+    defaults:
+        _format: json
+quiz-controllers:
+    resource:
+        path: ../src/Quiz/Transport/Controller/Api/
+        namespace: App\Quiz\Transport\Controller\Api
+    type: attribute
+    prefix: /api
+    defaults:
+        _format: json

@@ -152,6 +152,12 @@ when@dev:
         App\Recruit\Infrastructure\DataFixtures\:
             resource: '../src/Recruit/Infrastructure/DataFixtures/*'
 
+        App\Blog\Infrastructure\DataFixtures\:
+            resource: '../src/Blog/Infrastructure/DataFixtures/*'
+
+        App\Quiz\Infrastructure\DataFixtures\:
+            resource: '../src/Quiz/Infrastructure/DataFixtures/*'
+
         App\Tests\TestCase\:
             resource: '../tests/TestCase/*'
 
