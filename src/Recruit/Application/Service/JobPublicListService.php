@@ -12,6 +12,8 @@ use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Psr\Cache\InvalidArgumentException;
+use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -41,7 +43,12 @@ class JobPublicListService
     ) {
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @param Request $request
+     * @param string $applicationSlug
+     * @return array<string, mixed>
+     * @throws InvalidArgumentException
+     */
     public function getList(Request $request, string $applicationSlug): array
     {
         $page = max(1, $request->query->getInt('page', 1));
@@ -59,12 +66,12 @@ class JobPublicListService
             'q' => trim((string) $request->query->get('q', '')),
         ];
 
-        $cacheKey = 'recruit_job_public_' . md5((string) json_encode([
-            'page' => $page,
-            'limit' => $limit,
-            'filters' => $filters,
-            'applicationSlug' => $applicationSlug,
-        ]));
+        $cacheKey = 'recruit_job_public_' . md5((string)json_encode([
+                'page' => $page,
+                'limit' => $limit,
+                'filters' => $filters,
+                'applicationSlug' => $applicationSlug,
+            ], JSON_THROW_ON_ERROR));
 
         /** @var array<string, mixed> $result */
         $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($page, $limit, $filters, $applicationSlug): array {
@@ -94,7 +101,7 @@ class JobPublicListService
                 ->leftJoin('job.badges', 'badge')->addSelect('badge')
                 ->leftJoin('job.tags', 'tag')->addSelect('tag')
                 ->andWhere('job.recruit = :recruit')
-                ->setParameter('recruit', $recruit)
+                ->setParameter('recruit', $recruit->getId() , UuidBinaryOrderedTimeType::NAME)
                 ->orderBy('job.createdAt', 'DESC')
                 ->addOrderBy('job.id', 'DESC');
 

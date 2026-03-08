@@ -20,7 +20,7 @@ class PublicJobListController
     }
 
     #[Route(path: '/v1/recruit/public/{applicationSlug}/jobs', methods: [Request::METHOD_GET])]
-    #[OA\Get(security: [], summary: 'Liste publique des offres jobs, paginée et filtrable.')]
+    #[OA\Get(summary: 'Liste publique des offres jobs, paginée et filtrable.', security: [])]
     public function __invoke(Request $request, string $applicationSlug): JsonResponse
     {
         return new JsonResponse($this->jobPublicListService->getList($request, $applicationSlug));
