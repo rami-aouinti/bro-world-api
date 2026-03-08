@@ -363,11 +363,20 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
 
     private function ensureConversation(ObjectManager $manager, Chat $chat): Conversation
     {
+        static $conversationByChat = [];
+
+        $chatKey = $chat->getId();
+
+        if (isset($conversationByChat[$chatKey]) && $conversationByChat[$chatKey] instanceof Conversation) {
+            return $conversationByChat[$chatKey];
+        }
+
         $conversation = $manager->getRepository(Conversation::class)->findOneBy([
             'chat' => $chat,
         ]);
 
         if ($conversation instanceof Conversation) {
+            $conversationByChat[$chatKey] = $conversation;
             return $conversation;
         }
 
@@ -375,6 +384,7 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             ->setChat($chat);
 
         $manager->persist($conversation);
+        $conversationByChat[$chatKey] = $conversation;
 
         return $conversation;
     }
