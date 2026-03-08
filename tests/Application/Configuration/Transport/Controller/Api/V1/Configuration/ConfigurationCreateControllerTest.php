@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Application\Configuration\Transport\Controller\Api\V1\Configuration;
 
+use App\Configuration\Infrastructure\Repository\ConfigurationRepository;
 use App\General\Domain\Utils\JSON;
 use App\Tests\TestCase\WebTestCase;
 use Generator;
@@ -12,9 +13,6 @@ use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-/**
- * @package App\Tests
- */
 class ConfigurationCreateControllerTest extends WebTestCase
 {
     private string $baseUrl = self::API_URL_PREFIX . '/v1/configuration';
@@ -60,26 +58,25 @@ class ConfigurationCreateControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that `POST /api/v1/configuration` for root returns success and decrypted private value.')]
-    public function testThatCreateActionForRootUserReturnsSuccessResponse(): void
+    #[TestDox('Test that `POST /api/v1/configuration` for root returns 202 and does not write synchronously.')]
+    public function testThatCreateActionForRootUserReturnsAcceptedResponse(): void
     {
         $client = $this->getTestClient('john-root', 'password-root');
 
         $requestData = $this->getValidPayload();
-        $requestData['private'] = true;
-        $requestData['configurationKey'] = 'system.private.created';
+        $requestData['configurationKey'] = 'system.private.created.async';
+
         $client->request(method: 'POST', uri: $this->baseUrl, content: JSON::encode($requestData));
         $response = $client->getResponse();
         $responseContent = $response->getContent();
         self::assertNotFalse($responseContent);
-        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode(), "Response:\n" . $response);
+        self::assertSame(Response::HTTP_ACCEPTED, $response->getStatusCode(), "Response:\n" . $response);
         $responseData = JSON::decode($responseContent, true);
-        self::assertArrayHasKey('id', $responseData);
-        self::assertArrayHasKey('configurationKey', $responseData);
-        self::assertArrayHasKey('configurationValue', $responseData);
-        self::assertArrayHasKey('scope', $responseData);
-        self::assertArrayHasKey('private', $responseData);
-        self::assertSame($requestData['configurationValue'], $responseData['configurationValue']);
+        self::assertArrayHasKey('operationId', $responseData);
+
+        /** @var ConfigurationRepository $repository */
+        $repository = static::getContainer()->get(ConfigurationRepository::class);
+        self::assertNull($repository->findOneBy(['configurationKey' => $requestData['configurationKey']]));
     }
 
     /**
