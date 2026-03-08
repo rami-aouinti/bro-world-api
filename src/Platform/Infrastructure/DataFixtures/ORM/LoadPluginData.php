@@ -27,6 +27,7 @@ final class LoadPluginData extends Fixture implements OrderedFixtureInterface
         'Private Beta Plugin' => '50000000-0000-1000-8000-000000000003',
         'Disabled Public Plugin' => '50000000-0000-1000-8000-000000000004',
         'Knowledge Base Connector' => '50000000-0000-1000-8000-000000000005',
+        'Quiz Master' => '50000000-0000-1000-8000-000000000006',
     ];
 
     /**
@@ -77,6 +78,15 @@ final class LoadPluginData extends Fixture implements OrderedFixtureInterface
             'enabled' => true,
             'private' => false,
             'description' => 'Connector to sync articles and FAQs from external knowledge base systems.',
+        ],
+        [
+            'uuid' => '50000000-0000-1000-8000-000000000006',
+            'key' => 'Quiz-Master',
+            'pluginKey' => 'quiz',
+            'name' => 'Quiz Master',
+            'enabled' => true,
+            'private' => false,
+            'description' => 'Gamified quiz module with categories, difficulty levels and answer scoring.',
         ],
     ];
 

@@ -181,7 +181,7 @@ class ApplicationCreateController
             $pluginKey = $plugin->getPluginKey();
 
             if (
-                in_array($pluginKey, [PluginKey::CALENDAR, PluginKey::CHAT], true)
+                in_array($pluginKey, [PluginKey::CALENDAR, PluginKey::CHAT, PluginKey::BLOG, PluginKey::QUIZ], true)
                 && in_array($pluginKey, $detectedPluginKeys, true) === false
             ) {
                 $detectedPluginKeys[] = $pluginKey;

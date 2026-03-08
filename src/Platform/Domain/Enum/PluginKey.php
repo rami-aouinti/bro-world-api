@@ -12,5 +12,6 @@ enum PluginKey: string
     case CALENDAR = 'calendar';
     case CHAT = 'chat';
     case BLOG = 'blog';
+    case QUIZ = 'quiz';
     case LANGUAGE = 'language';
 }
