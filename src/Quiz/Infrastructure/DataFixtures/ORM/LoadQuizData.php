@@ -28,7 +28,7 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
             ->setApplication($application)
             ->setConfigurationKey('quiz.module.configuration')
             ->setConfigurationValue(['shuffleQuestions' => true, 'timerSec' => 45])
-            ->setScope(ConfigurationScope::APPLICATION)
+            ->setScope(ConfigurationScope::PLATFORM)
             ->setPrivate(true);
         $manager->persist($configuration);
 
