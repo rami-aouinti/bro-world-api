@@ -33,6 +33,23 @@ class ApplicantCreateController
     }
 
     #[Route(path: '/v1/recruit/applicants', methods: [Request::METHOD_POST])]
+    #[OA\Post(
+        summary: 'Crée un candidat lié au CV du user connecté.',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['resumeId'],
+                properties: [
+                    new OA\Property(property: 'resumeId', type: 'string', format: 'uuid'),
+                    new OA\Property(property: 'coverLetter', type: 'string', example: 'Je suis motivé pour ce poste.'),
+                ],
+            ),
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Candidat créé.'),
+            new OA\Response(response: 400, description: 'Payload invalide.'),
+        ],
+    )]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
         /** @var array<string, mixed> $payload */

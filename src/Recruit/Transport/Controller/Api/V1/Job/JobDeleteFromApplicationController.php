@@ -32,7 +32,18 @@ class JobDeleteFromApplicationController
     }
 
     #[Route(path: '/v1/recruit/applications/{applicationId}/jobs/{jobId}', methods: [Request::METHOD_DELETE])]
-    #[OA\Delete(summary: 'Supprime un job via applicationId et contrôle propriétaire.')]
+    #[OA\Delete(
+        summary: 'Supprime un job via applicationId et contrôle propriétaire.',
+        parameters: [
+            new OA\Parameter(name: 'applicationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+            new OA\Parameter(name: 'jobId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'Job supprimé.'),
+            new OA\Response(response: 403, description: 'Accès interdit.'),
+            new OA\Response(response: 404, description: 'Job introuvable.'),
+        ],
+    )]
     public function __invoke(string $applicationId, string $jobId, User $loggedInUser): JsonResponse
     {
         if (!Uuid::isValid($applicationId)) {

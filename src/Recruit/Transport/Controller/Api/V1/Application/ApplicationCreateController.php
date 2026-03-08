@@ -36,6 +36,24 @@ class ApplicationCreateController
     }
 
     #[Route(path: '/v1/recruit/applications', methods: [Request::METHOD_POST])]
+    #[OA\Post(
+        summary: 'Crée une candidature pour un job.',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['applicantId', 'jobId'],
+                properties: [
+                    new OA\Property(property: 'applicantId', type: 'string', format: 'uuid'),
+                    new OA\Property(property: 'jobId', type: 'string', format: 'uuid'),
+                    new OA\Property(property: 'status', type: 'string', enum: ['WAITING']),
+                ],
+            ),
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Candidature créée.'),
+            new OA\Response(response: 400, description: 'Payload invalide.'),
+        ],
+    )]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
         /** @var array<string, mixed> $payload */

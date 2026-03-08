@@ -189,11 +189,13 @@ curl -X GET "http://localhost/api/v1/recruit/private/me/jobs" \
   -H "Authorization: Bearer <JWT_TOKEN>"
 ```
 
-### 2.4 Créer un job via `applicationId`
-`POST /v1/recruit/jobs`
+### 2.4 Créer un job via `applicationSlug`
+`POST /v1/recruit/applications/{applicationSlug}/jobs`
+
+Path params:
+- `applicationSlug` (string)
 
 Body requis:
-- `applicationId` (UUID)
 - `title` (string non vide)
 
 Body optionnel:
@@ -211,12 +213,11 @@ Body optionnel:
 
 Exemple:
 ```bash
-curl -X POST "http://localhost/api/v1/recruit/jobs" \
+curl -X POST "http://localhost/api/v1/recruit/applications/my-app/jobs" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -d '{
-    "applicationId":"9fd54f69-d75f-4527-a252-489f4d5f2d39",
     "title":"Backend Developer",
     "location":"Paris",
     "contractType":"CDI",

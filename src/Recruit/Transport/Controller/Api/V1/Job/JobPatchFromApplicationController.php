@@ -40,7 +40,32 @@ class JobPatchFromApplicationController
     }
 
     #[Route(path: '/v1/recruit/applications/{applicationId}/jobs/{jobId}', methods: [Request::METHOD_PATCH])]
-    #[OA\Patch(summary: 'Met à jour un job via applicationId et contrôle propriétaire.')]
+    #[OA\Patch(
+        summary: 'Met à jour un job via applicationId et contrôle propriétaire.',
+        parameters: [
+            new OA\Parameter(name: 'applicationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+            new OA\Parameter(name: 'jobId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'title', type: 'string'),
+                    new OA\Property(property: 'location', type: 'string'),
+                    new OA\Property(property: 'summary', type: 'string'),
+                    new OA\Property(property: 'missionTitle', type: 'string'),
+                    new OA\Property(property: 'missionDescription', type: 'string'),
+                    new OA\Property(property: 'matchScore', type: 'integer'),
+                    new OA\Property(property: 'contractType', type: 'string', enum: ['CDI', 'CDD', 'Freelance', 'Internship']),
+                    new OA\Property(property: 'workMode', type: 'string', enum: ['Onsite', 'Remote', 'Hybrid']),
+                    new OA\Property(property: 'schedule', type: 'string', enum: ['Vollzeit', 'Teilzeit', 'Contract']),
+                    new OA\Property(property: 'responsibilities', type: 'array', items: new OA\Items(type: 'string')),
+                    new OA\Property(property: 'profile', type: 'array', items: new OA\Items(type: 'string')),
+                    new OA\Property(property: 'benefits', type: 'array', items: new OA\Items(type: 'string')),
+                ],
+            ),
+        ),
+    )]
     public function __invoke(string $applicationId, string $jobId, Request $request, User $loggedInUser): JsonResponse
     {
         if (!Uuid::isValid($applicationId)) {

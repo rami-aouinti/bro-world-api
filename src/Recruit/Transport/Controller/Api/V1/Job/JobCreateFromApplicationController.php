@@ -14,7 +14,6 @@ use App\Recruit\Infrastructure\Repository\JobRepository;
 use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
-use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -39,27 +38,60 @@ class JobCreateFromApplicationController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/jobs', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'Crée un job en résolvant automatiquement le recruit via applicationId.')]
-    public function __invoke(Request $request, User $loggedInUser): JsonResponse
+    #[Route(path: '/v1/recruit/applications/{applicationSlug}/jobs', methods: [Request::METHOD_POST])]
+    #[OA\Post(
+        summary: 'Crée un job en résolvant automatiquement le recruit via applicationSlug.',
+        parameters: [
+            new OA\Parameter(
+                name: 'applicationSlug',
+                description: 'Slug de l\'application propriétaire de l\'offre.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['title'],
+                properties: [
+                    new OA\Property(property: 'title', type: 'string', example: 'Backend Developer'),
+                    new OA\Property(property: 'location', type: 'string', example: 'Paris'),
+                    new OA\Property(property: 'summary', type: 'string', example: 'Build robust APIs'),
+                    new OA\Property(property: 'missionTitle', type: 'string', example: 'Your mission'),
+                    new OA\Property(property: 'missionDescription', type: 'string', example: 'Develop and maintain services'),
+                    new OA\Property(property: 'matchScore', type: 'integer', example: 85),
+                    new OA\Property(property: 'contractType', type: 'string', enum: ['CDI', 'CDD', 'Freelance', 'Internship']),
+                    new OA\Property(property: 'workMode', type: 'string', enum: ['Onsite', 'Remote', 'Hybrid']),
+                    new OA\Property(property: 'schedule', type: 'string', enum: ['Vollzeit', 'Teilzeit', 'Contract']),
+                    new OA\Property(property: 'responsibilities', type: 'array', items: new OA\Items(type: 'string')),
+                    new OA\Property(property: 'profile', type: 'array', items: new OA\Items(type: 'string')),
+                    new OA\Property(property: 'benefits', type: 'array', items: new OA\Items(type: 'string')),
+                ],
+            ),
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Job créé.'),
+            new OA\Response(response: 400, description: 'Payload invalide.'),
+            new OA\Response(response: 403, description: 'Accès interdit sur cette application.'),
+        ],
+    )]
+    public function __invoke(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
     {
         /** @var array<string, mixed> $payload */
         $payload = $request->toArray();
 
-        $applicationId = $payload['applicationId'] ?? null;
         $title = $payload['title'] ?? null;
-
-        if (!is_string($applicationId) || !Uuid::isValid($applicationId)) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "applicationId" must be a valid UUID.');
-        }
 
         if (!is_string($title) || trim($title) === '') {
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "title" is required and must be a non-empty string.');
         }
 
-        $application = $this->entityManager->getRepository(PlatformApplication::class)->find($applicationId);
+        $application = $this->entityManager->getRepository(PlatformApplication::class)->findOneBy([
+            'slug' => $applicationSlug,
+        ]);
         if (!$application instanceof PlatformApplication) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "applicationId".');
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "applicationSlug".');
         }
 
         if ($application->getUser()?->getId() !== $loggedInUser->getId()) {
@@ -85,6 +117,7 @@ class JobCreateFromApplicationController
         return new JsonResponse([
             'id' => $job->getId(),
             'recruitId' => $recruit->getId(),
+            'applicationSlug' => $application->getSlug(),
             'slug' => $job->getSlug(),
             'title' => $job->getTitle(),
         ], JsonResponse::HTTP_CREATED);
