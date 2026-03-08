@@ -178,7 +178,7 @@ class JobPublicListService
             /** @var Job $job */
             foreach ($paginator as $job) {
                 $jobIds[] = $job->getId();
-                $ownerId = $job->getRecruit()?->getApplication()?->getUser()?->getId();
+                $ownerId = $job->getOwner()?->getId();
                 $jobPayload = [
                     'id' => $job->getId(),
                     'slug' => $job->getSlug(),

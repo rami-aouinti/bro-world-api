@@ -56,7 +56,7 @@ class ApplicationStatusUpdateController
             throw new NotFoundHttpException('Application not found.');
         }
 
-        $ownerId = $application->getJob()->getRecruit()?->getApplication()?->getUser()?->getId();
+        $ownerId = $application->getJob()->getOwner()?->getId();
         if ($ownerId === null || $ownerId !== $loggedInUser->getId()) {
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You are not allowed to update the status for this application.');
         }

@@ -105,7 +105,7 @@ class JobApplicationListService
 
     private function assertJobOwnership(Job $job, User $loggedInUser): void
     {
-        $ownerId = $job->getRecruit()?->getApplication()?->getUser()?->getId();
+        $ownerId = $job->getOwner()?->getId();
 
         if ($ownerId === null || $ownerId !== $loggedInUser->getId()) {
             throw new AccessDeniedHttpException('You are not allowed to access applications for this job.');

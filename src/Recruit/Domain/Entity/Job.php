@@ -10,6 +10,7 @@ use App\General\Domain\Entity\Traits\Uuid;
 use App\Recruit\Domain\Enum\ContractType;
 use App\Recruit\Domain\Enum\Schedule;
 use App\Recruit\Domain\Enum\WorkMode;
+use App\User\Domain\Entity\User;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -44,6 +45,10 @@ class Job implements EntityInterface
     #[ORM\JoinColumn(name: 'recruit_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     #[Groups(['Job', 'Job.recruit'])]
     private ?Recruit $recruit = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'owner_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    private ?User $owner = null;
 
     #[ORM\Column(name: 'slug', type: Types::STRING, length: 255, options: ['default' => ''])]
     #[Groups(['Job', 'Job.slug'])]
@@ -146,6 +151,10 @@ class Job implements EntityInterface
     public function setTitle(string $title): self { $this->title = $title; return $this; }
     public function getRecruit(): ?Recruit { return $this->recruit; }
     public function setRecruit(?Recruit $recruit): self { $this->recruit = $recruit; return $this; }
+    public function getOwner(): ?User { return $this->owner; }
+    public function setOwner(?User $owner): self { $this->owner = $owner; return $this; }
+    #[Groups(['Job', 'Job.ownerId'])]
+    public function getOwnerId(): ?string { return $this->owner?->getId(); }
     public function getCompany(): ?Company { return $this->company; }
     public function setCompany(?Company $company): self { $this->company = $company; return $this; }
     public function getSalary(): ?Salary { return $this->salary; }

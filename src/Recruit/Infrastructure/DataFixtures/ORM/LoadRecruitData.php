@@ -143,6 +143,7 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
 
                 $job = (new Job())
                     ->setRecruit($recruit)
+                    ->setOwner($application->getUser())
                     ->setTitle($title)
                     ->setCompany($company)
                     ->setSalary($salary)

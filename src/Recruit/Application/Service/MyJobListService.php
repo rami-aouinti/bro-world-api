@@ -27,9 +27,7 @@ class MyJobListService
         $createdJobs = $this->entityManager
             ->getRepository(Job::class)
             ->createQueryBuilder('job')
-            ->innerJoin('job.recruit', 'recruit')
-            ->innerJoin('recruit.application', 'platformApplication')
-            ->innerJoin('platformApplication.user', 'owner')
+            ->innerJoin('job.owner', 'owner')
             ->leftJoin('job.company', 'company')->addSelect('company')
             ->andWhere('owner = :owner')
             ->setParameter('owner', $loggedInUser->getId(), UuidBinaryOrderedTimeType::NAME)
