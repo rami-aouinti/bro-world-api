@@ -21,15 +21,13 @@ use Override;
 use Throwable;
 
 use function sprintf;
-use function str_pad;
+use function str_contains;
 
 /**
  * @package App\Platform
  */
 final class LoadApplicationData extends Fixture implements OrderedFixtureInterface
 {
-    private const int BULK_APPLICATION_COUNT = 150;
-
     /**
      * @var array<int, array{
      *     uuid: non-empty-string,
@@ -47,140 +45,236 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
     private const array DATA = [
         [
             'uuid' => '60000000-0000-1000-8000-000000000001',
-            'key' => 'crm-growth-app',
-            'title' => 'CRM Growth App',
-            'description' => 'Application CRM pour la croissance commerciale.',
+            'key' => 'crm-sales-hub',
+            'title' => 'CRM Sales Hub',
+            'description' => 'Espace commercial pour suivre le pipeline et les opportunites.',
             'status' => PlatformStatus::ACTIVE,
             'private' => false,
             'ownerReference' => 'User-john-root',
             'platformReference' => 'Platform-CR-CRM 1',
             'appConfigurations' => [
-                [
-                    'uuid' => '60000000-0000-1000-8000-000000000101',
-                    'key' => 'application.crm.theme',
-                    'value' => ['theme' => 'dark', 'density' => 'compact'],
-                ],
-                [
-                    'uuid' => '60000000-0000-1000-8000-000000000102',
-                    'key' => 'application.crm.access',
-                    'value' => ['regions' => ['eu', 'us'], 'strictMode' => true],
-                ],
+                ['uuid' => '61000000-0000-1000-8000-000000000001', 'key' => 'application.crm.theme', 'value' => ['theme' => 'dark']],
             ],
             'plugins' => [
                 [
-                    'uuid' => '60000000-0000-1000-8000-000000000201',
+                    'uuid' => '62000000-0000-1000-8000-000000000001',
                     'reference' => 'Plugin-CRM-Assistant',
                     'configurations' => [
-                        [
-                            'uuid' => '60000000-0000-1000-8000-000000000301',
-                            'key' => 'plugin.crm-assistant.prompts',
-                            'value' => ['autoSummary' => true, 'language' => 'en'],
-                        ],
-                    ],
-                ],
-                [
-                    'uuid' => '60000000-0000-1000-8000-000000000202',
-                    'reference' => 'Plugin-Analytics-Booster',
-                    'configurations' => [
-                        [
-                            'uuid' => '60000000-0000-1000-8000-000000000302',
-                            'key' => 'plugin.analytics.widgets',
-                            'value' => ['enabled' => ['pipeline', 'conversion']],
-                        ],
+                        ['uuid' => '63000000-0000-1000-8000-000000000001', 'key' => 'plugin.crm-assistant.mode', 'value' => ['assistant' => 'sales']],
                     ],
                 ],
             ],
         ],
         [
             'uuid' => '60000000-0000-1000-8000-000000000002',
-            'key' => 'shop-ops-app',
-            'title' => 'Shop Ops App',
-            'description' => 'Application de gestion des operations e-commerce.',
+            'key' => 'crm-pipeline-pro',
+            'title' => 'CRM Pipeline Pro',
+            'description' => 'Vue avancee des etapes de conversion et relances.',
             'status' => PlatformStatus::MAINTENANCE,
-            'private' => false,
-            'ownerReference' => 'User-john-root',
-            'platformReference' => 'Platform-SH-Shop Principal',
+            'private' => true,
+            'ownerReference' => 'User-john-admin',
+            'platformReference' => 'Platform-CR-CRM 1',
             'appConfigurations' => [
-                [
-                    'uuid' => '60000000-0000-1000-8000-000000000103',
-                    'key' => 'application.shop.checkout',
-                    'value' => ['retryPayment' => true, 'guestCheckout' => false],
-                ],
+                ['uuid' => '61000000-0000-1000-8000-000000000002', 'key' => 'application.crm.forecast', 'value' => ['enabled' => true]],
             ],
             'plugins' => [
                 [
-                    'uuid' => '60000000-0000-1000-8000-000000000203',
-                    'reference' => 'Plugin-Knowledge-Base-Connector',
+                    'uuid' => '62000000-0000-1000-8000-000000000002',
+                    'reference' => 'Plugin-Analytics-Booster',
                     'configurations' => [
-                        [
-                            'uuid' => '60000000-0000-1000-8000-000000000303',
-                            'key' => 'plugin.kb.sync',
-                            'value' => ['intervalMinutes' => 15, 'categories' => ['faq', 'refund']],
-                        ],
+                        ['uuid' => '63000000-0000-1000-8000-000000000002', 'key' => 'plugin.analytics.widgets', 'value' => ['pipeline', 'wonDeals']],
                     ],
                 ],
             ],
         ],
         [
             'uuid' => '60000000-0000-1000-8000-000000000003',
-            'key' => 'recruit-lite-app',
-            'title' => 'Recruit Lite App',
-            'description' => 'Application privee pour le recrutement interne.',
-            'status' => PlatformStatus::DISABLED,
-            'private' => true,
-            'ownerReference' => 'User-john-root',
-            'platformReference' => 'Platform-RE-Recruit Principal',
+            'key' => 'crm-support-desk',
+            'title' => 'CRM Support Desk',
+            'description' => 'Gestion des demandes clients et suivi de satisfaction.',
+            'status' => PlatformStatus::ACTIVE,
+            'private' => false,
+            'ownerReference' => 'User-john-user',
+            'platformReference' => 'Platform-CR-CRM 2',
             'appConfigurations' => [
-                [
-                    'uuid' => '60000000-0000-1000-8000-000000000104',
-                    'key' => 'application.recruit.visibility',
-                    'value' => ['publicJobs' => false, 'teamOnly' => true],
-                ],
+                ['uuid' => '61000000-0000-1000-8000-000000000003', 'key' => 'application.crm.support', 'value' => ['slaHours' => 24]],
             ],
             'plugins' => [
                 [
-                    'uuid' => '60000000-0000-1000-8000-000000000204',
-                    'reference' => 'Plugin-Private-Beta-Plugin',
+                    'uuid' => '62000000-0000-1000-8000-000000000003',
+                    'reference' => 'Plugin-Knowledge-Base-Connector',
                     'configurations' => [
-                        [
-                            'uuid' => '60000000-0000-1000-8000-000000000304',
-                            'key' => 'plugin.beta.flags',
-                            'value' => ['aiRanking' => false, 'cvParsingV2' => true],
-                        ],
+                        ['uuid' => '63000000-0000-1000-8000-000000000003', 'key' => 'plugin.kb.categories', 'value' => ['support', 'faq']],
                     ],
                 ],
             ],
         ],
         [
             'uuid' => '60000000-0000-1000-8000-000000000004',
-            'key' => 'john-user-private-app',
-            'title' => 'John User Private App',
-            'description' => 'Application privee de l\'utilisateur authentifie john-user.',
+            'key' => 'shop-ops-center',
+            'title' => 'Shop Ops Center',
+            'description' => 'Pilotage des operations e-commerce quotidiennes.',
             'status' => PlatformStatus::ACTIVE,
-            'private' => true,
-            'ownerReference' => 'User-john-user',
-            'platformReference' => 'Platform-CR-CRM 1',
+            'private' => false,
+            'ownerReference' => 'User-john-root',
+            'platformReference' => 'Platform-SH-Shop Principal',
             'appConfigurations' => [
-                [
-                    'uuid' => '60000000-0000-1000-8000-000000000105',
-                    'key' => 'application.john-user.notifications',
-                    'value' => ['email' => true, 'push' => false],
-                ],
+                ['uuid' => '61000000-0000-1000-8000-000000000004', 'key' => 'application.shop.checkout', 'value' => ['guestCheckout' => true]],
             ],
             'plugins' => [
                 [
-                    'uuid' => '60000000-0000-1000-8000-000000000205',
-                    'reference' => 'Plugin-CRM-Assistant',
+                    'uuid' => '62000000-0000-1000-8000-000000000004',
+                    'reference' => 'Plugin-Knowledge-Base-Connector',
                     'configurations' => [
-                        [
-                            'uuid' => '60000000-0000-1000-8000-000000000305',
-                            'key' => 'plugin.crm-assistant.private-mode',
-                            'value' => ['enabled' => true],
-                        ],
+                        ['uuid' => '63000000-0000-1000-8000-000000000004', 'key' => 'plugin.kb.sync', 'value' => ['intervalMinutes' => 30]],
                     ],
                 ],
             ],
-        ]
+        ],
+        [
+            'uuid' => '60000000-0000-1000-8000-000000000005',
+            'key' => 'shop-catalog-lab',
+            'title' => 'Shop Catalog Lab',
+            'description' => 'Travail sur les fiches produits et categories.',
+            'status' => PlatformStatus::DISABLED,
+            'private' => true,
+            'ownerReference' => 'User-john-api',
+            'platformReference' => 'Platform-SH-Shop Principal',
+            'appConfigurations' => [
+                ['uuid' => '61000000-0000-1000-8000-000000000005', 'key' => 'application.shop.catalog', 'value' => ['autoClassify' => false]],
+            ],
+            'plugins' => [],
+        ],
+        [
+            'uuid' => '60000000-0000-1000-8000-000000000006',
+            'key' => 'shop-orders-watch',
+            'title' => 'Shop Orders Watch',
+            'description' => 'Suivi des commandes et incidents de paiement.',
+            'status' => PlatformStatus::MAINTENANCE,
+            'private' => false,
+            'ownerReference' => 'User-john-logged',
+            'platformReference' => 'Platform-SH-Shop Principal',
+            'appConfigurations' => [
+                ['uuid' => '61000000-0000-1000-8000-000000000006', 'key' => 'application.shop.orders', 'value' => ['fraudScore' => true]],
+            ],
+            'plugins' => [
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000006',
+                    'reference' => 'Plugin-Analytics-Booster',
+                    'configurations' => [
+                        ['uuid' => '63000000-0000-1000-8000-000000000006', 'key' => 'plugin.analytics.orders', 'value' => ['daily' => true]],
+                    ],
+                ],
+            ],
+        ],
+        [
+            'uuid' => '60000000-0000-1000-8000-000000000007',
+            'key' => 'school-campus-core',
+            'title' => 'School Campus Core',
+            'description' => 'Organisation des classes et planning du campus.',
+            'status' => PlatformStatus::ACTIVE,
+            'private' => false,
+            'ownerReference' => 'User-john-root',
+            'platformReference' => 'Platform-SC-School Principal',
+            'appConfigurations' => [
+                ['uuid' => '61000000-0000-1000-8000-000000000007', 'key' => 'application.school.schedule', 'value' => ['timezone' => 'Europe/Paris']],
+            ],
+            'plugins' => [],
+        ],
+        [
+            'uuid' => '60000000-0000-1000-8000-000000000008',
+            'key' => 'school-course-flow',
+            'title' => 'School Course Flow',
+            'description' => 'Flux des cours et suivi de progression pedagogique.',
+            'status' => PlatformStatus::ACTIVE,
+            'private' => true,
+            'ownerReference' => 'User-john-admin',
+            'platformReference' => 'Platform-SC-School Principal',
+            'appConfigurations' => [
+                ['uuid' => '61000000-0000-1000-8000-000000000008', 'key' => 'application.school.course', 'value' => ['semester' => 'S1']],
+            ],
+            'plugins' => [
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000008',
+                    'reference' => 'Plugin-Private-Beta-Plugin',
+                    'configurations' => [
+                        ['uuid' => '63000000-0000-1000-8000-000000000008', 'key' => 'plugin.beta.flags', 'value' => ['classAssistant' => true]],
+                    ],
+                ],
+            ],
+        ],
+        [
+            'uuid' => '60000000-0000-1000-8000-000000000009',
+            'key' => 'school-grade-track',
+            'title' => 'School Grade Track',
+            'description' => 'Saisie des notes et evaluation continue.',
+            'status' => PlatformStatus::MAINTENANCE,
+            'private' => false,
+            'ownerReference' => 'User-john-user',
+            'platformReference' => 'Platform-SC-School Principal',
+            'appConfigurations' => [
+                ['uuid' => '61000000-0000-1000-8000-000000000009', 'key' => 'application.school.grades', 'value' => ['scale' => 20]],
+            ],
+            'plugins' => [],
+        ],
+        [
+            'uuid' => '60000000-0000-1000-8000-000000000010',
+            'key' => 'recruit-talent-hub',
+            'title' => 'Recruit Talent Hub',
+            'description' => 'Publication d\'offres et centralisation des talents.',
+            'status' => PlatformStatus::ACTIVE,
+            'private' => false,
+            'ownerReference' => 'User-john-root',
+            'platformReference' => 'Platform-RE-Recruit Principal',
+            'appConfigurations' => [
+                ['uuid' => '61000000-0000-1000-8000-000000000010', 'key' => 'application.recruit.visibility', 'value' => ['publicJobs' => true]],
+            ],
+            'plugins' => [
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000010',
+                    'reference' => 'Plugin-CRM-Assistant',
+                    'configurations' => [
+                        ['uuid' => '63000000-0000-1000-8000-000000000010', 'key' => 'plugin.crm-assistant.recruit', 'value' => ['rankingHelp' => true]],
+                    ],
+                ],
+            ],
+        ],
+        [
+            'uuid' => '60000000-0000-1000-8000-000000000011',
+            'key' => 'recruit-hiring-pipeline',
+            'title' => 'Recruit Hiring Pipeline',
+            'description' => 'Pipeline de recrutement avec etapes de qualification.',
+            'status' => PlatformStatus::ACTIVE,
+            'private' => true,
+            'ownerReference' => 'User-john-admin',
+            'platformReference' => 'Platform-RE-Recruit Principal',
+            'appConfigurations' => [
+                ['uuid' => '61000000-0000-1000-8000-000000000011', 'key' => 'application.recruit.pipeline', 'value' => ['stages' => ['screening', 'interview']]],
+            ],
+            'plugins' => [
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000011',
+                    'reference' => 'Plugin-Private-Beta-Plugin',
+                    'configurations' => [
+                        ['uuid' => '63000000-0000-1000-8000-000000000011', 'key' => 'plugin.beta.recruit', 'value' => ['cvParsingV2' => true]],
+                    ],
+                ],
+            ],
+        ],
+        [
+            'uuid' => '60000000-0000-1000-8000-000000000012',
+            'key' => 'recruit-interview-desk',
+            'title' => 'Recruit Interview Desk',
+            'description' => 'Gestion des entretiens et feedbacks candidats.',
+            'status' => PlatformStatus::DISABLED,
+            'private' => false,
+            'ownerReference' => 'User-john-user',
+            'platformReference' => 'Platform-RE-Recruit Principal',
+            'appConfigurations' => [
+                ['uuid' => '61000000-0000-1000-8000-000000000012', 'key' => 'application.recruit.interview', 'value' => ['calendarSync' => false]],
+            ],
+            'plugins' => [],
+        ],
     ];
 
     /**
@@ -250,65 +344,18 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
 
             $manager->persist($application);
             $this->addReference('Application-' . $item['key'], $application);
-        }
 
-        $this->loadBulkPrivateApplications($manager);
+            if (str_contains($item['platformReference'], 'Platform-RE-')) {
+                $this->addReference('Recruit-Application-' . $item['key'], $application);
+
+                // Backward compatibility for older recruit fixtures expecting this reference key.
+                if ($item['key'] === 'recruit-talent-hub') {
+                    $this->addReference('Application-recruit-lite-app', $application);
+                }
+            }
+        }
 
         $manager->flush();
-    }
-
-    /**
-     * @throws Throwable
-     */
-    private function loadBulkPrivateApplications(ObjectManager $manager): void
-    {
-        $ownerReferences = [
-            'User-john',
-            'User-john-logged',
-            'User-john-api',
-            'User-john-admin',
-            'User-john-user',
-        ];
-        $platformReferences = [
-            'Platform-SH-Shop Principal',
-            'Platform-RE-Recruit Principal',
-            'Platform-SC-School Principal',
-        ];
-        $statuses = [
-            PlatformStatus::ACTIVE,
-            PlatformStatus::MAINTENANCE,
-            PlatformStatus::DISABLED,
-        ];
-
-        for ($index = 1; $index <= self::BULK_APPLICATION_COUNT; ++$index) {
-            $ownerReference = $ownerReferences[($index - 1) % count($ownerReferences)];
-            $platformReference = $platformReferences[($index - 1) % count($platformReferences)];
-            $status = $statuses[($index - 1) % count($statuses)];
-
-            /** @var User $owner */
-            $owner = $this->getReference($ownerReference, User::class);
-
-            /** @var Platform $platform */
-            $platform = $this->getReference($platformReference, Platform::class);
-
-            $application = (new Application())
-                ->setUser($owner)
-                ->setPlatform($platform)
-                ->setTitle(sprintf('Bulk Private App %03d', $index))
-                ->setDescription(sprintf('Application de fixture volumique %03d pour %s.', $index, $owner->getUsername()))
-                ->setStatus($status)
-                ->setPrivate(true);
-
-            PhpUnitUtil::setProperty('id', UuidHelper::fromString($this->buildBulkUuid($index)), $application);
-
-            $manager->persist($application);
-            $this->addReference(sprintf('Application-bulk-private-%03d', $index), $application);
-        }
-    }
-
-    private function buildBulkUuid(int $index): string
-    {
-        return '70000000-0000-1000-8000-' . str_pad((string) $index, 12, '0', STR_PAD_LEFT);
     }
 
     #[Override]

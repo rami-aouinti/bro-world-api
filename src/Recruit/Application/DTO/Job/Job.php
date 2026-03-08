@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Recruit\Application\DTO\Job;
 
 use App\General\Application\DTO\RestDto;
+use App\General\Application\Validator\Constraints as AppAssert;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\Recruit\Domain\Entity\Job as Entity;
+use App\Recruit\Domain\Entity\Recruit as RecruitEntity;
 use App\Recruit\Domain\Enum\ContractType;
 use App\Recruit\Domain\Enum\Schedule;
 use App\Recruit\Domain\Enum\WorkMode;
@@ -14,6 +16,9 @@ use Override;
 
 class Job extends RestDto
 {
+    #[AppAssert\EntityReferenceExists(entityClass: RecruitEntity::class)]
+    protected ?RecruitEntity $recruit = null;
+
     protected string $title = '';
     protected string $location = '';
     protected string $contractType = ContractType::CDI->value;
@@ -27,6 +32,8 @@ class Job extends RestDto
     protected array $profile = [];
     protected array $benefits = [];
 
+    public function getRecruit(): ?RecruitEntity { return $this->recruit; }
+    public function setRecruit(RecruitEntity $recruit): self { $this->setVisited('recruit'); $this->recruit = $recruit; return $this; }
     public function getTitle(): string { return $this->title; }
     public function setTitle(string $title): self { $this->setVisited('title'); $this->title = $title; return $this; }
     public function getLocation(): string { return $this->location; }
@@ -57,6 +64,7 @@ class Job extends RestDto
     {
         if ($entity instanceof Entity) {
             $this->id = $entity->getId();
+            $this->recruit = $entity->getRecruit();
             $this->title = $entity->getTitle();
             $this->location = $entity->getLocation();
             $this->contractType = $entity->getContractTypeValue();

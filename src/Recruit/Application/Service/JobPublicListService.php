@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace App\Recruit\Application\Service;
 
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
+use App\Platform\Domain\Entity\Application;
 use App\Recruit\Domain\Entity\Job;
+use App\Recruit\Domain\Entity\Recruit;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Throwable;
@@ -25,6 +29,7 @@ use function json_encode;
 use function mb_strtolower;
 use function md5;
 use function preg_match;
+use function sprintf;
 use function strtolower;
 
 class JobPublicListService
@@ -37,7 +42,7 @@ class JobPublicListService
     }
 
     /** @return array<string, mixed> */
-    public function getList(Request $request): array
+    public function getList(Request $request, string $applicationSlug): array
     {
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
@@ -58,11 +63,28 @@ class JobPublicListService
             'page' => $page,
             'limit' => $limit,
             'filters' => $filters,
+            'applicationSlug' => $applicationSlug,
         ]));
 
         /** @var array<string, mixed> $result */
-        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($page, $limit, $filters): array {
+        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($page, $limit, $filters, $applicationSlug): array {
             $item->expiresAfter(120);
+
+            $application = $this->entityManager->getRepository(Application::class)->findOneBy([
+                'slug' => $applicationSlug,
+            ]);
+
+            if (!$application instanceof Application) {
+                throw new NotFoundHttpException('Application not found.');
+            }
+
+            $recruit = $this->entityManager->getRepository(Recruit::class)->findOneBy([
+                'application' => $application,
+            ]);
+
+            if (!$recruit instanceof Recruit) {
+                throw new NotFoundHttpException('Recruit not found for this application.');
+            }
 
             $qb = $this->entityManager
                 ->getRepository(Job::class)
@@ -71,6 +93,8 @@ class JobPublicListService
                 ->leftJoin('job.salary', 'salary')->addSelect('salary')
                 ->leftJoin('job.badges', 'badge')->addSelect('badge')
                 ->leftJoin('job.tags', 'tag')->addSelect('tag')
+                ->andWhere('job.recruit = :recruit')
+                ->setParameter('recruit', $recruit)
                 ->orderBy('job.createdAt', 'DESC')
                 ->addOrderBy('job.id', 'DESC');
 
@@ -294,7 +318,7 @@ class JobPublicListService
         }
     }
 
-    private function applyPostedAtLabelFilter(\Doctrine\ORM\QueryBuilder $qb, string $postedAtLabel): void
+    private function applyPostedAtLabelFilter(QueryBuilder $qb, string $postedAtLabel): void
     {
         if ($postedAtLabel === '') {
             return;

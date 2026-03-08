@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Recruit\Infrastructure\DataFixtures\ORM;
 
+use App\Platform\Domain\Entity\Application;
+use App\Platform\Domain\Enum\PlatformKey;
 use App\Recruit\Domain\Entity\Badge;
 use App\Recruit\Domain\Entity\Company;
 use App\Recruit\Domain\Entity\Job;
+use App\Recruit\Domain\Entity\Recruit;
 use App\Recruit\Domain\Entity\Salary;
 use App\Recruit\Domain\Entity\Tag;
 use App\Recruit\Domain\Enum\ContractType;
@@ -24,7 +27,7 @@ use function sprintf;
 
 final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
 {
-    private const int JOB_COUNT = 100;
+    private const int JOB_COUNT_PER_APPLICATION = 12;
 
     /** @var array<int, array{name: string, logo: string, sector: string, size: string}> */
     private const array COMPANIES = [
@@ -90,71 +93,100 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
             $badges[] = $badge;
         }
 
-        for ($i = 1; $i <= self::JOB_COUNT; ++$i) {
-            $title = self::TITLES[($i - 1) % count(self::TITLES)];
-            $company = $companies[($i - 1) % count($companies)];
+        $recruitApplications = $manager->getRepository(Application::class)
+            ->createQueryBuilder('application')
+            ->innerJoin('application.platform', 'platform')
+            ->andWhere('platform.platformKey = :platformKey')
+            ->setParameter('platformKey', PlatformKey::RECRUIT)
+            ->orderBy('application.title', 'ASC')
+            ->getQuery()
+            ->getResult();
 
-            $salaryMin = 38000 + (($i % 8) * 4000);
-            $salary = (new Salary())
-                ->setMin($salaryMin)
-                ->setMax($salaryMin + 18000)
-                ->setCurrency('EUR')
-                ->setPeriod('year');
-
-            $job = (new Job())
-                ->setTitle($title)
-                ->setCompany($company)
-                ->setSalary($salary)
-                ->setLocation(self::LOCATIONS[($i - 1) % count(self::LOCATIONS)])
-                ->setContractType(match ($i % 4) {
-                    0 => ContractType::CDI,
-                    1 => ContractType::CDD,
-                    2 => ContractType::FREELANCE,
-                    default => ContractType::INTERNSHIP,
-                })
-                ->setWorkMode(match ($i % 3) {
-                    0 => WorkMode::HYBRID,
-                    1 => WorkMode::REMOTE,
-                    default => WorkMode::ONSITE,
-                })
-                ->setSchedule(match ($i % 3) {
-                    0 => Schedule::FULL_TIME,
-                    1 => Schedule::PART_TIME,
-                    default => Schedule::CONTRACT,
-                })
-                ->setSummary('Wir suchen einen leidenschaftlichen Fullstack-Entwickler mit Expertise in PHP, Laravel, React und Typescript.')
-                ->setMatchScore(65 + ($i % 35))
-                ->setMissionTitle('Deine Mission:')
-                ->setMissionDescription('Wir suchen einen leidenschaftlichen Fullstack-Entwickler...')
-                ->setResponsibilities([
-                    'Innovation gestalten',
-                    'Architektur weiterentwickeln',
-                    sprintf('Agilität leben (Team %d)', (($i - 1) % 10) + 1),
-                ])
-                ->setProfile([
-                    'Erfahrung in PHP und Laravel',
-                    'REST API und PostgreSQL',
-                    'Deutsch und Englisch',
-                ])
-                ->setBenefits([
-                    'Sinnstiftende Arbeit',
-                    'Flexibles Arbeiten',
-                    'Weiterbildung',
-                ])
-                ->setCreatedAt((new DateTimeImmutable())->modify(sprintf('-%d day', $i % 45)))
-                ->ensureGeneratedSlug();
-
-            $job->addBadge($badges[($i - 1) % count($badges)]);
-            $job->addBadge($badges[$i % count($badges)]);
-
-            $tagStart = (int) floor($i % count($tags));
-            for ($offset = 0; $offset < 4; ++$offset) {
-                $job->addTag($tags[($tagStart + $offset) % count($tags)]);
+        $jobReferenceIndex = 1;
+        foreach ($recruitApplications as $applicationIndex => $application) {
+            if (!$application instanceof Application) {
+                continue;
             }
 
-            $manager->persist($salary);
-            $manager->persist($job);
-            $this->addReference(sprintf('Recruit-Job-%03d', $i), $job);
+            $recruit = $manager->getRepository(Recruit::class)->findOneBy([
+                'application' => $application,
+            ]);
+
+            if (!$recruit instanceof Recruit) {
+                $recruit = (new Recruit())->setApplication($application);
+                $manager->persist($recruit);
+            }
+
+            for ($i = 1; $i <= self::JOB_COUNT_PER_APPLICATION; ++$i) {
+                $loopIndex = ($applicationIndex * self::JOB_COUNT_PER_APPLICATION) + $i;
+                $title = self::TITLES[($loopIndex - 1) % count(self::TITLES)];
+                $company = $companies[($loopIndex - 1) % count($companies)];
+
+                $salaryMin = 38000 + (($loopIndex % 8) * 4000);
+                $salary = (new Salary())
+                    ->setMin($salaryMin)
+                    ->setMax($salaryMin + 18000)
+                    ->setCurrency('EUR')
+                    ->setPeriod('year');
+
+                $job = (new Job())
+                    ->setRecruit($recruit)
+                    ->setTitle($title)
+                    ->setCompany($company)
+                    ->setSalary($salary)
+                    ->setLocation(self::LOCATIONS[($loopIndex - 1) % count(self::LOCATIONS)])
+                    ->setContractType(match ($loopIndex % 4) {
+                        0 => ContractType::CDI,
+                        1 => ContractType::CDD,
+                        2 => ContractType::FREELANCE,
+                        default => ContractType::INTERNSHIP,
+                    })
+                    ->setWorkMode(match ($loopIndex % 3) {
+                        0 => WorkMode::HYBRID,
+                        1 => WorkMode::REMOTE,
+                        default => WorkMode::ONSITE,
+                    })
+                    ->setSchedule(match ($loopIndex % 3) {
+                        0 => Schedule::FULL_TIME,
+                        1 => Schedule::PART_TIME,
+                        default => Schedule::CONTRACT,
+                    })
+                    ->setSummary('Wir suchen einen leidenschaftlichen Fullstack-Entwickler mit Expertise in PHP, Laravel, React und Typescript.')
+                    ->setMatchScore(65 + ($loopIndex % 35))
+                    ->setMissionTitle('Deine Mission:')
+                    ->setMissionDescription('Wir suchen einen leidenschaftlichen Fullstack-Entwickler...')
+                    ->setResponsibilities([
+                        'Innovation gestalten',
+                        'Architektur weiterentwickeln',
+                        sprintf('Agilität leben (Team %d)', (($loopIndex - 1) % 10) + 1),
+                    ])
+                    ->setProfile([
+                        'Erfahrung in PHP und Laravel',
+                        'REST API und PostgreSQL',
+                        'Deutsch und Englisch',
+                    ])
+                    ->setBenefits([
+                        'Sinnstiftende Arbeit',
+                        'Flexibles Arbeiten',
+                        'Weiterbildung',
+                    ])
+                    ->setCreatedAt((new DateTimeImmutable())->modify(sprintf('-%d day', $loopIndex % 45)))
+                    ->ensureGeneratedSlug();
+
+                $job->addBadge($badges[($loopIndex - 1) % count($badges)]);
+                $job->addBadge($badges[$loopIndex % count($badges)]);
+
+                $tagStart = (int) floor($loopIndex % count($tags));
+                for ($offset = 0; $offset < 4; ++$offset) {
+                    $job->addTag($tags[($tagStart + $offset) % count($tags)]);
+                }
+
+                $manager->persist($salary);
+                $manager->persist($job);
+                $this->addReference(sprintf('Recruit-Job-%03d', $jobReferenceIndex), $job);
+
+                ++$jobReferenceIndex;
+            }
         }
 
         $manager->flush();

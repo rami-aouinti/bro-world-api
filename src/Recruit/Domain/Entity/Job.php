@@ -39,6 +39,12 @@ class Job implements EntityInterface
     #[Groups(['Job', 'Job.id'])]
     private UuidInterface $id;
 
+
+    #[ORM\ManyToOne(targetEntity: Recruit::class, inversedBy: 'jobs')]
+    #[ORM\JoinColumn(name: 'recruit_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    #[Groups(['Job', 'Job.recruit'])]
+    private ?Recruit $recruit = null;
+
     #[ORM\Column(name: 'slug', type: Types::STRING, length: 255, options: ['default' => ''])]
     #[Groups(['Job', 'Job.slug'])]
     private string $slug = '';
@@ -138,6 +144,8 @@ class Job implements EntityInterface
     public function setSlug(string $slug): self { $this->slug = $slug; return $this; }
     public function getTitle(): string { return $this->title; }
     public function setTitle(string $title): self { $this->title = $title; return $this; }
+    public function getRecruit(): ?Recruit { return $this->recruit; }
+    public function setRecruit(?Recruit $recruit): self { $this->recruit = $recruit; return $this; }
     public function getCompany(): ?Company { return $this->company; }
     public function setCompany(?Company $company): self { $this->company = $company; return $this; }
     public function getSalary(): ?Salary { return $this->salary; }
