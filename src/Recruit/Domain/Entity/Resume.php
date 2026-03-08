@@ -84,4 +84,100 @@ class Resume implements EntityInterface
     public function getOwner(): User { return $this->owner; }
     public function setOwner(User $owner): self { $this->owner = $owner; return $this; }
     public function getApplicant(): ?Applicant { return $this->applicant; }
+
+    /** @return Collection<int, Experience>|ArrayCollection<int, Experience> */
+    public function getExperiences(): Collection|ArrayCollection { return $this->experiences; }
+    public function addExperience(Experience $experience): self
+    {
+        if (!$this->experiences->contains($experience)) {
+            $this->experiences->add($experience);
+            $experience->setResume($this);
+        }
+
+        return $this;
+    }
+
+    /** @return Collection<int, Education>|ArrayCollection<int, Education> */
+    public function getEducations(): Collection|ArrayCollection { return $this->educations; }
+    public function addEducation(Education $education): self
+    {
+        if (!$this->educations->contains($education)) {
+            $this->educations->add($education);
+            $education->setResume($this);
+        }
+
+        return $this;
+    }
+
+    /** @return Collection<int, Skill>|ArrayCollection<int, Skill> */
+    public function getSkills(): Collection|ArrayCollection { return $this->skills; }
+    public function addSkill(Skill $skill): self
+    {
+        if (!$this->skills->contains($skill)) {
+            $this->skills->add($skill);
+            $skill->setResume($this);
+        }
+
+        return $this;
+    }
+
+    /** @return Collection<int, Language>|ArrayCollection<int, Language> */
+    public function getLanguages(): Collection|ArrayCollection { return $this->languages; }
+    public function addLanguage(Language $language): self
+    {
+        if (!$this->languages->contains($language)) {
+            $this->languages->add($language);
+            $language->setResume($this);
+        }
+
+        return $this;
+    }
+
+    /** @return Collection<int, Certification>|ArrayCollection<int, Certification> */
+    public function getCertifications(): Collection|ArrayCollection { return $this->certifications; }
+    public function addCertification(Certification $certification): self
+    {
+        if (!$this->certifications->contains($certification)) {
+            $this->certifications->add($certification);
+            $certification->setResume($this);
+        }
+
+        return $this;
+    }
+
+    /** @return Collection<int, Project>|ArrayCollection<int, Project> */
+    public function getProjects(): Collection|ArrayCollection { return $this->projects; }
+    public function addProject(Project $project): self
+    {
+        if (!$this->projects->contains($project)) {
+            $this->projects->add($project);
+            $project->setResume($this);
+        }
+
+        return $this;
+    }
+
+    /** @return Collection<int, Reference>|ArrayCollection<int, Reference> */
+    public function getReferences(): Collection|ArrayCollection { return $this->references; }
+    public function addReference(Reference $reference): self
+    {
+        if (!$this->references->contains($reference)) {
+            $this->references->add($reference);
+            $reference->setResume($this);
+        }
+
+        return $this;
+    }
+
+    /** @return Collection<int, Hobby>|ArrayCollection<int, Hobby> */
+    public function getHobbies(): Collection|ArrayCollection { return $this->hobbies; }
+    public function addHobby(Hobby $hobby): self
+    {
+        if (!$this->hobbies->contains($hobby)) {
+            $this->hobbies->add($hobby);
+            $hobby->setResume($this);
+        }
+
+        return $this;
+    }
 }
