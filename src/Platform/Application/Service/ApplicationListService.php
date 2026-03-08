@@ -92,7 +92,7 @@ readonly class ApplicationListService
 
             $items = [];
             /** @var Application $application */
-            foreach ($query->toIterable() as $application) {
+            foreach ($query->getResult() as $application) {
                 $pluginKeys = [];
                 foreach ($application->getApplicationPlugins() as $applicationPlugin) {
                     $pluginKey = $applicationPlugin->getPlugin()?->getPluginKeyValue();
