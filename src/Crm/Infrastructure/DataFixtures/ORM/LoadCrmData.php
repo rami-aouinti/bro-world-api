@@ -17,111 +17,67 @@ use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Override;
 
-use function sprintf;
-
 final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 {
-    private const int COMPANY_COUNT_PER_APPLICATION = 2;
-    private const int PROJECT_COUNT_PER_COMPANY = 2;
-    private const int TASK_COUNT_PER_PROJECT = 3;
+    /** @var array<non-empty-string, array<int, non-empty-string>> */
+    private const array APPLICATION_KEYS_BY_PLATFORM = [
+        PlatformKey::CRM->value => [
+            'crm-sales-hub',
+            'crm-pipeline-pro',
+            'crm-support-desk',
+        ],
+    ];
 
     #[Override]
     public function load(ObjectManager $manager): void
     {
-        $crmApplications = $manager->getRepository(Application::class)
-            ->createQueryBuilder('application')
-            ->innerJoin('application.platform', 'platform')
-            ->andWhere('platform.platformKey = :platformKey')
-            ->setParameter('platformKey', PlatformKey::CRM)
-            ->orderBy('application.title', 'ASC')
-            ->getQuery()
-            ->getResult();
+        foreach ($this->getApplicationsByPlatform(PlatformKey::CRM) as $application) {
+            $crm = (new Crm())->setApplication($application);
+            $manager->persist($crm);
 
-        foreach ($crmApplications as $applicationIndex => $application) {
-            if (!$application instanceof Application) {
-                continue;
-            }
+            $companies = [
+                (new Company())->setCrm($crm)->setName($application->getTitle() . ' - Acme Corp'),
+                (new Company())->setCrm($crm)->setName($application->getTitle() . ' - Globex'),
+            ];
 
-            $crm = $manager->getRepository(Crm::class)->findOneBy([
-                'application' => $application,
-            ]);
+            foreach ($companies as $companyIndex => $company) {
+                $manager->persist($company);
 
-            if (!$crm instanceof Crm) {
-                $crm = (new Crm())->setApplication($application);
-                $manager->persist($crm);
-            }
+                $project = (new Project())
+                    ->setCompany($company)
+                    ->setName($company->getName() . ' - Projet Transformation');
+                $manager->persist($project);
 
-            for ($companyIndex = 1; $companyIndex <= self::COMPANY_COUNT_PER_APPLICATION; ++$companyIndex) {
-                $companyName = sprintf('%s - Company %d', $application->getTitle(), $companyIndex);
-                $company = $manager->getRepository(Company::class)->findOneBy([
-                    'crm' => $crm,
-                    'name' => $companyName,
-                ]);
+                $sprint = (new Sprint())
+                    ->setProject($project)
+                    ->setName('Sprint ' . (string) ($companyIndex + 1));
+                $manager->persist($sprint);
 
-                if (!$company instanceof Company) {
-                    $company = (new Company())
-                        ->setCrm($crm)
-                        ->setName($companyName);
-                    $manager->persist($company);
-                }
+                $taskBacklog = (new Task())
+                    ->setProject($project)
+                    ->setSprint($sprint)
+                    ->setTitle('Consolider le backlog');
+                $taskAutomation = (new Task())
+                    ->setProject($project)
+                    ->setSprint($sprint)
+                    ->setTitle('Automatiser les relances');
 
-                for ($projectIndex = 1; $projectIndex <= self::PROJECT_COUNT_PER_COMPANY; ++$projectIndex) {
-                    $projectName = sprintf('%s - Project %d', $companyName, $projectIndex);
-                    $project = $manager->getRepository(Project::class)->findOneBy([
-                        'company' => $company,
-                        'name' => $projectName,
-                    ]);
+                $manager->persist($taskBacklog);
+                $manager->persist($taskAutomation);
 
-                    if (!$project instanceof Project) {
-                        $project = (new Project())
-                            ->setCompany($company)
-                            ->setName($projectName);
-                        $manager->persist($project);
-                    }
+                $manager->persist(
+                    (new TaskRequest())
+                        ->setTask($taskBacklog)
+                        ->setTitle('Prioriser les leads chauds')
+                        ->setStatus('pending'),
+                );
 
-                    $sprintName = sprintf('%s - Sprint 1', $projectName);
-                    $sprint = $manager->getRepository(Sprint::class)->findOneBy([
-                        'project' => $project,
-                        'name' => $sprintName,
-                    ]);
-
-                    if (!$sprint instanceof Sprint) {
-                        $sprint = (new Sprint())
-                            ->setProject($project)
-                            ->setName($sprintName);
-                        $manager->persist($sprint);
-                    }
-
-                    for ($taskIndex = 1; $taskIndex <= self::TASK_COUNT_PER_PROJECT; ++$taskIndex) {
-                        $taskTitle = sprintf('%s - Task %d', $projectName, $taskIndex);
-                        $task = $manager->getRepository(Task::class)->findOneBy([
-                            'project' => $project,
-                            'title' => $taskTitle,
-                        ]);
-
-                        if (!$task instanceof Task) {
-                            $task = (new Task())
-                                ->setProject($project)
-                                ->setSprint($sprint)
-                                ->setTitle($taskTitle);
-                            $manager->persist($task);
-                        }
-
-                        $taskRequestTitle = sprintf('%s - Request 1', $taskTitle);
-                        $taskRequest = $manager->getRepository(TaskRequest::class)->findOneBy([
-                            'task' => $task,
-                            'title' => $taskRequestTitle,
-                        ]);
-
-                        if (!$taskRequest instanceof TaskRequest) {
-                            $taskRequest = (new TaskRequest())
-                                ->setTask($task)
-                                ->setTitle($taskRequestTitle)
-                                ->setStatus(($applicationIndex + $taskIndex) % 2 === 0 ? 'pending' : 'approved');
-                            $manager->persist($taskRequest);
-                        }
-                    }
-                }
+                $manager->persist(
+                    (new TaskRequest())
+                        ->setTask($taskAutomation)
+                        ->setTitle('Valider le workflow de notifications')
+                        ->setStatus('approved'),
+                );
             }
         }
 
@@ -131,6 +87,18 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     #[Override]
     public function getOrder(): int
     {
-        return 8;
+        return 9;
+    }
+
+    /** @return array<int, Application> */
+    private function getApplicationsByPlatform(PlatformKey $platformKey): array
+    {
+        $applications = [];
+
+        foreach (self::APPLICATION_KEYS_BY_PLATFORM[$platformKey->value] ?? [] as $applicationKey) {
+            $applications[] = $this->getReference('Application-' . $applicationKey, Application::class);
+        }
+
+        return $applications;
     }
 }
