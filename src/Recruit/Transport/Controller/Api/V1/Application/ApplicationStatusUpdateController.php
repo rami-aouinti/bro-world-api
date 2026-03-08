@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Recruit\Transport\Controller\Api\V1\Application;
 
+use App\Recruit\Application\Service\ApplicationDiscussionBootstrapService;
 use App\Recruit\Domain\Enum\ApplicationStatus;
 use App\Recruit\Infrastructure\Repository\ApplicationRepository;
 use App\User\Domain\Entity\User;
+use DomainException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,8 +29,10 @@ use function strtoupper;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class ApplicationStatusUpdateController
 {
-    public function __construct(private readonly ApplicationRepository $applicationRepository)
-    {
+    public function __construct(
+        private readonly ApplicationRepository $applicationRepository,
+        private readonly ApplicationDiscussionBootstrapService $applicationDiscussionBootstrapService,
+    ) {
     }
 
     #[Route(path: '/v1/recruit/private/applications/{applicationId}/status', methods: [Request::METHOD_PATCH, Request::METHOD_PUT])]
@@ -77,6 +81,14 @@ class ApplicationStatusUpdateController
         $currentStatus = $application->getStatus();
         if ($newStatus !== $currentStatus && !$this->isAllowedTransition($currentStatus, $newStatus)) {
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Status transition is not allowed for this application.');
+        }
+
+        if ($newStatus === ApplicationStatus::DISCUSSION && $currentStatus !== ApplicationStatus::DISCUSSION) {
+            try {
+                $this->applicationDiscussionBootstrapService->bootstrap($application);
+            } catch (DomainException $exception) {
+                throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, $exception->getMessage(), $exception);
+            }
         }
 
         $application->setStatus($newStatus);
