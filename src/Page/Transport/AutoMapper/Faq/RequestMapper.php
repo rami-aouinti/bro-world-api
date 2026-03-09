@@ -8,5 +8,5 @@ use App\General\Transport\AutoMapper\RestRequestMapper;
 
 class RequestMapper extends RestRequestMapper
 {
-    protected static array $properties = ['language', 'content'];
+    protected static array $properties = ['languageId', 'content'];
 }
