@@ -42,6 +42,9 @@ final class LoadUserData extends Fixture implements OrderedFixtureInterface
         'bob' => '20000000-0000-1000-8000-000000000010',
         'charlie' => '20000000-0000-1000-8000-000000000011',
         'diana' => '20000000-0000-1000-8000-000000000012',
+        'emma' => '20000000-0000-1000-8000-000000000013',
+        'felix' => '20000000-0000-1000-8000-000000000014',
+        'grace' => '20000000-0000-1000-8000-000000000015',
     ];
 
     public function __construct(
@@ -152,6 +155,21 @@ final class LoadUserData extends Fixture implements OrderedFixtureInterface
                 'username' => 'diana',
                 'firstName' => 'Diana',
                 'lastName' => 'Moreau',
+            ],
+            [
+                'username' => 'emma',
+                'firstName' => 'Emma',
+                'lastName' => 'Petit',
+            ],
+            [
+                'username' => 'felix',
+                'firstName' => 'Félix',
+                'lastName' => 'Renaud',
+            ],
+            [
+                'username' => 'grace',
+                'firstName' => 'Grace',
+                'lastName' => 'Lambert',
             ],
         ];
 

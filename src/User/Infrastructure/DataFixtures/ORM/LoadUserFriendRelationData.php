@@ -21,33 +21,70 @@ final class LoadUserFriendRelationData extends Fixture implements DependentFixtu
     #[Override]
     public function load(ObjectManager $manager): void
     {
-        /** @var User $john */
-        $john = $this->getReference('User-john', User::class);
+        /** @var User $johnRoot */
+        $johnRoot = $this->getReference('User-john-root', User::class);
         /** @var User $alice */
         $alice = $this->getReference('User-alice', User::class);
         /** @var User $bruno */
         $bruno = $this->getReference('User-bruno', User::class);
         /** @var User $clara */
         $clara = $this->getReference('User-clara', User::class);
+        /** @var User $bob */
+        $bob = $this->getReference('User-bob', User::class);
+        /** @var User $charlie */
+        $charlie = $this->getReference('User-charlie', User::class);
+        /** @var User $diana */
+        $diana = $this->getReference('User-diana', User::class);
+        /** @var User $emma */
+        $emma = $this->getReference('User-emma', User::class);
+        /** @var User $felix */
+        $felix = $this->getReference('User-felix', User::class);
+        /** @var User $grace */
+        $grace = $this->getReference('User-grace', User::class);
 
-        $pending = (new UserFriendRelation())
-            ->setRequester($alice)
-            ->setAddressee($john)
-            ->setStatus(FriendStatus::PENDING);
+        $relations = [
+            (new UserFriendRelation())
+                ->setRequester($alice)
+                ->setAddressee($johnRoot)
+                ->setStatus(FriendStatus::PENDING),
+            (new UserFriendRelation())
+                ->setRequester($johnRoot)
+                ->setAddressee($bruno)
+                ->setStatus(FriendStatus::PENDING),
+            (new UserFriendRelation())
+                ->setRequester($johnRoot)
+                ->setAddressee($clara)
+                ->setStatus(FriendStatus::REJECTED),
+            (new UserFriendRelation())
+                ->setRequester($diana)
+                ->setAddressee($johnRoot)
+                ->setStatus(FriendStatus::REJECTED),
+            (new UserFriendRelation())
+                ->setRequester($johnRoot)
+                ->setAddressee($emma)
+                ->setStatus(FriendStatus::ACCEPTED),
+            (new UserFriendRelation())
+                ->setRequester($felix)
+                ->setAddressee($johnRoot)
+                ->setStatus(FriendStatus::ACCEPTED),
+            (new UserFriendRelation())
+                ->setRequester($johnRoot)
+                ->setAddressee($grace)
+                ->setStatus(FriendStatus::ACCEPTED),
+            (new UserFriendRelation())
+                ->setRequester($charlie)
+                ->setAddressee($johnRoot)
+                ->setStatus(FriendStatus::BLOCKED),
+            (new UserFriendRelation())
+                ->setRequester($bob)
+                ->setAddressee($alice)
+                ->setStatus(FriendStatus::PENDING),
+        ];
 
-        $accepted = (new UserFriendRelation())
-            ->setRequester($john)
-            ->setAddressee($bruno)
-            ->setStatus(FriendStatus::ACCEPTED);
+        foreach ($relations as $relation) {
+            $manager->persist($relation);
+        }
 
-        $blocked = (new UserFriendRelation())
-            ->setRequester($clara)
-            ->setAddressee($john)
-            ->setStatus(FriendStatus::BLOCKED);
-
-        $manager->persist($pending);
-        $manager->persist($accepted);
-        $manager->persist($blocked);
         $manager->flush();
     }
 
