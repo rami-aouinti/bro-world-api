@@ -43,6 +43,9 @@ class MediaUploaderService
 
         $uploadedFiles = [];
         foreach ($files as $file) {
+            $originalName = $file->getClientOriginalName();
+            $mimeType = (string) ($file->getMimeType() ?? $file->getClientMimeType() ?? 'application/octet-stream');
+            $size = $this->extractSize($file);
             $extension = strtolower($file->guessExtension() ?? $file->getClientOriginalExtension() ?: 'bin');
             $fileName = bin2hex(random_bytes(16)) . '.' . $extension;
 
@@ -50,9 +53,9 @@ class MediaUploaderService
 
             $uploadedFiles[] = [
                 'url' => $request->getSchemeAndHttpHost() . $normalizedDirectory . '/' . $fileName,
-                'originalName' => $file->getClientOriginalName(),
-                'mimeType' => (string) ($file->getMimeType() ?? $file->getClientMimeType() ?? 'application/octet-stream'),
-                'size' => $this->extractSize($file),
+                'originalName' => $originalName,
+                'mimeType' => $mimeType,
+                'size' => $size,
                 'extension' => $extension,
             ];
         }
