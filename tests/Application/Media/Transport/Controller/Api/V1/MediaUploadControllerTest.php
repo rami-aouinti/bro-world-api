@@ -58,6 +58,10 @@ class MediaUploadControllerTest extends WebTestCase
         self::assertCount(1, $payload['files']);
 
         $this->assertValidUploadedMediaPayload($payload['files'][0]);
+
+        if (file_exists($tmpFile)) {
+            unlink($tmpFile);
+        }
     }
 
     /** @throws Throwable */
@@ -90,6 +94,12 @@ class MediaUploadControllerTest extends WebTestCase
         foreach ($payload['files'] as $item) {
             self::assertIsArray($item);
             $this->assertValidUploadedMediaPayload($item);
+        }
+
+        foreach ([$tmpPngA, $tmpPngB] as $tempFile) {
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
         }
     }
 
