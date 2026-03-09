@@ -33,7 +33,17 @@ final readonly class EntityProjectionHandler
     private const string RECRUIT_JOB = 'recruit_job';
     private const string SHOP_PRODUCT = 'shop_product';
     private const string CRM_TASK = 'crm_task';
+    private const string CRM_COMPANY = 'crm_company';
+    private const string CRM_PROJECT = 'crm_project';
+    private const string CRM_TASK_REQUEST = 'crm_task_request';
+    private const string CRM_SPRINT = 'crm_sprint';
     private const string SCHOOL_EXAM = 'school_exam';
+    private const string SCHOOL_CLASS = 'school_class';
+    private const string SCHOOL_TEACHER = 'school_teacher';
+    private const string SCHOOL_STUDENT = 'school_student';
+    private const string SCHOOL_GRADE = 'school_grade';
+    private const string SHOP_CATEGORY = 'shop_category';
+    private const string SHOP_TAG = 'shop_tag';
 
     public function __construct(
         private ApplicationRepository $applicationRepository,
@@ -69,13 +79,34 @@ final readonly class EntityProjectionHandler
             return;
         }
 
+        if ($message->entityType === self::SHOP_CATEGORY || $message->entityType === self::SHOP_TAG) {
+            $this->projectShopCatalog();
+            return;
+        }
+
         if ($message->entityType === self::CRM_TASK) {
             $this->projectCrmTask($message);
             return;
         }
 
+        if ($message->entityType === self::CRM_COMPANY
+            || $message->entityType === self::CRM_PROJECT
+            || $message->entityType === self::CRM_TASK_REQUEST
+            || $message->entityType === self::CRM_SPRINT) {
+            $this->projectCrmSupportEntities();
+            return;
+        }
+
         if ($message->entityType === self::SCHOOL_EXAM) {
             $this->projectSchoolExam($message);
+            return;
+        }
+
+        if ($message->entityType === self::SCHOOL_CLASS
+            || $message->entityType === self::SCHOOL_TEACHER
+            || $message->entityType === self::SCHOOL_STUDENT
+            || $message->entityType === self::SCHOOL_GRADE) {
+            $this->projectSchoolSupportEntities();
         }
     }
 
@@ -226,4 +257,20 @@ final readonly class EntityProjectionHandler
 
         $this->cacheInvalidationService->invalidateSchoolExamListCaches();
     }
+
+    private function projectShopCatalog(): void
+    {
+        $this->cacheInvalidationService->invalidateShopProductListCaches();
+    }
+
+    private function projectCrmSupportEntities(): void
+    {
+        $this->cacheInvalidationService->invalidateCrmTaskListCaches();
+    }
+
+    private function projectSchoolSupportEntities(): void
+    {
+        $this->cacheInvalidationService->invalidateSchoolExamListCaches();
+    }
+
 }
