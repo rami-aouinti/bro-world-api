@@ -6,17 +6,20 @@ namespace App\Page\Application\DTO\Faq;
 
 use App\General\Application\DTO\RestDto;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
-use App\General\Domain\Enum\Language;
 use App\Page\Domain\Entity\Faq as Entity;
 use Override;
 
 class Faq extends RestDto
 {
-    protected string $language = Language::EN->value;
+    protected static array $mappings = [
+        'languageId' => 'mapLanguageId',
+    ];
+
+    protected string $languageId = '';
     protected array $content = [];
 
-    public function getLanguage(): string { return $this->language; }
-    public function setLanguage(string $language): self { $this->setVisited('language'); $this->language = $language; return $this; }
+    public function getLanguageId(): string { return $this->languageId; }
+    public function setLanguageId(string $languageId): self { $this->setVisited('languageId'); $this->languageId = $languageId; return $this; }
     public function getContent(): array { return $this->content; }
     public function setContent(array $content): self { $this->setVisited('content'); $this->content = $content; return $this; }
 
@@ -25,10 +28,12 @@ class Faq extends RestDto
     {
         if ($entity instanceof Entity) {
             $this->id = $entity->getId();
-            $this->language = $entity->getLanguage()->value;
+            $this->languageId = $entity->getLanguageId();
             $this->content = $entity->getContent();
         }
 
         return $this;
     }
+
+    protected function mapLanguageId(EntityInterface $entity, string $languageId): void {}
 }
