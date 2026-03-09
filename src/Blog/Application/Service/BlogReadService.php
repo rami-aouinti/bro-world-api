@@ -8,6 +8,7 @@ use App\Blog\Domain\Entity\Blog;
 use App\Blog\Domain\Entity\BlogComment;
 use App\Blog\Infrastructure\Repository\BlogRepository;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
+use App\User\Domain\Entity\User;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -50,6 +51,7 @@ final readonly class BlogReadService
             'posts' => array_map(fn ($p): array => [
                 'id' => $p->getId(),
                 'authorId' => $p->getAuthor()->getId(),
+                'author' => $this->normalizeAuthor($p->getAuthor()),
                 'content' => $p->getContent(),
                 'filePath' => $p->getFilePath(),
                 'comments' => $this->normalizeComments($p->getComments()->toArray(), null),
@@ -66,11 +68,26 @@ final readonly class BlogReadService
             return [
                 'id' => $comment->getId(),
                 'authorId' => $comment->getAuthor()->getId(),
+                'author' => $this->normalizeAuthor($comment->getAuthor()),
                 'content' => $comment->getContent(),
                 'filePath' => $comment->getFilePath(),
-                'reactions' => array_map(static fn ($r): array => ['id' => $r->getId(), 'authorId' => $r->getAuthor()->getId(), 'type' => $r->getType()], $comment->getReactions()->toArray()),
+                'reactions' => array_map(fn ($r): array => [
+                    'id' => $r->getId(),
+                    'authorId' => $r->getAuthor()->getId(),
+                    'author' => $this->normalizeAuthor($r->getAuthor()),
+                    'type' => $r->getType(),
+                ], $comment->getReactions()->toArray()),
                 'children' => $this->normalizeComments($comments, $comment->getId()),
             ];
         }, array_values($filtered));
+    }
+
+    private function normalizeAuthor(User $author): array
+    {
+        return [
+            'firstName' => $author->getFirstName(),
+            'lastName' => $author->getLastName(),
+            'photo' => $author->getPhoto(),
+        ];
     }
 }

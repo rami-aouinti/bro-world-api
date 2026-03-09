@@ -56,7 +56,9 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
         $reactionTypes = ['like', 'heart', 'laugh'];
 
         foreach ($blogs as $blogIndex => $blog) {
-            for ($postIndex = 1; $postIndex <= 6; ++$postIndex) {
+            $postCount = $blog->getType() === BlogType::GENERAL ? 40 : 6;
+
+            for ($postIndex = 1; $postIndex <= $postCount; ++$postIndex) {
                 $author = $authors[($blogIndex + $postIndex) % count($authors)];
 
                 $post = (new BlogPost())
@@ -80,8 +82,14 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
                     ->setAuthor($authors[($blogIndex + $postIndex + 1) % count($authors)])
                     ->setContent('Child comment #' . $postIndex)
                     ->setParent($parent);
+                $subChild = (new BlogComment())
+                    ->setPost($post)
+                    ->setAuthor($authors[($blogIndex + $postIndex + 2) % count($authors)])
+                    ->setContent('Sub child comment #' . $postIndex)
+                    ->setParent($child);
                 $manager->persist($parent);
                 $manager->persist($child);
+                $manager->persist($subChild);
 
                 $manager->persist((new BlogReaction())
                     ->setComment($parent)
@@ -91,6 +99,10 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
                     ->setComment($child)
                     ->setAuthor($authors[($blogIndex + 2) % count($authors)])
                     ->setType($reactionTypes[($blogIndex + $postIndex + 1) % count($reactionTypes)]));
+                $manager->persist((new BlogReaction())
+                    ->setComment($subChild)
+                    ->setAuthor($authors[($blogIndex + $postIndex + 2) % count($authors)])
+                    ->setType($reactionTypes[($blogIndex + $postIndex + 2) % count($reactionTypes)]));
             }
         }
 

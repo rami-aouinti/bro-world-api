@@ -28,10 +28,16 @@ final readonly class BlogReadController
             'posts' => [[
                 'id' => '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e71',
                 'content' => 'Fixture post 1 for General Blog Root',
+                'author' => ['firstName' => 'John', 'lastName' => 'Root', 'photo' => 'https://...'],
                 'comments' => [[
                     'id' => '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e72',
                     'content' => 'Parent comment #1',
-                    'reactions' => [['type' => 'like', 'authorId' => '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e73']],
+                    'author' => ['firstName' => 'John', 'lastName' => 'Admin', 'photo' => 'https://...'],
+                    'reactions' => [[
+                        'type' => 'like',
+                        'authorId' => '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e73',
+                        'author' => ['firstName' => 'John', 'lastName' => 'User', 'photo' => 'https://...'],
+                    ]],
                 ]],
             ]],
         ]),
