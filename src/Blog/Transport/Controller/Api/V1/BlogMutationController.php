@@ -52,11 +52,17 @@ final readonly class BlogMutationController
     #[OA\Parameter(name: 'blogId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e77')]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['content' => 'Nouveau post produit', 'filePath' => '/uploads/blog/post.png']))]
     #[OA\Response(response: 202, description: 'Post creation requested.', content: new OA\JsonContent(example: ['status' => 'accepted']))]
-    public function createPost(string $blogId, Request $request): JsonResponse
+    public function createPost(string $blogId, Request $request, User $loggedInUser): JsonResponse
     {
-        $user = $this->requireUser($request);
         $payload = (array) json_decode((string) $request->getContent(), true);
-        $this->messageBus->dispatch(new CreateBlogPostCommand((string) uniqid('op_', true), $user->getId(), $blogId, $payload['content'] ?? null, $payload['filePath'] ?? null));
+
+        $this->messageBus->dispatch(new CreateBlogPostCommand(
+            (string) uniqid('op_', true),
+            $loggedInUser->getId(),
+            $blogId,
+            $payload['content'] ?? null,
+            $payload['filePath'] ?? null
+        ));
 
         return new JsonResponse(['status' => 'accepted'], JsonResponse::HTTP_ACCEPTED);
     }
@@ -65,19 +71,18 @@ final readonly class BlogMutationController
     #[OA\Parameter(name: 'postId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e78')]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['content' => 'Mise a jour du post', 'filePath' => '/uploads/blog/new-file.png']))]
     #[OA\Response(response: 204, description: 'Post updated.')]
-    public function patchPost(string $postId, Request $request): JsonResponse
+    public function patchPost(string $postId, Request $request, User $loggedInUser): JsonResponse
     {
-        $user = $this->requireUser($request); $payload = (array) json_decode((string) $request->getContent(), true);
-        $this->messageBus->dispatch(new PatchBlogPostCommand((string) uniqid('op_', true), $user->getId(), $postId, $payload['content'] ?? null, $payload['filePath'] ?? null));
+        $this->messageBus->dispatch(new PatchBlogPostCommand((string) uniqid('op_', true), $loggedInUser->getId(), $postId, $payload['content'] ?? null, $payload['filePath'] ?? null));
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
 
     #[Route('/v1/blog/posts/{postId}', methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'postId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e78')]
     #[OA\Response(response: 204, description: 'Post deleted.')]
-    public function deletePost(string $postId, Request $request): JsonResponse
+    public function deletePost(string $postId, Request $request, User $loggedInUser): JsonResponse
     {
-        $user = $this->requireUser($request); $this->messageBus->dispatch(new DeleteBlogPostCommand((string) uniqid('op_', true), $user->getId(), $postId));
+        $this->messageBus->dispatch(new DeleteBlogPostCommand((string) uniqid('op_', true), $loggedInUser->getId(), $postId));
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
 
@@ -85,10 +90,9 @@ final readonly class BlogMutationController
     #[OA\Parameter(name: 'postId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e79')]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['content' => 'Je valide ce point', 'parentCommentId' => null]))]
     #[OA\Response(response: 202, description: 'Comment creation requested.', content: new OA\JsonContent(example: ['status' => 'accepted']))]
-    public function createComment(string $postId, Request $request): JsonResponse
+    public function createComment(string $postId, Request $request, User $loggedInUser): JsonResponse
     {
-        $user = $this->requireUser($request); $payload = (array) json_decode((string) $request->getContent(), true);
-        $this->messageBus->dispatch(new CreateBlogCommentCommand((string) uniqid('op_', true), $user->getId(), $postId, $payload['content'] ?? null, $payload['filePath'] ?? null, $payload['parentCommentId'] ?? null));
+        $this->messageBus->dispatch(new CreateBlogCommentCommand((string) uniqid('op_', true), $loggedInUser->getId(), $postId, $payload['content'] ?? null, $payload['filePath'] ?? null, $payload['parentCommentId'] ?? null));
         return new JsonResponse(['status' => 'accepted'], JsonResponse::HTTP_ACCEPTED);
     }
 
@@ -96,19 +100,18 @@ final readonly class BlogMutationController
     #[OA\Parameter(name: 'commentId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e90')]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['content' => 'Commentaire corrige']))]
     #[OA\Response(response: 204, description: 'Comment updated.')]
-    public function patchComment(string $commentId, Request $request): JsonResponse
+    public function patchComment(string $commentId, Request $request, User $loggedInUser): JsonResponse
     {
-        $user = $this->requireUser($request); $payload = (array) json_decode((string) $request->getContent(), true);
-        $this->messageBus->dispatch(new PatchBlogCommentCommand((string) uniqid('op_', true), $user->getId(), $commentId, $payload['content'] ?? null, $payload['filePath'] ?? null));
+        $this->messageBus->dispatch(new PatchBlogCommentCommand((string) uniqid('op_', true), $loggedInUser->getId(), $commentId, $payload['content'] ?? null, $payload['filePath'] ?? null));
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
 
     #[Route('/v1/blog/comments/{commentId}', methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'commentId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e90')]
     #[OA\Response(response: 204, description: 'Comment deleted.')]
-    public function deleteComment(string $commentId, Request $request): JsonResponse
+    public function deleteComment(string $commentId, Request $request, User $loggedInUser): JsonResponse
     {
-        $user = $this->requireUser($request); $this->messageBus->dispatch(new DeleteBlogCommentCommand((string) uniqid('op_', true), $user->getId(), $commentId));
+        $this->messageBus->dispatch(new DeleteBlogCommentCommand((string) uniqid('op_', true), $loggedInUser->getId(), $commentId));
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
 
@@ -116,10 +119,9 @@ final readonly class BlogMutationController
     #[OA\Parameter(name: 'commentId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e90')]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['type' => 'heart']))]
     #[OA\Response(response: 202, description: 'Reaction creation requested.', content: new OA\JsonContent(example: ['status' => 'accepted']))]
-    public function createReaction(string $commentId, Request $request): JsonResponse
+    public function createReaction(string $commentId, Request $request, User $loggedInUser): JsonResponse
     {
-        $user = $this->requireUser($request); $payload = (array) json_decode((string) $request->getContent(), true);
-        $this->messageBus->dispatch(new CreateBlogReactionCommand((string) uniqid('op_', true), $user->getId(), $commentId, (string) ($payload['type'] ?? 'like')));
+        $this->messageBus->dispatch(new CreateBlogReactionCommand((string) uniqid('op_', true), $loggedInUser->getId(), $commentId, (string) ($payload['type'] ?? 'like')));
         return new JsonResponse(['status' => 'accepted'], JsonResponse::HTTP_ACCEPTED);
     }
 
@@ -127,19 +129,18 @@ final readonly class BlogMutationController
     #[OA\Parameter(name: 'reactionId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e91')]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['type' => 'laugh']))]
     #[OA\Response(response: 204, description: 'Reaction updated.')]
-    public function patchReaction(string $reactionId, Request $request): JsonResponse
+    public function patchReaction(string $reactionId, Request $request, User $loggedInUser): JsonResponse
     {
-        $user = $this->requireUser($request); $payload = (array) json_decode((string) $request->getContent(), true);
-        $this->messageBus->dispatch(new PatchBlogReactionCommand((string) uniqid('op_', true), $user->getId(), $reactionId, (string) ($payload['type'] ?? 'like')));
+        $this->messageBus->dispatch(new PatchBlogReactionCommand((string) uniqid('op_', true), $loggedInUser->getId(), $reactionId, (string) ($payload['type'] ?? 'like')));
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
 
     #[Route('/v1/blog/reactions/{reactionId}', methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'reactionId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e91')]
     #[OA\Response(response: 204, description: 'Reaction deleted.')]
-    public function deleteReaction(string $reactionId, Request $request): JsonResponse
+    public function deleteReaction(string $reactionId, Request $request, User $loggedInUser): JsonResponse
     {
-        $user = $this->requireUser($request); $this->messageBus->dispatch(new DeleteBlogReactionCommand((string) uniqid('op_', true), $user->getId(), $reactionId));
+        $this->messageBus->dispatch(new DeleteBlogReactionCommand((string) uniqid('op_', true), $loggedInUser->getId(), $reactionId));
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
 

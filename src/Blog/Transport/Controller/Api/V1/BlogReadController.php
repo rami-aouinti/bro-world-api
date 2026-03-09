@@ -7,6 +7,7 @@ namespace App\Blog\Transport\Controller\Api\V1;
 use App\Blog\Application\Service\BlogReadService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -17,6 +18,9 @@ final readonly class BlogReadController
 {
     public function __construct(private BlogReadService $blogReadService) {}
 
+    /**
+     * @throws InvalidArgumentException
+     */
     #[Route('/v1/blogs/general', methods: [Request::METHOD_GET])]
     #[OA\Tag(name: 'Blog')]
     #[OA\Response(
@@ -46,11 +50,9 @@ final readonly class BlogReadController
             ]],
         ]),
     )]
-    public function general(Request $request): JsonResponse
+    public function general(Request $request, User $loggedInUser): JsonResponse
     {
-        $user = $this->getCurrentUserFromRequest($request);
-
-        return new JsonResponse($this->blogReadService->getGeneralBlogWithTree($user));
+        return new JsonResponse($this->blogReadService->getGeneralBlogWithTree($loggedInUser));
     }
 
     #[Route('/v1/blogs/application/{applicationSlug}', methods: [Request::METHOD_GET])]
