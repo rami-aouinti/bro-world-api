@@ -97,6 +97,7 @@ final readonly class BlogReadService
     private function normalizeAuthor(User $author): array
     {
         return [
+            'username' => $author->getUsername(),
             'firstName' => $author->getFirstName(),
             'lastName' => $author->getLastName(),
             'photo' => $author->getPhoto(),
