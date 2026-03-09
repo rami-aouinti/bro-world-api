@@ -24,5 +24,11 @@ interface UserRelationshipRepositoryInterface
      */
     public function findOutgoingRequests(User $user): array;
 
+
+    /**
+     * @return array<int, UserRelationship>
+     */
+    public function findAcceptedRelationships(User $user): array;
+
     public function hasActiveBlock(User $firstUser, User $secondUser): bool;
 }

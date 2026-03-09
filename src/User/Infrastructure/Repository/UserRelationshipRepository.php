@@ -82,6 +82,19 @@ class UserRelationshipRepository extends BaseRepository implements UserRelations
             ->getResult();
     }
 
+    public function findAcceptedRelationships(User $user): array
+    {
+        return $this
+            ->createQueryBuilder('ur')
+            ->where('(ur.requester = :user OR ur.addressee = :user)')
+            ->andWhere('ur.status = :status')
+            ->setParameter('user', $user)
+            ->setParameter('status', UserRelationshipStatus::ACCEPTED)
+            ->orderBy('ur.updatedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function hasActiveBlock(User $firstUser, User $secondUser): bool
     {
         $result = $this
