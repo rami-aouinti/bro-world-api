@@ -80,6 +80,22 @@ readonly class UserFriendService
     }
 
     /** @return array<string,string> */
+    public function cancelRequest(User $loggedInUser, User $targetUser): array
+    {
+        $this->guardNotSelf($loggedInUser, $targetUser);
+
+        $relation = $this->findDirectRelation($loggedInUser, $targetUser);
+        if ($relation === null || $relation->getStatus() !== FriendStatus::PENDING) {
+            throw new NotFoundHttpException('Pending sent friend request not found.');
+        }
+
+        $this->entityManager->remove($relation);
+        $this->entityManager->flush();
+
+        return ['status' => 'request_cancelled'];
+    }
+
+    /** @return array<string,string> */
     public function block(User $loggedInUser, User $targetUser): array
     {
         $this->guardNotSelf($loggedInUser, $targetUser);
@@ -166,6 +182,54 @@ readonly class UserFriendService
             'firstName' => $relation->getRequester()->getFirstName(),
             'lastName' => $relation->getRequester()->getLastName(),
             'photo' => $relation->getRequester()->getPhoto(),
+        ], $relations);
+    }
+
+    /** @return array<int,array<string,string>> */
+    public function getMySentRequests(User $loggedInUser): array
+    {
+        $qb = $this->entityManager->createQueryBuilder()
+            ->select('r, addressee')
+            ->from(UserFriendRelation::class, 'r')
+            ->join('r.addressee', 'addressee')
+            ->where('r.requester = :me')
+            ->andWhere('r.status = :status')
+            ->setParameter('me', $loggedInUser->getId(), UuidBinaryOrderedTimeType::NAME)
+            ->setParameter('status', FriendStatus::PENDING->value);
+
+        /** @var array<int,UserFriendRelation> $relations */
+        $relations = $qb->getQuery()->getResult();
+
+        return array_map(static fn (UserFriendRelation $relation): array => [
+            'id' => $relation->getAddressee()->getId(),
+            'username' => $relation->getAddressee()->getUsername(),
+            'firstName' => $relation->getAddressee()->getFirstName(),
+            'lastName' => $relation->getAddressee()->getLastName(),
+            'photo' => $relation->getAddressee()->getPhoto(),
+        ], $relations);
+    }
+
+    /** @return array<int,array<string,string>> */
+    public function getMyBlockedUsers(User $loggedInUser): array
+    {
+        $qb = $this->entityManager->createQueryBuilder()
+            ->select('r, addressee')
+            ->from(UserFriendRelation::class, 'r')
+            ->join('r.addressee', 'addressee')
+            ->where('r.requester = :me')
+            ->andWhere('r.status = :status')
+            ->setParameter('me', $loggedInUser->getId(), UuidBinaryOrderedTimeType::NAME)
+            ->setParameter('status', FriendStatus::BLOCKED->value);
+
+        /** @var array<int,UserFriendRelation> $relations */
+        $relations = $qb->getQuery()->getResult();
+
+        return array_map(static fn (UserFriendRelation $relation): array => [
+            'id' => $relation->getAddressee()->getId(),
+            'username' => $relation->getAddressee()->getUsername(),
+            'firstName' => $relation->getAddressee()->getFirstName(),
+            'lastName' => $relation->getAddressee()->getLastName(),
+            'photo' => $relation->getAddressee()->getPhoto(),
         ], $relations);
     }
 

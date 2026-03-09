@@ -34,6 +34,16 @@ class UserFriendController
         return new JsonResponse($this->userFriendService->sendRequest($loggedInUser, $user));
     }
 
+
+
+    #[Route(path: '/v1/users/{user}/friends/request', requirements: ['user' => Requirement::UUID_V1], methods: [Request::METHOD_DELETE])]
+    #[OA\Parameter(name: 'user', description: 'Target user UUID', in: 'path', required: true)]
+    #[OA\Response(response: 200, description: 'Request cancelled', content: new JsonContent(example: ['status' => 'request_cancelled']))]
+    public function cancelRequest(User $user, User $loggedInUser): JsonResponse
+    {
+        return new JsonResponse($this->userFriendService->cancelRequest($loggedInUser, $user));
+    }
+
     #[Route(path: '/v1/users/{user}/friends/accept', requirements: ['user' => Requirement::UUID_V1], methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'user', description: 'Requester user UUID', in: 'path', required: true)]
     #[OA\Response(response: 200, description: 'Request accepted', content: new JsonContent(example: ['status' => 'accepted']))]
@@ -109,4 +119,49 @@ class UserFriendController
     {
         return new JsonResponse($this->userFriendService->getMyIncomingRequests($loggedInUser));
     }
+
+    #[Route(path: '/v1/users/me/friends/requests/sent', methods: [Request::METHOD_GET])]
+    #[OA\Response(
+        response: 200,
+        description: 'My outgoing pending requests',
+        content: new JsonContent(
+            type: 'array',
+            items: new OA\Items(
+                properties: [
+                    new Property(property: 'id', type: 'string'),
+                    new Property(property: 'username', type: 'string'),
+                    new Property(property: 'firstName', type: 'string'),
+                    new Property(property: 'lastName', type: 'string'),
+                ],
+                type: 'object',
+            ),
+        ),
+    )]
+    public function myOutgoingRequests(User $loggedInUser): JsonResponse
+    {
+        return new JsonResponse($this->userFriendService->getMySentRequests($loggedInUser));
+    }
+
+    #[Route(path: '/v1/users/me/friends/blocked', methods: [Request::METHOD_GET])]
+    #[OA\Response(
+        response: 200,
+        description: 'My blocked users',
+        content: new JsonContent(
+            type: 'array',
+            items: new OA\Items(
+                properties: [
+                    new Property(property: 'id', type: 'string'),
+                    new Property(property: 'username', type: 'string'),
+                    new Property(property: 'firstName', type: 'string'),
+                    new Property(property: 'lastName', type: 'string'),
+                ],
+                type: 'object',
+            ),
+        ),
+    )]
+    public function myBlockedUsers(User $loggedInUser): JsonResponse
+    {
+        return new JsonResponse($this->userFriendService->getMyBlockedUsers($loggedInUser));
+    }
+
 }
