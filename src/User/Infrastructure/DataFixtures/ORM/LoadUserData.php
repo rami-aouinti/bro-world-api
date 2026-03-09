@@ -139,11 +139,6 @@ final class LoadUserData extends Fixture implements OrderedFixtureInterface
     {
         $users = [
             [
-                'username' => 'alice',
-                'firstName' => 'Alice',
-                'lastName' => 'Martin',
-            ],
-            [
                 'username' => 'bob',
                 'firstName' => 'Bob',
                 'lastName' => 'Durand',
