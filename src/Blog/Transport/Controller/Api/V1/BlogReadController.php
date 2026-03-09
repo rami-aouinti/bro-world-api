@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Blog\Transport\Controller\Api\V1;
 
 use App\Blog\Application\Service\BlogReadService;
+use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,24 +28,29 @@ final readonly class BlogReadController
             'type' => 'general',
             'posts' => [[
                 'id' => '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e71',
+                'isAuthor' => true,
                 'content' => 'Fixture post 1 for General Blog Root',
                 'author' => ['firstName' => 'John', 'lastName' => 'Root', 'photo' => 'https://...'],
                 'comments' => [[
                     'id' => '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e72',
+                    'isAuthor' => false,
                     'content' => 'Parent comment #1',
                     'author' => ['firstName' => 'John', 'lastName' => 'Admin', 'photo' => 'https://...'],
                     'reactions' => [[
                         'type' => 'like',
                         'authorId' => '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e73',
+                        'isAuthor' => false,
                         'author' => ['firstName' => 'John', 'lastName' => 'User', 'photo' => 'https://...'],
                     ]],
                 ]],
             ]],
         ]),
     )]
-    public function general(): JsonResponse
+    public function general(Request $request): JsonResponse
     {
-        return new JsonResponse($this->blogReadService->getGeneralBlogWithTree());
+        $user = $this->getCurrentUserFromRequest($request);
+
+        return new JsonResponse($this->blogReadService->getGeneralBlogWithTree($user));
     }
 
     #[Route('/v1/blogs/application/{applicationSlug}', methods: [Request::METHOD_GET])]
@@ -62,8 +68,17 @@ final readonly class BlogReadController
             'tags' => [['label' => 'tag-2-1']],
         ]),
     )]
-    public function byApplication(string $applicationSlug): JsonResponse
+    public function byApplication(string $applicationSlug, Request $request): JsonResponse
     {
-        return new JsonResponse($this->blogReadService->getByApplicationSlug($applicationSlug));
+        $user = $this->getCurrentUserFromRequest($request);
+
+        return new JsonResponse($this->blogReadService->getByApplicationSlug($applicationSlug, $user));
+    }
+
+    private function getCurrentUserFromRequest(Request $request): ?User
+    {
+        $user = $request->getUser();
+
+        return $user instanceof User ? $user : null;
     }
 }
