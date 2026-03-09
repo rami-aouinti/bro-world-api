@@ -24,18 +24,21 @@ class UserMeController
     }
 
     #[Route(path: '/v1/users/me', methods: [Request::METHOD_GET])]
+    #[OA\Response(response: 200, description: 'Current authenticated user')]
     public function me(User $loggedInUser): JsonResponse
     {
         return new JsonResponse($this->userMeService->getMe($loggedInUser));
     }
 
     #[Route(path: '/v1/users/me/sessions', methods: [Request::METHOD_GET])]
+    #[OA\Response(response: 200, description: 'Recent sessions for current user')]
     public function sessions(User $loggedInUser): JsonResponse
     {
         return new JsonResponse($this->userMeService->getSessions($loggedInUser));
     }
 
     #[Route(path: '/v1/users/me/profile', methods: [Request::METHOD_GET])]
+    #[OA\Response(response: 200, description: 'Current user profile')]
     public function profile(User $loggedInUser): JsonResponse
     {
         $me = $this->userMeService->getMe($loggedInUser);
@@ -44,6 +47,8 @@ class UserMeController
     }
 
     #[Route(path: '/v1/users/me/profile', methods: [Request::METHOD_PATCH])]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object'))]
+    #[OA\Response(response: 200, description: 'Updated profile')]
     public function patchProfile(Request $request, User $loggedInUser): JsonResponse
     {
         /** @var array<string,mixed> $payload */
@@ -53,6 +58,8 @@ class UserMeController
     }
 
     #[Route(path: '/v1/users/me/password', methods: [Request::METHOD_PATCH])]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object', required: ['currentPassword', 'newPassword']))]
+    #[OA\Response(response: 200, description: 'Password changed', content: new OA\JsonContent(example: ['status' => 'ok']))]
     public function changePassword(Request $request, User $loggedInUser): JsonResponse
     {
         /** @var array<string,mixed> $payload */
@@ -64,6 +71,7 @@ class UserMeController
     }
 
     #[Route(path: '/v1/users/me', methods: [Request::METHOD_DELETE])]
+    #[OA\Response(response: 204, description: 'Current user deleted')]
     public function delete(User $loggedInUser): JsonResponse
     {
         $this->userMeService->deleteMe($loggedInUser);

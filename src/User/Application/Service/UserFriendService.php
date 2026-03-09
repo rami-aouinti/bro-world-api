@@ -5,263 +5,198 @@ declare(strict_types=1);
 namespace App\User\Application\Service;
 
 use App\User\Domain\Entity\User;
-use App\User\Domain\Entity\UserRelationship;
-use App\User\Domain\Enum\UserRelationshipStatus;
-use App\User\Domain\Repository\Interfaces\UserRelationshipRepositoryInterface;
-use App\User\Infrastructure\Repository\UserRepository;
+use App\User\Domain\Entity\UserFriendRelation;
+use App\User\Domain\Enum\FriendStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
-use Symfony\Component\HttpKernel\Exception\ForbiddenHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 readonly class UserFriendService
 {
     public function __construct(
-        private UserRepository $userRepository,
-        private UserRelationshipRepositoryInterface $userRelationshipRepository,
         private EntityManagerInterface $entityManager,
     ) {
     }
 
-    /** @return array<string,mixed> */
-    public function requestFriend(string $targetUserId, User $loggedInUser): array
+    /** @return array<string,string> */
+    public function sendRequest(User $loggedInUser, User $targetUser): array
     {
-        $targetUser = $this->getTargetUser($targetUserId);
-        $this->assertNotSameUser($loggedInUser, $targetUser);
-        $this->assertNoActiveBlock($loggedInUser, $targetUser, 'Cannot send a friend request while a block is active between both users.');
+        $this->guardNotSelf($loggedInUser, $targetUser);
 
-        $relationship = $this->userRelationshipRepository->findRelationBetweenUsers($loggedInUser, $targetUser);
-
-        if ($relationship === null) {
-            $relationship = new UserRelationship();
-            $relationship
-                ->setRequester($loggedInUser)
-                ->setAddressee($targetUser)
-                ->setStatus(UserRelationshipStatus::PENDING);
-
-            $this->entityManager->persist($relationship);
-            $this->entityManager->flush();
-
-            return ['status' => 'ok', 'data' => $this->normalizeRelationship($relationship)];
-        }
-
-        if ($relationship->getStatus() === UserRelationshipStatus::ACCEPTED) {
-            throw new ConflictHttpException('You are already friends with this user.');
-        }
-
-        if ($relationship->getStatus() === UserRelationshipStatus::BLOCKED) {
-            throw new ForbiddenHttpException('Cannot send a friend request while one of you has blocked the other.');
-        }
-
-        if ($relationship->getStatus() === UserRelationshipStatus::PENDING) {
-            if ($relationship->getRequester() === $loggedInUser) {
-                throw new ConflictHttpException('Friend request already sent.');
+        $relation = $this->findRelation($loggedInUser, $targetUser);
+        if ($relation !== null) {
+            if ($relation->getStatus() === FriendStatus::BLOCKED) {
+                throw new ConflictHttpException('Relation is blocked.');
             }
 
-            throw new ConflictHttpException('You already have an incoming pending friend request from this user.');
+            if ($relation->getStatus() === FriendStatus::ACCEPTED) {
+                throw new ConflictHttpException('Users are already friends.');
+            }
+
+            if ($relation->getStatus() === FriendStatus::PENDING) {
+                throw new ConflictHttpException('Friend request already exists.');
+            }
         }
 
-        $relationship
+        $relation = (new UserFriendRelation())
             ->setRequester($loggedInUser)
             ->setAddressee($targetUser)
-            ->setStatus(UserRelationshipStatus::PENDING);
+            ->setStatus(FriendStatus::PENDING);
 
+        $this->entityManager->persist($relation);
         $this->entityManager->flush();
 
-        return ['status' => 'ok', 'data' => $this->normalizeRelationship($relationship)];
+        return ['status' => 'request_sent'];
     }
 
-    /** @return array<string,mixed> */
-    public function acceptFriendRequest(string $targetUserId, User $loggedInUser): array
+    /** @return array<string,string> */
+    public function acceptRequest(User $loggedInUser, User $requester): array
     {
-        $targetUser = $this->getTargetUser($targetUserId);
-        $this->assertNotSameUser($loggedInUser, $targetUser);
-        $this->assertNoActiveBlock($loggedInUser, $targetUser, 'Cannot accept a friend request while a block is active between both users.');
-
-        $relationship = $this->userRelationshipRepository->findRelationBetweenUsers($loggedInUser, $targetUser);
-
-        if ($relationship === null) {
-            throw new NotFoundHttpException('No friend request found between both users.');
+        $relation = $this->findDirectRelation($requester, $loggedInUser);
+        if ($relation === null || $relation->getStatus() !== FriendStatus::PENDING) {
+            throw new NotFoundHttpException('Pending friend request not found.');
         }
 
-        if ($relationship->getStatus() !== UserRelationshipStatus::PENDING) {
-            throw new ConflictHttpException('Cannot accept a friend request that is not pending.');
-        }
-
-        if ($relationship->getAddressee() !== $loggedInUser) {
-            throw new ForbiddenHttpException('Only the addressee can accept this friend request.');
-        }
-
-        $relationship->setStatus(UserRelationshipStatus::ACCEPTED);
+        $relation->setStatus(FriendStatus::ACCEPTED);
         $this->entityManager->flush();
 
-        return ['status' => 'ok', 'data' => $this->normalizeRelationship($relationship)];
+        return ['status' => 'accepted'];
     }
 
-    /** @return array<string,mixed> */
-    public function rejectFriendRequest(string $targetUserId, User $loggedInUser): array
+    /** @return array<string,string> */
+    public function rejectRequest(User $loggedInUser, User $requester): array
     {
-        $targetUser = $this->getTargetUser($targetUserId);
-        $this->assertNotSameUser($loggedInUser, $targetUser);
-
-        $relationship = $this->userRelationshipRepository->findRelationBetweenUsers($loggedInUser, $targetUser);
-
-        if ($relationship === null) {
-            throw new NotFoundHttpException('No friend request found between both users.');
+        $relation = $this->findDirectRelation($requester, $loggedInUser);
+        if ($relation === null || $relation->getStatus() !== FriendStatus::PENDING) {
+            throw new NotFoundHttpException('Pending friend request not found.');
         }
 
-        if ($relationship->getStatus() !== UserRelationshipStatus::PENDING) {
-            throw new ConflictHttpException('Cannot reject a friend request that is not pending.');
-        }
-
-        if ($relationship->getAddressee() !== $loggedInUser) {
-            throw new ForbiddenHttpException('Only the addressee can reject this friend request.');
-        }
-
-        $relationship->setStatus(UserRelationshipStatus::REJECTED);
+        $relation->setStatus(FriendStatus::REJECTED);
         $this->entityManager->flush();
 
-        return ['status' => 'ok', 'data' => $this->normalizeRelationship($relationship)];
+        return ['status' => 'rejected'];
     }
 
-    /** @return array<string,mixed> */
-    public function blockUser(string $targetUserId, User $loggedInUser): array
+    /** @return array<string,string> */
+    public function block(User $loggedInUser, User $targetUser): array
     {
-        $targetUser = $this->getTargetUser($targetUserId);
-        $this->assertNotSameUser($loggedInUser, $targetUser);
+        $this->guardNotSelf($loggedInUser, $targetUser);
 
-        $relationship = $this->userRelationshipRepository->findRelationBetweenUsers($loggedInUser, $targetUser);
+        $relation = $this->findRelation($loggedInUser, $targetUser);
 
-        if ($relationship === null) {
-            $relationship = new UserRelationship();
-            $relationship
+        if ($relation === null) {
+            $relation = (new UserFriendRelation())
                 ->setRequester($loggedInUser)
                 ->setAddressee($targetUser);
-
-            $this->entityManager->persist($relationship);
+            $this->entityManager->persist($relation);
         }
 
-        if ($relationship->getStatus() === UserRelationshipStatus::BLOCKED) {
-            if ($relationship->getBlockedBy() === $loggedInUser) {
-                throw new ConflictHttpException('This user is already blocked.');
-            }
-
-            throw new ForbiddenHttpException('Cannot override an active block created by the other user.');
-        }
-
-        $relationship
-            ->setStatus(UserRelationshipStatus::BLOCKED)
-            ->setBlockedBy($loggedInUser);
-
+        $relation->setStatus(FriendStatus::BLOCKED);
         $this->entityManager->flush();
 
-        return ['status' => 'ok', 'data' => $this->normalizeRelationship($relationship)];
+        return ['status' => 'blocked'];
     }
 
-    /** @return array<string,mixed> */
-    public function unblockUser(string $targetUserId, User $loggedInUser): array
+    /** @return array<string,string> */
+    public function unblock(User $loggedInUser, User $targetUser): array
     {
-        $targetUser = $this->getTargetUser($targetUserId);
-        $this->assertNotSameUser($loggedInUser, $targetUser);
+        $relation = $this->findRelation($loggedInUser, $targetUser);
 
-        $relationship = $this->userRelationshipRepository->findRelationBetweenUsers($loggedInUser, $targetUser);
-
-        if ($relationship === null || $relationship->getStatus() !== UserRelationshipStatus::BLOCKED) {
-            throw new NotFoundHttpException('No block relationship found.');
+        if ($relation === null || $relation->getStatus() !== FriendStatus::BLOCKED) {
+            throw new NotFoundHttpException('Blocked relation not found.');
         }
 
-        if ($relationship->getBlockedBy() !== $loggedInUser) {
-            throw new ForbiddenHttpException('Only the user who created the block can remove it.');
-        }
-
-        $relationship->setStatus(UserRelationshipStatus::REJECTED);
+        $this->entityManager->remove($relation);
         $this->entityManager->flush();
 
-        return ['status' => 'ok', 'data' => $this->normalizeRelationship($relationship)];
+        return ['status' => 'unblocked'];
     }
 
-    /** @return array<string,mixed> */
-    public function getFriends(User $loggedInUser): array
+    /** @return array<int,array<string,string>> */
+    public function getMyFriends(User $loggedInUser): array
     {
-        $friends = $this->userRelationshipRepository->findAcceptedRelationships($loggedInUser);
+        $qb = $this->entityManager->createQueryBuilder()
+            ->select('r, requester, addressee')
+            ->from(UserFriendRelation::class, 'r')
+            ->join('r.requester', 'requester')
+            ->join('r.addressee', 'addressee')
+            ->where('(r.requester = :me OR r.addressee = :me)')
+            ->andWhere('r.status = :status')
+            ->setParameter('me', $loggedInUser)
+            ->setParameter('status', FriendStatus::ACCEPTED->value);
 
-        return [
-            'status' => 'ok',
-            'data' => [
-                'friends' => array_map(fn (UserRelationship $relationship): array => $this->normalizeFriend($relationship, $loggedInUser), $friends),
-            ],
-        ];
+        /** @var array<int,UserFriendRelation> $relations */
+        $relations = $qb->getQuery()->getResult();
+
+        return array_map(static function (UserFriendRelation $relation) use ($loggedInUser): array {
+            $friend = $relation->getRequester()->getId() === $loggedInUser->getId()
+                ? $relation->getAddressee()
+                : $relation->getRequester();
+
+            return [
+                'id' => $friend->getId(),
+                'username' => $friend->getUsername(),
+                'firstName' => $friend->getFirstName(),
+                'lastName' => $friend->getLastName(),
+            ];
+        }, $relations);
     }
 
-    /** @return array<string,mixed> */
-    public function getFriendRequests(User $loggedInUser): array
+    /** @return array<int,array<string,string>> */
+    public function getMyIncomingRequests(User $loggedInUser): array
     {
-        $incoming = $this->userRelationshipRepository->findIncomingRequests($loggedInUser);
-        $outgoing = $this->userRelationshipRepository->findOutgoingRequests($loggedInUser);
+        $qb = $this->entityManager->createQueryBuilder()
+            ->select('r, requester')
+            ->from(UserFriendRelation::class, 'r')
+            ->join('r.requester', 'requester')
+            ->where('r.addressee = :me')
+            ->andWhere('r.status = :status')
+            ->setParameter('me', $loggedInUser)
+            ->setParameter('status', FriendStatus::PENDING->value);
 
-        return [
-            'status' => 'ok',
-            'data' => [
-                'incoming' => array_map(fn (UserRelationship $relationship): array => $this->normalizeRelationship($relationship), $incoming),
-                'outgoing' => array_map(fn (UserRelationship $relationship): array => $this->normalizeRelationship($relationship), $outgoing),
-            ],
-        ];
+        /** @var array<int,UserFriendRelation> $relations */
+        $relations = $qb->getQuery()->getResult();
+
+        return array_map(static fn (UserFriendRelation $relation): array => [
+            'id' => $relation->getRequester()->getId(),
+            'username' => $relation->getRequester()->getUsername(),
+            'firstName' => $relation->getRequester()->getFirstName(),
+            'lastName' => $relation->getRequester()->getLastName(),
+        ], $relations);
     }
 
-    private function getTargetUser(string $targetUserId): User
-    {
-        $targetUser = $this->userRepository->find($targetUserId);
-
-        if (!$targetUser instanceof User) {
-            throw new NotFoundHttpException('User not found.');
-        }
-
-        return $targetUser;
-    }
-
-    private function assertNotSameUser(User $loggedInUser, User $targetUser): void
+    private function guardNotSelf(User $loggedInUser, User $targetUser): void
     {
         if ($loggedInUser->getId() === $targetUser->getId()) {
-            throw new BadRequestHttpException('Cannot perform this action on yourself.');
+            throw new BadRequestHttpException('You cannot perform this action on yourself.');
         }
     }
 
-    private function assertNoActiveBlock(User $loggedInUser, User $targetUser, string $message): void
+    private function findRelation(User $first, User $second): ?UserFriendRelation
     {
-        if ($this->userRelationshipRepository->hasActiveBlock($loggedInUser, $targetUser)) {
-            throw new ForbiddenHttpException($message);
+        $repository = $this->entityManager->getRepository(UserFriendRelation::class);
+
+        /** @var UserFriendRelation|null $relation */
+        $relation = $repository->findOneBy(['requester' => $first, 'addressee' => $second]);
+
+        if ($relation instanceof UserFriendRelation) {
+            return $relation;
         }
+
+        /** @var UserFriendRelation|null $reverse */
+        $reverse = $repository->findOneBy(['requester' => $second, 'addressee' => $first]);
+
+        return $reverse;
     }
 
-    /** @return array<string,mixed> */
-    private function normalizeRelationship(UserRelationship $relationship): array
+    private function findDirectRelation(User $requester, User $addressee): ?UserFriendRelation
     {
-        return [
-            'id' => $relationship->getId(),
-            'status' => $relationship->getStatus()->value,
-            'requesterId' => $relationship->getRequester()->getId(),
-            'addresseeId' => $relationship->getAddressee()->getId(),
-            'blockedById' => $relationship->getBlockedBy()?->getId(),
-            'createdAt' => $relationship->getCreatedAt()?->format(DATE_ATOM),
-            'updatedAt' => $relationship->getUpdatedAt()?->format(DATE_ATOM),
-        ];
-    }
+        $repository = $this->entityManager->getRepository(UserFriendRelation::class);
 
-    /** @return array<string,mixed> */
-    private function normalizeFriend(UserRelationship $relationship, User $loggedInUser): array
-    {
-        $friend = $relationship->getRequester() === $loggedInUser
-            ? $relationship->getAddressee()
-            : $relationship->getRequester();
+        /** @var UserFriendRelation|null $relation */
+        $relation = $repository->findOneBy(['requester' => $requester, 'addressee' => $addressee]);
 
-        return [
-            'id' => $friend->getId(),
-            'username' => $friend->getUsername(),
-            'firstName' => $friend->getFirstName(),
-            'lastName' => $friend->getLastName(),
-            'photo' => $friend->getPhoto(),
-            'relationship' => $this->normalizeRelationship($relationship),
-        ];
+        return $relation;
     }
 }
