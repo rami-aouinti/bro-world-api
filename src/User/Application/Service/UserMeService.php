@@ -47,7 +47,7 @@ readonly class UserMeService
     /** @return array<int,array<string,string>> */
     public function getSessions(User $user): array
     {
-        $cacheKey = sprintf('user:sessions:%s', $user->getId());
+        $cacheKey = sprintf('user_sessions_%s', $user->getId());
 
         /** @var array<int,array<string,string>> $sessions */
         $sessions = $this->cache->get($cacheKey, function (ItemInterface $item) use ($user): array {
