@@ -8,8 +8,10 @@ use App\Log\Domain\Entity\LogLogin;
 use App\Log\Domain\Entity\LogLoginFailure;
 use App\Configuration\Domain\Entity\Configuration;
 use App\Log\Domain\Entity\LogRequest;
+use App\User\Domain\Entity\Social;
 use App\User\Domain\Entity\User;
 use App\User\Domain\Entity\UserGroup;
+use App\User\Domain\Entity\UserProfile;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -81,6 +83,15 @@ trait UserRelations
         'User.configurations',
     ])]
     protected Collection | ArrayCollection $configurations;
+
+    #[ORM\OneToOne(targetEntity: UserProfile::class, mappedBy: 'user')]
+    protected ?UserProfile $profile = null;
+
+    /**
+     * @var Collection<int, Social>|ArrayCollection<int, Social>
+     */
+    #[ORM\OneToMany(targetEntity: Social::class, mappedBy: 'user')]
+    protected Collection | ArrayCollection $socials;
 
     /**
      * Getter for roles.
@@ -154,6 +165,47 @@ trait UserRelations
     public function getConfigurations(): Collection | ArrayCollection
     {
         return $this->configurations;
+    }
+
+    public function getProfile(): ?UserProfile
+    {
+        return $this->profile;
+    }
+
+    public function setProfile(?UserProfile $profile): self
+    {
+        $this->profile = $profile;
+
+        if ($profile !== null && $profile->getUser() !== $this) {
+            $profile->setUser($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Social>|ArrayCollection<int, Social>
+     */
+    public function getSocials(): Collection | ArrayCollection
+    {
+        return $this->socials;
+    }
+
+    public function addSocial(Social $social): self
+    {
+        if ($this->socials->contains($social) === false) {
+            $this->socials->add($social);
+            $social->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSocial(Social $social): self
+    {
+        $this->socials->removeElement($social);
+
+        return $this;
     }
 
     public function addConfiguration(Configuration $configuration): self
