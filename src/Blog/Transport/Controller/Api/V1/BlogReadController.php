@@ -18,6 +18,7 @@ final readonly class BlogReadController
     public function __construct(private BlogReadService $blogReadService) {}
 
     #[Route('/v1/blogs/general', methods: [Request::METHOD_GET])]
+    #[OA\Get(security: [])]
     #[OA\Tag(name: 'Blog')]
     #[OA\Response(
         response: 200,
@@ -46,11 +47,31 @@ final readonly class BlogReadController
             ]],
         ]),
     )]
-    public function general(Request $request, User $loggedInUser): JsonResponse
+    public function general(User $loggedInUser): JsonResponse
     {
-        $user = $this->getCurrentUserFromRequest($request);
-
         return new JsonResponse($this->blogReadService->getGeneralBlogWithTree($loggedInUser));
+    }
+
+    #[Route('/v1/blogs/general/public', methods: [Request::METHOD_GET])]
+    #[OA\Tag(name: 'Blog')]
+    #[OA\Get(security: [])]
+    #[OA\Response(
+        response: 200,
+        description: 'General blog public tree (isAuthor always false).',
+        content: new OA\JsonContent(example: [
+            'id' => '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e70',
+            'title' => 'General Blog Root',
+            'type' => 'general',
+            'posts' => [[
+                'id' => '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e71',
+                'isAuthor' => false,
+                'content' => 'Fixture post 1 for General Blog Root',
+            ]],
+        ]),
+    )]
+    public function generalPublic(): JsonResponse
+    {
+        return new JsonResponse($this->blogReadService->getGeneralBlogWithTree());
     }
 
     #[Route('/v1/blogs/application/{applicationSlug}', methods: [Request::METHOD_GET])]

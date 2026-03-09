@@ -14,10 +14,14 @@ use App\Blog\Application\Message\DeleteBlogReactionCommand;
 use App\Blog\Application\Message\PatchBlogCommentCommand;
 use App\Blog\Application\Message\PatchBlogPostCommand;
 use App\Blog\Application\Message\PatchBlogReactionCommand;
+use App\Media\Application\Service\MediaUploaderService;
+use App\Media\Application\Service\MediaUploadValidationPolicy;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -30,7 +34,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[OA\Tag(name: 'Blog')]
 final readonly class BlogMutationController
 {
-    public function __construct(private MessageBusInterface $messageBus) {}
+    public function __construct(
+        private MessageBusInterface $messageBus,
+        private MediaUploaderService $mediaUploaderService,
+    ) {}
 
     #[Route('/v1/blogs/general', methods: [Request::METHOD_POST])]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['title' => 'General Blog']))]
@@ -42,7 +49,7 @@ final readonly class BlogMutationController
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Only root can create General blog.');
         }
 
-        $payload = (array) json_decode((string) $request->getContent(), true);
+        $payload = $this->extractPayload($request);
         $this->messageBus->dispatch(new CreateGeneralBlogCommand((string) uniqid('op_', true), $user->getId(), (string) ($payload['title'] ?? 'General Blog')));
 
         return new JsonResponse(['status' => 'accepted'], JsonResponse::HTTP_ACCEPTED);
@@ -50,18 +57,19 @@ final readonly class BlogMutationController
 
     #[Route('/v1/blogs/{blogId}/posts', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'blogId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e77')]
-    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['content' => 'Nouveau post produit', 'filePath' => '/uploads/blog/post.png']))]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['content' => 'Nouveau post produit', 'filePath' => 'https://api.example.com/uploads/blog/post.png']))]
     #[OA\Response(response: 202, description: 'Post creation requested.', content: new OA\JsonContent(example: ['status' => 'accepted']))]
     public function createPost(string $blogId, Request $request, User $loggedInUser): JsonResponse
     {
-        $payload = (array) json_decode((string) $request->getContent(), true);
+        $payload = $this->extractPayload($request);
+        $payload['filePath'] = $this->resolveUploadedFileUrl($request, (string) ($payload['filePath'] ?? ''));
 
         $this->messageBus->dispatch(new CreateBlogPostCommand(
             (string) uniqid('op_', true),
             $loggedInUser->getId(),
             $blogId,
             $payload['content'] ?? null,
-            $payload['filePath'] ?? null
+            $payload['filePath'] ?: null,
         ));
 
         return new JsonResponse(['status' => 'accepted'], JsonResponse::HTTP_ACCEPTED);
@@ -69,20 +77,25 @@ final readonly class BlogMutationController
 
     #[Route('/v1/blog/posts/{postId}', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'postId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e78')]
-    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['content' => 'Mise a jour du post', 'filePath' => '/uploads/blog/new-file.png']))]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['content' => 'Mise a jour du post', 'filePath' => 'https://api.example.com/uploads/blog/new-file.png']))]
     #[OA\Response(response: 204, description: 'Post updated.')]
     public function patchPost(string $postId, Request $request, User $loggedInUser): JsonResponse
     {
-        $this->messageBus->dispatch(new PatchBlogPostCommand((string) uniqid('op_', true), $loggedInUser->getId(), $postId, $payload['content'] ?? null, $payload['filePath'] ?? null));
+        $payload = $this->extractPayload($request);
+        $payload['filePath'] = $this->resolveUploadedFileUrl($request, (string) ($payload['filePath'] ?? ''));
+
+        $this->messageBus->dispatch(new PatchBlogPostCommand((string) uniqid('op_', true), $loggedInUser->getId(), $postId, $payload['content'] ?? null, $payload['filePath'] ?: null));
+
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
 
     #[Route('/v1/blog/posts/{postId}', methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'postId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e78')]
     #[OA\Response(response: 204, description: 'Post deleted.')]
-    public function deletePost(string $postId, Request $request, User $loggedInUser): JsonResponse
+    public function deletePost(string $postId, User $loggedInUser): JsonResponse
     {
         $this->messageBus->dispatch(new DeleteBlogPostCommand((string) uniqid('op_', true), $loggedInUser->getId(), $postId));
+
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
 
@@ -92,7 +105,18 @@ final readonly class BlogMutationController
     #[OA\Response(response: 202, description: 'Comment creation requested.', content: new OA\JsonContent(example: ['status' => 'accepted']))]
     public function createComment(string $postId, Request $request, User $loggedInUser): JsonResponse
     {
-        $this->messageBus->dispatch(new CreateBlogCommentCommand((string) uniqid('op_', true), $loggedInUser->getId(), $postId, $payload['content'] ?? null, $payload['filePath'] ?? null, $payload['parentCommentId'] ?? null));
+        $payload = $this->extractPayload($request);
+        $payload['filePath'] = $this->resolveUploadedFileUrl($request, (string) ($payload['filePath'] ?? ''));
+
+        $this->messageBus->dispatch(new CreateBlogCommentCommand(
+            (string) uniqid('op_', true),
+            $loggedInUser->getId(),
+            $postId,
+            $payload['content'] ?? null,
+            $payload['filePath'] ?: null,
+            $payload['parentCommentId'] ?? null,
+        ));
+
         return new JsonResponse(['status' => 'accepted'], JsonResponse::HTTP_ACCEPTED);
     }
 
@@ -102,16 +126,21 @@ final readonly class BlogMutationController
     #[OA\Response(response: 204, description: 'Comment updated.')]
     public function patchComment(string $commentId, Request $request, User $loggedInUser): JsonResponse
     {
-        $this->messageBus->dispatch(new PatchBlogCommentCommand((string) uniqid('op_', true), $loggedInUser->getId(), $commentId, $payload['content'] ?? null, $payload['filePath'] ?? null));
+        $payload = $this->extractPayload($request);
+        $payload['filePath'] = $this->resolveUploadedFileUrl($request, (string) ($payload['filePath'] ?? ''));
+
+        $this->messageBus->dispatch(new PatchBlogCommentCommand((string) uniqid('op_', true), $loggedInUser->getId(), $commentId, $payload['content'] ?? null, $payload['filePath'] ?: null));
+
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
 
     #[Route('/v1/blog/comments/{commentId}', methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'commentId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e90')]
     #[OA\Response(response: 204, description: 'Comment deleted.')]
-    public function deleteComment(string $commentId, Request $request, User $loggedInUser): JsonResponse
+    public function deleteComment(string $commentId, User $loggedInUser): JsonResponse
     {
         $this->messageBus->dispatch(new DeleteBlogCommentCommand((string) uniqid('op_', true), $loggedInUser->getId(), $commentId));
+
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
 
@@ -121,7 +150,9 @@ final readonly class BlogMutationController
     #[OA\Response(response: 202, description: 'Reaction creation requested.', content: new OA\JsonContent(example: ['status' => 'accepted']))]
     public function createReaction(string $commentId, Request $request, User $loggedInUser): JsonResponse
     {
+        $payload = $this->extractPayload($request);
         $this->messageBus->dispatch(new CreateBlogReactionCommand((string) uniqid('op_', true), $loggedInUser->getId(), $commentId, (string) ($payload['type'] ?? 'like')));
+
         return new JsonResponse(['status' => 'accepted'], JsonResponse::HTTP_ACCEPTED);
     }
 
@@ -131,26 +162,57 @@ final readonly class BlogMutationController
     #[OA\Response(response: 204, description: 'Reaction updated.')]
     public function patchReaction(string $reactionId, Request $request, User $loggedInUser): JsonResponse
     {
+        $payload = $this->extractPayload($request);
         $this->messageBus->dispatch(new PatchBlogReactionCommand((string) uniqid('op_', true), $loggedInUser->getId(), $reactionId, (string) ($payload['type'] ?? 'like')));
+
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
 
     #[Route('/v1/blog/reactions/{reactionId}', methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'reactionId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e91')]
     #[OA\Response(response: 204, description: 'Reaction deleted.')]
-    public function deleteReaction(string $reactionId, Request $request, User $loggedInUser): JsonResponse
+    public function deleteReaction(string $reactionId, User $loggedInUser): JsonResponse
     {
         $this->messageBus->dispatch(new DeleteBlogReactionCommand((string) uniqid('op_', true), $loggedInUser->getId(), $reactionId));
+
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
 
-    private function requireUser(Request $request): User
+    private function extractPayload(Request $request): array
     {
-        $user = $request->getUser();
-        if (!$user instanceof User) {
-            throw new HttpException(JsonResponse::HTTP_UNAUTHORIZED, 'User required.');
+        $payload = (array) json_decode((string) $request->getContent(), true);
+
+        if ([] === $payload) {
+            $payload = $request->request->all();
         }
 
-        return $user;
+        return $payload;
+    }
+
+    private function resolveUploadedFileUrl(Request $request, string $fallbackUrl): string
+    {
+        $file = $request->files->get('file');
+
+        if (!$file instanceof UploadedFile) {
+            return $fallbackUrl;
+        }
+
+        $uploaded = $this->mediaUploaderService->upload(
+            $request,
+            [$file],
+            '/uploads/blog',
+            new MediaUploadValidationPolicy(
+                maxSizeInBytes: 10 * 1024 * 1024,
+                allowedMimeTypes: [
+                    'image/jpeg',
+                    'image/png',
+                    'image/webp',
+                    'application/pdf',
+                ],
+                allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'pdf'],
+            ),
+        );
+
+        return (string) ($uploaded[0]['url'] ?? $fallbackUrl);
     }
 }
