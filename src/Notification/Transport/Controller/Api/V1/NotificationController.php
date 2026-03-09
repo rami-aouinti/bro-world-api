@@ -47,6 +47,7 @@ final readonly class NotificationController
                     new OA\Property(property: 'title', type: 'string', example: 'System maintenance'),
                     new OA\Property(property: 'description', type: 'string', example: 'A maintenance window is planned for tonight.'),
                     new OA\Property(property: 'type', type: 'string', example: 'system'),
+                    new OA\Property(property: 'read', type: 'boolean', example: false),
                     new OA\Property(property: 'createdAt', type: 'string', format: 'date-time'),
                     new OA\Property(
                         property: 'from',
@@ -72,6 +73,7 @@ final readonly class NotificationController
                     'title' => 'System maintenance',
                     'description' => 'A maintenance window is planned for tonight.',
                     'type' => 'system',
+                    'read' => false,
                     'createdAt' => '2026-03-10T10:00:00+00:00',
                     'from' => null,
                 ],
@@ -80,6 +82,7 @@ final readonly class NotificationController
                     'title' => 'Profile warning',
                     'description' => 'Your profile is missing a required document.',
                     'type' => 'warning',
+                    'read' => false,
                     'createdAt' => '2026-03-10T10:05:00+00:00',
                     'from' => [
                         'firstName' => 'John',
@@ -100,8 +103,33 @@ final readonly class NotificationController
 
         $notifications = $this->notificationRepository->findByRecipient($loggedInUser, $limit, $offset);
 
-        return new JsonResponse($this->notificationReadService->normalizeList($notifications));
+        return new JsonResponse([
+            'items' => $this->notificationReadService->normalizeList($notifications),
+            'unreadCount' => $this->notificationRepository->countUnreadByRecipient($loggedInUser),
+        ]);
     }
+
+    #[Route('/v1/notifications/read-all', methods: [Request::METHOD_PATCH])]
+    #[OA\Patch(summary: 'Mark all notifications as read for the logged-in user.')]
+    #[OA\Response(
+        response: 200,
+        description: 'Notifications updated.',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'updatedCount', type: 'integer', example: 3),
+            ],
+            type: 'object',
+        ),
+    )]
+    #[OA\Response(response: 401, description: 'Authentication required.')]
+    #[OA\Response(response: 403, description: 'Access denied.')]
+    public function markAllAsRead(User $loggedInUser): JsonResponse
+    {
+        $updatedCount = $this->notificationRepository->markAllAsReadByRecipient($loggedInUser);
+
+        return new JsonResponse(['updatedCount' => $updatedCount]);
+    }
+
 
     #[Route('/v1/notifications/{id}', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'Get a notification detail by id.')]

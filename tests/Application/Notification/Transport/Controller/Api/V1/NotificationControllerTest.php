@@ -49,13 +49,17 @@ class NotificationControllerTest extends WebTestCase
 
         $payload = JSON::decode($content, true);
         self::assertIsArray($payload);
+        self::assertArrayHasKey('items', $payload);
+        self::assertArrayHasKey('unreadCount', $payload);
+        self::assertIsArray($payload['items']);
+        self::assertIsInt($payload['unreadCount']);
 
-        $notificationIds = array_column($payload, 'id');
+        $notificationIds = array_column($payload['items'], 'id');
         self::assertContains($rootNotification['id'], $notificationIds);
         self::assertNotContains($otherUserNotification['id'], $notificationIds);
 
         $rootNotificationInList = null;
-        foreach ($payload as $item) {
+        foreach ($payload['items'] as $item) {
             if (($item['id'] ?? null) === $rootNotification['id']) {
                 $rootNotificationInList = $item;
                 break;
@@ -66,6 +70,8 @@ class NotificationControllerTest extends WebTestCase
         self::assertArrayHasKey('from', $rootNotificationInList);
         self::assertIsArray($rootNotificationInList['from']);
         self::assertSame(['firstName', 'lastName', 'photo'], array_keys($rootNotificationInList['from']));
+        self::assertArrayHasKey('read', $rootNotificationInList);
+        self::assertIsBool($rootNotificationInList['read']);
     }
 
     /** @throws Throwable */
@@ -81,6 +87,48 @@ class NotificationControllerTest extends WebTestCase
 
         $response = $client->getResponse();
         self::assertContains($response->getStatusCode(), [Response::HTTP_FORBIDDEN, Response::HTTP_NOT_FOUND], "Response:\n" . $response);
+    }
+
+
+
+    /** @throws Throwable */
+    #[TestDox('Test that `PATCH /v1/notifications/read-all` marks notifications as read for authenticated user only.')]
+    public function testThatMarkAllAsReadUpdatesOnlyCurrentUserNotifications(): void
+    {
+        $recipientId = LoadUserData::getUuidByKey('john-root');
+        $otherRecipientId = LoadUserData::getUuidByKey('john-admin');
+
+        $rootNotification = $this->createNotification('root-to-read', $recipientId);
+        $otherNotification = $this->createNotification('other-stays-unread', $otherRecipientId);
+
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('PATCH', $this->baseUrl . '/read-all');
+
+        $response = $client->getResponse();
+        $content = $response->getContent();
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:
+" . $response);
+
+        $payload = JSON::decode($content, true);
+        self::assertIsArray($payload);
+        self::assertArrayHasKey('updatedCount', $payload);
+        self::assertGreaterThanOrEqual(1, $payload['updatedCount']);
+
+        $client->request('GET', $this->baseUrl . '/' . $rootNotification['id']);
+        $rootDetailContent = $client->getResponse()->getContent();
+        self::assertNotFalse($rootDetailContent);
+        $rootDetail = JSON::decode($rootDetailContent, true);
+        self::assertIsArray($rootDetail);
+        self::assertTrue($rootDetail['read']);
+
+        $adminClient = $this->getTestClient('john-admin', 'password-admin');
+        $adminClient->request('GET', $this->baseUrl . '/' . $otherNotification['id']);
+        $otherDetailContent = $adminClient->getResponse()->getContent();
+        self::assertNotFalse($otherDetailContent);
+        $otherDetail = JSON::decode($otherDetailContent, true);
+        self::assertIsArray($otherDetail);
+        self::assertFalse($otherDetail['read']);
     }
 
     /** @throws Throwable */
@@ -114,6 +162,8 @@ class NotificationControllerTest extends WebTestCase
         self::assertArrayHasKey('from', $payload);
         self::assertIsArray($payload['from']);
         self::assertSame(['firstName', 'lastName', 'photo'], array_keys($payload['from']));
+        self::assertArrayHasKey('read', $payload);
+        self::assertFalse($payload['read']);
     }
 
     /** @throws Throwable */

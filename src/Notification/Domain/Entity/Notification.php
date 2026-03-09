@@ -34,6 +34,9 @@ class Notification implements EntityInterface
     #[ORM\Column(name: 'type', type: Types::STRING, length: 100)]
     private string $type = '';
 
+    #[ORM\Column(name: 'is_read', type: Types::BOOLEAN, options: ['default' => false])]
+    private bool $isRead = false;
+
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'from_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?User $from = null;
@@ -50,6 +53,8 @@ class Notification implements EntityInterface
     public function setDescription(string $description): self { $this->description = $description; return $this; }
     public function getType(): string { return $this->type; }
     public function setType(string $type): self { $this->type = $type; return $this; }
+    public function isRead(): bool { return $this->isRead; }
+    public function setRead(bool $isRead): self { $this->isRead = $isRead; return $this; }
     public function getFrom(): ?User { return $this->from; }
     public function setFrom(?User $from): self { $this->from = $from; return $this; }
     public function getRecipient(): User { return $this->recipient; }

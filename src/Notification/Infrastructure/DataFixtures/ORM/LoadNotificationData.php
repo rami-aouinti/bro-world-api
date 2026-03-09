@@ -17,7 +17,7 @@ use Throwable;
 final class LoadNotificationData extends Fixture implements OrderedFixtureInterface
 {
     /**
-     * @var array<int, array{uuid: non-empty-string, title: non-empty-string, description: non-empty-string, type: non-empty-string, recipientRef: non-empty-string, fromRef: non-empty-string|null}>
+     * @var array<int, array{uuid: non-empty-string, title: non-empty-string, description: non-empty-string, type: non-empty-string, recipientRef: non-empty-string, fromRef: non-empty-string|null, read: bool}>
      */
     private const array DATA = [
         [
@@ -27,6 +27,7 @@ final class LoadNotificationData extends Fixture implements OrderedFixtureInterf
             'type' => 'system',
             'recipientRef' => 'User-john-user',
             'fromRef' => null,
+            'read' => false,
         ],
         [
             'uuid' => '70000000-0000-1000-8000-000000000002',
@@ -35,6 +36,7 @@ final class LoadNotificationData extends Fixture implements OrderedFixtureInterf
             'type' => 'warning',
             'recipientRef' => 'User-john-admin',
             'fromRef' => 'User-john-root',
+            'read' => true,
         ],
         [
             'uuid' => '70000000-0000-1000-8000-000000000003',
@@ -43,7 +45,28 @@ final class LoadNotificationData extends Fixture implements OrderedFixtureInterf
             'type' => 'info',
             'recipientRef' => 'User-john-root',
             'fromRef' => 'User-john-admin',
+            'read' => false,
         ],
+
+        [
+            'uuid' => '70000000-0000-1000-8000-000000000004',
+            'title' => 'Team update',
+            'description' => 'A new update is available for your team.',
+            'type' => 'info',
+            'recipientRef' => 'User-john-root',
+            'fromRef' => 'User-john-user',
+            'read' => true,
+        ],
+        [
+            'uuid' => '70000000-0000-1000-8000-000000000005',
+            'title' => 'Security alert',
+            'description' => 'A login from a new device was detected.',
+            'type' => 'security',
+            'recipientRef' => 'User-john-root',
+            'fromRef' => null,
+            'read' => false,
+        ],
+
     ];
 
     /**
@@ -63,7 +86,8 @@ final class LoadNotificationData extends Fixture implements OrderedFixtureInterf
                 ->setDescription($item['description'])
                 ->setType($item['type'])
                 ->setRecipient($recipient)
-                ->setFrom($from);
+                ->setFrom($from)
+                ->setRead($item['read']);
 
             PhpUnitUtil::setProperty('id', UuidHelper::fromString($item['uuid']), $notification);
 

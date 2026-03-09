@@ -34,4 +34,32 @@ class NotificationRepository extends BaseRepository
 
         return array_values(array_filter($result, static fn ($notification): bool => $notification instanceof Notification));
     }
+
+    public function countUnreadByRecipient(User $user): int
+    {
+        return (int) $this->createQueryBuilder('n')
+            ->select('COUNT(n.id)')
+            ->andWhere('n.recipient = :recipient')
+            ->andWhere('n.isRead = :isRead')
+            ->setParameter('recipient', $user->getId(), UuidBinaryOrderedTimeType::NAME)
+            ->setParameter('isRead', false)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function markAllAsReadByRecipient(User $user): int
+    {
+        return $this->createQueryBuilder('n')
+            ->update()
+            ->set('n.isRead', ':isRead')
+            ->andWhere('n.recipient = :recipient')
+            ->andWhere('n.isRead = :currentState')
+            ->setParameter('isRead', true)
+            ->setParameter('currentState', false)
+            ->setParameter('recipient', $user->getId(), UuidBinaryOrderedTimeType::NAME)
+            ->getQuery()
+            ->execute();
+    }
+
 }
+
