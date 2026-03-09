@@ -18,28 +18,32 @@ final readonly class BlogReadService
     public function __construct(private BlogRepository $blogRepository, private CacheInterface $cache, private ElasticsearchServiceInterface $elasticsearchService) {}
 
     /** @throws InvalidArgumentException */
-    public function getGeneralBlogWithTree(): array
+    public function getGeneralBlogWithTree(?User $currentUser = null): array
     {
-        return $this->cache->get('blog_general_tree', function (ItemInterface $item): array {
+        $userId = $currentUser?->getId() ?? 'anonymous';
+
+        return $this->cache->get('blog_general_tree_' . $userId, function (ItemInterface $item) use ($currentUser): array {
             $item->expiresAfter(120);
             $blog = $this->blogRepository->findGeneralBlog();
 
-            return $blog instanceof Blog ? $this->normalizeBlog($blog) : [];
+            return $blog instanceof Blog ? $this->normalizeBlog($blog, $currentUser) : [];
         });
     }
 
     /** @throws InvalidArgumentException */
-    public function getByApplicationSlug(string $applicationSlug): array
+    public function getByApplicationSlug(string $applicationSlug, ?User $currentUser = null): array
     {
-        return $this->cache->get('blog_app_' . $applicationSlug, function (ItemInterface $item) use ($applicationSlug): array {
+        $userId = $currentUser?->getId() ?? 'anonymous';
+
+        return $this->cache->get('blog_app_' . $applicationSlug . '_' . $userId, function (ItemInterface $item) use ($applicationSlug, $currentUser): array {
             $item->expiresAfter(120);
             $blog = $this->blogRepository->findOneByApplicationSlug($applicationSlug);
 
-            return $blog instanceof Blog ? $this->normalizeBlog($blog) : [];
+            return $blog instanceof Blog ? $this->normalizeBlog($blog, $currentUser) : [];
         });
     }
 
-    private function normalizeBlog(Blog $blog): array
+    private function normalizeBlog(Blog $blog, ?User $currentUser): array
     {
         return [
             'id' => $blog->getId(),
@@ -51,35 +55,43 @@ final readonly class BlogReadService
             'posts' => array_map(fn ($p): array => [
                 'id' => $p->getId(),
                 'authorId' => $p->getAuthor()->getId(),
+                'isAuthor' => $this->isAuthor($p->getAuthor(), $currentUser),
                 'author' => $this->normalizeAuthor($p->getAuthor()),
                 'content' => $p->getContent(),
                 'filePath' => $p->getFilePath(),
-                'comments' => $this->normalizeComments($p->getComments()->toArray(), null),
+                'comments' => $this->normalizeComments($p->getComments()->toArray(), null, $currentUser),
             ], $blog->getPosts()->toArray()),
         ];
     }
 
     /** @param array<int, BlogComment> $comments */
-    private function normalizeComments(array $comments, ?string $parentId): array
+    private function normalizeComments(array $comments, ?string $parentId, ?User $currentUser): array
     {
         $filtered = array_filter($comments, static fn (BlogComment $comment): bool => $comment->getParent()?->getId() === $parentId);
 
-        return array_map(function (BlogComment $comment) use ($comments): array {
+        return array_map(function (BlogComment $comment) use ($comments, $currentUser): array {
             return [
                 'id' => $comment->getId(),
                 'authorId' => $comment->getAuthor()->getId(),
+                'isAuthor' => $this->isAuthor($comment->getAuthor(), $currentUser),
                 'author' => $this->normalizeAuthor($comment->getAuthor()),
                 'content' => $comment->getContent(),
                 'filePath' => $comment->getFilePath(),
                 'reactions' => array_map(fn ($r): array => [
                     'id' => $r->getId(),
                     'authorId' => $r->getAuthor()->getId(),
+                    'isAuthor' => $this->isAuthor($r->getAuthor(), $currentUser),
                     'author' => $this->normalizeAuthor($r->getAuthor()),
                     'type' => $r->getType(),
                 ], $comment->getReactions()->toArray()),
-                'children' => $this->normalizeComments($comments, $comment->getId()),
+                'children' => $this->normalizeComments($comments, $comment->getId(), $currentUser),
             ];
         }, array_values($filtered));
+    }
+
+    private function isAuthor(User $author, ?User $currentUser): bool
+    {
+        return null !== $currentUser && $author->getId() === $currentUser->getId();
     }
 
     private function normalizeAuthor(User $author): array
