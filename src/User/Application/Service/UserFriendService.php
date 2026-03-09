@@ -11,6 +11,8 @@ use App\User\Domain\Repository\Interfaces\UserRelationshipRepositoryInterface;
 use App\User\Infrastructure\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Symfony\Component\HttpKernel\Exception\ForbiddenHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 readonly class UserFriendService
@@ -27,6 +29,7 @@ readonly class UserFriendService
     {
         $targetUser = $this->getTargetUser($targetUserId);
         $this->assertNotSameUser($loggedInUser, $targetUser);
+        $this->assertNoActiveBlock($loggedInUser, $targetUser, 'Cannot send a friend request while a block is active between both users.');
 
         $relationship = $this->userRelationshipRepository->findRelationBetweenUsers($loggedInUser, $targetUser);
 
@@ -44,15 +47,19 @@ readonly class UserFriendService
         }
 
         if ($relationship->getStatus() === UserRelationshipStatus::ACCEPTED) {
-            throw new BadRequestHttpException('You are already friends with this user.');
+            throw new ConflictHttpException('You are already friends with this user.');
         }
 
         if ($relationship->getStatus() === UserRelationshipStatus::BLOCKED) {
-            throw new BadRequestHttpException('Cannot send a friend request while one of you has blocked the other.');
+            throw new ForbiddenHttpException('Cannot send a friend request while one of you has blocked the other.');
         }
 
-        if ($relationship->getStatus() === UserRelationshipStatus::PENDING && $relationship->getRequester() === $loggedInUser) {
-            throw new BadRequestHttpException('Friend request already sent.');
+        if ($relationship->getStatus() === UserRelationshipStatus::PENDING) {
+            if ($relationship->getRequester() === $loggedInUser) {
+                throw new ConflictHttpException('Friend request already sent.');
+            }
+
+            throw new ConflictHttpException('You already have an incoming pending friend request from this user.');
         }
 
         $relationship
@@ -70,15 +77,20 @@ readonly class UserFriendService
     {
         $targetUser = $this->getTargetUser($targetUserId);
         $this->assertNotSameUser($loggedInUser, $targetUser);
+        $this->assertNoActiveBlock($loggedInUser, $targetUser, 'Cannot accept a friend request while a block is active between both users.');
 
         $relationship = $this->userRelationshipRepository->findRelationBetweenUsers($loggedInUser, $targetUser);
 
-        if ($relationship === null || $relationship->getStatus() !== UserRelationshipStatus::PENDING) {
-            throw new BadRequestHttpException('No pending friend request found.');
+        if ($relationship === null) {
+            throw new NotFoundHttpException('No friend request found between both users.');
+        }
+
+        if ($relationship->getStatus() !== UserRelationshipStatus::PENDING) {
+            throw new ConflictHttpException('Cannot accept a friend request that is not pending.');
         }
 
         if ($relationship->getAddressee() !== $loggedInUser) {
-            throw new BadRequestHttpException('Only the addressee can accept this friend request.');
+            throw new ForbiddenHttpException('Only the addressee can accept this friend request.');
         }
 
         $relationship->setStatus(UserRelationshipStatus::ACCEPTED);
@@ -95,12 +107,16 @@ readonly class UserFriendService
 
         $relationship = $this->userRelationshipRepository->findRelationBetweenUsers($loggedInUser, $targetUser);
 
-        if ($relationship === null || $relationship->getStatus() !== UserRelationshipStatus::PENDING) {
-            throw new BadRequestHttpException('No pending friend request found.');
+        if ($relationship === null) {
+            throw new NotFoundHttpException('No friend request found between both users.');
+        }
+
+        if ($relationship->getStatus() !== UserRelationshipStatus::PENDING) {
+            throw new ConflictHttpException('Cannot reject a friend request that is not pending.');
         }
 
         if ($relationship->getAddressee() !== $loggedInUser) {
-            throw new BadRequestHttpException('Only the addressee can reject this friend request.');
+            throw new ForbiddenHttpException('Only the addressee can reject this friend request.');
         }
 
         $relationship->setStatus(UserRelationshipStatus::REJECTED);
@@ -126,6 +142,14 @@ readonly class UserFriendService
             $this->entityManager->persist($relationship);
         }
 
+        if ($relationship->getStatus() === UserRelationshipStatus::BLOCKED) {
+            if ($relationship->getBlockedBy() === $loggedInUser) {
+                throw new ConflictHttpException('This user is already blocked.');
+            }
+
+            throw new ForbiddenHttpException('Cannot override an active block created by the other user.');
+        }
+
         $relationship
             ->setStatus(UserRelationshipStatus::BLOCKED)
             ->setBlockedBy($loggedInUser);
@@ -144,11 +168,11 @@ readonly class UserFriendService
         $relationship = $this->userRelationshipRepository->findRelationBetweenUsers($loggedInUser, $targetUser);
 
         if ($relationship === null || $relationship->getStatus() !== UserRelationshipStatus::BLOCKED) {
-            throw new BadRequestHttpException('No block relationship found.');
+            throw new NotFoundHttpException('No block relationship found.');
         }
 
         if ($relationship->getBlockedBy() !== $loggedInUser) {
-            throw new BadRequestHttpException('Only the user who created the block can remove it.');
+            throw new ForbiddenHttpException('Only the user who created the block can remove it.');
         }
 
         $relationship->setStatus(UserRelationshipStatus::REJECTED);
@@ -198,8 +222,15 @@ readonly class UserFriendService
 
     private function assertNotSameUser(User $loggedInUser, User $targetUser): void
     {
-        if ($loggedInUser === $targetUser) {
+        if ($loggedInUser->getId() === $targetUser->getId()) {
             throw new BadRequestHttpException('Cannot perform this action on yourself.');
+        }
+    }
+
+    private function assertNoActiveBlock(User $loggedInUser, User $targetUser, string $message): void
+    {
+        if ($this->userRelationshipRepository->hasActiveBlock($loggedInUser, $targetUser)) {
+            throw new ForbiddenHttpException($message);
         }
     }
 
