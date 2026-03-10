@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Notification\Transport\Controller\Api\V1;
 
+use App\General\Domain\Service\Interfaces\MessageServiceInterface;
+use App\Notification\Application\Message\CreateNotificationCommand;
+use App\Notification\Application\Message\MarkAllNotificationsAsReadCommand;
 use App\Notification\Application\Service\NotificationReadService;
 use App\Notification\Domain\Entity\Notification;
 use App\Notification\Infrastructure\Repository\NotificationRepository;
 use App\User\Domain\Entity\User;
-use App\User\Infrastructure\Repository\UserRepository;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,6 +19,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Uid\Uuid;
 
 use function is_string;
 use function trim;
@@ -28,8 +31,8 @@ final readonly class NotificationController
 {
     public function __construct(
         private NotificationRepository $notificationRepository,
-        private UserRepository $userRepository,
         private NotificationReadService $notificationReadService,
+        private MessageServiceInterface $messageService,
     ) {}
 
     #[Route('/v1/notifications', methods: [Request::METHOD_GET])]
@@ -112,11 +115,11 @@ final readonly class NotificationController
     #[Route('/v1/notifications/read-all', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(summary: 'Mark all notifications as read for the logged-in user.')]
     #[OA\Response(
-        response: 200,
-        description: 'Notifications updated.',
+        response: 202,
+        description: 'Commande acceptée.',
         content: new OA\JsonContent(
             properties: [
-                new OA\Property(property: 'updatedCount', type: 'integer', example: 3),
+                new OA\Property(property: 'operationId', type: 'string', format: 'uuid'),
             ],
             type: 'object',
         ),
@@ -125,9 +128,13 @@ final readonly class NotificationController
     #[OA\Response(response: 403, description: 'Access denied.')]
     public function markAllAsRead(User $loggedInUser): JsonResponse
     {
-        $updatedCount = $this->notificationRepository->markAllAsReadByRecipient($loggedInUser);
+        $operationId = Uuid::v4()->toRfc4122();
+        $this->messageService->sendMessage(new MarkAllNotificationsAsReadCommand(
+            operationId: $operationId,
+            actorUserId: $loggedInUser->getId(),
+        ));
 
-        return new JsonResponse(['updatedCount' => $updatedCount]);
+        return new JsonResponse(['operationId' => $operationId], JsonResponse::HTTP_ACCEPTED);
     }
 
 
@@ -175,7 +182,7 @@ final readonly class NotificationController
             ],
         ),
     )]
-    #[OA\Response(response: 201, description: 'Notification created.')]
+    #[OA\Response(response: 202, description: 'Commande acceptée.')]
     #[OA\Response(response: 400, description: 'Validation error or unknown users.')]
     #[OA\Response(response: 401, description: 'Authentication required.')]
     #[OA\Response(response: 403, description: 'Access denied.')]
@@ -206,32 +213,20 @@ final readonly class NotificationController
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "toId" (or "recipientId") is required and must be a non-empty string.');
         }
 
-        $recipient = $this->userRepository->find($toId);
-        if (!$recipient instanceof User) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Recipient user not found.');
+        if ($fromId !== null && (!is_string($fromId) || trim($fromId) === '')) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "fromId" must be a non-empty string when provided.');
         }
 
-        $from = null;
-        if ($fromId !== null) {
-            if (!is_string($fromId) || trim($fromId) === '') {
-                throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "fromId" must be a non-empty string when provided.');
-            }
+        $operationId = Uuid::v4()->toRfc4122();
+        $this->messageService->sendMessage(new CreateNotificationCommand(
+            operationId: $operationId,
+            title: $title,
+            description: $description,
+            type: $type,
+            recipientId: $toId,
+            fromId: $fromId,
+        ));
 
-            $from = $this->userRepository->find($fromId);
-            if (!$from instanceof User) {
-                throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Sender user not found.');
-            }
-        }
-
-        $notification = (new Notification())
-            ->setTitle(trim($title))
-            ->setDescription(trim($description))
-            ->setType(trim($type))
-            ->setRecipient($recipient)
-            ->setFrom($from);
-
-        $this->notificationRepository->save($notification);
-
-        return new JsonResponse($this->notificationReadService->normalize($notification), JsonResponse::HTTP_CREATED);
+        return new JsonResponse(['operationId' => $operationId], JsonResponse::HTTP_ACCEPTED);
     }
 }
