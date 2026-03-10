@@ -15,9 +15,9 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use function abs;
 use function array_filter;
 use function array_key_exists;
+use function array_map;
 use function array_unique;
 use function array_values;
-use function array_walk;
 use function explode;
 use function in_array;
 use function is_array;
@@ -25,6 +25,7 @@ use function is_string;
 use function mb_strtoupper;
 use function mb_substr;
 use function str_starts_with;
+use function trim;
 
 /**
  * @package App\General
@@ -250,8 +251,39 @@ final class RequestHandler
      */
     private static function normalizeSearchTerms(array $searchTerms): array
     {
-        // Normalize user input, note that this support array and string formats on value
-        array_walk($searchTerms, static fn (array $terms): array => array_unique(array_values(array_filter($terms))));
+        foreach (['and', 'or'] as $operand) {
+            if (!array_key_exists($operand, $searchTerms)) {
+                continue;
+            }
+
+            $terms = $searchTerms[$operand];
+
+            if (is_string($terms)) {
+                $terms = array_filter(array_map(trim(...), explode(' ', $terms)));
+            } elseif (is_array($terms)) {
+                $terms = array_map(
+                    static function (mixed $term): string {
+                        if (!is_string($term)) {
+                            throw new HttpException(
+                                HttpFoundationResponse::HTTP_BAD_REQUEST,
+                                'Given search parameter is not valid, each search term must be a string value.',
+                            );
+                        }
+
+                        return trim($term);
+                    },
+                    $terms,
+                );
+                $terms = array_filter($terms);
+            } else {
+                throw new HttpException(
+                    HttpFoundationResponse::HTTP_BAD_REQUEST,
+                    "Given search parameter is not valid, '{$operand}' value must be a string or an array of strings.",
+                );
+            }
+
+            $searchTerms[$operand] = array_unique(array_values($terms));
+        }
 
         return $searchTerms;
     }
