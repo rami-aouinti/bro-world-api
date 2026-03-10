@@ -17,6 +17,20 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Chat Conversation')]
+#[OA\Get(
+    path: '/v1/chat/private/conversations',
+    operationId: 'chat_conversation_private_list',
+    summary: 'Lister les conversations de l\'utilisateur connecté',
+    tags: ['Chat Conversation'],
+    parameters: [
+        new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, default: 1)),
+        new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 20)),
+        new OA\Parameter(name: 'message', in: 'query', required: false, schema: new OA\Schema(type: 'string', example: 'bonjour')),
+    ],
+    responses: [
+        new OA\Response(response: 200, description: 'Liste paginée des conversations'),
+    ]
+)]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class UserConversationListController
 {
