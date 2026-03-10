@@ -21,7 +21,10 @@ use function array_values;
 use function explode;
 use function in_array;
 use function is_array;
+use function json_decode;
 use function is_string;
+use function sprintf;
+use function trim;
 use function mb_strtoupper;
 use function mb_substr;
 use function str_starts_with;
@@ -140,9 +143,52 @@ final class RequestHandler
     public static function getTenant(HttpFoundationRequest $request): ?string
     {
         $tenant = $request->query->get('tenant') ?? $request->request->get('tenant');
-        //TODO: Think about validation for tenant.
 
-        return $tenant !== null ? (string)$tenant : null;
+        if ($tenant === null) {
+            return null;
+        }
+
+        $tenant = (string)$tenant;
+        $allowedEntityManagers = self::getAllowedEntityManagers();
+
+        if (!in_array($tenant, $allowedEntityManagers, true)) {
+            throw new HttpException(
+                HttpFoundationResponse::HTTP_BAD_REQUEST,
+                sprintf(
+                    "Given 'tenant' value '%s' is not allowed. Allowed values: %s.",
+                    $tenant,
+                    implode(', ', $allowedEntityManagers),
+                ),
+            );
+        }
+
+        return $tenant;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function getAllowedEntityManagers(): array
+    {
+        $configuredEntityManagers = $_SERVER['APP_ALLOWED_ENTITY_MANAGERS']
+            ?? $_ENV['APP_ALLOWED_ENTITY_MANAGERS']
+            ?? '["default"]';
+
+        /** @var mixed $decoded */
+        $decoded = json_decode($configuredEntityManagers, true);
+
+        if (!is_array($decoded)) {
+            return ['default'];
+        }
+
+        $allowedEntityManagers = array_values(
+            array_filter(
+                $decoded,
+                static fn (mixed $entityManager): bool => is_string($entityManager) && trim($entityManager) !== ''
+            )
+        );
+
+        return $allowedEntityManagers !== [] ? $allowedEntityManagers : ['default'];
     }
 
     /**

@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping\AssociationMapping;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\QueryBuilder;
 use Ramsey\Uuid\Exception\InvalidUuidStringException;
+use Throwable;
 use UnexpectedValueException;
 
 use function preg_replace;
@@ -56,13 +57,24 @@ trait RepositoryWrappersTrait
      */
     public function getEntityManager(?string $entityManagerName = null): EntityManager
     {
-        $manager = $entityManagerName
-            ? $this->managerRegistry->getManager($entityManagerName)
-            : $this->managerRegistry->getManagerForClass($this->getEntityName());
+        try {
+            $manager = $entityManagerName
+                ? $this->managerRegistry->getManager($entityManagerName)
+                : $this->managerRegistry->getManagerForClass($this->getEntityName());
+        } catch (Throwable $exception) {
+            throw new UnexpectedValueException(
+                $entityManagerName !== null
+                    ? 'Entity manager \'' . $entityManagerName . '\' is not available for API request.'
+                    : 'Cannot resolve entity manager for entity \'' . $this->getEntityName() . '\'.',
+                previous: $exception,
+            );
+        }
 
         if (!($manager instanceof EntityManager)) {
             throw new UnexpectedValueException(
-                'Cannot get entity manager for entity \'' . $this->getEntityName() . '\''
+                $entityManagerName !== null
+                    ? 'Entity manager \'' . $entityManagerName . '\' is not available for API request.'
+                    : 'Cannot get entity manager for entity \'' . $this->getEntityName() . '\''
             );
         }
 

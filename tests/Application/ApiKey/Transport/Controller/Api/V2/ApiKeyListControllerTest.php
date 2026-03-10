@@ -35,6 +35,40 @@ class ApiKeyListControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
+    #[TestDox('Test that `GET /v2/api_key?tenant=default` for the Root user returns success response.')]
+    public function testThatFindActionWithValidTenantReturnsSuccessResponse(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request(method: 'GET', uri: $this->baseUrl . '?tenant=default');
+        $response = $client->getResponse();
+        $content = $response->getContent();
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:\n" . $response);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('Test that `GET /v2/api_key?tenant=unknown` for the Root user returns bad request response.')]
+    public function testThatFindActionWithUnknownTenantReturnsBadRequestResponse(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request(method: 'GET', uri: $this->baseUrl . '?tenant=unknown');
+        $response = $client->getResponse();
+        $content = $response->getContent();
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode(), "Response:\n" . $response);
+        $responseData = JSON::decode($content, true);
+        self::assertIsArray($responseData);
+        self::assertArrayHasKey('message', $responseData);
+        self::assertStringContainsString("Given 'tenant' value 'unknown' is not allowed", $responseData['message']);
+    }
+
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `GET /v2/api_key` for the Root user returns success response.')]
     public function testThatFindActionForRootUserReturnsSuccessResponse(): void
     {
