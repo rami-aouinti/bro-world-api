@@ -30,6 +30,14 @@ class CacheKeyConventionService
     /**
      * @param array<string, mixed> $filters
      */
+    public function buildPublicUserListKey(array $filters): string
+    {
+        return 'public_users_list_' . $this->buildHash($filters);
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     */
     public function buildPublicApplicationsListKey(array $filters): string
     {
         return 'public_applications_list_' . $this->buildHash($filters);
@@ -161,6 +169,11 @@ class CacheKeyConventionService
     public function tagPublicPlatformsList(): string
     {
         return 'cache_platform_public_list';
+    }
+
+    public function publicUserListTag(): string
+    {
+        return 'cache_public_users_list';
     }
 
     public function tagPublicApplicationsList(): string
