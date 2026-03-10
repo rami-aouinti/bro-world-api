@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\User\Application\Service;
 
+use App\General\Domain\Service\Interfaces\MailerServiceInterface;
 use App\Notification\Application\Service\NotificationPublisher;
 use App\User\Domain\Entity\User;
 use App\User\Domain\Entity\UserFriendRelation;
@@ -13,8 +14,10 @@ use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Twig\Environment as Twig;
 
 use function trim;
 
@@ -26,6 +29,10 @@ readonly class UserFriendService
         private EntityManagerInterface $entityManager,
         private CacheInterface $cache,
         private NotificationPublisher $notificationPublisher,
+        private MailerServiceInterface $mailerService,
+        private Twig $twig,
+        #[Autowire('%env(resolve:APP_SENDER_EMAIL)%')]
+        private string $appSenderEmail,
     ) {
     }
 
@@ -67,6 +74,20 @@ readonly class UserFriendService
             description: $this->buildUserProfileLink($loggedInUser),
         );
 
+        if ($targetUser->getEmail() !== '') {
+            $body = $this->twig->render('Emails/friend_request_received.html.twig', [
+                'requester' => $loggedInUser,
+                'recipient' => $targetUser,
+            ]);
+
+            $this->mailerService->sendMail(
+                'You received a friend request',
+                $this->appSenderEmail,
+                $targetUser->getEmail(),
+                $body,
+            );
+        }
+
         return ['status' => 'request_sent'];
     }
 
@@ -90,6 +111,20 @@ readonly class UserFriendService
             type: self::FRIEND_NOTIFICATION_TYPE,
             description: $this->buildUserProfileLink($loggedInUser),
         );
+
+        if ($requester->getEmail() !== '') {
+            $body = $this->twig->render('Emails/friend_request_accepted.html.twig', [
+                'accepter' => $loggedInUser,
+                'recipient' => $requester,
+            ]);
+
+            $this->mailerService->sendMail(
+                'Your friend request has been accepted',
+                $this->appSenderEmail,
+                $requester->getEmail(),
+                $body,
+            );
+        }
 
         return ['status' => 'accepted'];
     }

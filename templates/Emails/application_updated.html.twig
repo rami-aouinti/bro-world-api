@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <h2>Your application update was successful ✅</h2>
+    <p><strong>Title:</strong> {{ application.title }}</p>
+    <p><strong>Platform:</strong> {{ platformName }}</p>
+    <p><strong>Description:</strong> {{ application.description is not empty ? application.description : 'No description provided.' }}</p>
+    <p><strong>Slug:</strong> {{ application.slug }}</p>
+    <p><strong>Status:</strong> {{ application.status.value }}</p>
+    <p><strong>Plugins:</strong> {{ plugins is not empty ? plugins|join(', ') : 'No plugin selected.' }}</p>
+  </body>
+</html>

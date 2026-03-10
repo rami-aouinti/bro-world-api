@@ -27,7 +27,9 @@ services:
     App\Platform\Transport\EventListener\PlatformEntityEventListener:
         tags:
             - { name: doctrine.event_listener, event: prePersist }
+            - { name: doctrine.event_listener, event: postPersist }
             - { name: doctrine.event_listener, event: preUpdate }
+            - { name: doctrine.event_listener, event: postUpdate }
 
     App\Configuration\Transport\EventListener\ConfigurationEntityEventListener:
         tags:
