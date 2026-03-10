@@ -22,8 +22,72 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Chat Message')]
-#[OA\Post(path: '/v1/chat/private/conversations/{conversationId}/messages', operationId: 'chat_message_create', summary: 'Créer un message', tags: ['Chat Message'], parameters: [new OA\Parameter(name: 'conversationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['content'], properties: [new OA\Property(property: 'content', type: 'string', minLength: 1, example: 'Bonjour, dispo pour un entretien demain ?')])), responses: [new OA\Response(response: 201, description: 'Message créé'), new OA\Response(response: 404, description: 'Conversation introuvable')])]
-#[OA\Patch(path: '/v1/chat/private/messages/{messageId}', operationId: 'chat_message_patch', summary: 'Modifier son message', tags: ['Chat Message'], parameters: [new OA\Parameter(name: 'messageId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [new OA\Property(property: 'content', type: 'string', minLength: 1, example: 'Bonjour, finalement mercredi 10h ?')])), responses: [new OA\Response(response: 200, description: 'Message mis à jour'), new OA\Response(response: 404, description: 'Message introuvable')])]
+#[OA\Post(
+    path: '/v1/chat/private/conversations/{conversationId}/messages',
+    operationId: 'chat_message_create',
+    summary: 'Créer un message',
+    tags: ['Chat Message'],
+    parameters: [
+        new OA\Parameter(name: 'conversationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000')),
+    ],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ['content'],
+            properties: [
+                new OA\Property(property: 'content', type: 'string', minLength: 1, example: 'Bonjour, dispo pour un entretien demain ?'),
+            ],
+            example: ['content' => 'Bonjour, dispo pour un entretien demain ?']
+        )
+    ),
+    responses: [
+        new OA\Response(
+            response: 201,
+            description: 'Message créé',
+            content: new OA\JsonContent(properties: [new OA\Property(property: 'id', type: 'string', format: 'uuid')], example: ['id' => '8f210e56-6550-4b61-b7f3-8994f5f6dc41'])
+        ),
+        new OA\Response(
+            response: 400,
+            description: 'Payload invalide',
+            content: new OA\JsonContent(properties: [new OA\Property(property: 'message', type: 'string')], example: ['message' => 'Field "content" is required.'])
+        ),
+        new OA\Response(
+            response: 404,
+            description: 'Conversation introuvable',
+            content: new OA\JsonContent(properties: [new OA\Property(property: 'message', type: 'string')], example: ['message' => 'Conversation not found.'])
+        ),
+    ]
+)]
+#[OA\Patch(
+    path: '/v1/chat/private/messages/{messageId}',
+    operationId: 'chat_message_patch',
+    summary: 'Modifier son message (update)',
+    tags: ['Chat Message'],
+    parameters: [
+        new OA\Parameter(name: 'messageId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000')),
+    ],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'content', type: 'string', minLength: 1, example: 'Bonjour, finalement mercredi 10h ?'),
+            ],
+            example: ['content' => 'Bonjour, finalement mercredi 10h ?']
+        )
+    ),
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: 'Message mis à jour',
+            content: new OA\JsonContent(properties: [new OA\Property(property: 'id', type: 'string', format: 'uuid')], example: ['id' => '8f210e56-6550-4b61-b7f3-8994f5f6dc41'])
+        ),
+        new OA\Response(
+            response: 404,
+            description: 'Message introuvable',
+            content: new OA\JsonContent(properties: [new OA\Property(property: 'message', type: 'string')], example: ['message' => 'Message not found.'])
+        ),
+    ]
+)]
 #[OA\Delete(path: '/v1/chat/private/messages/{messageId}', operationId: 'chat_message_delete', summary: 'Supprimer son message', tags: ['Chat Message'], parameters: [new OA\Parameter(name: 'messageId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], responses: [new OA\Response(response: 204, description: 'Supprimé'), new OA\Response(response: 404, description: 'Message introuvable')])]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class UserMessageMutationController

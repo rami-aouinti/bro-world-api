@@ -22,8 +22,78 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Chat Conversation')]
-#[OA\Post(path: '/v1/chat/private/chats/{chatId}/conversations', operationId: 'chat_conversation_create', summary: 'Créer une conversation', tags: ['Chat Conversation'], parameters: [new OA\Parameter(name: 'chatId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['userId'], properties: [new OA\Property(property: 'userId', type: 'string', format: 'uuid', example: '7c9e6679-7425-40de-944b-e07fc1f90ae7')])), responses: [new OA\Response(response: 201, description: 'Conversation créée'), new OA\Response(response: 400, description: 'userId invalide')])]
-#[OA\Patch(path: '/v1/chat/private/conversations/{conversationId}', operationId: 'chat_conversation_patch', summary: 'Ajouter un participant', tags: ['Chat Conversation'], parameters: [new OA\Parameter(name: 'conversationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['userId'], properties: [new OA\Property(property: 'userId', type: 'string', format: 'uuid', example: '7c9e6679-7425-40de-944b-e07fc1f90ae7')])), responses: [new OA\Response(response: 200, description: 'Participant ajouté'), new OA\Response(response: 404, description: 'Conversation introuvable')])]
+#[OA\Post(
+    path: '/v1/chat/private/chats/{chatId}/conversations',
+    operationId: 'chat_conversation_create',
+    summary: 'Créer une conversation',
+    tags: ['Chat Conversation'],
+    parameters: [
+        new OA\Parameter(name: 'chatId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000')),
+    ],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ['userId'],
+            properties: [
+                new OA\Property(property: 'userId', type: 'string', format: 'uuid', example: '7c9e6679-7425-40de-944b-e07fc1f90ae7'),
+            ],
+            example: ['userId' => '7c9e6679-7425-40de-944b-e07fc1f90ae7']
+        )
+    ),
+    responses: [
+        new OA\Response(
+            response: 201,
+            description: 'Conversation créée',
+            content: new OA\JsonContent(properties: [new OA\Property(property: 'id', type: 'string', format: 'uuid')], example: ['id' => '2a4d0a6c-9465-4d36-8f08-b6302ea62b44'])
+        ),
+        new OA\Response(
+            response: 400,
+            description: 'Payload invalide',
+            content: new OA\JsonContent(properties: [new OA\Property(property: 'message', type: 'string')], example: ['message' => 'Field "userId" is required.'])
+        ),
+        new OA\Response(
+            response: 404,
+            description: 'Chat introuvable',
+            content: new OA\JsonContent(properties: [new OA\Property(property: 'message', type: 'string')], example: ['message' => 'Chat not found.'])
+        ),
+    ]
+)]
+#[OA\Patch(
+    path: '/v1/chat/private/conversations/{conversationId}',
+    operationId: 'chat_conversation_patch',
+    summary: 'Ajouter un participant (update)',
+    tags: ['Chat Conversation'],
+    parameters: [
+        new OA\Parameter(name: 'conversationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000')),
+    ],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ['userId'],
+            properties: [
+                new OA\Property(property: 'userId', type: 'string', format: 'uuid', example: '7c9e6679-7425-40de-944b-e07fc1f90ae7'),
+            ],
+            example: ['userId' => '7c9e6679-7425-40de-944b-e07fc1f90ae7']
+        )
+    ),
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: 'Participant ajouté',
+            content: new OA\JsonContent(properties: [new OA\Property(property: 'id', type: 'string', format: 'uuid')], example: ['id' => '2a4d0a6c-9465-4d36-8f08-b6302ea62b44'])
+        ),
+        new OA\Response(
+            response: 400,
+            description: 'Payload invalide',
+            content: new OA\JsonContent(properties: [new OA\Property(property: 'message', type: 'string')], example: ['message' => 'Unknown userId.'])
+        ),
+        new OA\Response(
+            response: 404,
+            description: 'Conversation introuvable',
+            content: new OA\JsonContent(properties: [new OA\Property(property: 'message', type: 'string')], example: ['message' => 'Conversation not found.'])
+        ),
+    ]
+)]
 #[OA\Delete(path: '/v1/chat/private/conversations/{conversationId}', operationId: 'chat_conversation_delete', summary: 'Supprimer une conversation', tags: ['Chat Conversation'], parameters: [new OA\Parameter(name: 'conversationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], responses: [new OA\Response(response: 204, description: 'Supprimée')])]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class UserConversationMutationController
