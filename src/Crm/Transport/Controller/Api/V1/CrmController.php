@@ -58,6 +58,7 @@ final readonly class CrmController
     }
 
     #[Route('/v1/crm/companies', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/crm/companies', tags: ['Crm'], parameters: [], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createCompany(Request $request): JsonResponse
     {
         $payload = (array) json_decode((string) $request->getContent(), true);
@@ -97,6 +98,7 @@ final readonly class CrmController
     }
 
     #[Route('/v1/crm/projects', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/crm/projects', tags: ['Crm'], parameters: [], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createProject(Request $request): JsonResponse
     {
         $payload = (array) json_decode((string) $request->getContent(), true);
@@ -135,6 +137,7 @@ final readonly class CrmController
     }
 
     #[Route('/v1/crm/tasks', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/crm/tasks', tags: ['Crm'], parameters: [], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createTask(Request $request): JsonResponse
     {
         $payload = (array) json_decode((string) $request->getContent(), true);
@@ -177,6 +180,7 @@ final readonly class CrmController
     }
 
     #[Route('/v1/crm/task-requests', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/crm/task-requests', tags: ['Crm'], parameters: [], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createTaskRequest(Request $request): JsonResponse
     {
         $payload = (array) json_decode((string) $request->getContent(), true);
@@ -216,6 +220,7 @@ final readonly class CrmController
     }
 
     #[Route('/v1/crm/sprints', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/crm/sprints', tags: ['Crm'], parameters: [], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createSprint(Request $request): JsonResponse
     {
         $payload = (array) json_decode((string) $request->getContent(), true);
@@ -259,6 +264,7 @@ final readonly class CrmController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/companies', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/crm/applications/{applicationSlug}/companies', tags: ['Crm'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'crm-sales-hub')]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['name' => 'Acme Europe']))]
     #[OA\Response(response: 201, description: 'Company created under CRM application.', content: new OA\JsonContent(example: ['id' => 'uuid', 'crmId' => 'uuid', 'applicationSlug' => 'crm-sales-hub']))]

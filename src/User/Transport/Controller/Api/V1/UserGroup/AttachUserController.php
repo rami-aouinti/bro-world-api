@@ -50,6 +50,7 @@ class AttachUserController
         ],
         methods: [Request::METHOD_POST],
     )]
+    #[OA\Post(summary: 'POST /v1/user_group/{userGroup}/user/{user}', tags: ['UserGroup Management'], parameters: [new OA\Parameter(name: 'userGroup', in: 'path', required: true, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     #[IsGranted(Role::ROOT->value)]
     #[OA\Parameter(name: 'userGroup', description: 'User Group GUID', in: 'path', required: true)]
     #[OA\Parameter(name: 'user', description: 'User GUID', in: 'path', required: true)]

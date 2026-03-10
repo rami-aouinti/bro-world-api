@@ -36,6 +36,7 @@ class ApplicationUploadPhotoController
         path: '/v1/profile/applications/{application}/photo',
         methods: [Request::METHOD_POST],
     )]
+    #[OA\Post(summary: 'Upload application photo', tags: ['Profile'], parameters: [new OA\Parameter(name: 'application', in: 'path', required: true, schema: new OA\Schema(type: 'string'))])]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
     #[OA\RequestBody(
         required: true,

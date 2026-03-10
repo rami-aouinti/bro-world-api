@@ -58,6 +58,7 @@ final readonly class SchoolController
     }
 
     #[Route('/v1/school/classes', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/school/classes', tags: ['School'], parameters: [], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createClass(Request $request): JsonResponse
     {
         $payload = (array) json_decode((string) $request->getContent(), true);
@@ -97,6 +98,7 @@ final readonly class SchoolController
     }
 
     #[Route('/v1/school/students', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/school/students', tags: ['School'], parameters: [], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createStudent(Request $request): JsonResponse
     {
         $payload = (array) json_decode((string) $request->getContent(), true);
@@ -136,6 +138,7 @@ final readonly class SchoolController
     }
 
     #[Route('/v1/school/teachers', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/school/teachers', tags: ['School'], parameters: [], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createTeacher(Request $request): JsonResponse
     {
         $payload = (array) json_decode((string) $request->getContent(), true);
@@ -171,6 +174,7 @@ final readonly class SchoolController
     }
 
     #[Route('/v1/school/exams', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/school/exams', tags: ['School'], parameters: [], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createExam(Request $request): JsonResponse
     {
         $payload = (array) json_decode((string) $request->getContent(), true);
@@ -213,6 +217,7 @@ final readonly class SchoolController
     }
 
     #[Route('/v1/school/grades', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/school/grades', tags: ['School'], parameters: [], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createGrade(Request $request): JsonResponse
     {
         $payload = (array) json_decode((string) $request->getContent(), true);
@@ -259,6 +264,7 @@ final readonly class SchoolController
     }
 
     #[Route('/v1/school/applications/{applicationSlug}/classes', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/school/applications/{applicationSlug}/classes', tags: ['School'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'school-campus-core')]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['name' => 'Classe C - Informatique']))]
     #[OA\Response(response: 201, description: 'Class created under school application.', content: new OA\JsonContent(example: ['id' => 'uuid', 'schoolId' => 'uuid', 'applicationSlug' => 'school-campus-core']))]
