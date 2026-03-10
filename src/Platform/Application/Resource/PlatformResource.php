@@ -6,6 +6,7 @@ namespace App\Platform\Application\Resource;
 
 use App\General\Application\DTO\Interfaces\RestDtoInterface;
 use App\General\Application\Rest\RestResource;
+use App\General\Application\Service\CacheInvalidationService;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\Platform\Domain\Entity\Platform as Entity;
 use App\Platform\Domain\Repository\Interfaces\PlatformRepositoryInterface as Repository;
@@ -36,8 +37,29 @@ class PlatformResource extends RestResource
      */
     public function __construct(
         Repository $repository,
+        private readonly CacheInvalidationService $cacheInvalidationService,
     ) {
         parent::__construct($repository);
+    }
+
+    public function afterCreate(RestDtoInterface $restDto, EntityInterface $entity): void
+    {
+        $this->cacheInvalidationService->invalidatePublicPlatformListCaches();
+    }
+
+    public function afterUpdate(string &$id, RestDtoInterface $restDto, EntityInterface $entity): void
+    {
+        $this->cacheInvalidationService->invalidatePublicPlatformListCaches();
+    }
+
+    public function afterPatch(string &$id, RestDtoInterface $dto, EntityInterface $entity): void
+    {
+        $this->cacheInvalidationService->invalidatePublicPlatformListCaches();
+    }
+
+    public function afterDelete(string &$id, EntityInterface $entity): void
+    {
+        $this->cacheInvalidationService->invalidatePublicPlatformListCaches();
     }
 
     /**

@@ -113,6 +113,24 @@ class CacheInvalidationService
         $this->cache->invalidateTags($tags);
     }
 
+    public function invalidatePublicPageCaches(): void
+    {
+        if (!$this->cache instanceof TagAwareCacheInterface) {
+            return;
+        }
+
+        $this->cache->invalidateTags([$this->cacheKeyConventionService->tagPublicPage()]);
+    }
+
+    public function invalidatePublicPlatformListCaches(): void
+    {
+        if (!$this->cache instanceof TagAwareCacheInterface) {
+            return;
+        }
+
+        $this->cache->invalidateTags([$this->cacheKeyConventionService->tagPublicPlatformsList()]);
+    }
+
     public function invalidateConversationCaches(?string $chatId, ?string $userId): void
     {
         if (!$this->cache instanceof TagAwareCacheInterface) {

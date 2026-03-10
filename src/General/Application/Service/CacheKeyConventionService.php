@@ -9,7 +9,7 @@ use function md5;
 
 class CacheKeyConventionService
 {
-    public function buildPublicPageKey(int $page, string $lang): string
+    public function buildPublicPageKey(string $page, string $lang): string
     {
         return 'public/page/' . $page . '/' . $lang;
     }
@@ -21,7 +21,7 @@ class CacheKeyConventionService
 
     public function buildPublicPlatformsListKey(): string
     {
-        return 'public/platforms/list';
+        return 'public/platform/list';
     }
 
     /**
@@ -142,7 +142,7 @@ class CacheKeyConventionService
 
     public function tagPublicPage(): string
     {
-        return 'cache:public:page';
+        return 'cache:page:public';
     }
 
     public function tagPublicBlog(): string
@@ -157,7 +157,7 @@ class CacheKeyConventionService
 
     public function tagPublicPlatformsList(): string
     {
-        return 'cache:public:platforms:list';
+        return 'cache:platform:public:list';
     }
 
     public function tagPublicApplicationsList(): string

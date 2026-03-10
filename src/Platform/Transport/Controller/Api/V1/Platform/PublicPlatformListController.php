@@ -6,6 +6,7 @@ namespace App\Platform\Transport\Controller\Api\V1\Platform;
 
 use App\General\Transport\Rest\ResponseHandler;
 use App\Platform\Application\Resource\PlatformResource;
+use App\Platform\Application\Service\PublicPlatformListReadService;
 use App\Platform\Domain\Entity\Platform;
 use Nelmio\ApiDocBundle\Attribute\Model;
 use OpenApi\Attributes as OA;
@@ -24,6 +25,7 @@ use Throwable;
 class PublicPlatformListController
 {
     public function __construct(
+        private readonly PublicPlatformListReadService $publicPlatformListReadService,
         private readonly PlatformResource $platformResource,
         private readonly ResponseHandler $responseHandler,
     ) {
@@ -58,7 +60,7 @@ class PublicPlatformListController
     {
         return $this->responseHandler->createResponse(
             request: $request,
-            data: $this->platformResource->findPublicEnabled(),
+            data: $this->publicPlatformListReadService->getPublicEnabled(),
             restResource: $this->platformResource,
             context: [
                 'groups' => ['Platform.id', 'Platform.name', 'Platform.description', 'Platform.platformKey', 'Platform.photo'],
