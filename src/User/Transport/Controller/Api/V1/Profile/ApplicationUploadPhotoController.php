@@ -37,39 +37,44 @@ class ApplicationUploadPhotoController
         methods: [Request::METHOD_POST],
     )]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-    #[OA\RequestBody(
-        required: true,
-        content: new OA\MediaType(
-            mediaType: 'multipart/form-data',
-            schema: new OA\Schema(
-                required: ['photo'],
-                properties: [
-                    new OA\Property(property: 'photo', type: 'string', format: 'binary'),
-                ],
-                type: 'object',
+    #[OA\Post(
+        summary: "Upload la photo d'une candidature.",
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['photo'],
+                    properties: [
+                        new OA\Property(property: 'photo', type: 'string', format: 'binary'),
+                    ],
+                    type: 'object',
+                ),
             ),
         ),
-    )]
-    #[OA\Response(
-        response: 200,
-        description: 'Uploaded application photo URL',
-        content: new JsonContent(
-            properties: [
-                new Property(property: 'photo', description: 'Uploaded photo URL', type: 'string'),
-            ],
-            type: 'object',
-            example: [
-                'photo' => 'https://localhost/uploads/applications/0af6fe1514bdbce22f637d970a6e6042.jpg',
-            ],
-        ),
-    )]
-    #[OA\Response(
-        response: 400,
-        description: 'File upload error',
-    )]
-    #[OA\Response(
-        response: 404,
-        description: 'Application not found for current user',
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Uploaded application photo URL',
+                content: new JsonContent(
+                    properties: [
+                        new Property(property: 'photo', description: 'Uploaded photo URL', type: 'string'),
+                    ],
+                    type: 'object',
+                    example: [
+                        'photo' => 'https://localhost/uploads/applications/0af6fe1514bdbce22f637d970a6e6042.jpg',
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'File upload error',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Application not found for current user',
+            ),
+        ],
     )]
     public function __invoke(Request $request, User $loggedInUser, Application $application): JsonResponse
     {

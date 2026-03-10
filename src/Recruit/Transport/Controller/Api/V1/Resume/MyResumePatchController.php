@@ -43,7 +43,171 @@ class MyResumePatchController
     }
 
     #[Route(path: '/v1/recruit/private/me/resumes/{resumeId}', methods: [Request::METHOD_PATCH])]
-    #[OA\Patch(summary: 'Met à jour un CV appartenant au user connecté.')]
+    #[OA\Patch(
+        summary: 'Met à jour un CV appartenant au user connecté.',
+        parameters: [
+            new OA\Parameter(
+                name: 'resumeId',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'),
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            description: 'Payload partiel pour remplacer une ou plusieurs sections du CV.',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(
+                        property: 'experiences',
+                        type: 'array',
+                        items: new OA\Items(
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'title', type: 'string', example: 'Senior Backend Developer'),
+                                new OA\Property(property: 'description', type: 'string', example: 'Conception de microservices Symfony et mentoring équipe.'),
+                            ],
+                        ),
+                    ),
+                    new OA\Property(
+                        property: 'educations',
+                        type: 'array',
+                        items: new OA\Items(
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'title', type: 'string', example: 'Master Informatique'),
+                                new OA\Property(property: 'description', type: 'string', example: 'Université de Lille, spécialité génie logiciel.'),
+                            ],
+                        ),
+                    ),
+                    new OA\Property(
+                        property: 'skills',
+                        type: 'array',
+                        items: new OA\Items(
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'title', type: 'string', example: 'PHP 8.3'),
+                                new OA\Property(property: 'description', type: 'string', example: 'Architecture hexagonale, performance et tests.'),
+                            ],
+                        ),
+                    ),
+                    new OA\Property(
+                        property: 'languages',
+                        type: 'array',
+                        items: new OA\Items(
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'title', type: 'string', example: 'Anglais'),
+                                new OA\Property(property: 'description', type: 'string', example: 'Niveau C1 professionnel.'),
+                            ],
+                        ),
+                    ),
+                    new OA\Property(
+                        property: 'certifications',
+                        type: 'array',
+                        items: new OA\Items(
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'title', type: 'string', example: 'AWS Certified Developer - Associate'),
+                                new OA\Property(property: 'description', type: 'string', example: 'Certification obtenue en 2025.'),
+                            ],
+                        ),
+                    ),
+                    new OA\Property(
+                        property: 'projects',
+                        type: 'array',
+                        items: new OA\Items(
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'title', type: 'string', example: 'Plateforme de recrutement B2B'),
+                                new OA\Property(property: 'description', type: 'string', example: 'Développement API REST et pipelines CI/CD.'),
+                            ],
+                        ),
+                    ),
+                    new OA\Property(
+                        property: 'references',
+                        type: 'array',
+                        items: new OA\Items(
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'title', type: 'string', example: 'Jean Dupont - CTO'),
+                                new OA\Property(property: 'description', type: 'string', example: 'Disponible sur demande.'),
+                            ],
+                        ),
+                    ),
+                    new OA\Property(
+                        property: 'hobbies',
+                        type: 'array',
+                        items: new OA\Items(
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'title', type: 'string', example: 'Trail running'),
+                                new OA\Property(property: 'description', type: 'string', example: 'Participation à des courses régionales.'),
+                            ],
+                        ),
+                    ),
+                    new OA\Property(property: 'documentUrl', type: 'string', nullable: true, example: 'https://cdn.example.com/cv/jane-doe.pdf'),
+                ],
+                example: [
+                    'experiences' => [
+                        [
+                            'title' => 'Senior Backend Developer',
+                            'description' => 'Conception de microservices Symfony et mentoring équipe.',
+                        ],
+                    ],
+                    'educations' => [
+                        [
+                            'title' => 'Master Informatique',
+                            'description' => 'Université de Lille, spécialité génie logiciel.',
+                        ],
+                    ],
+                    'skills' => [
+                        [
+                            'title' => 'PHP 8.3',
+                            'description' => 'Architecture hexagonale, performance et tests.',
+                        ],
+                    ],
+                    'languages' => [
+                        [
+                            'title' => 'Anglais',
+                            'description' => 'Niveau C1 professionnel.',
+                        ],
+                    ],
+                    'certifications' => [
+                        [
+                            'title' => 'AWS Certified Developer - Associate',
+                            'description' => 'Certification obtenue en 2025.',
+                        ],
+                    ],
+                    'projects' => [
+                        [
+                            'title' => 'Plateforme de recrutement B2B',
+                            'description' => 'Développement API REST et pipelines CI/CD.',
+                        ],
+                    ],
+                    'references' => [
+                        [
+                            'title' => 'Jean Dupont - CTO',
+                            'description' => 'Disponible sur demande.',
+                        ],
+                    ],
+                    'hobbies' => [
+                        [
+                            'title' => 'Trail running',
+                            'description' => 'Participation à des courses régionales.',
+                        ],
+                    ],
+                    'documentUrl' => 'https://cdn.example.com/cv/jane-doe.pdf',
+                ],
+            ),
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'CV mis à jour.'),
+            new OA\Response(response: 400, description: 'UUID invalide ou payload invalide.'),
+            new OA\Response(response: 403, description: 'Accès interdit sur ce CV.'),
+            new OA\Response(response: 404, description: 'CV introuvable.'),
+        ],
+    )]
     public function __invoke(string $resumeId, Request $request, User $loggedInUser): JsonResponse
     {
         if (!Uuid::isValid($resumeId)) {
