@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\User\Application\Service;
 
+use App\Notification\Application\Service\NotificationPublisher;
 use App\User\Domain\Entity\User;
 use App\User\Domain\Entity\UserFriendRelation;
 use App\User\Domain\Enum\FriendStatus;
@@ -15,11 +16,16 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
+use function trim;
+
 readonly class UserFriendService
 {
+    private const string FRIEND_NOTIFICATION_TYPE = 'friend_notification';
+
     public function __construct(
         private EntityManagerInterface $entityManager,
         private CacheInterface $cache,
+        private NotificationPublisher $notificationPublisher,
     ) {
     }
 
@@ -53,6 +59,14 @@ readonly class UserFriendService
         $this->invalidateUserCaches($loggedInUser);
         $this->invalidateUserCaches($targetUser);
 
+        $this->notificationPublisher->publish(
+            from: $loggedInUser,
+            recipient: $targetUser,
+            title: trim($loggedInUser->getFirstName() . ' ' . $loggedInUser->getLastName()) . ' sent you a friend request',
+            type: self::FRIEND_NOTIFICATION_TYPE,
+            description: $this->buildUserProfileLink($loggedInUser),
+        );
+
         return ['status' => 'request_sent'];
     }
 
@@ -68,6 +82,14 @@ readonly class UserFriendService
         $this->entityManager->flush();
         $this->invalidateUserCaches($loggedInUser);
         $this->invalidateUserCaches($requester);
+
+        $this->notificationPublisher->publish(
+            from: $loggedInUser,
+            recipient: $requester,
+            title: trim($loggedInUser->getFirstName() . ' ' . $loggedInUser->getLastName()) . ' accepted your friend request',
+            type: self::FRIEND_NOTIFICATION_TYPE,
+            description: $this->buildUserProfileLink($loggedInUser),
+        );
 
         return ['status' => 'accepted'];
     }
@@ -282,6 +304,11 @@ readonly class UserFriendService
         });
 
         return $payload;
+    }
+
+    private function buildUserProfileLink(User $user): string
+    {
+        return '/user/' . $user->getUsername() . '/profile';
     }
 
     private function invalidateUserCaches(User $user): void

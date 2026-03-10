@@ -30,6 +30,7 @@ final readonly class BlogNotificationService
                 recipient: $comment->getParent()->getAuthor(),
                 title: $this->buildTitle($actor, 'commented your comment', $targetLabel),
                 type: self::BLOG_NOTIFICATION_TYPE,
+                description: $this->buildPostLinkDescription($post),
             );
 
             return;
@@ -40,6 +41,7 @@ final readonly class BlogNotificationService
             recipient: $post->getAuthor(),
             title: $this->buildTitle($actor, 'commented your post', $targetLabel),
             type: self::BLOG_NOTIFICATION_TYPE,
+            description: $this->buildPostLinkDescription($post),
         );
     }
 
@@ -53,6 +55,7 @@ final readonly class BlogNotificationService
                 recipient: $comment->getAuthor(),
                 title: $this->buildTitle($actor, $actionLabel . ' your comment', $this->formatCommentPreview($comment)),
                 type: self::BLOG_NOTIFICATION_TYPE,
+                description: $this->buildPostLinkDescription($comment->getPost()),
             );
 
             return;
@@ -63,7 +66,13 @@ final readonly class BlogNotificationService
             recipient: $comment->getPost()->getAuthor(),
             title: $this->buildTitle($actor, $actionLabel . ' your post', $this->formatPostTitle($comment->getPost())),
             type: self::BLOG_NOTIFICATION_TYPE,
+            description: $this->buildPostLinkDescription($comment->getPost()),
         );
+    }
+
+    private function buildPostLinkDescription(BlogPost $post): string
+    {
+        return '/blog/post/' . $post->getId();
     }
 
     private function buildTitle(User $actor, string $action, string $target): string
