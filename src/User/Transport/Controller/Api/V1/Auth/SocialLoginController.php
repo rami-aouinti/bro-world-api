@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\User\Transport\Controller\Api\V1\Auth;
 
+use OpenApi\Attributes as OA;
 use App\General\Domain\Utils\JSON;
 use App\Role\Application\Security\Interfaces\RolesServiceInterface;
 use App\User\Application\Security\SecurityUser;
@@ -29,6 +30,7 @@ use function sprintf;
 use function trim;
 
 #[AsController]
+#[OA\Tag(name: 'Authentication')]
 class SocialLoginController
 {
     /** @var array<int, string> */

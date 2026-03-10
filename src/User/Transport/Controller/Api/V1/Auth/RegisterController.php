@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\User\Transport\Controller\Api\V1\Auth;
 
+use OpenApi\Attributes as OA;
 use App\General\Domain\Service\Interfaces\MailerServiceInterface;
 use App\General\Domain\Utils\JSON;
 use App\Role\Application\Security\Interfaces\RolesServiceInterface;
@@ -27,6 +28,7 @@ use function sprintf;
 use function trim;
 
 #[AsController]
+#[OA\Tag(name: 'Authentication')]
 class RegisterController
 {
     public function __construct(
