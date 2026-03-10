@@ -8,6 +8,7 @@ use App\Blog\Application\Message\CreateGeneralBlogCommand;
 use App\Blog\Domain\Entity\Blog;
 use App\Blog\Domain\Enum\BlogType;
 use App\Blog\Infrastructure\Repository\BlogRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,7 +18,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 final readonly class CreateGeneralBlogCommandHandler
 {
-    public function __construct(private BlogRepository $blogRepository, private UserRepository $userRepository) {}
+    public function __construct(private BlogRepository $blogRepository, private UserRepository $userRepository, private CacheInvalidationService $cacheInvalidationService) {}
 
     public function __invoke(CreateGeneralBlogCommand $command): void
     {
@@ -31,5 +32,6 @@ final readonly class CreateGeneralBlogCommandHandler
         }
 
         $this->blogRepository->save((new Blog())->setTitle($command->title)->setOwner($user)->setType(BlogType::GENERAL));
+        $this->cacheInvalidationService->invalidateBlogCaches(null, $command->actorUserId);
     }
 }

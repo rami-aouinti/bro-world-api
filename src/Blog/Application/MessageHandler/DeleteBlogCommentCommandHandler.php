@@ -7,6 +7,7 @@ namespace App\Blog\Application\MessageHandler;
 use App\Blog\Application\Message\DeleteBlogCommentCommand;
 use App\Blog\Domain\Entity\BlogComment;
 use App\Blog\Infrastructure\Repository\BlogCommentRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -14,7 +15,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 final readonly class DeleteBlogCommentCommandHandler
 {
-    public function __construct(private BlogCommentRepository $commentRepository) {}
+    public function __construct(private BlogCommentRepository $commentRepository, private CacheInvalidationService $cacheInvalidationService) {}
 
     public function __invoke(DeleteBlogCommentCommand $command): void
     {
@@ -28,6 +29,8 @@ final readonly class DeleteBlogCommentCommandHandler
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Only comment owner can delete.');
         }
 
+        $applicationSlug = $comment->getPost()->getBlog()->getApplication()?->getSlug();
         $this->commentRepository->remove($comment);
+        $this->cacheInvalidationService->invalidateBlogCaches($applicationSlug, $command->actorUserId);
     }
 }

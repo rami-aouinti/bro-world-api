@@ -10,6 +10,7 @@ use App\Chat\Domain\Entity\ConversationParticipant;
 use App\Chat\Infrastructure\Repository\ChatMessageRepository;
 use App\Chat\Infrastructure\Repository\ConversationParticipantRepository;
 use App\Chat\Infrastructure\Repository\ConversationRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -110,6 +111,7 @@ class UserMessageMutationController
         private readonly ConversationRepository $conversationRepository,
         private readonly ConversationParticipantRepository $participantRepository,
         private readonly ChatMessageRepository $messageRepository,
+        private readonly CacheInvalidationService $cacheInvalidationService,
     ) {
     }
 
@@ -165,6 +167,7 @@ class UserMessageMutationController
             ->setRead(false);
 
         $this->messageRepository->save($message);
+        $this->cacheInvalidationService->invalidateConversationCaches($conversation->getChat()->getId(), $loggedInUser->getId());
 
         return new JsonResponse(['id' => $message->getId()], JsonResponse::HTTP_CREATED);
     }
@@ -189,6 +192,7 @@ class UserMessageMutationController
 
         if ($updated) {
             $this->messageRepository->save($message);
+            $this->cacheInvalidationService->invalidateConversationCaches($message->getConversation()->getChat()->getId(), $loggedInUser->getId());
         }
 
         return new JsonResponse(['id' => $message->getId()]);
@@ -198,7 +202,9 @@ class UserMessageMutationController
     public function delete(string $messageId, User $loggedInUser): JsonResponse
     {
         $message = $this->findOwnMessage($messageId, $loggedInUser);
+        $chatId = $message->getConversation()->getChat()->getId();
         $this->messageRepository->remove($message);
+        $this->cacheInvalidationService->invalidateConversationCaches($chatId, $loggedInUser->getId());
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }

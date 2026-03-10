@@ -10,6 +10,7 @@ use App\Blog\Domain\Entity\BlogComment;
 use App\Blog\Domain\Entity\BlogReaction;
 use App\Blog\Infrastructure\Repository\BlogCommentRepository;
 use App\Blog\Infrastructure\Repository\BlogReactionRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,6 +25,7 @@ final readonly class CreateBlogReactionCommandHandler
         private BlogCommentRepository $commentRepository,
         private UserRepository $userRepository,
         private BlogNotificationService $blogNotificationService,
+        private CacheInvalidationService $cacheInvalidationService,
     ) {}
 
     public function __invoke(CreateBlogReactionCommand $command): void
@@ -42,5 +44,6 @@ final readonly class CreateBlogReactionCommandHandler
         );
 
         $this->blogNotificationService->notifyReactionCreated($comment, $user, $command->type);
+        $this->cacheInvalidationService->invalidateBlogCaches($comment->getPost()->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
     }
 }

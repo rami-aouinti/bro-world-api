@@ -101,6 +101,9 @@ final readonly class EventListService
             if ($user !== null && method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->tagPrivateEvents($user->getId()));
             }
+            if ($applicationSlug !== null && $applicationSlug !== '' && method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
+                $item->tag($this->cacheKeyConventionService->tagPublicEventsByApplication($applicationSlug));
+            }
 
             $esIds = $this->searchIdsFromElastic($filters);
             if ($esIds === []) {

@@ -7,6 +7,7 @@ namespace App\Blog\Application\MessageHandler;
 use App\Blog\Application\Message\PatchBlogReactionCommand;
 use App\Blog\Domain\Entity\BlogReaction;
 use App\Blog\Infrastructure\Repository\BlogReactionRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -14,7 +15,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 final readonly class PatchBlogReactionCommandHandler
 {
-    public function __construct(private BlogReactionRepository $reactionRepository) {}
+    public function __construct(private BlogReactionRepository $reactionRepository, private CacheInvalidationService $cacheInvalidationService) {}
 
     public function __invoke(PatchBlogReactionCommand $command): void
     {
@@ -30,5 +31,6 @@ final readonly class PatchBlogReactionCommandHandler
 
         $reaction->setType($command->type);
         $this->reactionRepository->save($reaction);
+        $this->cacheInvalidationService->invalidateBlogCaches($reaction->getComment()->getPost()->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
     }
 }

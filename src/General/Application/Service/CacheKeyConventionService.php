@@ -150,6 +150,11 @@ class CacheKeyConventionService
         return 'cache:public:blog';
     }
 
+    public function tagPublicBlogByApplication(?string $applicationSlug): string
+    {
+        return 'cache:public:blog:' . ($applicationSlug !== null && $applicationSlug !== '' ? $applicationSlug : 'general');
+    }
+
     public function tagPublicPlatformsList(): string
     {
         return 'cache:public:platforms:list';
@@ -170,6 +175,11 @@ class CacheKeyConventionService
         return 'cache:private:' . $userId . ':conversation';
     }
 
+    public function tagPublicConversationByChat(string $chatId): string
+    {
+        return 'cache:public:conversation:' . $chatId;
+    }
+
     public function tagPrivateNotification(string $userId): string
     {
         return 'cache:private:' . $userId . ':notifications';
@@ -178,6 +188,11 @@ class CacheKeyConventionService
     public function tagPrivateEvents(string $userId): string
     {
         return 'cache:private:' . $userId . ':events';
+    }
+
+    public function tagPublicEventsByApplication(string $applicationSlug): string
+    {
+        return 'cache:public:events:' . $applicationSlug;
     }
 
     public function tagPrivateBlog(string $userId): string

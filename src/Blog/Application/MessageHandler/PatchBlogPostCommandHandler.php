@@ -7,6 +7,7 @@ namespace App\Blog\Application\MessageHandler;
 use App\Blog\Application\Message\PatchBlogPostCommand;
 use App\Blog\Domain\Entity\BlogPost;
 use App\Blog\Infrastructure\Repository\BlogPostRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -14,7 +15,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 final readonly class PatchBlogPostCommandHandler
 {
-    public function __construct(private BlogPostRepository $postRepository) {}
+    public function __construct(private BlogPostRepository $postRepository, private CacheInvalidationService $cacheInvalidationService) {}
 
     public function __invoke(PatchBlogPostCommand $command): void
     {
@@ -33,5 +34,6 @@ final readonly class PatchBlogPostCommandHandler
             ->setFilePath($command->filePath);
 
         $this->postRepository->save($post);
+        $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
     }
 }

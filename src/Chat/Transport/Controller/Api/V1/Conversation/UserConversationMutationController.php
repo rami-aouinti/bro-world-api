@@ -10,6 +10,7 @@ use App\Chat\Domain\Entity\ConversationParticipant;
 use App\Chat\Infrastructure\Repository\ChatRepository;
 use App\Chat\Infrastructure\Repository\ConversationParticipantRepository;
 use App\Chat\Infrastructure\Repository\ConversationRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
 use OpenApi\Attributes as OA;
@@ -119,6 +120,7 @@ class UserConversationMutationController
         private readonly UserRepository $userRepository,
         private readonly ConversationRepository $conversationRepository,
         private readonly ConversationParticipantRepository $participantRepository,
+        private readonly CacheInvalidationService $cacheInvalidationService,
     ) {
     }
 
@@ -149,6 +151,8 @@ class UserConversationMutationController
             $this->participantRepository->save((new ConversationParticipant())->setConversation($conversation)->setUser($targetUser), false);
         }
         $this->conversationRepository->getEntityManager()->flush();
+        $this->cacheInvalidationService->invalidateConversationCaches($chat->getId(), $loggedInUser->getId());
+        $this->cacheInvalidationService->invalidateConversationCaches($chat->getId(), $targetUser->getId());
 
         return new JsonResponse(['id' => $conversation->getId()], JsonResponse::HTTP_CREATED);
     }
@@ -174,6 +178,8 @@ class UserConversationMutationController
             $this->participantRepository->save(
                 (new ConversationParticipant())->setConversation($conversation)->setUser($targetUser)
             );
+            $this->cacheInvalidationService->invalidateConversationCaches($conversation->getChat()->getId(), $loggedInUser->getId());
+            $this->cacheInvalidationService->invalidateConversationCaches($conversation->getChat()->getId(), $targetUser->getId());
         }
 
         return new JsonResponse(['id' => $conversation->getId()]);
@@ -183,7 +189,9 @@ class UserConversationMutationController
     public function delete(string $conversationId, User $loggedInUser): JsonResponse
     {
         $conversation = $this->findParticipantConversation($conversationId, $loggedInUser);
+        $chatId = $conversation->getChat()->getId();
         $this->conversationRepository->remove($conversation);
+        $this->cacheInvalidationService->invalidateConversationCaches($chatId, $loggedInUser->getId());
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
@@ -215,6 +223,8 @@ class UserConversationMutationController
         $this->participantRepository->save((new ConversationParticipant())->setConversation($conversation)->setUser($loggedInUser), false);
         $this->participantRepository->save((new ConversationParticipant())->setConversation($conversation)->setUser($targetUser), false);
         $this->conversationRepository->getEntityManager()->flush();
+        $this->cacheInvalidationService->invalidateConversationCaches($chat->getId(), $loggedInUser->getId());
+        $this->cacheInvalidationService->invalidateConversationCaches($chat->getId(), $targetUser->getId());
 
         return new JsonResponse($this->normalizeConversation($conversation, $loggedInUser), JsonResponse::HTTP_CREATED);
     }

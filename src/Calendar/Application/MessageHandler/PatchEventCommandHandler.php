@@ -6,6 +6,7 @@ namespace App\Calendar\Application\MessageHandler;
 
 use App\Calendar\Application\Message\PatchEventCommand;
 use App\Calendar\Domain\Entity\Event;
+use App\General\Application\Service\CacheInvalidationService;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Infrastructure\Repository\ApplicationRepository;
 use App\Calendar\Infrastructure\Repository\EventRepository;
@@ -19,6 +20,7 @@ final readonly class PatchEventCommandHandler
     public function __construct(
         private EventRepository $eventRepository,
         private ApplicationRepository $applicationRepository,
+        private CacheInvalidationService $cacheInvalidationService,
     ) {
     }
 
@@ -57,5 +59,7 @@ final readonly class PatchEventCommandHandler
 
             $this->eventRepository->save($event);
         });
+
+        $this->cacheInvalidationService->invalidateEventCaches($command->applicationSlug, $command->actorUserId);
     }
 }

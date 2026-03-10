@@ -7,6 +7,7 @@ namespace App\Calendar\Application\MessageHandler;
 use App\Calendar\Application\Message\DeleteEventCommand;
 use App\Calendar\Domain\Entity\Event;
 use App\Calendar\Infrastructure\Repository\EventRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Infrastructure\Repository\ApplicationRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,6 +20,7 @@ final readonly class DeleteEventCommandHandler
     public function __construct(
         private EventRepository $eventRepository,
         private ApplicationRepository $applicationRepository,
+        private CacheInvalidationService $cacheInvalidationService,
     ) {
     }
 
@@ -44,5 +46,7 @@ final readonly class DeleteEventCommandHandler
 
             $this->eventRepository->remove($event);
         });
+
+        $this->cacheInvalidationService->invalidateEventCaches($command->applicationSlug, $command->actorUserId);
     }
 }

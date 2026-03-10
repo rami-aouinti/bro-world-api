@@ -7,6 +7,7 @@ namespace App\Blog\Application\MessageHandler;
 use App\Blog\Application\Message\DeleteBlogPostCommand;
 use App\Blog\Domain\Entity\BlogPost;
 use App\Blog\Infrastructure\Repository\BlogPostRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -14,7 +15,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 final readonly class DeleteBlogPostCommandHandler
 {
-    public function __construct(private BlogPostRepository $postRepository) {}
+    public function __construct(private BlogPostRepository $postRepository, private CacheInvalidationService $cacheInvalidationService) {}
 
     public function __invoke(DeleteBlogPostCommand $command): void
     {
@@ -28,6 +29,8 @@ final readonly class DeleteBlogPostCommandHandler
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Only post owner can delete.');
         }
 
+        $applicationSlug = $post->getBlog()->getApplication()?->getSlug();
         $this->postRepository->remove($post);
+        $this->cacheInvalidationService->invalidateBlogCaches($applicationSlug, $command->actorUserId);
     }
 }

@@ -94,4 +94,60 @@ class CacheInvalidationService
             'q' => '',
         ]));
     }
+
+    public function invalidateBlogCaches(?string $applicationSlug, ?string $userId): void
+    {
+        if (!$this->cache instanceof TagAwareCacheInterface) {
+            return;
+        }
+
+        $tags = [
+            $this->cacheKeyConventionService->tagPublicBlog(),
+            $this->cacheKeyConventionService->tagPublicBlogByApplication($applicationSlug),
+        ];
+
+        if ($userId !== null && $userId !== '') {
+            $tags[] = $this->cacheKeyConventionService->tagPrivateBlog($userId);
+        }
+
+        $this->cache->invalidateTags($tags);
+    }
+
+    public function invalidateConversationCaches(?string $chatId, ?string $userId): void
+    {
+        if (!$this->cache instanceof TagAwareCacheInterface) {
+            return;
+        }
+
+        $tags = [];
+        if ($chatId !== null && $chatId !== '') {
+            $tags[] = $this->cacheKeyConventionService->tagPublicConversationByChat($chatId);
+        }
+        if ($userId !== null && $userId !== '') {
+            $tags[] = $this->cacheKeyConventionService->tagPrivateConversation($userId);
+        }
+
+        if ($tags !== []) {
+            $this->cache->invalidateTags($tags);
+        }
+    }
+
+    public function invalidateEventCaches(?string $applicationSlug, ?string $userId): void
+    {
+        if (!$this->cache instanceof TagAwareCacheInterface) {
+            return;
+        }
+
+        $tags = [];
+        if ($applicationSlug !== null && $applicationSlug !== '') {
+            $tags[] = $this->cacheKeyConventionService->tagPublicEventsByApplication($applicationSlug);
+        }
+        if ($userId !== null && $userId !== '') {
+            $tags[] = $this->cacheKeyConventionService->tagPrivateEvents($userId);
+        }
+
+        if ($tags !== []) {
+            $this->cache->invalidateTags($tags);
+        }
+    }
 }

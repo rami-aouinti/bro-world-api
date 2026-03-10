@@ -102,6 +102,9 @@ final readonly class ConversationListService
             if ($user !== null && method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->tagPrivateConversation($user->getId()));
             }
+            if ($chatId !== null && $chatId !== '' && method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
+                $item->tag($this->cacheKeyConventionService->tagPublicConversationByChat($chatId));
+            }
 
             $esIds = $this->searchIdsFromElastic($filters);
             if ($esIds === []) {

@@ -7,6 +7,7 @@ namespace App\Chat\Transport\Controller\Api\V1\Reaction;
 use App\Chat\Domain\Entity\ChatMessage;
 use App\Chat\Domain\Entity\ChatMessageReaction;
 use App\Chat\Domain\Entity\ConversationParticipant;
+use App\General\Application\Service\CacheInvalidationService;
 use App\Chat\Infrastructure\Repository\ChatMessageReactionRepository;
 use App\Chat\Infrastructure\Repository\ChatMessageRepository;
 use App\Chat\Infrastructure\Repository\ConversationParticipantRepository;
@@ -31,6 +32,7 @@ class UserReactionMutationController
         private readonly ChatMessageRepository $messageRepository,
         private readonly ChatMessageReactionRepository $reactionRepository,
         private readonly ConversationParticipantRepository $participantRepository,
+        private readonly CacheInvalidationService $cacheInvalidationService,
     ) {
     }
 
@@ -51,6 +53,7 @@ class UserReactionMutationController
             ->setReaction($reactionType);
 
         $this->reactionRepository->save($reaction);
+        $this->cacheInvalidationService->invalidateConversationCaches($message->getConversation()->getChat()->getId(), $loggedInUser->getId());
 
         return new JsonResponse(['id' => $reaction->getId()], JsonResponse::HTTP_CREATED);
     }
@@ -64,6 +67,7 @@ class UserReactionMutationController
         if (isset($payload['reaction']) && is_string($payload['reaction']) && $payload['reaction'] !== '') {
             $reaction->setReaction($payload['reaction']);
             $this->reactionRepository->save($reaction);
+            $this->cacheInvalidationService->invalidateConversationCaches($reaction->getMessage()->getConversation()->getChat()->getId(), $loggedInUser->getId());
         }
 
         return new JsonResponse(['id' => $reaction->getId()]);
@@ -73,7 +77,9 @@ class UserReactionMutationController
     public function delete(string $reactionId, User $loggedInUser): JsonResponse
     {
         $reaction = $this->findOwnReaction($reactionId, $loggedInUser);
+        $chatId = $reaction->getMessage()->getConversation()->getChat()->getId();
         $this->reactionRepository->remove($reaction);
+        $this->cacheInvalidationService->invalidateConversationCaches($chatId, $loggedInUser->getId());
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }

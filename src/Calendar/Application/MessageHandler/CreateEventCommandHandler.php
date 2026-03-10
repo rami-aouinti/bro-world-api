@@ -8,6 +8,7 @@ use App\Calendar\Application\Message\CreateEventCommand;
 use App\Calendar\Domain\Entity\Event;
 use App\Calendar\Infrastructure\Repository\CalendarRepository;
 use App\Calendar\Infrastructure\Repository\EventRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Infrastructure\Repository\ApplicationRepository;
 use App\User\Domain\Entity\User;
@@ -24,6 +25,7 @@ final readonly class CreateEventCommandHandler
         private UserRepository $userRepository,
         private ApplicationRepository $applicationRepository,
         private CalendarRepository $calendarRepository,
+        private CacheInvalidationService $cacheInvalidationService,
     ) {
     }
 
@@ -61,5 +63,7 @@ final readonly class CreateEventCommandHandler
 
             $this->eventRepository->save($event);
         });
+
+        $this->cacheInvalidationService->invalidateEventCaches($command->applicationSlug, $command->actorUserId);
     }
 }

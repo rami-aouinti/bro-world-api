@@ -9,6 +9,7 @@ use App\Blog\Domain\Entity\Blog;
 use App\Blog\Domain\Entity\BlogPost;
 use App\Blog\Infrastructure\Repository\BlogPostRepository;
 use App\Blog\Infrastructure\Repository\BlogRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,6 +25,7 @@ final readonly class CreateBlogPostCommandHandler
         private BlogPostRepository $postRepository,
         private BlogRepository $blogRepository,
         private UserRepository $userRepository,
+        private CacheInvalidationService $cacheInvalidationService,
     ) {}
 
     public function __invoke(CreateBlogPostCommand $command): void
@@ -49,5 +51,7 @@ final readonly class CreateBlogPostCommandHandler
             ->setContent($command->content)
             ->setFilePath($command->filePath)
         );
+
+        $this->cacheInvalidationService->invalidateBlogCaches($blog->getApplication()?->getSlug(), $command->actorUserId);
     }
 }

@@ -33,6 +33,7 @@ final readonly class BlogReadService
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->tagPublicBlog());
+                $item->tag($this->cacheKeyConventionService->tagPublicBlogByApplication(null));
                 if ($currentUser !== null) {
                     $item->tag($this->cacheKeyConventionService->tagPrivateBlog($currentUser->getId()));
                 }
@@ -52,6 +53,7 @@ final readonly class BlogReadService
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->tagPublicBlog());
+                $item->tag($this->cacheKeyConventionService->tagPublicBlogByApplication($applicationSlug));
                 if ($currentUser !== null) {
                     $item->tag($this->cacheKeyConventionService->tagPrivateBlog($currentUser->getId()));
                 }

@@ -8,6 +8,7 @@ use App\Calendar\Application\Message\CancelEventCommand;
 use App\Calendar\Domain\Entity\Event;
 use App\Calendar\Domain\Enum\EventStatus;
 use App\Calendar\Infrastructure\Repository\EventRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Infrastructure\Repository\ApplicationRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,6 +21,7 @@ final readonly class CancelEventCommandHandler
     public function __construct(
         private EventRepository $eventRepository,
         private ApplicationRepository $applicationRepository,
+        private CacheInvalidationService $cacheInvalidationService,
     ) {
     }
 
@@ -46,5 +48,7 @@ final readonly class CancelEventCommandHandler
             $event->setIsCancelled(true)->setStatus(EventStatus::CANCELLED);
             $this->eventRepository->save($event);
         });
+
+        $this->cacheInvalidationService->invalidateEventCaches($command->applicationSlug, $command->actorUserId);
     }
 }
