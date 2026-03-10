@@ -209,6 +209,22 @@ final readonly class ConversationListService
                     },
                     $conversation->getParticipants()->toArray()
                 ),
+                'unreadMessagesCount' => array_reduce(
+                    $conversation->getMessages()->toArray(),
+                    static function (int $carry, ChatMessage $message) use ($connectedUserId): int {
+                        if ($connectedUserId === null) {
+                            return $carry;
+                        }
+
+                        $isOwner = $message->getSender()->getId() === $connectedUserId;
+                        if ($isOwner || $message->isRead()) {
+                            return $carry;
+                        }
+
+                        return $carry + 1;
+                    },
+                    0
+                ),
                 'messages' => array_map(
                     function (ChatMessage $message) use ($connectedUserId): array {
                         $sender = $message->getSender();
@@ -225,6 +241,7 @@ final readonly class ConversationListService
                                 'owner' => null !== $connectedUserId && $senderId === $connectedUserId,
                             ],
                             'attachments' => $message->getAttachments(),
+                            'read' => $message->isRead(),
                             'readAt' => $message->getReadAt()?->format(DATE_ATOM),
                             'createdAt' => $message->getCreatedAt()?->format(DATE_ATOM),
                             'reactions' => array_map(

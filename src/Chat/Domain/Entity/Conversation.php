@@ -16,7 +16,6 @@ use Ramsey\Uuid\UuidInterface;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'chat_conversation')]
-#[ORM\UniqueConstraint(name: 'uq_conversation_chat_id', columns: ['chat_id'])]
 #[ORM\Index(name: 'idx_conversation_chat_id', columns: ['chat_id'])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class Conversation implements EntityInterface

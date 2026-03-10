@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chat\Transport\Controller\Api\V1\Conversation;
 
+use App\Chat\Domain\Entity\Chat;
 use App\Chat\Domain\Entity\Conversation;
 use App\Chat\Domain\Entity\ConversationParticipant;
 use App\Chat\Infrastructure\Repository\ChatRepository;
@@ -95,6 +96,21 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
     ]
 )]
 #[OA\Delete(path: '/v1/chat/private/conversations/{conversationId}', operationId: 'chat_conversation_delete', summary: 'Supprimer une conversation', tags: ['Chat Conversation'], parameters: [new OA\Parameter(name: 'conversationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], responses: [new OA\Response(response: 204, description: 'Supprimée')])]
+#[OA\Post(
+    path: '/v1/chat/private/conversation/{userId}/user',
+    operationId: 'chat_conversation_find_or_create_with_user',
+    summary: 'Trouver ou créer une conversation directe avec un utilisateur',
+    tags: ['Chat Conversation'],
+    parameters: [
+        new OA\Parameter(name: 'userId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '7c9e6679-7425-40de-944b-e07fc1f90ae7')),
+    ],
+    responses: [
+        new OA\Response(response: 200, description: 'Conversation existante retournée'),
+        new OA\Response(response: 201, description: 'Conversation créée'),
+        new OA\Response(response: 400, description: 'userId invalide'),
+        new OA\Response(response: 404, description: 'Utilisateur introuvable'),
+    ]
+)]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class UserConversationMutationController
 {
@@ -170,6 +186,93 @@ class UserConversationMutationController
         $this->conversationRepository->remove($conversation);
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
+    }
+
+    #[Route(path: '/v1/chat/private/conversation/{userId}/user', methods: [Request::METHOD_POST])]
+    public function findOrCreateWithUser(string $userId, User $loggedInUser): JsonResponse
+    {
+        if ($userId === '' || $userId === $loggedInUser->getId()) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Invalid target userId.');
+        }
+
+        $targetUser = $this->userRepository->find($userId);
+        if (!$targetUser instanceof User) {
+            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'User not found.');
+        }
+
+        $conversation = $this->conversationRepository->findDirectConversationBetweenUsers($loggedInUser, $targetUser);
+        if ($conversation instanceof Conversation) {
+            return new JsonResponse($this->normalizeConversation($conversation, $loggedInUser), JsonResponse::HTTP_OK);
+        }
+
+        $chat = $this->chatRepository->findBy([], ['createdAt' => 'ASC'], 1)[0] ?? null;
+        if (!$chat instanceof Chat) {
+            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'No chat available to create a conversation.');
+        }
+
+        $conversation = (new Conversation())->setChat($chat);
+        $this->conversationRepository->save($conversation, false);
+        $this->participantRepository->save((new ConversationParticipant())->setConversation($conversation)->setUser($loggedInUser), false);
+        $this->participantRepository->save((new ConversationParticipant())->setConversation($conversation)->setUser($targetUser), false);
+        $this->conversationRepository->getEntityManager()->flush();
+
+        return new JsonResponse($this->normalizeConversation($conversation, $loggedInUser), JsonResponse::HTTP_CREATED);
+    }
+
+    private function normalizeConversation(Conversation $conversation, User $loggedInUser): array
+    {
+        $loggedInUserId = $loggedInUser->getId();
+
+        $messages = array_map(static function (\App\Chat\Domain\Entity\ChatMessage $message) use ($loggedInUserId): array {
+            $sender = $message->getSender();
+            $senderId = $sender->getId();
+
+            return [
+                'id' => $message->getId(),
+                'content' => $message->getContent(),
+                'read' => $message->isRead(),
+                'readAt' => $message->getReadAt()?->format(DATE_ATOM),
+                'attachments' => $message->getAttachments(),
+                'createdAt' => $message->getCreatedAt()?->format(DATE_ATOM),
+                'sender' => [
+                    'id' => $senderId,
+                    'firstName' => $sender->getFirstName(),
+                    'lastName' => $sender->getLastName(),
+                    'photo' => $sender->getPhoto(),
+                    'owner' => $senderId === $loggedInUserId,
+                ],
+            ];
+        }, $conversation->getMessages()->toArray());
+
+        $unreadMessagesCount = array_reduce($conversation->getMessages()->toArray(), static function (int $carry, \App\Chat\Domain\Entity\ChatMessage $message) use ($loggedInUserId): int {
+            if ($message->getSender()->getId() === $loggedInUserId || $message->isRead()) {
+                return $carry;
+            }
+
+            return $carry + 1;
+        }, 0);
+
+        return [
+            'id' => $conversation->getId(),
+            'chatId' => $conversation->getChat()->getId(),
+            'unreadMessagesCount' => $unreadMessagesCount,
+            'participants' => array_map(static function (ConversationParticipant $participant) use ($loggedInUserId): array {
+                $participantUser = $participant->getUser();
+
+                return [
+                    'id' => $participant->getId(),
+                    'user' => [
+                        'id' => $participantUser->getId(),
+                        'firstName' => $participantUser->getFirstName(),
+                        'lastName' => $participantUser->getLastName(),
+                        'photo' => $participantUser->getPhoto(),
+                        'owner' => $participantUser->getId() === $loggedInUserId,
+                    ],
+                ];
+            }, $conversation->getParticipants()->toArray()),
+            'messages' => $messages,
+            'createdAt' => $conversation->getCreatedAt()?->format(DATE_ATOM),
+        ];
     }
 
     private function findParticipantConversation(string $conversationId, User $loggedInUser): Conversation

@@ -71,8 +71,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
         content: new OA\JsonContent(
             properties: [
                 new OA\Property(property: 'content', type: 'string', minLength: 1, example: 'Bonjour, finalement mercredi 10h ?'),
+                new OA\Property(property: 'read', type: 'boolean', example: true),
             ],
-            example: ['content' => 'Bonjour, finalement mercredi 10h ?']
+            example: ['content' => 'Bonjour, finalement mercredi 10h ?', 'read' => true]
         )
     ),
     responses: [
@@ -114,7 +115,8 @@ class UserMessageMutationController
             ->setConversation($conversation)
             ->setSender($loggedInUser)
             ->setContent($content)
-            ->setAttachments([]);
+            ->setAttachments([])
+            ->setRead(false);
 
         $this->messageRepository->save($message);
 
@@ -127,8 +129,19 @@ class UserMessageMutationController
         $message = $this->findOwnMessage($messageId, $loggedInUser);
         $payload = $request->toArray();
 
+        $updated = false;
+
         if (isset($payload['content']) && is_string($payload['content']) && $payload['content'] !== '') {
             $message->setContent($payload['content']);
+            $updated = true;
+        }
+
+        if (array_key_exists('read', $payload) && is_bool($payload['read'])) {
+            $message->setRead((bool) $payload['read']);
+            $updated = true;
+        }
+
+        if ($updated) {
             $this->messageRepository->save($message);
         }
 

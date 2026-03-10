@@ -43,6 +43,9 @@ class ChatMessage implements EntityInterface
     #[ORM\Column(name: 'content', type: Types::TEXT)]
     private string $content = '';
 
+    #[ORM\Column(name: 'read', type: Types::BOOLEAN, options: ['default' => false])]
+    private bool $read = false;
+
     #[ORM\Column(name: 'read_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $readAt = null;
 
@@ -102,6 +105,18 @@ class ChatMessage implements EntityInterface
     public function setContent(string $content): self
     {
         $this->content = $content;
+
+        return $this;
+    }
+
+    public function isRead(): bool
+    {
+        return $this->read;
+    }
+
+    public function setRead(bool $read): self
+    {
+        $this->read = $read;
 
         return $this;
     }

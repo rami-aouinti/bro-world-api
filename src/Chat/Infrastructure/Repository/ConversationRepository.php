@@ -124,6 +124,31 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
             ->getSingleScalarResult();
     }
 
+
+    public function findDirectConversationBetweenUsers(User $firstUser, User $secondUser): ?Entity
+    {
+        $conversation = $this->createQueryBuilder('conversation')
+            ->addSelect('participants', 'participantUser', 'messages', 'sender', 'reactions', 'reactionUser', 'chat')
+            ->innerJoin('conversation.chat', 'chat')
+            ->innerJoin('conversation.participants', 'participants')
+            ->innerJoin('participants.user', 'participantUser')
+            ->leftJoin('conversation.messages', 'messages')
+            ->leftJoin('messages.sender', 'sender')
+            ->leftJoin('messages.reactions', 'reactions')
+            ->leftJoin('reactions.user', 'reactionUser')
+            ->where('participantUser IN (:users)')
+            ->setParameter('users', [$firstUser, $secondUser])
+            ->groupBy('conversation.id')
+            ->having('COUNT(DISTINCT participantUser.id) = 2')
+            ->andHaving('COUNT(DISTINCT participants.id) = 2')
+            ->orderBy('conversation.createdAt', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $conversation instanceof Entity ? $conversation : null;
+    }
+
     private function getConversationQueryBuilder(): QueryBuilder
     {
         return $this->createQueryBuilder('conversation')
