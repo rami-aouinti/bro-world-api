@@ -67,13 +67,21 @@ readonly class ApplicationListService
             'platformKey' => trim((string) $request->query->get('platformKey', '')),
         ];
 
-        $cacheKey = $this->cacheKeyConventionService->buildApplicationListKey($loggedInUser?->getId(), $page, $limit, $filters);
+        $cacheKey = $this->cacheKeyConventionService->buildPublicApplicationsListKey([
+            'userId' => $loggedInUser?->getId(),
+            'page' => $page,
+            'limit' => $limit,
+            'filters' => $filters,
+        ]);
 
         /** @var array<string, mixed> $result */
         $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($loggedInUser, $filters, $page, $limit): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->applicationListTag());
+                if ($loggedInUser !== null) {
+                    $item->tag($this->cacheKeyConventionService->tagPrivateProfile($loggedInUser->getId()));
+                }
             }
 
             $esIds = $this->searchIdsFromElastic($filters);

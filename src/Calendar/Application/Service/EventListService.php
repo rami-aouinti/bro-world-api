@@ -6,11 +6,13 @@ namespace App\Calendar\Application\Service;
 
 use App\Calendar\Domain\Entity\Event;
 use App\Calendar\Domain\Repository\Interfaces\EventRepositoryInterface;
+use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\User\Domain\Entity\User;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Throwable;
 
 use function array_filter;
@@ -22,6 +24,7 @@ final readonly class EventListService
         private EventRepositoryInterface $eventRepository,
         private CacheInterface $cache,
         private ElasticsearchServiceInterface $elasticsearchService,
+        private CacheKeyConventionService $cacheKeyConventionService,
     ) {
     }
 
@@ -79,18 +82,25 @@ final readonly class EventListService
             'location' => trim((string)($filters['location'] ?? '')),
         ];
 
-        $cacheKey = 'event_list_' . md5((string) json_encode([
+        $cachePayload = [
             'accessContext' => $accessContext,
             'userId' => $user?->getId(),
             'applicationSlug' => $applicationSlug,
             'page' => $page,
             'limit' => $limit,
             'filters' => $filters,
-        ], JSON_THROW_ON_ERROR));
+        ];
+
+        $cacheKey = $user !== null
+            ? $this->cacheKeyConventionService->buildPrivateEventKey($user->getUsername(), $cachePayload)
+            : 'event_list_' . md5((string) json_encode($cachePayload, JSON_THROW_ON_ERROR));
 
         /** @var array<string, mixed> $result */
         $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($accessContext, $user, $applicationSlug, $filters, $page, $limit): array {
             $item->expiresAfter(120);
+            if ($user !== null && method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
+                $item->tag($this->cacheKeyConventionService->tagPrivateEvents($user->getId()));
+            }
 
             $esIds = $this->searchIdsFromElastic($filters);
             if ($esIds === []) {

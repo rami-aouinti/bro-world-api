@@ -7,23 +7,36 @@ namespace App\Blog\Application\Service;
 use App\Blog\Domain\Entity\Blog;
 use App\Blog\Domain\Entity\BlogComment;
 use App\Blog\Infrastructure\Repository\BlogRepository;
+use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\User\Domain\Entity\User;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 final readonly class BlogReadService
 {
-    public function __construct(private BlogRepository $blogRepository, private CacheInterface $cache, private ElasticsearchServiceInterface $elasticsearchService) {}
+    public function __construct(
+        private BlogRepository $blogRepository,
+        private CacheInterface $cache,
+        private ElasticsearchServiceInterface $elasticsearchService,
+        private CacheKeyConventionService $cacheKeyConventionService,
+    ) {}
 
     /** @throws InvalidArgumentException */
     public function getGeneralBlogWithTree(?User $currentUser = null): array
     {
-        $userId = $currentUser?->getId() ?? 'anonymous';
+        $cacheKey = $this->buildBlogCacheKey('general', $currentUser);
 
-        return $this->cache->get('blog_general_tree_' . $userId, function (ItemInterface $item) use ($currentUser): array {
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($currentUser): array {
             $item->expiresAfter(120);
+            if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
+                $item->tag($this->cacheKeyConventionService->tagPublicBlog());
+                if ($currentUser !== null) {
+                    $item->tag($this->cacheKeyConventionService->tagPrivateBlog($currentUser->getId()));
+                }
+            }
             $blog = $this->blogRepository->findGeneralBlog();
 
             return $blog instanceof Blog ? $this->normalizeBlog($blog, $currentUser) : [];
@@ -33,10 +46,16 @@ final readonly class BlogReadService
     /** @throws InvalidArgumentException */
     public function getByApplicationSlug(string $applicationSlug, ?User $currentUser = null): array
     {
-        $userId = $currentUser?->getId() ?? 'anonymous';
+        $cacheKey = $this->buildBlogCacheKey('app/' . $applicationSlug, $currentUser);
 
-        return $this->cache->get('blog_app_' . $applicationSlug . '_' . $userId, function (ItemInterface $item) use ($applicationSlug, $currentUser): array {
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $currentUser): array {
             $item->expiresAfter(120);
+            if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
+                $item->tag($this->cacheKeyConventionService->tagPublicBlog());
+                if ($currentUser !== null) {
+                    $item->tag($this->cacheKeyConventionService->tagPrivateBlog($currentUser->getId()));
+                }
+            }
             $blog = $this->blogRepository->findOneByApplicationSlug($applicationSlug);
 
             return $blog instanceof Blog ? $this->normalizeBlog($blog, $currentUser) : [];
@@ -62,6 +81,15 @@ final readonly class BlogReadService
                 'comments' => $this->normalizeComments($p->getComments()->toArray(), null, $currentUser),
             ], $blog->getPosts()->toArray()),
         ];
+    }
+
+    private function buildBlogCacheKey(string $scope, ?User $currentUser): string
+    {
+        if ($currentUser === null) {
+            return $this->cacheKeyConventionService->buildPublicBlogKey($scope);
+        }
+
+        return $this->cacheKeyConventionService->buildPrivateBlogKey($currentUser->getUsername(), $scope);
     }
 
     /** @param array<int, BlogComment> $comments */
