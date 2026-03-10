@@ -49,6 +49,31 @@ class SocialLoginController
      * @throws Throwable
      */
     #[Route(path: '/v1/auth/social_login', methods: [Request::METHOD_POST])]
+    #[OA\Post(
+        summary: 'Authenticate or create a user via a social provider',
+        tags: ['Authentication'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email', 'provider', 'providerId'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'social.user@bro-world.com'),
+                    new OA\Property(property: 'provider', type: 'string', enum: ['github', 'instagram', 'facebook', 'google'], example: 'google'),
+                    new OA\Property(property: 'providerId', type: 'string', example: 'google-oauth2|1134889988776655'),
+                ],
+                example: [
+                    'email' => 'social.user@bro-world.com',
+                    'provider' => 'google',
+                    'providerId' => 'google-oauth2|1134889988776655',
+                ],
+            ),
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Authenticated successfully, token returned.'),
+            new OA\Response(response: 400, description: 'Invalid payload or unsupported provider.'),
+            new OA\Response(response: 422, description: 'Validation failed.'),
+        ],
+    )]
     public function __invoke(Request $request): JsonResponse
     {
         /** @var array<string, mixed> $payload */

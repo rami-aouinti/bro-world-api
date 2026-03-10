@@ -47,6 +47,31 @@ class RegisterController
      * @throws Throwable
      */
     #[Route(path: '/v1/auth/register', methods: [Request::METHOD_POST])]
+    #[OA\Post(
+        summary: 'Register a new user account',
+        tags: ['Authentication'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email', 'password', 'repeatPassword'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'new.user@bro-world.com'),
+                    new OA\Property(property: 'password', type: 'string', format: 'password', example: 'Str0ngPassword!'),
+                    new OA\Property(property: 'repeatPassword', type: 'string', format: 'password', example: 'Str0ngPassword!'),
+                ],
+                example: [
+                    'email' => 'new.user@bro-world.com',
+                    'password' => 'Str0ngPassword!',
+                    'repeatPassword' => 'Str0ngPassword!',
+                ],
+            ),
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'User created and token returned.'),
+            new OA\Response(response: 400, description: 'Invalid payload or email already used.'),
+            new OA\Response(response: 422, description: 'Validation failed.'),
+        ],
+    )]
     public function __invoke(Request $request): JsonResponse
     {
         /** @var array<string, mixed> $payload */

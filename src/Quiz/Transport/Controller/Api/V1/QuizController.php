@@ -33,6 +33,7 @@ final readonly class QuizController
     }
 
     #[Route('/v1/quiz/application/{applicationSlug}/questions', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/quiz/application/{applicationSlug}/questions', tags: ['Quiz'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'shop-ops-center')]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['title' => 'What is Symfony Messenger?', 'level' => 'medium', 'category' => 'backend', 'answers' => [['label' => 'Message bus component', 'correct' => true], ['label' => 'Template engine', 'correct' => false]], 'configuration' => ['shuffleAnswers' => true, 'timeLimitSec' => 40]]))]
     #[OA\Response(response: 202, description: 'Question creation requested.', content: new OA\JsonContent(example: ['status' => 'accepted']))]
