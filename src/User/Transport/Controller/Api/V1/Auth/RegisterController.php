@@ -22,6 +22,7 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Throwable;
+use Twig\Environment as Twig;
 
 use function explode;
 use function sprintf;
@@ -35,6 +36,7 @@ class RegisterController
         private readonly EntityManagerInterface $entityManager,
         private readonly JWTTokenManagerInterface $jwtTokenManager,
         private readonly MailerServiceInterface $mailerService,
+        private readonly Twig $twig,
         private readonly UserRepositoryInterface $userRepository,
         private readonly RolesServiceInterface $rolesService,
         #[Autowire('%env(resolve:APP_SENDER_EMAIL)%')]
@@ -104,11 +106,15 @@ class RegisterController
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
+        $body = $this->twig->render('Emails/welcome.html.twig', [
+            'email' => $email,
+        ]);
+
         $this->mailerService->sendMail(
             'Welcome to Bro World',
             $this->appSenderEmail,
             $email,
-            '<p>Your account was successfully created.</p>',
+            $body,
         );
 
         $securityUser = new SecurityUser($user, $this->rolesService->getInheritedRoles($user->getRoles()));
