@@ -187,47 +187,58 @@ final readonly class ConversationListService
     {
         $connectedUserId = $connectedUser?->getId();
 
-        return array_map(function (Conversation $conversation): array {
+        return array_map(function (Conversation $conversation) use ($connectedUserId): array {
             return [
                 'id' => $conversation->getId(),
-                'chatId' => $conversation->getChat()->getId(),
-                'participants' => array_map(function (ConversationParticipant $participant) use ($connectedUserId): array {
-                    $participantUser = $participant->getUser();
+                'chatId' => $conversation->getChat()?->getId(),
+                'participants' => array_map(
+                    function (ConversationParticipant $participant) use ($connectedUserId): array {
+                        $participantUser = $participant->getUser();
+                        $participantUserId = $participantUser?->getId();
 
-                    return [
-                        'id' => $participant->getId(),
-                        'user' => [
-                            'id' => $participantUser->getId(),
-                            'firstName' => $participantUser->getFirstName(),
-                            'lastName' => $participantUser->getLastName(),
-                            'photo' => $participantUser->getPhoto(),
-                            'owner' => $connectedUserId !== null && $participantUser->getId() === $connectedUserId,
-                        ],
-                    ];
-                }, $conversation->getParticipants()->toArray()),
-                'messages' => array_map(function (ChatMessage $message) use ($connectedUserId): array {
-                    $sender = $message->getSender();
+                        return [
+                            'id' => $participant->getId(),
+                            'user' => [
+                                'id' => $participantUserId,
+                                'firstName' => $participantUser?->getFirstName(),
+                                'lastName' => $participantUser?->getLastName(),
+                                'photo' => $participantUser?->getPhoto(),
+                                'owner' => null !== $connectedUserId && $participantUserId === $connectedUserId,
+                            ],
+                        ];
+                    },
+                    $conversation->getParticipants()->toArray()
+                ),
+                'messages' => array_map(
+                    function (ChatMessage $message) use ($connectedUserId): array {
+                        $sender = $message->getSender();
+                        $senderId = $sender?->getId();
 
-                    return [
-                        'id' => $message->getId(),
-                        'content' => $message->getContent(),
-                        'sender' => [
-                            'id' => $sender->getId(),
-                            'firstName' => $sender->getFirstName(),
-                            'lastName' => $sender->getLastName(),
-                            'photo' => $sender->getPhoto(),
-                            'owner' => $connectedUserId !== null && $sender->getId() === $connectedUserId,
-                        ],
-                        'attachments' => $message->getAttachments(),
-                        'readAt' => $message->getReadAt()?->format(DATE_ATOM),
-                        'createdAt' => $message->getCreatedAt()?->format(DATE_ATOM),
-                        'reactions' => array_map(static fn (ChatMessageReaction $reaction): array => [
-                            'id' => $reaction->getId(),
-                            'userId' => $reaction->getUser()->getId(),
-                            'reaction' => $reaction->getReaction(),
-                        ], $message->getReactions()->toArray()),
-                    ];
-                }, $conversation->getMessages()->toArray()),
+                        return [
+                            'id' => $message->getId(),
+                            'content' => $message->getContent(),
+                            'sender' => [
+                                'id' => $senderId,
+                                'firstName' => $sender?->getFirstName(),
+                                'lastName' => $sender?->getLastName(),
+                                'photo' => $sender?->getPhoto(),
+                                'owner' => null !== $connectedUserId && $senderId === $connectedUserId,
+                            ],
+                            'attachments' => $message->getAttachments(),
+                            'readAt' => $message->getReadAt()?->format(DATE_ATOM),
+                            'createdAt' => $message->getCreatedAt()?->format(DATE_ATOM),
+                            'reactions' => array_map(
+                                static fn (ChatMessageReaction $reaction): array => [
+                                    'id' => $reaction->getId(),
+                                    'userId' => $reaction->getUser(),
+                                    'reaction' => $reaction->getReaction(),
+                                ],
+                                $message->getReactions()->toArray()
+                            ),
+                        ];
+                    },
+                    $conversation->getMessages()->toArray()
+                ),
                 'createdAt' => $conversation->getCreatedAt()?->format(DATE_ATOM),
             ];
         }, $conversations);
