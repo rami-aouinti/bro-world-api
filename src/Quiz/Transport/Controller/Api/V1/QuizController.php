@@ -34,7 +34,40 @@ final readonly class QuizController
 
     #[Route('/v1/quiz/application/{applicationSlug}/questions', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'shop-ops-center')]
-    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['title' => 'What is Symfony Messenger?', 'level' => 'medium', 'category' => 'backend', 'answers' => [['label' => 'Message bus component', 'correct' => true], ['label' => 'Template engine', 'correct' => false]], 'configuration' => ['shuffleAnswers' => true, 'timeLimitSec' => 40]]))]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            type: 'object',
+            required: ['title', 'level', 'category', 'answers'],
+            properties: [
+                new OA\Property(property: 'title', type: 'string', minLength: 1, example: 'What is Symfony Messenger?'),
+                new OA\Property(property: 'level', type: 'string', example: 'medium'),
+                new OA\Property(property: 'category', type: 'string', example: 'backend'),
+                new OA\Property(
+                    property: 'answers',
+                    type: 'array',
+                    items: new OA\Items(
+                        type: 'object',
+                        required: ['label', 'correct'],
+                        properties: [
+                            new OA\Property(property: 'label', type: 'string', example: 'Message bus component'),
+                            new OA\Property(property: 'correct', type: 'boolean', example: true),
+                        ],
+                    ),
+                ),
+                new OA\Property(
+                    property: 'configuration',
+                    type: 'object',
+                    nullable: true,
+                    properties: [
+                        new OA\Property(property: 'shuffleAnswers', type: 'boolean', example: true),
+                        new OA\Property(property: 'timeLimitSec', type: 'integer', example: 40),
+                    ],
+                ),
+            ],
+            example: ['title' => 'What is Symfony Messenger?', 'level' => 'medium', 'category' => 'backend', 'answers' => [['label' => 'Message bus component', 'correct' => true], ['label' => 'Template engine', 'correct' => false]], 'configuration' => ['shuffleAnswers' => true, 'timeLimitSec' => 40]],
+        )
+    )]
     #[OA\Response(response: 202, description: 'Question creation requested.', content: new OA\JsonContent(example: ['status' => 'accepted']))]
     public function createQuestion(string $applicationSlug, Request $request): JsonResponse
     {

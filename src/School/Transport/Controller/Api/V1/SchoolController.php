@@ -260,7 +260,17 @@ final readonly class SchoolController
 
     #[Route('/v1/school/applications/{applicationSlug}/classes', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'school-campus-core')]
-    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['name' => 'Classe C - Informatique']))]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            type: 'object',
+            required: ['name'],
+            properties: [
+                new OA\Property(property: 'name', type: 'string', minLength: 1, example: 'Classe C - Informatique'),
+            ],
+            example: ['name' => 'Classe C - Informatique'],
+        )
+    )]
     #[OA\Response(response: 201, description: 'Class created under school application.', content: new OA\JsonContent(example: ['id' => 'uuid', 'schoolId' => 'uuid', 'applicationSlug' => 'school-campus-core']))]
     public function createClassByApplication(string $applicationSlug, Request $request): JsonResponse
     {

@@ -67,10 +67,6 @@ class ApplicationUploadPhotoController
         response: 400,
         description: 'File upload error',
     )]
-    #[OA\Response(
-        response: 404,
-        description: 'Application not found for current user',
-    )]
     public function __invoke(Request $request, User $loggedInUser, Application $application): JsonResponse
     {
         /** @var UploadedFile|null $photo */

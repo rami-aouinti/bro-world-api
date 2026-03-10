@@ -40,7 +40,7 @@ final readonly class BlogMutationController
     ) {}
 
     #[Route('/v1/blogs/general', methods: [Request::METHOD_POST])]
-    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['title' => 'General Blog']))]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object', properties: [new OA\Property(property: 'title', type: 'string', example: 'General Blog')], example: ['title' => 'General Blog']))]
     #[OA\Response(response: 202, description: 'General blog creation requested.', content: new OA\JsonContent(example: ['status' => 'accepted']))]
     public function createGeneral(Request $request): JsonResponse
     {
@@ -57,7 +57,7 @@ final readonly class BlogMutationController
 
     #[Route('/v1/blogs/{blogId}/posts', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'blogId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e77')]
-    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['content' => 'Nouveau post produit', 'filePath' => 'https://api.example.com/uploads/blog/post.png']))]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object', properties: [new OA\Property(property: 'content', type: 'string', nullable: true, example: 'Nouveau post produit'), new OA\Property(property: 'filePath', type: 'string', nullable: true, example: 'https://api.example.com/uploads/blog/post.png')], example: ['content' => 'Nouveau post produit', 'filePath' => 'https://api.example.com/uploads/blog/post.png']))]
     #[OA\Response(response: 202, description: 'Post creation requested.', content: new OA\JsonContent(example: ['status' => 'accepted']))]
     public function createPost(string $blogId, Request $request, User $loggedInUser): JsonResponse
     {
@@ -77,7 +77,7 @@ final readonly class BlogMutationController
 
     #[Route('/v1/blog/posts/{postId}', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'postId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e78')]
-    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['content' => 'Mise a jour du post', 'filePath' => 'https://api.example.com/uploads/blog/new-file.png']))]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object', properties: [new OA\Property(property: 'content', type: 'string', nullable: true, example: 'Mise a jour du post'), new OA\Property(property: 'filePath', type: 'string', nullable: true, example: 'https://api.example.com/uploads/blog/new-file.png')], example: ['content' => 'Mise a jour du post', 'filePath' => 'https://api.example.com/uploads/blog/new-file.png']))]
     #[OA\Response(response: 204, description: 'Post updated.')]
     public function patchPost(string $postId, Request $request, User $loggedInUser): JsonResponse
     {
@@ -101,7 +101,7 @@ final readonly class BlogMutationController
 
     #[Route('/v1/blog/posts/{postId}/comments', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'postId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e79')]
-    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['content' => 'Je valide ce point', 'parentCommentId' => null]))]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object', properties: [new OA\Property(property: 'content', type: 'string', nullable: true, example: 'Je valide ce point'), new OA\Property(property: 'filePath', type: 'string', nullable: true, example: 'https://api.example.com/uploads/blog/comment.png'), new OA\Property(property: 'parentCommentId', type: 'string', format: 'uuid', nullable: true, example: null)], example: ['content' => 'Je valide ce point', 'parentCommentId' => null]))]
     #[OA\Response(response: 202, description: 'Comment creation requested.', content: new OA\JsonContent(example: ['status' => 'accepted']))]
     public function createComment(string $postId, Request $request, User $loggedInUser): JsonResponse
     {
@@ -122,7 +122,7 @@ final readonly class BlogMutationController
 
     #[Route('/v1/blog/comments/{commentId}', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'commentId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e90')]
-    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['content' => 'Commentaire corrige']))]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object', properties: [new OA\Property(property: 'content', type: 'string', nullable: true, example: 'Commentaire corrige'), new OA\Property(property: 'filePath', type: 'string', nullable: true, example: 'https://api.example.com/uploads/blog/new-file.png')], example: ['content' => 'Commentaire corrige']))]
     #[OA\Response(response: 204, description: 'Comment updated.')]
     public function patchComment(string $commentId, Request $request, User $loggedInUser): JsonResponse
     {
@@ -146,7 +146,7 @@ final readonly class BlogMutationController
 
     #[Route('/v1/blog/comments/{commentId}/reactions', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'commentId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e90')]
-    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['type' => 'heart']))]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object', required: ['type'], properties: [new OA\Property(property: 'type', type: 'string', example: 'heart')], example: ['type' => 'heart']))]
     #[OA\Response(response: 202, description: 'Reaction creation requested.', content: new OA\JsonContent(example: ['status' => 'accepted']))]
     public function createReaction(string $commentId, Request $request, User $loggedInUser): JsonResponse
     {
@@ -158,7 +158,7 @@ final readonly class BlogMutationController
 
     #[Route('/v1/blog/reactions/{reactionId}', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'reactionId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e91')]
-    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['type' => 'laugh']))]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object', required: ['type'], properties: [new OA\Property(property: 'type', type: 'string', example: 'laugh')], example: ['type' => 'laugh']))]
     #[OA\Response(response: 204, description: 'Reaction updated.')]
     public function patchReaction(string $reactionId, Request $request, User $loggedInUser): JsonResponse
     {
