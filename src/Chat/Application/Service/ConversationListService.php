@@ -118,7 +118,7 @@ final readonly class ConversationListService
             }
 
             return [
-                'items' => $this->normalizeConversations($conversations),
+                'items' => $this->normalizeConversations($conversations, $user),
                 'pagination' => [
                     'page' => $page,
                     'limit' => $limit,
@@ -183,23 +183,41 @@ final readonly class ConversationListService
      *
      * @return array<int, array<string, mixed>>
      */
-    private function normalizeConversations(array $conversations): array
+    private function normalizeConversations(array $conversations, ?User $connectedUser): array
     {
+        $connectedUserId = $connectedUser?->getId();
+
         return array_map(function (Conversation $conversation): array {
             return [
                 'id' => $conversation->getId(),
                 'chatId' => $conversation->getChat()->getId(),
-                'participants' => array_map(static function (ConversationParticipant $participant): array {
+                'participants' => array_map(function (ConversationParticipant $participant) use ($connectedUserId): array {
+                    $participantUser = $participant->getUser();
+
                     return [
                         'id' => $participant->getId(),
-                        'userId' => $participant?->getUser()?->getId(),
+                        'user' => [
+                            'id' => $participantUser->getId(),
+                            'firstName' => $participantUser->getFirstName(),
+                            'lastName' => $participantUser->getLastName(),
+                            'photo' => $participantUser->getPhoto(),
+                            'owner' => $connectedUserId !== null && $participantUser->getId() === $connectedUserId,
+                        ],
                     ];
                 }, $conversation->getParticipants()->toArray()),
-                'messages' => array_map(static function (ChatMessage $message): array {
+                'messages' => array_map(function (ChatMessage $message) use ($connectedUserId): array {
+                    $sender = $message->getSender();
+
                     return [
                         'id' => $message->getId(),
                         'content' => $message->getContent(),
-                        'senderId' => $message?->getSender()?->getId(),
+                        'sender' => [
+                            'id' => $sender->getId(),
+                            'firstName' => $sender->getFirstName(),
+                            'lastName' => $sender->getLastName(),
+                            'photo' => $sender->getPhoto(),
+                            'owner' => $connectedUserId !== null && $sender->getId() === $connectedUserId,
+                        ],
                         'attachments' => $message->getAttachments(),
                         'readAt' => $message->getReadAt()?->format(DATE_ATOM),
                         'createdAt' => $message->getCreatedAt()?->format(DATE_ATOM),
