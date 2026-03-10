@@ -34,7 +34,7 @@ class PlatformUploadPhotoController
         path: '/v1/profile/platforms/{platform}/photo',
         methods: [Request::METHOD_POST],
     )]
-    #[OA\Post(summary: 'POST /v1/profile/platforms/{platform}/photo', tags: ['Profile'], parameters: [new OA\Parameter(name: 'platform', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
+    #[OA\Post(summary: 'POST /v1/profile/platforms/{platform}/photo', tags: ['Profile'], parameters: [new OA\Parameter(name: 'platform', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
     #[OA\RequestBody(
         required: true,

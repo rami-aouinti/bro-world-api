@@ -41,7 +41,7 @@ final readonly class BlogMutationController
 
     #[Route('/v1/blogs/general', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'POST /v1/blogs/general', tags: ['Blog'], parameters: [], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
-    #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object', properties: [new OA\Property(property: 'title', type: 'string', example: 'General Blog')], example: ['title' => 'General Blog']))]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(example: ['title' => 'General Blog']))]
     #[OA\Response(response: 202, description: 'General blog creation requested.', content: new OA\JsonContent(example: ['status' => 'accepted']))]
     public function createGeneral(Request $request): JsonResponse
     {
