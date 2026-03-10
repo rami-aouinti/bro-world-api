@@ -27,11 +27,14 @@ final readonly class CreateQuizQuestionCommandHandler
         private QuizQuestionRepository $questionRepository,
         private ApplicationRepository $applicationRepository,
         private ConfigurationRepository $configurationRepository,
-    ) {}
+    ) {
+    }
 
     public function __invoke(CreateQuizQuestionCommand $command): void
     {
-        $application = $this->applicationRepository->findOneBy(['slug' => $command->applicationSlug]);
+        $application = $this->applicationRepository->findOneBy([
+            'slug' => $command->applicationSlug,
+        ]);
         if (!$application instanceof Application) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Application not found.');
         }
@@ -54,8 +57,8 @@ final readonly class CreateQuizQuestionCommandHandler
         foreach ($command->answers as $answerItem) {
             $answer = (new QuizAnswer())
                 ->setQuestion($question)
-                ->setLabel((string) ($answerItem['label'] ?? ''))
-                ->setCorrect((bool) ($answerItem['correct'] ?? false));
+                ->setLabel((string)($answerItem['label'] ?? ''))
+                ->setCorrect((bool)($answerItem['correct'] ?? false));
             $this->questionRepository->getEntityManager()->persist($answer);
         }
 

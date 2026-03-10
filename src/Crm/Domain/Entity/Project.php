@@ -50,14 +50,43 @@ class Project implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getCompany(): ?Company { return $this->company; }
-    public function setCompany(?Company $company): self { $this->company = $company; return $this; }
-    public function getName(): string { return $this->name; }
-    public function setName(string $name): self { $this->name = $name; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getCompany(): ?Company
+    {
+        return $this->company;
+    }
+    public function setCompany(?Company $company): self
+    {
+        $this->company = $company;
 
-    /** @return Collection<int, Task>|ArrayCollection<int, Task> */
-    public function getTasks(): Collection|ArrayCollection { return $this->tasks; }
-    /** @return Collection<int, Sprint>|ArrayCollection<int, Sprint> */
-    public function getSprints(): Collection|ArrayCollection { return $this->sprints; }
+        return $this;
+    }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Task>|ArrayCollection<int, Task>
+     */
+    public function getTasks(): Collection|ArrayCollection
+    {
+        return $this->tasks;
+    }
+    /**
+     * @return Collection<int, Sprint>|ArrayCollection<int, Sprint>
+     */
+    public function getSprints(): Collection|ArrayCollection
+    {
+        return $this->sprints;
+    }
 }

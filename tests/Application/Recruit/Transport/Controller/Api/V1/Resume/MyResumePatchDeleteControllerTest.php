@@ -15,7 +15,9 @@ use Throwable;
 
 class MyResumePatchDeleteControllerTest extends WebTestCase
 {
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that PATCH /v1/recruit/private/me/resumes/{resumeId} updates connected user resume.')]
     public function testThatPatchMyResumeUpdatesResume(): void
     {
@@ -25,7 +27,10 @@ class MyResumePatchDeleteControllerTest extends WebTestCase
         $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/private/me/resumes/' . $resumeId, content: JSON::encode([
             'documentUrl' => 'https://localhost/uploads/resumes/updated.pdf',
             'experiences' => [
-                ['title' => 'Staff Engineer', 'description' => 'Architecture API'],
+                [
+                    'title' => 'Staff Engineer',
+                    'description' => 'Architecture API',
+                ],
             ],
         ]));
 
@@ -47,7 +52,9 @@ class MyResumePatchDeleteControllerTest extends WebTestCase
         self::assertSame('Staff Engineer', $resume->getExperiences()->first()->getTitle());
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that PATCH /v1/recruit/private/me/resumes/{resumeId} forbids foreign user.')]
     public function testThatPatchMyResumeRejectsForeignUser(): void
     {
@@ -61,7 +68,9 @@ class MyResumePatchDeleteControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_FORBIDDEN, $client->getResponse()->getStatusCode());
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that DELETE /v1/recruit/private/me/resumes/{resumeId} deletes connected user resume.')]
     public function testThatDeleteMyResumeDeletesResume(): void
     {
@@ -79,17 +88,23 @@ class MyResumePatchDeleteControllerTest extends WebTestCase
         self::assertNull($deletedResume);
     }
 
-    /** @return non-empty-string */
+    /**
+     * @return non-empty-string
+     */
     private function getResumeIdForUsername(string $username): string
     {
         self::bootKernel();
 
         /** @var EntityManagerInterface $entityManager */
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        $user = $entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
+        $user = $entityManager->getRepository(User::class)->findOneBy([
+            'username' => $username,
+        ]);
         self::assertInstanceOf(User::class, $user);
 
-        $resume = $entityManager->getRepository(Resume::class)->findOneBy(['owner' => $user]);
+        $resume = $entityManager->getRepository(Resume::class)->findOneBy([
+            'owner' => $user,
+        ]);
         self::assertInstanceOf(Resume::class, $resume);
 
         return $resume->getId();

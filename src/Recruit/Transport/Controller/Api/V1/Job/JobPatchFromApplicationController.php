@@ -18,13 +18,12 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Messenger\MessageBusInterface;
 
 use function is_array;
-use function is_int;
 use function is_string;
 use function trim;
 
@@ -101,7 +100,9 @@ class JobPatchFromApplicationController
         ]);
     }
 
-    /** @param array<string, mixed> $payload */
+    /**
+     * @param array<string, mixed> $payload
+     */
     private function applyPatchFields(Job $job, array $payload): void
     {
         $title = $payload['title'] ?? null;
@@ -213,5 +214,4 @@ class JobPatchFromApplicationController
 
         return $recruit;
     }
-
 }

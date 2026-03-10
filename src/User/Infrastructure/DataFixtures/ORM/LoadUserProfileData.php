@@ -32,9 +32,18 @@ final class LoadUserProfileData extends Fixture implements OrderedFixtureInterfa
         $johnRoot->setProfile($profile);
 
         $socials = [
-            ['provider' => 'facebook', 'providerId' => 'john.root.fb'],
-            ['provider' => 'instagram', 'providerId' => 'john.root.ig'],
-            ['provider' => 'github', 'providerId' => 'john-root'],
+            [
+                'provider' => 'facebook',
+                'providerId' => 'john.root.fb',
+            ],
+            [
+                'provider' => 'instagram',
+                'providerId' => 'john.root.ig',
+            ],
+            [
+                'provider' => 'github',
+                'providerId' => 'john-root',
+            ],
         ];
 
         foreach ($socials as $item) {

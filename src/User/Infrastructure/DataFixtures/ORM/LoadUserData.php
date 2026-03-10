@@ -137,7 +137,7 @@ final class LoadUserData extends Fixture implements OrderedFixtureInterface
 
         $manager->persist($entity);
         $this->addReference('User-' . $entity->getUsername(), $entity);
-      }
+    }
     private function createAdditionalUsers(ObjectManager $manager): void
     {
         $users = [

@@ -50,7 +50,9 @@ class Blog implements EntityInterface
     #[ORM\JoinColumn(name: 'owner_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private User $owner;
 
-    /** @var Collection<int, BlogPost> */
+    /**
+     * @var Collection<int, BlogPost>
+     */
     #[ORM\OneToMany(targetEntity: BlogPost::class, mappedBy: 'blog', cascade: ['remove'])]
     private Collection $posts;
 
@@ -66,18 +68,71 @@ class Blog implements EntityInterface
         return $this->id->toString();
     }
 
-    public function getTitle(): string { return $this->title; }
-    public function setTitle(string $title): self { $this->title = $title; return $this; }
-    public function getType(): BlogType { return $this->type; }
-    public function setType(BlogType $type): self { $this->type = $type; return $this; }
-    public function getPostStatus(): BlogStatus { return $this->postStatus; }
-    public function setPostStatus(BlogStatus $postStatus): self { $this->postStatus = $postStatus; return $this; }
-    public function getCommentStatus(): BlogStatus { return $this->commentStatus; }
-    public function setCommentStatus(BlogStatus $commentStatus): self { $this->commentStatus = $commentStatus; return $this; }
-    public function getApplication(): ?Application { return $this->application; }
-    public function setApplication(?Application $application): self { $this->application = $application; return $this; }
-    public function getOwner(): User { return $this->owner; }
-    public function setOwner(User $owner): self { $this->owner = $owner; return $this; }
-    /** @return Collection<int, BlogPost> */
-    public function getPosts(): Collection { return $this->posts; }
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+    public function setTitle(string $title): self
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+    public function getType(): BlogType
+    {
+        return $this->type;
+    }
+    public function setType(BlogType $type): self
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+    public function getPostStatus(): BlogStatus
+    {
+        return $this->postStatus;
+    }
+    public function setPostStatus(BlogStatus $postStatus): self
+    {
+        $this->postStatus = $postStatus;
+
+        return $this;
+    }
+    public function getCommentStatus(): BlogStatus
+    {
+        return $this->commentStatus;
+    }
+    public function setCommentStatus(BlogStatus $commentStatus): self
+    {
+        $this->commentStatus = $commentStatus;
+
+        return $this;
+    }
+    public function getApplication(): ?Application
+    {
+        return $this->application;
+    }
+    public function setApplication(?Application $application): self
+    {
+        $this->application = $application;
+
+        return $this;
+    }
+    public function getOwner(): User
+    {
+        return $this->owner;
+    }
+    public function setOwner(User $owner): self
+    {
+        $this->owner = $owner;
+
+        return $this;
+    }
+    /**
+     * @return Collection<int, BlogPost>
+     */
+    public function getPosts(): Collection
+    {
+        return $this->posts;
+    }
 }

@@ -22,7 +22,8 @@ class EducationRepository extends BaseRepository implements EducationRepositoryI
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

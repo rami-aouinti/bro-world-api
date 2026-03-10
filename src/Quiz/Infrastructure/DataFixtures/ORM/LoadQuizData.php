@@ -52,7 +52,7 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
                 ->setConfiguration($configuration);
             $manager->persist($quiz);
 
-            for ($questionIndex = 1; $questionIndex <= 12; ++$questionIndex) {
+            for ($questionIndex = 1; $questionIndex <= 12; $questionIndex++) {
                 $question = (new QuizQuestion())
                     ->setQuiz($quiz)
                     ->setTitle('Question fixture #' . $questionIndex . ' app #' . ($applicationIndex + 1))

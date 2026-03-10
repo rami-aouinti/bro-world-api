@@ -45,12 +45,36 @@ class Company implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getCrm(): ?Crm { return $this->crm; }
-    public function setCrm(?Crm $crm): self { $this->crm = $crm; return $this; }
-    public function getName(): string { return $this->name; }
-    public function setName(string $name): self { $this->name = $name; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getCrm(): ?Crm
+    {
+        return $this->crm;
+    }
+    public function setCrm(?Crm $crm): self
+    {
+        $this->crm = $crm;
 
-    /** @return Collection<int, Project>|ArrayCollection<int, Project> */
-    public function getProjects(): Collection|ArrayCollection { return $this->projects; }
+        return $this;
+    }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Project>|ArrayCollection<int, Project>
+     */
+    public function getProjects(): Collection|ArrayCollection
+    {
+        return $this->projects;
+    }
 }

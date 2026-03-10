@@ -42,7 +42,7 @@ class JobApplicationListService
             ->innerJoin('applicant.user', 'user')->addSelect('user')
             ->leftJoin('applicant.resume', 'resume')->addSelect('resume')
             ->andWhere('application.job = :job')
-            ->setParameter('job', $job->getId() , UuidBinaryOrderedTimeType::NAME)
+            ->setParameter('job', $job->getId(), UuidBinaryOrderedTimeType::NAME)
             ->orderBy('application.createdAt', 'DESC')
             ->addOrderBy('application.id', 'DESC')
             ->getQuery()

@@ -22,7 +22,8 @@ class JobRepository extends BaseRepository implements JobRepositoryInterface
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

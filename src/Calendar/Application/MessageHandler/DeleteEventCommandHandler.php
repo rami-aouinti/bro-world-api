@@ -34,7 +34,9 @@ final readonly class DeleteEventCommandHandler
             }
 
             if ($command->applicationSlug !== null) {
-                $application = $this->applicationRepository->findOneBy(['slug' => $command->applicationSlug]);
+                $application = $this->applicationRepository->findOneBy([
+                    'slug' => $command->applicationSlug,
+                ]);
                 if (!$application instanceof Application || $application->getUser()?->getId() !== $command->actorUserId) {
                     throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Application not found.');
                 }

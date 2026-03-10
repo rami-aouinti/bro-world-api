@@ -24,8 +24,9 @@ class ConversationParticipantRepository extends BaseRepository implements Conver
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 
     public function findOneByConversationAndUser(Conversation $conversation, User $user): ?Entity

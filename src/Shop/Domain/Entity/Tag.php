@@ -41,10 +41,26 @@ class Tag implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getLabel(): string { return $this->label; }
-    public function setLabel(string $label): self { $this->label = $label; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getLabel(): string
+    {
+        return $this->label;
+    }
+    public function setLabel(string $label): self
+    {
+        $this->label = $label;
 
-    /** @return Collection<int, Product>|ArrayCollection<int, Product> */
-    public function getProducts(): Collection|ArrayCollection { return $this->products; }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Product>|ArrayCollection<int, Product>
+     */
+    public function getProducts(): Collection|ArrayCollection
+    {
+        return $this->products;
+    }
 }

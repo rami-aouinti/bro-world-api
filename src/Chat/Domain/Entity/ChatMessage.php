@@ -43,7 +43,9 @@ class ChatMessage implements EntityInterface
     #[ORM\Column(name: 'content', type: Types::TEXT)]
     private string $content = '';
 
-    #[ORM\Column(name: 'is_read', type: Types::BOOLEAN, options: ['default' => false])]
+    #[ORM\Column(name: 'is_read', type: Types::BOOLEAN, options: [
+        'default' => false,
+    ])]
     private bool $read = false;
 
     #[ORM\Column(name: 'read_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]

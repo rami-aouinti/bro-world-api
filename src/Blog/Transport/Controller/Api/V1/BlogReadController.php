@@ -17,7 +17,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[AsController]
 final readonly class BlogReadController
 {
-    public function __construct(private BlogReadService $blogReadService) {}
+    public function __construct(
+        private BlogReadService $blogReadService
+    ) {
+    }
 
     #[Route('/v1/blogs/general', methods: [Request::METHOD_GET])]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
@@ -33,17 +36,32 @@ final readonly class BlogReadController
                 'id' => '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e71',
                 'isAuthor' => true,
                 'content' => 'Fixture post 1 for General Blog Root',
-                'author' => ['username' => 'john.root', 'firstName' => 'John', 'lastName' => 'Root', 'photo' => 'https://...'],
+                'author' => [
+                    'username' => 'john.root',
+                    'firstName' => 'John',
+                    'lastName' => 'Root',
+                    'photo' => 'https://...',
+                ],
                 'comments' => [[
                     'id' => '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e72',
                     'isAuthor' => false,
                     'content' => 'Parent comment #1',
-                    'author' => ['username' => 'john.admin', 'firstName' => 'John', 'lastName' => 'Admin', 'photo' => 'https://...'],
+                    'author' => [
+                        'username' => 'john.admin',
+                        'firstName' => 'John',
+                        'lastName' => 'Admin',
+                        'photo' => 'https://...',
+                    ],
                     'reactions' => [[
                         'type' => 'like',
                         'authorId' => '0195f4b9-4f2b-7c9a-8e6d-6f9b7d4a6e73',
                         'isAuthor' => false,
-                        'author' => ['username' => 'john.user', 'firstName' => 'John', 'lastName' => 'User', 'photo' => 'https://...'],
+                        'author' => [
+                            'username' => 'john.user',
+                            'firstName' => 'John',
+                            'lastName' => 'User',
+                            'photo' => 'https://...',
+                        ],
                     ]],
                 ]],
             ]],
@@ -88,7 +106,9 @@ final readonly class BlogReadController
             'type' => 'application',
             'applicationSlug' => 'shop-ops-center',
             'posts' => [],
-            'tags' => [['label' => 'tag-2-1']],
+            'tags' => [[
+                'label' => 'tag-2-1',
+            ]],
         ]),
     )]
     public function byApplication(string $applicationSlug, Request $request): JsonResponse

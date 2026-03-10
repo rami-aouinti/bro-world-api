@@ -8,8 +8,6 @@ use App\Configuration\Application\Service\Crypt\Interfaces\ConfigurationValueCry
 use App\Configuration\Domain\Entity\Configuration;
 use App\Tool\Domain\Service\Crypt\Interfaces\OpenSslCryptServiceInterface;
 
-use function is_array;
-
 /**
  * @package App\Configuration
  */

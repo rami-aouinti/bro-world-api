@@ -26,7 +26,8 @@ final readonly class CreateBlogReactionCommandHandler
         private UserRepository $userRepository,
         private BlogNotificationService $blogNotificationService,
         private CacheInvalidationService $cacheInvalidationService,
-    ) {}
+    ) {
+    }
 
     public function __invoke(CreateBlogReactionCommand $command): void
     {
@@ -40,8 +41,7 @@ final readonly class CreateBlogReactionCommandHandler
         $this->reactionRepository->save((new BlogReaction())
             ->setComment($comment)
             ->setAuthor($user)
-            ->setType($command->type)
-        );
+            ->setType($command->type));
 
         $this->blogNotificationService->notifyReactionCreated($comment, $user, $command->type);
         $this->cacheInvalidationService->invalidateBlogCaches($comment->getPost()->getBlog()->getApplication()?->getSlug(), $command->actorUserId);

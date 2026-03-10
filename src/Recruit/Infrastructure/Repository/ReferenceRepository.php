@@ -22,7 +22,8 @@ class ReferenceRepository extends BaseRepository implements ReferenceRepositoryI
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

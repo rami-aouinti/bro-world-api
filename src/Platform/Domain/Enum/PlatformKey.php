@@ -14,4 +14,3 @@ enum PlatformKey: string
     case SHOP = 'shop';
     case RECRUIT = 'recruit';
 }
-

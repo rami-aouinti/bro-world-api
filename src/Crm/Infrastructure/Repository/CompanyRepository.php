@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Crm\Infrastructure\Repository;
 
-use App\General\Infrastructure\Repository\BaseRepository;
 use App\Crm\Domain\Entity\Company as Entity;
+use App\General\Infrastructure\Repository\BaseRepository;
 use Doctrine\DBAL\LockMode;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -21,7 +21,8 @@ class CompanyRepository extends BaseRepository
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

@@ -45,12 +45,36 @@ class Sprint implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getProject(): ?Project { return $this->project; }
-    public function setProject(?Project $project): self { $this->project = $project; return $this; }
-    public function getName(): string { return $this->name; }
-    public function setName(string $name): self { $this->name = $name; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getProject(): ?Project
+    {
+        return $this->project;
+    }
+    public function setProject(?Project $project): self
+    {
+        $this->project = $project;
 
-    /** @return Collection<int, Task>|ArrayCollection<int, Task> */
-    public function getTasks(): Collection|ArrayCollection { return $this->tasks; }
+        return $this;
+    }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Task>|ArrayCollection<int, Task>
+     */
+    public function getTasks(): Collection|ArrayCollection
+    {
+        return $this->tasks;
+    }
 }

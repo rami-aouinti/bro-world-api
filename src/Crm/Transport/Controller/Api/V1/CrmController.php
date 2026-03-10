@@ -6,11 +6,11 @@ namespace App\Crm\Transport\Controller\Api\V1;
 
 use App\Crm\Application\Service\TaskListService;
 use App\Crm\Domain\Entity\Company;
+use App\Crm\Domain\Entity\Crm;
 use App\Crm\Domain\Entity\Project;
 use App\Crm\Domain\Entity\Sprint;
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Domain\Entity\TaskRequest;
-use App\Crm\Domain\Entity\Crm;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\Crm\Infrastructure\Repository\CrmRepository;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
@@ -22,9 +22,9 @@ use App\General\Application\Message\EntityDeleted;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PlatformKey;
 use Doctrine\ORM\EntityManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use OpenApi\Attributes as OA;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -53,17 +53,32 @@ final readonly class CrmController
     #[Route('/v1/crm/companies', methods: [Request::METHOD_GET])]
     public function companies(): JsonResponse
     {
-        $items = array_map(static fn (Company $company): array => ['id' => $company->getId(), 'name' => $company->getName()], $this->companyRepository->findBy([], ['createdAt' => 'DESC'], 200));
-        return new JsonResponse(['items' => $items]);
+        $items = array_map(static fn (Company $company): array => [
+            'id' => $company->getId(),
+            'name' => $company->getName(),
+        ], $this->companyRepository->findBy([], [
+            'createdAt' => 'DESC',
+        ], 200));
+
+        return new JsonResponse([
+            'items' => $items,
+        ]);
     }
 
     #[Route('/v1/crm/companies', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/crm/companies', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), tags: ['Crm'], parameters: [], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
+    #[OA\Post(summary: 'POST /v1/crm/companies', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [
+        new OA\Property(property: 'payload', type: 'object', example: [
+            'value' => 'example',
+        ])], example: [
+            'payload' => [
+                'value' => 'example',
+            ],
+        ])), tags: ['Crm'], parameters: [], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createCompany(Request $request): JsonResponse
     {
-        $payload = (array) json_decode((string) $request->getContent(), true);
+        $payload = (array)json_decode((string)$request->getContent(), true);
         $company = new Company();
-        $company->setName((string) ($payload['name'] ?? ''));
+        $company->setName((string)($payload['name'] ?? ''));
         if (is_string($payload['crmId'] ?? null)) {
             $company->setCrm($this->crmRepository->find($payload['crmId']));
         }
@@ -72,7 +87,9 @@ final readonly class CrmController
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityCreated('crm_company', $company->getId()));
 
-        return new JsonResponse(['id' => $company->getId()], JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $company->getId(),
+        ], JsonResponse::HTTP_CREATED);
     }
 
     #[Route('/v1/crm/companies/{id}', methods: [Request::METHOD_DELETE])]
@@ -93,17 +110,33 @@ final readonly class CrmController
     #[Route('/v1/crm/projects', methods: [Request::METHOD_GET])]
     public function projects(): JsonResponse
     {
-        $items = array_map(static fn (Project $project): array => ['id' => $project->getId(), 'name' => $project->getName(), 'companyId' => $project->getCompany()?->getId()], $this->projectRepository->findBy([], ['createdAt' => 'DESC'], 200));
-        return new JsonResponse(['items' => $items]);
+        $items = array_map(static fn (Project $project): array => [
+            'id' => $project->getId(),
+            'name' => $project->getName(),
+            'companyId' => $project->getCompany()?->getId(),
+        ], $this->projectRepository->findBy([], [
+            'createdAt' => 'DESC',
+        ], 200));
+
+        return new JsonResponse([
+            'items' => $items,
+        ]);
     }
 
     #[Route('/v1/crm/projects', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/crm/projects', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), tags: ['Crm'], parameters: [], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
+    #[OA\Post(summary: 'POST /v1/crm/projects', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [
+        new OA\Property(property: 'payload', type: 'object', example: [
+            'value' => 'example',
+        ])], example: [
+            'payload' => [
+                'value' => 'example',
+            ],
+        ])), tags: ['Crm'], parameters: [], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createProject(Request $request): JsonResponse
     {
-        $payload = (array) json_decode((string) $request->getContent(), true);
+        $payload = (array)json_decode((string)$request->getContent(), true);
         $project = new Project();
-        $project->setName((string) ($payload['name'] ?? ''));
+        $project->setName((string)($payload['name'] ?? ''));
         if (is_string($payload['companyId'] ?? null)) {
             $project->setCompany($this->companyRepository->find($payload['companyId']));
         }
@@ -112,7 +145,9 @@ final readonly class CrmController
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityCreated('crm_project', $project->getId()));
 
-        return new JsonResponse(['id' => $project->getId()], JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $project->getId(),
+        ], JsonResponse::HTTP_CREATED);
     }
 
     #[Route('/v1/crm/projects/{id}', methods: [Request::METHOD_DELETE])]
@@ -137,12 +172,19 @@ final readonly class CrmController
     }
 
     #[Route('/v1/crm/tasks', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/crm/tasks', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), tags: ['Crm'], parameters: [], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
+    #[OA\Post(summary: 'POST /v1/crm/tasks', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [
+        new OA\Property(property: 'payload', type: 'object', example: [
+            'value' => 'example',
+        ])], example: [
+            'payload' => [
+                'value' => 'example',
+            ],
+        ])), tags: ['Crm'], parameters: [], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createTask(Request $request): JsonResponse
     {
-        $payload = (array) json_decode((string) $request->getContent(), true);
+        $payload = (array)json_decode((string)$request->getContent(), true);
         $task = new Task();
-        $task->setTitle((string) ($payload['title'] ?? ''));
+        $task->setTitle((string)($payload['title'] ?? ''));
         if (is_string($payload['projectId'] ?? null)) {
             $task->setProject($this->projectRepository->find($payload['projectId']));
         }
@@ -154,7 +196,9 @@ final readonly class CrmController
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityCreated('crm_task', $task->getId()));
 
-        return new JsonResponse(['id' => $task->getId()], JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $task->getId(),
+        ], JsonResponse::HTTP_CREATED);
     }
 
     #[Route('/v1/crm/tasks/{id}', methods: [Request::METHOD_DELETE])]
@@ -175,17 +219,34 @@ final readonly class CrmController
     #[Route('/v1/crm/task-requests', methods: [Request::METHOD_GET])]
     public function taskRequests(): JsonResponse
     {
-        $items = array_map(static fn (TaskRequest $taskRequest): array => ['id' => $taskRequest->getId(), 'title' => $taskRequest->getTitle(), 'status' => $taskRequest->getStatus(), 'taskId' => $taskRequest->getTask()?->getId()], $this->taskRequestRepository->findBy([], ['createdAt' => 'DESC'], 200));
-        return new JsonResponse(['items' => $items]);
+        $items = array_map(static fn (TaskRequest $taskRequest): array => [
+            'id' => $taskRequest->getId(),
+            'title' => $taskRequest->getTitle(),
+            'status' => $taskRequest->getStatus(),
+            'taskId' => $taskRequest->getTask()?->getId(),
+        ], $this->taskRequestRepository->findBy([], [
+            'createdAt' => 'DESC',
+        ], 200));
+
+        return new JsonResponse([
+            'items' => $items,
+        ]);
     }
 
     #[Route('/v1/crm/task-requests', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/crm/task-requests', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), tags: ['Crm'], parameters: [], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
+    #[OA\Post(summary: 'POST /v1/crm/task-requests', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [
+        new OA\Property(property: 'payload', type: 'object', example: [
+            'value' => 'example',
+        ])], example: [
+            'payload' => [
+                'value' => 'example',
+            ],
+        ])), tags: ['Crm'], parameters: [], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createTaskRequest(Request $request): JsonResponse
     {
-        $payload = (array) json_decode((string) $request->getContent(), true);
+        $payload = (array)json_decode((string)$request->getContent(), true);
         $taskRequest = new TaskRequest();
-        $taskRequest->setTitle((string) ($payload['title'] ?? ''))->setStatus((string) ($payload['status'] ?? 'pending'));
+        $taskRequest->setTitle((string)($payload['title'] ?? ''))->setStatus((string)($payload['status'] ?? 'pending'));
         if (is_string($payload['taskId'] ?? null)) {
             $taskRequest->setTask($this->taskRepository->find($payload['taskId']));
         }
@@ -194,7 +255,9 @@ final readonly class CrmController
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityCreated('crm_task_request', $taskRequest->getId()));
 
-        return new JsonResponse(['id' => $taskRequest->getId()], JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $taskRequest->getId(),
+        ], JsonResponse::HTTP_CREATED);
     }
 
     #[Route('/v1/crm/task-requests/{id}', methods: [Request::METHOD_DELETE])]
@@ -215,17 +278,33 @@ final readonly class CrmController
     #[Route('/v1/crm/sprints', methods: [Request::METHOD_GET])]
     public function sprints(): JsonResponse
     {
-        $items = array_map(static fn (Sprint $sprint): array => ['id' => $sprint->getId(), 'name' => $sprint->getName(), 'projectId' => $sprint->getProject()?->getId()], $this->sprintRepository->findBy([], ['createdAt' => 'DESC'], 200));
-        return new JsonResponse(['items' => $items]);
+        $items = array_map(static fn (Sprint $sprint): array => [
+            'id' => $sprint->getId(),
+            'name' => $sprint->getName(),
+            'projectId' => $sprint->getProject()?->getId(),
+        ], $this->sprintRepository->findBy([], [
+            'createdAt' => 'DESC',
+        ], 200));
+
+        return new JsonResponse([
+            'items' => $items,
+        ]);
     }
 
     #[Route('/v1/crm/sprints', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/crm/sprints', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), tags: ['Crm'], parameters: [], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
+    #[OA\Post(summary: 'POST /v1/crm/sprints', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [
+        new OA\Property(property: 'payload', type: 'object', example: [
+            'value' => 'example',
+        ])], example: [
+            'payload' => [
+                'value' => 'example',
+            ],
+        ])), tags: ['Crm'], parameters: [], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createSprint(Request $request): JsonResponse
     {
-        $payload = (array) json_decode((string) $request->getContent(), true);
+        $payload = (array)json_decode((string)$request->getContent(), true);
         $sprint = new Sprint();
-        $sprint->setName((string) ($payload['name'] ?? ''));
+        $sprint->setName((string)($payload['name'] ?? ''));
         if (is_string($payload['projectId'] ?? null)) {
             $sprint->setProject($this->projectRepository->find($payload['projectId']));
         }
@@ -234,7 +313,9 @@ final readonly class CrmController
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityCreated('crm_sprint', $sprint->getId()));
 
-        return new JsonResponse(['id' => $sprint->getId()], JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $sprint->getId(),
+        ], JsonResponse::HTTP_CREATED);
     }
 
     #[Route('/v1/crm/sprints/{id}', methods: [Request::METHOD_DELETE])]
@@ -258,9 +339,20 @@ final readonly class CrmController
     public function companiesByApplication(string $applicationSlug): JsonResponse
     {
         $crm = $this->resolveOrCreateCrmByApplicationSlug($applicationSlug);
-        $items = array_map(static fn (Company $company): array => ['id' => $company->getId(), 'name' => $company->getName()], $this->companyRepository->findBy(['crm' => $crm], ['createdAt' => 'DESC'], 200));
+        $items = array_map(static fn (Company $company): array => [
+            'id' => $company->getId(),
+            'name' => $company->getName(),
+        ], $this->companyRepository->findBy([
+            'crm' => $crm,
+        ], [
+            'createdAt' => 'DESC',
+        ], 200));
 
-        return new JsonResponse(['applicationSlug' => $applicationSlug, 'crmId' => $crm->getId(), 'items' => $items]);
+        return new JsonResponse([
+            'applicationSlug' => $applicationSlug,
+            'crmId' => $crm->getId(),
+            'items' => $items,
+        ]);
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/companies', methods: [Request::METHOD_POST])]
@@ -274,23 +366,31 @@ final readonly class CrmController
                 new OA\Property(property: 'name', type: 'string', minLength: 1, example: 'Acme Europe'),
             ],
             type: 'object',
-            example: ['name' => 'Acme Europe'],
+            example: [
+                'name' => 'Acme Europe',
+            ],
         )
     )]
     public function createCompanyByApplication(string $applicationSlug, Request $request): JsonResponse
     {
         $crm = $this->resolveOrCreateCrmByApplicationSlug($applicationSlug);
-        $payload = (array) json_decode((string) $request->getContent(), true);
+        $payload = (array)json_decode((string)$request->getContent(), true);
 
         $company = (new Company())
             ->setCrm($crm)
-            ->setName((string) ($payload['name'] ?? ''));
+            ->setName((string)($payload['name'] ?? ''));
 
         $this->entityManager->persist($company);
         $this->entityManager->flush();
-        $this->messageBus->dispatch(new EntityCreated('crm_company', $company->getId(), context: ['applicationSlug' => $applicationSlug]));
+        $this->messageBus->dispatch(new EntityCreated('crm_company', $company->getId(), context: [
+            'applicationSlug' => $applicationSlug,
+        ]));
 
-        return new JsonResponse(['id' => $company->getId(), 'crmId' => $crm->getId(), 'applicationSlug' => $applicationSlug], JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $company->getId(),
+            'crmId' => $crm->getId(),
+            'applicationSlug' => $applicationSlug,
+        ], JsonResponse::HTTP_CREATED);
     }
 
     private function resolveOrCreateCrmByApplicationSlug(string $applicationSlug): Crm
@@ -300,7 +400,9 @@ final readonly class CrmController
             return $crm;
         }
 
-        $application = $this->entityManager->getRepository(Application::class)->findOneBy(['slug' => $applicationSlug]);
+        $application = $this->entityManager->getRepository(Application::class)->findOneBy([
+            'slug' => $applicationSlug,
+        ]);
         if (!$application instanceof Application || $application->getPlatform()?->getPlatformKey() !== PlatformKey::CRM) {
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "applicationSlug" for CRM platform.');
         }
@@ -311,5 +413,4 @@ final readonly class CrmController
 
         return $crm;
     }
-
 }

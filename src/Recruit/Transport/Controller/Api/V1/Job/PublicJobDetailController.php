@@ -15,8 +15,9 @@ use Symfony\Component\Routing\Attribute\Route;
 #[OA\Tag(name: 'Recruit Job')]
 class PublicJobDetailController
 {
-    public function __construct(private readonly JobPublicDetailService $jobPublicDetailService)
-    {
+    public function __construct(
+        private readonly JobPublicDetailService $jobPublicDetailService
+    ) {
     }
 
     #[Route(path: '/v1/recruit/public/{applicationSlug}/jobs/{jobSlug}', methods: [Request::METHOD_GET])]

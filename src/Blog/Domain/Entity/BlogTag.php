@@ -30,10 +30,32 @@ class BlogTag implements EntityInterface
     #[ORM\Column(name: 'label', type: 'string', length: 100)]
     private string $label = '';
 
-    public function __construct() { $this->id = $this->createUuid(); }
-    #[Override] public function getId(): string { return $this->id->toString(); }
-    public function getBlog(): Blog { return $this->blog; }
-    public function setBlog(Blog $blog): self { $this->blog = $blog; return $this; }
-    public function getLabel(): string { return $this->label; }
-    public function setLabel(string $label): self { $this->label = $label; return $this; }
+    public function __construct()
+    {
+        $this->id = $this->createUuid();
+    }
+    #[Override] public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getBlog(): Blog
+    {
+        return $this->blog;
+    }
+    public function setBlog(Blog $blog): self
+    {
+        $this->blog = $blog;
+
+        return $this;
+    }
+    public function getLabel(): string
+    {
+        return $this->label;
+    }
+    public function setLabel(string $label): self
+    {
+        $this->label = $label;
+
+        return $this;
+    }
 }

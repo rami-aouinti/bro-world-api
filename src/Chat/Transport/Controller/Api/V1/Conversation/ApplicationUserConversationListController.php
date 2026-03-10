@@ -34,8 +34,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class ApplicationUserConversationListController
 {
-    public function __construct(private readonly ConversationListService $conversationListService)
-    {
+    public function __construct(
+        private readonly ConversationListService $conversationListService
+    ) {
     }
 
     #[Route(path: '/v1/chat/private/chats/{chatId}/conversations', methods: [Request::METHOD_GET])]
@@ -44,7 +45,7 @@ class ApplicationUserConversationListController
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
         $filters = [
-            'message' => trim((string) $request->query->get('message', '')),
+            'message' => trim((string)$request->query->get('message', '')),
         ];
 
         return ConversationJsonResponseFactory::create(

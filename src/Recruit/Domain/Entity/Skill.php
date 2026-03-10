@@ -29,10 +29,14 @@ class Skill implements EntityInterface
     #[ORM\JoinColumn(name: 'resume_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private Resume $resume;
 
-    #[ORM\Column(name: 'title', type: Types::STRING, length: 255, options: ['default' => ''])]
+    #[ORM\Column(name: 'title', type: Types::STRING, length: 255, options: [
+        'default' => '',
+    ])]
     private string $title = '';
 
-    #[ORM\Column(name: 'description', type: Types::TEXT, options: ['default' => ''])]
+    #[ORM\Column(name: 'description', type: Types::TEXT, options: [
+        'default' => '',
+    ])]
     private string $description = '';
 
     public function __construct()
@@ -41,11 +45,38 @@ class Skill implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getResume(): Resume { return $this->resume; }
-    public function setResume(Resume $resume): self { $this->resume = $resume; return $this; }
-    public function getTitle(): string { return $this->title; }
-    public function setTitle(string $title): self { $this->title = $title; return $this; }
-    public function getDescription(): string { return $this->description; }
-    public function setDescription(string $description): self { $this->description = $description; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getResume(): Resume
+    {
+        return $this->resume;
+    }
+    public function setResume(Resume $resume): self
+    {
+        $this->resume = $resume;
+
+        return $this;
+    }
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+    public function setTitle(string $title): self
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+    public function getDescription(): string
+    {
+        return $this->description;
+    }
+    public function setDescription(string $description): self
+    {
+        $this->description = $description;
+
+        return $this;
+    }
 }

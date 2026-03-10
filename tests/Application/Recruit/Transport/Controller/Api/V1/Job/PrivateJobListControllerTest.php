@@ -9,8 +9,8 @@ use App\Platform\Domain\Entity\Application as PlatformApplication;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
 use App\Recruit\Domain\Entity\Resume;
-use App\User\Domain\Entity\User;
 use App\Tests\TestCase\WebTestCase;
+use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,8 +25,8 @@ use function max;
 use function mb_strtolower;
 use function preg_split;
 use function round;
-use function strlen;
 use function str_contains;
+use function strlen;
 use function trim;
 
 class PrivateJobListControllerTest extends WebTestCase
@@ -74,7 +74,9 @@ class PrivateJobListControllerTest extends WebTestCase
         self::assertSame($expectedMatchScore, $jobPayload['matchScore']);
     }
 
-    /** @return array{0: string, 1: string, 2: int} */
+    /**
+     * @return array{0: string, 1: string, 2: int}
+     */
     private function getFixtureContext(): array
     {
         self::bootKernel();
@@ -160,10 +162,10 @@ class PrivateJobListControllerTest extends WebTestCase
         $matched = 0;
         foreach ($keywords as $keyword) {
             if ($keyword !== '' && str_contains($searchable, ' ' . $keyword . ' ')) {
-                ++$matched;
+                $matched++;
             }
         }
 
-        return (int) max(0, min(100, round(($matched / count($keywords)) * 100)));
+        return (int)max(0, min(100, round(($matched / count($keywords)) * 100)));
     }
 }

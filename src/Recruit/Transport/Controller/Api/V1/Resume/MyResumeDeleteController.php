@@ -22,8 +22,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class MyResumeDeleteController
 {
-    public function __construct(private readonly ResumeRepository $resumeRepository)
-    {
+    public function __construct(
+        private readonly ResumeRepository $resumeRepository
+    ) {
     }
 
     #[Route(path: '/v1/recruit/private/me/resumes/{resumeId}', methods: [Request::METHOD_DELETE])]

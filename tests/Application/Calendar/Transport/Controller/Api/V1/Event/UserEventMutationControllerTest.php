@@ -37,7 +37,9 @@ final class UserEventMutationControllerTest extends WebTestCase
 
         /** @var EventRepository $repository */
         $repository = static::getContainer()->get(EventRepository::class);
-        self::assertCount(0, $repository->findBy(['title' => 'async-event-title']));
+        self::assertCount(0, $repository->findBy([
+            'title' => 'async-event-title',
+        ]));
     }
 
     #[TestDox('POST /api/v1/calendar/private/events fails fast with 422 for invalid range.')]

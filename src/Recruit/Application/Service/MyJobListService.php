@@ -8,14 +8,15 @@ use App\Recruit\Domain\Entity\Application as RecruitApplication;
 use App\Recruit\Domain\Entity\Job;
 use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
-
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
+
 use function array_map;
 
 class MyJobListService
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager
+    ) {
     }
 
     /**

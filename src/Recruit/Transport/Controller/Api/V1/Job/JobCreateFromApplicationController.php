@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Recruit\Transport\Controller\Api\V1\Job;
 
+use App\General\Application\Message\EntityCreated;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
-use App\General\Application\Message\EntityCreated;
 use App\Recruit\Domain\Enum\ContractType;
 use App\Recruit\Domain\Enum\Schedule;
 use App\Recruit\Domain\Enum\WorkMode;
@@ -18,10 +18,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Messenger\MessageBusInterface;
 
 use function is_array;
 use function is_string;
@@ -114,7 +114,9 @@ class JobCreateFromApplicationController
         ], JsonResponse::HTTP_CREATED);
     }
 
-    /** @param array<string, mixed> $payload */
+    /**
+     * @param array<string, mixed> $payload
+     */
     private function applyOptionalFields(Job $job, array $payload): void
     {
         $location = $payload['location'] ?? null;

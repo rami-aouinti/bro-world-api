@@ -77,7 +77,6 @@ class Platform implements EntityInterface
     #[Assert\NotNull]
     private string $description = '';
 
-
     #[ORM\Column(
         name: 'platform_key',
         type: Types::STRING,
@@ -214,7 +213,6 @@ class Platform implements EntityInterface
 
         return $this;
     }
-
 
     public function getPlatformKey(): PlatformKey
     {

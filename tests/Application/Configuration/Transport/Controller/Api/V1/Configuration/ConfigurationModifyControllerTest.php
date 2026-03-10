@@ -25,7 +25,12 @@ class ConfigurationModifyControllerTest extends WebTestCase
 
         $rootClient = $this->getTestClient('john-root', 'password-root');
 
-        $patchData = ['configurationValue' => ['apiSecret' => 'patched-secret', 'rotation' => 15]];
+        $patchData = [
+            'configurationValue' => [
+                'apiSecret' => 'patched-secret',
+                'rotation' => 15,
+            ],
+        ];
         $rootClient->request('PATCH', $this->baseUrl . '/' . $configurationId, content: JSON::encode($patchData));
         $patchResponse = $rootClient->getResponse();
         $patchContent = $patchResponse->getContent();

@@ -10,7 +10,10 @@ use App\User\Domain\Entity\User;
 
 final readonly class NotificationPublisher
 {
-    public function __construct(private NotificationRepository $notificationRepository) {}
+    public function __construct(
+        private NotificationRepository $notificationRepository
+    ) {
+    }
 
     public function publish(User $from, User $recipient, string $title, string $type, string $description = ''): void
     {

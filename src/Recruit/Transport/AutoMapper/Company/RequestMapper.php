@@ -8,5 +8,5 @@ use App\General\Transport\AutoMapper\RestRequestMapper;
 
 class RequestMapper extends RestRequestMapper
 {
-    protected static array $properties = ['name','logo','sector','size'];
+    protected static array $properties = ['name', 'logo', 'sector', 'size'];
 }

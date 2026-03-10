@@ -29,7 +29,9 @@ class IndexSimilarJobsScheduledCommand extends Command
         parent::__construct();
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = $this->getSymfonyStyle($input, $output);
@@ -42,7 +44,9 @@ class IndexSimilarJobsScheduledCommand extends Command
         return Command::SUCCESS;
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     private function createScheduledCommand(): string
     {
         $entity = $this->scheduledCommandService->findByCommand(IndexSimilarJobsCommand::NAME);

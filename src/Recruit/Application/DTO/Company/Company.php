@@ -16,14 +16,50 @@ class Company extends RestDto
     protected string $sector = '';
     protected string $size = '';
 
-    public function getName(): string { return $this->name; }
-    public function setName(string $name): self { $this->setVisited('name'); $this->name = $name; return $this; }
-    public function getLogo(): string { return $this->logo; }
-    public function setLogo(string $logo): self { $this->setVisited('logo'); $this->logo = $logo; return $this; }
-    public function getSector(): string { return $this->sector; }
-    public function setSector(string $sector): self { $this->setVisited('sector'); $this->sector = $sector; return $this; }
-    public function getSize(): string { return $this->size; }
-    public function setSize(string $size): self { $this->setVisited('size'); $this->size = $size; return $this; }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function setName(string $name): self
+    {
+        $this->setVisited('name');
+        $this->name = $name;
+
+        return $this;
+    }
+    public function getLogo(): string
+    {
+        return $this->logo;
+    }
+    public function setLogo(string $logo): self
+    {
+        $this->setVisited('logo');
+        $this->logo = $logo;
+
+        return $this;
+    }
+    public function getSector(): string
+    {
+        return $this->sector;
+    }
+    public function setSector(string $sector): self
+    {
+        $this->setVisited('sector');
+        $this->sector = $sector;
+
+        return $this;
+    }
+    public function getSize(): string
+    {
+        return $this->size;
+    }
+    public function setSize(string $size): self
+    {
+        $this->setVisited('size');
+        $this->size = $size;
+
+        return $this;
+    }
 
     #[Override]
     public function load(EntityInterface $entity): self

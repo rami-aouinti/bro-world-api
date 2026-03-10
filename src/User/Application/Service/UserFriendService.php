@@ -11,13 +11,17 @@ use App\User\Domain\Entity\UserFriendRelation;
 use App\User\Domain\Enum\FriendStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Throwable;
 use Twig\Environment as Twig;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 
 use function trim;
 
@@ -36,7 +40,9 @@ readonly class UserFriendService
     ) {
     }
 
-    /** @return array<string,string> */
+    /**
+     * @return array<string,string>
+     */
     public function sendRequest(User $loggedInUser, User $targetUser): array
     {
         $this->guardNotSelf($loggedInUser, $targetUser);
@@ -88,10 +94,18 @@ readonly class UserFriendService
             );
         }
 
-        return ['status' => 'request_sent'];
+        return [
+            'status' => 'request_sent',
+        ];
     }
 
-    /** @return array<string,string> */
+    /**
+     * @return array<string,string>
+     * @throws Throwable
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     */
     public function acceptRequest(User $loggedInUser, User $requester): array
     {
         $relation = $this->findDirectRelation($requester, $loggedInUser);
@@ -100,6 +114,7 @@ readonly class UserFriendService
         }
 
         $relation->setStatus(FriendStatus::ACCEPTED);
+        $this->entityManager->persist($relation);
         $this->entityManager->flush();
         $this->invalidateUserCaches($loggedInUser);
         $this->invalidateUserCaches($requester);
@@ -126,26 +141,41 @@ readonly class UserFriendService
             );
         }
 
-        return ['status' => 'accepted'];
+        return [
+            'status' => 'accepted',
+        ];
     }
 
-    /** @return array<string,string> */
+    /**
+     * @return array<string,string>
+     */
     public function rejectRequest(User $loggedInUser, User $requester): array
     {
         $relation = $this->findDirectRelation($requester, $loggedInUser);
-        if ($relation === null || $relation->getStatus() !== FriendStatus::PENDING) {
-            throw new NotFoundHttpException('Pending friend request not found.');
+        if (
+            $relation === null ||
+            (
+                $relation->getStatus() !== FriendStatus::PENDING &&
+                $relation->getStatus() !== FriendStatus::ACCEPTED
+            )
+        ) {
+            throw new NotFoundHttpException('Pending or Accepted friend request not found.');
         }
 
         $relation->setStatus(FriendStatus::REJECTED);
+        $this->entityManager->persist($relation);
         $this->entityManager->flush();
         $this->invalidateUserCaches($loggedInUser);
         $this->invalidateUserCaches($requester);
 
-        return ['status' => 'rejected'];
+        return [
+            'status' => 'rejected',
+        ];
     }
 
-    /** @return array<string,string> */
+    /**
+     * @return array<string,string>
+     */
     public function cancelRequest(User $loggedInUser, User $targetUser): array
     {
         $this->guardNotSelf($loggedInUser, $targetUser);
@@ -160,10 +190,14 @@ readonly class UserFriendService
         $this->invalidateUserCaches($loggedInUser);
         $this->invalidateUserCaches($targetUser);
 
-        return ['status' => 'request_cancelled'];
+        return [
+            'status' => 'request_cancelled',
+        ];
     }
 
-    /** @return array<string,string> */
+    /**
+     * @return array<string,string>
+     */
     public function block(User $loggedInUser, User $targetUser): array
     {
         $this->guardNotSelf($loggedInUser, $targetUser);
@@ -178,14 +212,19 @@ readonly class UserFriendService
         }
 
         $relation->setStatus(FriendStatus::BLOCKED);
+        $this->entityManager->persist($relation);
         $this->entityManager->flush();
         $this->invalidateUserCaches($loggedInUser);
         $this->invalidateUserCaches($targetUser);
 
-        return ['status' => 'blocked'];
+        return [
+            'status' => 'blocked',
+        ];
     }
 
-    /** @return array<string,string> */
+    /**
+     * @return array<string,string>
+     */
     public function unblock(User $loggedInUser, User $targetUser): array
     {
         $relation = $this->findRelation($loggedInUser, $targetUser);
@@ -199,10 +238,14 @@ readonly class UserFriendService
         $this->invalidateUserCaches($loggedInUser);
         $this->invalidateUserCaches($targetUser);
 
-        return ['status' => 'unblocked'];
+        return [
+            'status' => 'unblocked',
+        ];
     }
 
-    /** @return array<int,array<string,string>> */
+    /**
+     * @return array<int,array<string,string>>
+     */
     public function getMyFriends(User $loggedInUser): array
     {
         $qb = $this->entityManager->createQueryBuilder()
@@ -225,24 +268,26 @@ readonly class UserFriendService
             $relations = $qb->getQuery()->getResult();
 
             return array_map(static function (UserFriendRelation $relation) use ($loggedInUser): array {
-            $friend = $relation->getRequester()->getId() === $loggedInUser->getId()
+                $friend = $relation->getRequester()->getId() === $loggedInUser->getId()
                 ? $relation->getAddressee()
                 : $relation->getRequester();
 
-            return [
-                'id' => $friend->getId(),
-                'username' => $friend->getUsername(),
-                'firstName' => $friend->getFirstName(),
-                'lastName' => $friend->getLastName(),
-                'photo' => $friend->getPhoto(),
-            ];
+                return [
+                    'id' => $friend->getId(),
+                    'username' => $friend->getUsername(),
+                    'firstName' => $friend->getFirstName(),
+                    'lastName' => $friend->getLastName(),
+                    'photo' => $friend->getPhoto(),
+                ];
             }, $relations);
         });
 
         return $payload;
     }
 
-    /** @return array<int,array<string,string>> */
+    /**
+     * @return array<int,array<string,string>>
+     */
     public function getMyIncomingRequests(User $loggedInUser): array
     {
         $qb = $this->entityManager->createQueryBuilder()
@@ -265,17 +310,19 @@ readonly class UserFriendService
 
             return array_map(static fn (UserFriendRelation $relation): array => [
                 'id' => $relation->getRequester()->getId(),
-            'username' => $relation->getRequester()->getUsername(),
-            'firstName' => $relation->getRequester()->getFirstName(),
-            'lastName' => $relation->getRequester()->getLastName(),
-            'photo' => $relation->getRequester()->getPhoto(),
+                'username' => $relation->getRequester()->getUsername(),
+                'firstName' => $relation->getRequester()->getFirstName(),
+                'lastName' => $relation->getRequester()->getLastName(),
+                'photo' => $relation->getRequester()->getPhoto(),
             ], $relations);
         });
 
         return $payload;
     }
 
-    /** @return array<int,array<string,string>> */
+    /**
+     * @return array<int,array<string,string>>
+     */
     public function getMySentRequests(User $loggedInUser): array
     {
         $qb = $this->entityManager->createQueryBuilder()
@@ -308,7 +355,9 @@ readonly class UserFriendService
         return $payload;
     }
 
-    /** @return array<int,array<string,string>> */
+    /**
+     * @return array<int,array<string,string>>
+     */
     public function getMyBlockedUsers(User $loggedInUser): array
     {
         $qb = $this->entityManager->createQueryBuilder()
@@ -367,14 +416,20 @@ readonly class UserFriendService
         $repository = $this->entityManager->getRepository(UserFriendRelation::class);
 
         /** @var UserFriendRelation|null $relation */
-        $relation = $repository->findOneBy(['requester' => $first, 'addressee' => $second]);
+        $relation = $repository->findOneBy([
+            'requester' => $first,
+            'addressee' => $second,
+        ]);
 
         if ($relation instanceof UserFriendRelation) {
             return $relation;
         }
 
         /** @var UserFriendRelation|null $reverse */
-        $reverse = $repository->findOneBy(['requester' => $second, 'addressee' => $first]);
+        $reverse = $repository->findOneBy([
+            'requester' => $second,
+            'addressee' => $first,
+        ]);
 
         return $reverse;
     }
@@ -384,7 +439,10 @@ readonly class UserFriendService
         $repository = $this->entityManager->getRepository(UserFriendRelation::class);
 
         /** @var UserFriendRelation|null $relation */
-        $relation = $repository->findOneBy(['requester' => $requester, 'addressee' => $addressee]);
+        $relation = $repository->findOneBy([
+            'requester' => $requester,
+            'addressee' => $addressee,
+        ]);
 
         return $relation;
     }

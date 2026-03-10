@@ -41,7 +41,9 @@ class Conversation implements EntityInterface
      * @var Collection<int, ChatMessage>
      */
     #[ORM\OneToMany(targetEntity: ChatMessage::class, mappedBy: 'conversation', cascade: ['persist', 'remove'], orphanRemoval: true)]
-    #[ORM\OrderBy(['createdAt' => 'ASC'])]
+    #[ORM\OrderBy([
+        'createdAt' => 'ASC',
+    ])]
     private Collection $messages;
 
     public function __construct()

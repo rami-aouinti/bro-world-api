@@ -27,13 +27,17 @@ final class MediaUploadValidationPolicy
         return $this->maxSizeInBytes;
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     public function getAllowedMimeTypes(): array
     {
         return $this->allowedMimeTypes;
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     public function getAllowedExtensions(): array
     {
         return $this->allowedExtensions;

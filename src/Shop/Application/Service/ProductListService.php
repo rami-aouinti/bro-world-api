@@ -25,15 +25,17 @@ readonly class ProductListService
     ) {
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     public function getList(Request $request): array
     {
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
         $filters = [
-            'q' => trim((string) $request->query->get('q', '')),
-            'name' => trim((string) $request->query->get('name', '')),
-            'category' => trim((string) $request->query->get('category', '')),
+            'q' => trim((string)$request->query->get('q', '')),
+            'name' => trim((string)$request->query->get('name', '')),
+            'category' => trim((string)$request->query->get('category', '')),
         ];
 
         $cacheKey = $this->cacheKeyConventionService->buildShopProductListKey($page, $limit, $filters);
@@ -47,7 +49,15 @@ readonly class ProductListService
 
             $esIds = $this->searchIdsFromElastic($filters);
             if ($esIds === []) {
-                return ['items' => [], 'pagination' => ['page' => $page, 'limit' => $limit, 'totalItems' => 0, 'totalPages' => 0]];
+                return [
+                    'items' => [],
+                    'pagination' => [
+                        'page' => $page,
+                        'limit' => $limit,
+                        'totalItems' => 0,
+                        'totalPages' => 0,
+                    ],
+                ];
             }
 
             $qb = $this->productRepository->createQueryBuilder('product')
@@ -91,9 +101,17 @@ readonly class ProductListService
                 $countQb->andWhere('product.id IN (:ids)')->setParameter('ids', $esIds);
             }
 
-            $totalItems = (int) $countQb->getQuery()->getSingleScalarResult();
+            $totalItems = (int)$countQb->getQuery()->getSingleScalarResult();
 
-            return ['items' => $items, 'pagination' => ['page' => $page, 'limit' => $limit, 'totalItems' => $totalItems, 'totalPages' => $totalItems > 0 ? (int) ceil($totalItems / $limit) : 0]];
+            return [
+                'items' => $items,
+                'pagination' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'totalItems' => $totalItems,
+                    'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
+                ],
+            ];
         });
 
         $result['filters'] = array_filter($filters, static fn (string $value): bool => $value !== '');
@@ -112,7 +130,13 @@ readonly class ProductListService
 
         try {
             $response = $this->elasticsearchService->search(ShopProductProjection::INDEX_NAME, [
-                'query' => ['multi_match' => ['query' => $filters['q'], 'type' => 'phrase_prefix', 'fields' => ['name^3', 'categoryName^2', 'tags']]],
+                'query' => [
+                    'multi_match' => [
+                        'query' => $filters['q'],
+                        'type' => 'phrase_prefix',
+                        'fields' => ['name^3', 'categoryName^2', 'tags'],
+                    ],
+                ],
                 '_source' => ['id'],
             ], 0, 200);
         } catch (Throwable) {

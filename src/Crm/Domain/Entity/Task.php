@@ -49,14 +49,46 @@ class Task implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getProject(): ?Project { return $this->project; }
-    public function setProject(?Project $project): self { $this->project = $project; return $this; }
-    public function getSprint(): ?Sprint { return $this->sprint; }
-    public function setSprint(?Sprint $sprint): self { $this->sprint = $sprint; return $this; }
-    public function getTitle(): string { return $this->title; }
-    public function setTitle(string $title): self { $this->title = $title; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getProject(): ?Project
+    {
+        return $this->project;
+    }
+    public function setProject(?Project $project): self
+    {
+        $this->project = $project;
 
-    /** @return Collection<int, TaskRequest>|ArrayCollection<int, TaskRequest> */
-    public function getTaskRequests(): Collection|ArrayCollection { return $this->taskRequests; }
+        return $this;
+    }
+    public function getSprint(): ?Sprint
+    {
+        return $this->sprint;
+    }
+    public function setSprint(?Sprint $sprint): self
+    {
+        $this->sprint = $sprint;
+
+        return $this;
+    }
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+    public function setTitle(string $title): self
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, TaskRequest>|ArrayCollection<int, TaskRequest>
+     */
+    public function getTaskRequests(): Collection|ArrayCollection
+    {
+        return $this->taskRequests;
+    }
 }

@@ -24,8 +24,9 @@ class CalendarRepository extends BaseRepository implements CalendarRepositoryInt
         'title',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 
     public function findOneByApplication(Application $application): ?Entity

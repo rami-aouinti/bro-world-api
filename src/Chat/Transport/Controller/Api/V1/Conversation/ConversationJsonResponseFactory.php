@@ -16,6 +16,7 @@ final class ConversationJsonResponseFactory
         $response = new JsonResponse();
         $response->setEncodingOptions(JsonResponse::DEFAULT_ENCODING_OPTIONS | JSON_INVALID_UTF8_SUBSTITUTE);
         $response->setData($payload);
+
         return $response;
     }
 }

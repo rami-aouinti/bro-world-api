@@ -29,8 +29,9 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
         'visibility',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 
     public function findByUser(User $user, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array
@@ -49,7 +50,7 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
 
     public function countByUser(User $user, array $filters = [], ?array $esIds = null): int
     {
-        return (int) $this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds)
+        return (int)$this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds)
             ->andWhere('event.user = :user OR calendar.user = :user')
             ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
             ->getQuery()
@@ -73,7 +74,7 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
 
     public function countByApplicationSlug(string $applicationSlug, array $filters = [], ?array $esIds = null): int
     {
-        return (int) $this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds)
+        return (int)$this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds)
             ->innerJoin('calendar.application', 'application')
             ->andWhere('application.slug = :applicationSlug')
             ->setParameter('applicationSlug', $applicationSlug)
@@ -100,7 +101,7 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
 
     public function countByApplicationSlugAndUser(string $applicationSlug, User $user, array $filters = [], ?array $esIds = null): int
     {
-        return (int) $this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds)
+        return (int)$this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds)
             ->innerJoin('calendar.application', 'application')
             ->andWhere('application.slug = :applicationSlug')
             ->andWhere('event.user = :user OR calendar.user = :user')

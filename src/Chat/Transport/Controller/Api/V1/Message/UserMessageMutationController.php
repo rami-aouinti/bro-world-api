@@ -21,7 +21,6 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Uid\Uuid;
 
 #[AsController]
 #[OA\Tag(name: 'Chat Message')]
@@ -49,7 +48,9 @@ use Symfony\Component\Uid\Uuid;
             properties: [
                 new OA\Property(property: 'content', type: 'string', minLength: 1, example: 'Bonjour, dispo pour un entretien demain ?'),
             ],
-            example: ['content' => 'Bonjour, dispo pour un entretien demain ?']
+            example: [
+                'content' => 'Bonjour, dispo pour un entretien demain ?',
+            ]
         )
     ),
     tags: ['Chat Message'],
@@ -72,7 +73,10 @@ use Symfony\Component\Uid\Uuid;
                 new OA\Property(property: 'content', type: 'string', minLength: 1, example: 'Bonjour, finalement mercredi 10h ?'),
                 new OA\Property(property: 'read', type: 'boolean', example: true),
             ],
-            example: ['content' => 'Bonjour, finalement mercredi 10h ?', 'read' => true]
+            example: [
+                'content' => 'Bonjour, finalement mercredi 10h ?',
+                'read' => true,
+            ]
         )
     ),
     tags: ['Chat Message'],
@@ -145,7 +149,9 @@ class UserMessageMutationController
             content: $content,
         ));
 
-        return new JsonResponse(['operationId' => $operationId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     #[Route(path: '/v1/chat/private/messages/{messageId}', methods: [Request::METHOD_PATCH])]
@@ -180,7 +186,10 @@ class UserMessageMutationController
             read: $read,
         ));
 
-        return new JsonResponse(['operationId' => $operationId, 'id' => $messageId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'id' => $messageId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     #[Route(path: '/v1/chat/private/messages/{messageId}', methods: [Request::METHOD_DELETE])]
@@ -193,7 +202,10 @@ class UserMessageMutationController
             messageId: $messageId,
         ));
 
-        return new JsonResponse(['operationId' => $operationId, 'id' => $messageId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'id' => $messageId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     private function findParticipantConversation(string $conversationId, User $loggedInUser): Conversation

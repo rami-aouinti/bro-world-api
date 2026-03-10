@@ -18,12 +18,39 @@ class Application extends RestDto
     protected ?Job $job = null;
     protected string $status = ApplicationStatus::WAITING->value;
 
-    public function getApplicant(): ?Applicant { return $this->applicant; }
-    public function setApplicant(Applicant $applicant): self { $this->setVisited('applicant'); $this->applicant = $applicant; return $this; }
-    public function getJob(): ?Job { return $this->job; }
-    public function setJob(Job $job): self { $this->setVisited('job'); $this->job = $job; return $this; }
-    public function getStatus(): string { return $this->status; }
-    public function setStatus(string $status): self { $this->setVisited('status'); $this->status = $status; return $this; }
+    public function getApplicant(): ?Applicant
+    {
+        return $this->applicant;
+    }
+    public function setApplicant(Applicant $applicant): self
+    {
+        $this->setVisited('applicant');
+        $this->applicant = $applicant;
+
+        return $this;
+    }
+    public function getJob(): ?Job
+    {
+        return $this->job;
+    }
+    public function setJob(Job $job): self
+    {
+        $this->setVisited('job');
+        $this->job = $job;
+
+        return $this;
+    }
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+    public function setStatus(string $status): self
+    {
+        $this->setVisited('status');
+        $this->status = $status;
+
+        return $this;
+    }
 
     #[Override]
     public function load(EntityInterface $entity): self

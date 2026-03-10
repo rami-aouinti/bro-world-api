@@ -8,5 +8,11 @@ use App\General\Domain\Message\Interfaces\MessageHighInterface;
 
 final readonly class PatchBlogReactionCommand implements MessageHighInterface
 {
-    public function __construct(public string $operationId, public string $actorUserId, public string $reactionId, public string $type) {}
+    public function __construct(
+        public string $operationId,
+        public string $actorUserId,
+        public string $reactionId,
+        public string $type
+    ) {
+    }
 }

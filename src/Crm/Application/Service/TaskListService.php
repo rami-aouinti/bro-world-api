@@ -25,12 +25,17 @@ readonly class TaskListService
     ) {
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     public function getList(Request $request): array
     {
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
-        $filters = ['q' => trim((string) $request->query->get('q', '')), 'title' => trim((string) $request->query->get('title', ''))];
+        $filters = [
+            'q' => trim((string)$request->query->get('q', '')),
+            'title' => trim((string)$request->query->get('title', '')),
+        ];
         $cacheKey = $this->cacheKeyConventionService->buildCrmTaskListKey($page, $limit, $filters);
 
         /** @var array<string,mixed> $result */
@@ -42,7 +47,15 @@ readonly class TaskListService
 
             $esIds = $this->searchIdsFromElastic($filters);
             if ($esIds === []) {
-                return ['items' => [], 'pagination' => ['page' => $page, 'limit' => $limit, 'totalItems' => 0, 'totalPages' => 0]];
+                return [
+                    'items' => [],
+                    'pagination' => [
+                        'page' => $page,
+                        'limit' => $limit,
+                        'totalItems' => 0,
+                        'totalPages' => 0,
+                    ],
+                ];
             }
 
             $qb = $this->taskRepository->createQueryBuilder('task')->leftJoin('task.project', 'project')->leftJoin('task.sprint', 'sprint')
@@ -56,8 +69,13 @@ readonly class TaskListService
             }
 
             $items = array_map(static fn (Task $task): array => [
-                'id' => $task->getId(), 'title' => $task->getTitle(), 'projectId' => $task->getProject()?->getId(), 'projectName' => $task->getProject()?->getName(),
-                'sprintId' => $task->getSprint()?->getId(), 'sprintName' => $task->getSprint()?->getName(), 'updatedAt' => $task->getUpdatedAt()?->format(DATE_ATOM),
+                'id' => $task->getId(),
+                'title' => $task->getTitle(),
+                'projectId' => $task->getProject()?->getId(),
+                'projectName' => $task->getProject()?->getName(),
+                'sprintId' => $task->getSprint()?->getId(),
+                'sprintName' => $task->getSprint()?->getName(),
+                'updatedAt' => $task->getUpdatedAt()?->format(DATE_ATOM),
             ], $qb->getQuery()->getResult());
 
             $countQb = $this->taskRepository->createQueryBuilder('task')->select('COUNT(task.id)');
@@ -68,11 +86,21 @@ readonly class TaskListService
                 $countQb->andWhere('task.id IN (:ids)')->setParameter('ids', $esIds);
             }
 
-            $totalItems = (int) $countQb->getQuery()->getSingleScalarResult();
-            return ['items' => $items, 'pagination' => ['page' => $page, 'limit' => $limit, 'totalItems' => $totalItems, 'totalPages' => $totalItems > 0 ? (int) ceil($totalItems / $limit) : 0]];
+            $totalItems = (int)$countQb->getQuery()->getSingleScalarResult();
+
+            return [
+                'items' => $items,
+                'pagination' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'totalItems' => $totalItems,
+                    'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
+                ],
+            ];
         });
 
         $result['filters'] = array_filter($filters, static fn (string $value): bool => $value !== '');
+
         return $result;
     }
 
@@ -87,7 +115,13 @@ readonly class TaskListService
 
         try {
             $response = $this->elasticsearchService->search(CrmTaskProjection::INDEX_NAME, [
-                'query' => ['multi_match' => ['query' => $filters['q'], 'type' => 'phrase_prefix', 'fields' => ['title^3', 'projectName^2', 'sprintName', 'taskRequests']]],
+                'query' => [
+                    'multi_match' => [
+                        'query' => $filters['q'],
+                        'type' => 'phrase_prefix',
+                        'fields' => ['title^3', 'projectName^2', 'sprintName', 'taskRequests'],
+                    ],
+                ],
                 '_source' => ['id'],
             ], 0, 200);
         } catch (Throwable) {
@@ -95,6 +129,7 @@ readonly class TaskListService
         }
 
         $hits = $response['hits']['hits'] ?? [];
+
         return array_values(array_filter(array_map(static fn (array $hit): ?string => $hit['_source']['id'] ?? $hit['_id'] ?? null, $hits)));
     }
 }

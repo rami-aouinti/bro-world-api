@@ -7,8 +7,8 @@ namespace App\Platform\Application\DTO\Plugin;
 use App\General\Application\DTO\Interfaces\RestDtoInterface;
 use App\General\Application\DTO\RestDto;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
-use App\Platform\Domain\Enum\PluginKey;
 use App\Platform\Domain\Entity\Plugin as Entity;
+use App\Platform\Domain\Enum\PluginKey;
 use Override;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -28,7 +28,6 @@ class Plugin extends RestDto
 
     #[Assert\NotNull]
     protected string $description = '';
-
 
     #[Assert\NotNull]
     #[Assert\Choice(choices: [
@@ -72,7 +71,6 @@ class Plugin extends RestDto
 
         return $this;
     }
-
 
     public function getPluginKey(): string
     {

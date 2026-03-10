@@ -42,11 +42,38 @@ class Grade implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getStudent(): ?Student { return $this->student; }
-    public function setStudent(?Student $student): self { $this->student = $student; return $this; }
-    public function getExam(): ?Exam { return $this->exam; }
-    public function setExam(?Exam $exam): self { $this->exam = $exam; return $this; }
-    public function getScore(): float { return $this->score; }
-    public function setScore(float $score): self { $this->score = $score; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getStudent(): ?Student
+    {
+        return $this->student;
+    }
+    public function setStudent(?Student $student): self
+    {
+        $this->student = $student;
+
+        return $this;
+    }
+    public function getExam(): ?Exam
+    {
+        return $this->exam;
+    }
+    public function setExam(?Exam $exam): self
+    {
+        $this->exam = $exam;
+
+        return $this;
+    }
+    public function getScore(): float
+    {
+        return $this->score;
+    }
+    public function setScore(float $score): self
+    {
+        $this->score = $score;
+
+        return $this;
+    }
 }

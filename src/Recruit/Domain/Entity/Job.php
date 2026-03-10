@@ -40,7 +40,6 @@ class Job implements EntityInterface
     #[Groups(['Job', 'Job.id'])]
     private UuidInterface $id;
 
-
     #[ORM\ManyToOne(targetEntity: Recruit::class, inversedBy: 'jobs')]
     #[ORM\JoinColumn(name: 'recruit_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     #[Groups(['Job', 'Job.recruit'])]
@@ -50,7 +49,9 @@ class Job implements EntityInterface
     #[ORM\JoinColumn(name: 'owner_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?User $owner = null;
 
-    #[ORM\Column(name: 'slug', type: Types::STRING, length: 255, options: ['default' => ''])]
+    #[ORM\Column(name: 'slug', type: Types::STRING, length: 255, options: [
+        'default' => '',
+    ])]
     #[Groups(['Job', 'Job.slug'])]
     private string $slug = '';
 
@@ -68,7 +69,9 @@ class Job implements EntityInterface
     #[Groups(['Job', 'Job.salary'])]
     private ?Salary $salary = null;
 
-    #[ORM\Column(name: 'location', type: Types::STRING, length: 255, options: ['default' => ''])]
+    #[ORM\Column(name: 'location', type: Types::STRING, length: 255, options: [
+        'default' => '',
+    ])]
     #[Groups(['Job', 'Job.location'])]
     private string $location = '';
 
@@ -84,19 +87,27 @@ class Job implements EntityInterface
     #[Groups(['Job', 'Job.schedule'])]
     private Schedule $schedule = Schedule::FULL_TIME;
 
-    #[ORM\Column(name: 'summary', type: Types::TEXT, options: ['default' => ''])]
+    #[ORM\Column(name: 'summary', type: Types::TEXT, options: [
+        'default' => '',
+    ])]
     #[Groups(['Job', 'Job.summary'])]
     private string $summary = '';
 
-    #[ORM\Column(name: 'match_score', type: Types::SMALLINT, options: ['default' => 0])]
+    #[ORM\Column(name: 'match_score', type: Types::SMALLINT, options: [
+        'default' => 0,
+    ])]
     #[Groups(['Job', 'Job.matchScore'])]
     private int $matchScore = 0;
 
-    #[ORM\Column(name: 'mission_title', type: Types::STRING, length: 255, options: ['default' => ''])]
+    #[ORM\Column(name: 'mission_title', type: Types::STRING, length: 255, options: [
+        'default' => '',
+    ])]
     #[Groups(['Job', 'Job.missionTitle'])]
     private string $missionTitle = '';
 
-    #[ORM\Column(name: 'mission_description', type: Types::TEXT, options: ['default' => ''])]
+    #[ORM\Column(name: 'mission_description', type: Types::TEXT, options: [
+        'default' => '',
+    ])]
     #[Groups(['Job', 'Job.missionDescription'])]
     private string $missionDescription = '';
 
@@ -144,52 +155,237 @@ class Job implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getSlug(): string { return $this->slug; }
-    public function setSlug(string $slug): self { $this->slug = $slug; return $this; }
-    public function getTitle(): string { return $this->title; }
-    public function setTitle(string $title): self { $this->title = $title; return $this; }
-    public function getRecruit(): ?Recruit { return $this->recruit; }
-    public function setRecruit(?Recruit $recruit): self { $this->recruit = $recruit; return $this; }
-    public function getOwner(): ?User { return $this->owner; }
-    public function setOwner(?User $owner): self { $this->owner = $owner; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getSlug(): string
+    {
+        return $this->slug;
+    }
+    public function setSlug(string $slug): self
+    {
+        $this->slug = $slug;
+
+        return $this;
+    }
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+    public function setTitle(string $title): self
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+    public function getRecruit(): ?Recruit
+    {
+        return $this->recruit;
+    }
+    public function setRecruit(?Recruit $recruit): self
+    {
+        $this->recruit = $recruit;
+
+        return $this;
+    }
+    public function getOwner(): ?User
+    {
+        return $this->owner;
+    }
+    public function setOwner(?User $owner): self
+    {
+        $this->owner = $owner;
+
+        return $this;
+    }
     #[Groups(['Job', 'Job.ownerId'])]
-    public function getOwnerId(): ?string { return $this->owner?->getId(); }
-    public function getCompany(): ?Company { return $this->company; }
-    public function setCompany(?Company $company): self { $this->company = $company; return $this; }
-    public function getSalary(): ?Salary { return $this->salary; }
-    public function setSalary(?Salary $salary): self { $this->salary = $salary; return $this; }
-    public function getLocation(): string { return $this->location; }
-    public function setLocation(string $location): self { $this->location = $location; return $this; }
-    public function getContractType(): ContractType { return $this->contractType; }
-    public function getContractTypeValue(): string { return $this->contractType->value; }
-    public function setContractType(ContractType|string $contractType): self { $this->contractType = $contractType instanceof ContractType ? $contractType : ContractType::from($contractType); return $this; }
-    public function getWorkMode(): WorkMode { return $this->workMode; }
-    public function getWorkModeValue(): string { return $this->workMode->value; }
-    public function setWorkMode(WorkMode|string $workMode): self { $this->workMode = $workMode instanceof WorkMode ? $workMode : WorkMode::from($workMode); return $this; }
-    public function getSchedule(): Schedule { return $this->schedule; }
-    public function getScheduleValue(): string { return $this->schedule->value; }
-    public function setSchedule(Schedule|string $schedule): self { $this->schedule = $schedule instanceof Schedule ? $schedule : Schedule::from($schedule); return $this; }
-    public function getSummary(): string { return $this->summary; }
-    public function setSummary(string $summary): self { $this->summary = $summary; return $this; }
-    public function getMatchScore(): int { return $this->matchScore; }
-    public function setMatchScore(int $matchScore): self { $this->matchScore = $matchScore; return $this; }
-    public function getMissionTitle(): string { return $this->missionTitle; }
-    public function setMissionTitle(string $missionTitle): self { $this->missionTitle = $missionTitle; return $this; }
-    public function getMissionDescription(): string { return $this->missionDescription; }
-    public function setMissionDescription(string $missionDescription): self { $this->missionDescription = $missionDescription; return $this; }
-    public function getResponsibilities(): array { return $this->responsibilities; }
-    public function setResponsibilities(array $responsibilities): self { $this->responsibilities = $responsibilities; return $this; }
-    public function getProfile(): array { return $this->profile; }
-    public function setProfile(array $profile): self { $this->profile = $profile; return $this; }
-    public function getBenefits(): array { return $this->benefits; }
-    public function setBenefits(array $benefits): self { $this->benefits = $benefits; return $this; }
-    /** @return Collection<int, Badge>|ArrayCollection<int, Badge> */
-    public function getBadges(): Collection|ArrayCollection { return $this->badges; }
-    public function addBadge(Badge $badge): self { if (!$this->badges->contains($badge)) { $this->badges->add($badge); } return $this; }
-    public function removeBadge(Badge $badge): self { $this->badges->removeElement($badge); return $this; }
-    /** @return Collection<int, Tag>|ArrayCollection<int, Tag> */
-    public function getTags(): Collection|ArrayCollection { return $this->tags; }
-    public function addTag(Tag $tag): self { if (!$this->tags->contains($tag)) { $this->tags->add($tag); } return $this; }
-    public function removeTag(Tag $tag): self { $this->tags->removeElement($tag); return $this; }
+    public function getOwnerId(): ?string
+    {
+        return $this->owner?->getId();
+    }
+    public function getCompany(): ?Company
+    {
+        return $this->company;
+    }
+    public function setCompany(?Company $company): self
+    {
+        $this->company = $company;
+
+        return $this;
+    }
+    public function getSalary(): ?Salary
+    {
+        return $this->salary;
+    }
+    public function setSalary(?Salary $salary): self
+    {
+        $this->salary = $salary;
+
+        return $this;
+    }
+    public function getLocation(): string
+    {
+        return $this->location;
+    }
+    public function setLocation(string $location): self
+    {
+        $this->location = $location;
+
+        return $this;
+    }
+    public function getContractType(): ContractType
+    {
+        return $this->contractType;
+    }
+    public function getContractTypeValue(): string
+    {
+        return $this->contractType->value;
+    }
+    public function setContractType(ContractType|string $contractType): self
+    {
+        $this->contractType = $contractType instanceof ContractType ? $contractType : ContractType::from($contractType);
+
+        return $this;
+    }
+    public function getWorkMode(): WorkMode
+    {
+        return $this->workMode;
+    }
+    public function getWorkModeValue(): string
+    {
+        return $this->workMode->value;
+    }
+    public function setWorkMode(WorkMode|string $workMode): self
+    {
+        $this->workMode = $workMode instanceof WorkMode ? $workMode : WorkMode::from($workMode);
+
+        return $this;
+    }
+    public function getSchedule(): Schedule
+    {
+        return $this->schedule;
+    }
+    public function getScheduleValue(): string
+    {
+        return $this->schedule->value;
+    }
+    public function setSchedule(Schedule|string $schedule): self
+    {
+        $this->schedule = $schedule instanceof Schedule ? $schedule : Schedule::from($schedule);
+
+        return $this;
+    }
+    public function getSummary(): string
+    {
+        return $this->summary;
+    }
+    public function setSummary(string $summary): self
+    {
+        $this->summary = $summary;
+
+        return $this;
+    }
+    public function getMatchScore(): int
+    {
+        return $this->matchScore;
+    }
+    public function setMatchScore(int $matchScore): self
+    {
+        $this->matchScore = $matchScore;
+
+        return $this;
+    }
+    public function getMissionTitle(): string
+    {
+        return $this->missionTitle;
+    }
+    public function setMissionTitle(string $missionTitle): self
+    {
+        $this->missionTitle = $missionTitle;
+
+        return $this;
+    }
+    public function getMissionDescription(): string
+    {
+        return $this->missionDescription;
+    }
+    public function setMissionDescription(string $missionDescription): self
+    {
+        $this->missionDescription = $missionDescription;
+
+        return $this;
+    }
+    public function getResponsibilities(): array
+    {
+        return $this->responsibilities;
+    }
+    public function setResponsibilities(array $responsibilities): self
+    {
+        $this->responsibilities = $responsibilities;
+
+        return $this;
+    }
+    public function getProfile(): array
+    {
+        return $this->profile;
+    }
+    public function setProfile(array $profile): self
+    {
+        $this->profile = $profile;
+
+        return $this;
+    }
+    public function getBenefits(): array
+    {
+        return $this->benefits;
+    }
+    public function setBenefits(array $benefits): self
+    {
+        $this->benefits = $benefits;
+
+        return $this;
+    }
+    /**
+     * @return Collection<int, Badge>|ArrayCollection<int, Badge>
+     */
+    public function getBadges(): Collection|ArrayCollection
+    {
+        return $this->badges;
+    }
+    public function addBadge(Badge $badge): self
+    {
+        if (!$this->badges->contains($badge)) {
+            $this->badges->add($badge);
+        }
+
+return $this;
+    }
+    public function removeBadge(Badge $badge): self
+    {
+        $this->badges->removeElement($badge);
+
+        return $this;
+    }
+    /**
+     * @return Collection<int, Tag>|ArrayCollection<int, Tag>
+     */
+    public function getTags(): Collection|ArrayCollection
+    {
+        return $this->tags;
+    }
+    public function addTag(Tag $tag): self
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags->add($tag);
+        }
+
+return $this;
+    }
+    public function removeTag(Tag $tag): self
+    {
+        $this->tags->removeElement($tag);
+
+        return $this;
+    }
 }

@@ -8,4 +8,3 @@ final class NotificationProjection
 {
     public const string INDEX_NAME = 'notifications';
 }
-

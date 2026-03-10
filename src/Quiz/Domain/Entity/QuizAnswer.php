@@ -33,12 +33,42 @@ class QuizAnswer implements EntityInterface
     #[ORM\Column(name: 'correct', type: 'boolean')]
     private bool $correct = false;
 
-    public function __construct() { $this->id = $this->createUuid(); }
-    #[Override] public function getId(): string { return $this->id->toString(); }
-    public function getQuestion(): QuizQuestion { return $this->question; }
-    public function setQuestion(QuizQuestion $question): self { $this->question = $question; return $this; }
-    public function getLabel(): string { return $this->label; }
-    public function setLabel(string $label): self { $this->label = $label; return $this; }
-    public function isCorrect(): bool { return $this->correct; }
-    public function setCorrect(bool $correct): self { $this->correct = $correct; return $this; }
+    public function __construct()
+    {
+        $this->id = $this->createUuid();
+    }
+    #[Override] public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getQuestion(): QuizQuestion
+    {
+        return $this->question;
+    }
+    public function setQuestion(QuizQuestion $question): self
+    {
+        $this->question = $question;
+
+        return $this;
+    }
+    public function getLabel(): string
+    {
+        return $this->label;
+    }
+    public function setLabel(string $label): self
+    {
+        $this->label = $label;
+
+        return $this;
+    }
+    public function isCorrect(): bool
+    {
+        return $this->correct;
+    }
+    public function setCorrect(bool $correct): self
+    {
+        $this->correct = $correct;
+
+        return $this;
+    }
 }

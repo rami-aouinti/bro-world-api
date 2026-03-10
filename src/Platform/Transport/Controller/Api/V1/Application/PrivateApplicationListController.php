@@ -20,8 +20,9 @@ use Throwable;
 #[OA\Tag(name: 'Application')]
 class PrivateApplicationListController
 {
-    public function __construct(private readonly ApplicationListService $applicationListService)
-    {
+    public function __construct(
+        private readonly ApplicationListService $applicationListService
+    ) {
     }
 
     #[Route(path: '/v1/application/private', methods: [Request::METHOD_GET])]
@@ -52,7 +53,9 @@ class PrivateApplicationListController
         ],
     )]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
         return new JsonResponse($this->applicationListService->getPrivateList($request, $loggedInUser));

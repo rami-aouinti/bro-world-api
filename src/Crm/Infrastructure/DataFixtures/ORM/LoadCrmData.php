@@ -19,7 +19,9 @@ use Override;
 
 final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 {
-    /** @var array<non-empty-string, array<int, non-empty-string>> */
+    /**
+     * @var array<non-empty-string, array<int, non-empty-string>>
+     */
     private const array APPLICATION_KEYS_BY_PLATFORM = [
         PlatformKey::CRM->value => [
             'crm-sales-hub',
@@ -50,7 +52,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 
                 $sprint = (new Sprint())
                     ->setProject($project)
-                    ->setName('Sprint ' . (string) ($companyIndex + 1));
+                    ->setName('Sprint ' . (string)($companyIndex + 1));
                 $manager->persist($sprint);
 
                 $taskBacklog = (new Task())
@@ -90,7 +92,9 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         return 9;
     }
 
-    /** @return array<int, Application> */
+    /**
+     * @return array<int, Application>
+     */
     private function getApplicationsByPlatform(PlatformKey $platformKey): array
     {
         $applications = [];

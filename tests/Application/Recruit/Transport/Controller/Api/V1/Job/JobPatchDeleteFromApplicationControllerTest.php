@@ -17,7 +17,9 @@ use Throwable;
 
 class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
 {
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that PATCH /v1/recruit/applications/{applicationSlug}/jobs/{jobId} updates job for owner.')]
     public function testThatPatchFromApplicationUpdatesJob(): void
     {
@@ -39,7 +41,9 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         self::assertSame('Updated job title', $payload['title']);
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that PATCH /v1/recruit/applications/{applicationSlug}/jobs/{jobId} forbids non owner.')]
     public function testThatPatchFromApplicationRejectsForeignApplication(): void
     {
@@ -53,7 +57,9 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_FORBIDDEN, $client->getResponse()->getStatusCode());
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that DELETE /v1/recruit/applications/{applicationSlug}/jobs/{jobId} deletes job for owner.')]
     public function testThatDeleteFromApplicationDeletesJob(): void
     {
@@ -71,14 +77,18 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         self::assertNull($deletedJob);
     }
 
-    /** @return array{0: string, 1: string} */
+    /**
+     * @return array{0: string, 1: string}
+     */
     private function getApplicationSlugAndJobIdForUsername(string $username): array
     {
         self::bootKernel();
 
         /** @var EntityManagerInterface $entityManager */
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        $user = $entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
+        $user = $entityManager->getRepository(User::class)->findOneBy([
+            'username' => $username,
+        ]);
         self::assertInstanceOf(User::class, $user);
 
         $application = $entityManager->getRepository(PlatformApplication::class)->findOneBy([
@@ -87,23 +97,31 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         ]);
         self::assertInstanceOf(PlatformApplication::class, $application);
 
-        $recruit = $entityManager->getRepository(Recruit::class)->findOneBy(['application' => $application]);
+        $recruit = $entityManager->getRepository(Recruit::class)->findOneBy([
+            'application' => $application,
+        ]);
         self::assertInstanceOf(Recruit::class, $recruit);
 
-        $job = $entityManager->getRepository(Job::class)->findOneBy(['recruit' => $recruit]);
+        $job = $entityManager->getRepository(Job::class)->findOneBy([
+            'recruit' => $recruit,
+        ]);
         self::assertInstanceOf(Job::class, $job);
 
         return [$application->getSlug(), $job->getId()];
     }
 
-    /** @return array{0: string, 1: string} */
+    /**
+     * @return array{0: string, 1: string}
+     */
     private function createDedicatedJobForUser(string $username): array
     {
         self::bootKernel();
 
         /** @var EntityManagerInterface $entityManager */
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        $user = $entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
+        $user = $entityManager->getRepository(User::class)->findOneBy([
+            'username' => $username,
+        ]);
         self::assertInstanceOf(User::class, $user);
 
         $application = $entityManager->getRepository(PlatformApplication::class)->findOneBy([
@@ -112,7 +130,9 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         ]);
         self::assertInstanceOf(PlatformApplication::class, $application);
 
-        $recruit = $entityManager->getRepository(Recruit::class)->findOneBy(['application' => $application]);
+        $recruit = $entityManager->getRepository(Recruit::class)->findOneBy([
+            'application' => $application,
+        ]);
         self::assertInstanceOf(Recruit::class, $recruit);
 
         $job = (new Job())

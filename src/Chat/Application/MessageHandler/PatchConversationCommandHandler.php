@@ -44,7 +44,11 @@ final readonly class PatchConversationCommandHandler
 
             $this->participantRepository->save((new ConversationParticipant())->setConversation($conversation)->setUser($targetUser));
 
-            return ['chatId' => $conversation->getChat()->getId(), 'actorId' => $command->actorUserId, 'targetId' => $targetUser->getId()];
+            return [
+                'chatId' => $conversation->getChat()->getId(),
+                'actorId' => $command->actorUserId,
+                'targetId' => $targetUser->getId(),
+            ];
         });
 
         if ($result !== null) {

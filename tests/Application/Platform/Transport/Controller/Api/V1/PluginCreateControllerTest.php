@@ -111,7 +111,7 @@ class PluginCreateControllerTest extends WebTestCase
                 'description' => 'Plugin description',
                 'enabled' => true,
                 'private' => false,
-            'pluginKey' => 'chat',
+                'pluginKey' => 'chat',
             ],
             'This value should not be blank.',
         ];
@@ -121,7 +121,7 @@ class PluginCreateControllerTest extends WebTestCase
                 'description' => 'Plugin description',
                 'enabled' => true,
                 'private' => false,
-            'pluginKey' => 'chat',
+                'pluginKey' => 'chat',
             ],
             'This value is too short.',
         ];

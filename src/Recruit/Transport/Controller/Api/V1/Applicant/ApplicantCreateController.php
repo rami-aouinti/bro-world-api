@@ -82,6 +82,8 @@ class ApplicantCreateController
 
         $this->applicantRepository->save($applicant);
 
-        return new JsonResponse(['id' => $applicant->getId()], JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $applicant->getId(),
+        ], JsonResponse::HTTP_CREATED);
     }
 }

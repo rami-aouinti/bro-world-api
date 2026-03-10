@@ -24,7 +24,6 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Uid\Uuid;
 
 #[AsController]
 #[OA\Tag(name: 'Chat Conversation')]
@@ -61,7 +60,9 @@ class UserConversationMutationController
             targetUserId: $targetUserId,
         ));
 
-        return new JsonResponse(['operationId' => $operationId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     #[Route(path: '/v1/chat/private/conversations/{conversationId}', methods: [Request::METHOD_PATCH])]
@@ -81,7 +82,10 @@ class UserConversationMutationController
             targetUserId: $targetUserId,
         ));
 
-        return new JsonResponse(['operationId' => $operationId, 'id' => $conversationId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'id' => $conversationId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     #[Route(path: '/v1/chat/private/conversations/{conversationId}', methods: [Request::METHOD_DELETE])]
@@ -94,7 +98,10 @@ class UserConversationMutationController
             conversationId: $conversationId,
         ));
 
-        return new JsonResponse(['operationId' => $operationId, 'id' => $conversationId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'id' => $conversationId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     #[Route(path: '/v1/chat/private/conversation/{userId}/user', methods: [Request::METHOD_POST])]
@@ -114,7 +121,9 @@ class UserConversationMutationController
             return new JsonResponse($this->normalizeConversation($conversation, $loggedInUser), JsonResponse::HTTP_OK);
         }
 
-        $chat = $this->chatRepository->findBy([], ['createdAt' => 'ASC'], 1)[0] ?? null;
+        $chat = $this->chatRepository->findBy([], [
+            'createdAt' => 'ASC',
+        ], 1)[0] ?? null;
         if (!$chat instanceof Chat) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'No chat available to create a conversation.');
         }

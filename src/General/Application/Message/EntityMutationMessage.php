@@ -8,8 +8,12 @@ use function uniqid;
 
 abstract class EntityMutationMessage
 {
-    /** @var array<string, mixed> */
+    /**
+     * @var array<string, mixed>
+     */
     public array $context;
+
+    public readonly string $eventId;
 
     public function __construct(
         public readonly string $entityType,
@@ -20,6 +24,4 @@ abstract class EntityMutationMessage
         $this->eventId = $eventId ?? uniqid('evt_', true);
         $this->context = $context;
     }
-
-    public readonly string $eventId;
 }

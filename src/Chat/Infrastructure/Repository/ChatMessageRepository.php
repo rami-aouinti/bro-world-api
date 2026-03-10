@@ -19,7 +19,8 @@ class ChatMessageRepository extends BaseRepository
 
     protected static array $searchColumns = ['id', 'content'];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

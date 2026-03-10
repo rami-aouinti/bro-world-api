@@ -55,16 +55,50 @@ class SchoolClass implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getSchool(): ?School { return $this->school; }
-    public function setSchool(?School $school): self { $this->school = $school; return $this; }
-    public function getName(): string { return $this->name; }
-    public function setName(string $name): self { $this->name = $name; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getSchool(): ?School
+    {
+        return $this->school;
+    }
+    public function setSchool(?School $school): self
+    {
+        $this->school = $school;
 
-    /** @return Collection<int, Student>|ArrayCollection<int, Student> */
-    public function getStudents(): Collection|ArrayCollection { return $this->students; }
-    /** @return Collection<int, Teacher>|ArrayCollection<int, Teacher> */
-    public function getTeachers(): Collection|ArrayCollection { return $this->teachers; }
-    /** @return Collection<int, Exam>|ArrayCollection<int, Exam> */
-    public function getExams(): Collection|ArrayCollection { return $this->exams; }
+        return $this;
+    }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Student>|ArrayCollection<int, Student>
+     */
+    public function getStudents(): Collection|ArrayCollection
+    {
+        return $this->students;
+    }
+    /**
+     * @return Collection<int, Teacher>|ArrayCollection<int, Teacher>
+     */
+    public function getTeachers(): Collection|ArrayCollection
+    {
+        return $this->teachers;
+    }
+    /**
+     * @return Collection<int, Exam>|ArrayCollection<int, Exam>
+     */
+    public function getExams(): Collection|ArrayCollection
+    {
+        return $this->exams;
+    }
 }

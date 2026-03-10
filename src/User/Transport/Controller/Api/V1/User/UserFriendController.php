@@ -22,59 +22,110 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class UserFriendController
 {
-    public function __construct(private readonly UserFriendService $userFriendService)
-    {
+    public function __construct(
+        private readonly UserFriendService $userFriendService
+    ) {
     }
 
-    #[Route(path: '/v1/users/{user}/friends/request', requirements: ['user' => Requirement::UUID_V1], methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/users/{user}/friends/request', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), tags: ['User Friends'], parameters: [new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
+    #[Route(path: '/v1/users/{user}/friends/request', requirements: [
+        'user' => Requirement::UUID_V1,
+    ], methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/users/{user}/friends/request', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [
+        new OA\Property(property: 'payload', type: 'object', example: [
+            'value' => 'example',
+        ])], example: [
+            'payload' => [
+                'value' => 'example',
+            ],
+        ])), tags: ['User Friends'], parameters: [new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     #[OA\Parameter(name: 'user', description: 'Target user UUID', in: 'path', required: true)]
-    #[OA\Response(response: 200, description: 'Request sent', content: new JsonContent(example: ['status' => 'request_sent']))]
+    #[OA\Response(response: 200, description: 'Request sent', content: new JsonContent(example: [
+        'status' => 'request_sent',
+    ]))]
     public function sendRequest(User $user, User $loggedInUser): JsonResponse
     {
         return new JsonResponse($this->userFriendService->sendRequest($loggedInUser, $user));
     }
 
-
-
-    #[Route(path: '/v1/users/{user}/friends/request', requirements: ['user' => Requirement::UUID_V1], methods: [Request::METHOD_DELETE])]
+    #[Route(path: '/v1/users/{user}/friends/cancel', requirements: [
+        'user' => Requirement::UUID_V1,
+    ], methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'user', description: 'Target user UUID', in: 'path', required: true)]
-    #[OA\Response(response: 200, description: 'Request cancelled', content: new JsonContent(example: ['status' => 'request_cancelled']))]
+    #[OA\Response(response: 200, description: 'Request cancelled', content: new JsonContent(example: [
+        'status' => 'request_cancelled',
+    ]))]
     public function cancelRequest(User $user, User $loggedInUser): JsonResponse
     {
         return new JsonResponse($this->userFriendService->cancelRequest($loggedInUser, $user));
     }
 
-    #[Route(path: '/v1/users/{user}/friends/accept', requirements: ['user' => Requirement::UUID_V1], methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/users/{user}/friends/accept', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), tags: ['User Friends'], parameters: [new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
+    #[Route(path: '/v1/users/{user}/friends/accept', requirements: [
+        'user' => Requirement::UUID_V1,
+    ], methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/users/{user}/friends/accept', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [
+        new OA\Property(property: 'payload', type: 'object', example: [
+            'value' => 'example',
+        ])], example: [
+            'payload' => [
+                'value' => 'example',
+            ],
+        ])), tags: ['User Friends'], parameters: [new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     #[OA\Parameter(name: 'user', description: 'Requester user UUID', in: 'path', required: true)]
-    #[OA\Response(response: 200, description: 'Request accepted', content: new JsonContent(example: ['status' => 'accepted']))]
+    #[OA\Response(response: 200, description: 'Request accepted', content: new JsonContent(example: [
+        'status' => 'accepted',
+    ]))]
     public function acceptRequest(User $user, User $loggedInUser): JsonResponse
     {
         return new JsonResponse($this->userFriendService->acceptRequest($loggedInUser, $user));
     }
 
-    #[Route(path: '/v1/users/{user}/friends/reject', requirements: ['user' => Requirement::UUID_V1], methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/users/{user}/friends/reject', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), tags: ['User Friends'], parameters: [new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
+    #[Route(path: '/v1/users/{user}/friends/reject', requirements: [
+        'user' => Requirement::UUID_V1,
+    ], methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/users/{user}/friends/reject', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [
+        new OA\Property(property: 'payload', type: 'object', example: [
+            'value' => 'example',
+        ])], example: [
+            'payload' => [
+                'value' => 'example',
+            ],
+        ])), tags: ['User Friends'], parameters: [new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     #[OA\Parameter(name: 'user', description: 'Requester user UUID', in: 'path', required: true)]
-    #[OA\Response(response: 200, description: 'Request rejected', content: new JsonContent(example: ['status' => 'rejected']))]
+    #[OA\Response(response: 200, description: 'Request rejected', content: new JsonContent(example: [
+        'status' => 'rejected',
+    ]))]
     public function rejectRequest(User $user, User $loggedInUser): JsonResponse
     {
         return new JsonResponse($this->userFriendService->rejectRequest($loggedInUser, $user));
     }
 
-    #[Route(path: '/v1/users/{user}/block', requirements: ['user' => Requirement::UUID_V1], methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/users/{user}/block', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), tags: ['User Friends'], parameters: [new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
+    #[Route(path: '/v1/users/{user}/block', requirements: [
+        'user' => Requirement::UUID_V1,
+    ], methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/users/{user}/block', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [
+        new OA\Property(property: 'payload', type: 'object', example: [
+            'value' => 'example',
+        ])], example: [
+            'payload' => [
+                'value' => 'example',
+            ],
+        ])), tags: ['User Friends'], parameters: [new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     #[OA\Parameter(name: 'user', description: 'Target user UUID', in: 'path', required: true)]
-    #[OA\Response(response: 200, description: 'User blocked', content: new JsonContent(example: ['status' => 'blocked']))]
+    #[OA\Response(response: 200, description: 'User blocked', content: new JsonContent(example: [
+        'status' => 'blocked',
+    ]))]
     public function block(User $user, User $loggedInUser): JsonResponse
     {
         return new JsonResponse($this->userFriendService->block($loggedInUser, $user));
     }
 
-    #[Route(path: '/v1/users/{user}/block', requirements: ['user' => Requirement::UUID_V1], methods: [Request::METHOD_DELETE])]
+    #[Route(path: '/v1/users/{user}/block', requirements: [
+        'user' => Requirement::UUID_V1,
+    ], methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'user', description: 'Target user UUID', in: 'path', required: true)]
-    #[OA\Response(response: 200, description: 'User unblocked', content: new JsonContent(example: ['status' => 'unblocked']))]
+    #[OA\Response(response: 200, description: 'User unblocked', content: new JsonContent(example: [
+        'status' => 'unblocked',
+    ]))]
     public function unblock(User $user, User $loggedInUser): JsonResponse
     {
         return new JsonResponse($this->userFriendService->unblock($loggedInUser, $user));
@@ -167,5 +218,4 @@ class UserFriendController
     {
         return new JsonResponse($this->userFriendService->getMyBlockedUsers($loggedInUser));
     }
-
 }

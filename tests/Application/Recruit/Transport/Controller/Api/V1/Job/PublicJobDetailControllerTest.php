@@ -36,7 +36,9 @@ class PublicJobDetailControllerTest extends WebTestCase
         self::assertIsArray($payload['similarJobs']);
     }
 
-    /** @return array{0: string, 1: string} */
+    /**
+     * @return array{0: string, 1: string}
+     */
     private function getApplicationSlugAndJobSlug(): array
     {
         self::bootKernel();

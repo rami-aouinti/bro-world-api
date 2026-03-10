@@ -20,8 +20,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class MyResumeListController
 {
-    public function __construct(private readonly ResumeRepository $resumeRepository)
-    {
+    public function __construct(
+        private readonly ResumeRepository $resumeRepository
+    ) {
     }
 
     #[Route(path: '/v1/recruit/private/me/resumes', methods: [Request::METHOD_GET])]
@@ -51,12 +52,18 @@ class MyResumeListController
     #[OA\Response(response: 401, description: 'Authentication required')]
     public function __invoke(User $loggedInUser): JsonResponse
     {
-        $resumes = $this->resumeRepository->findBy(['owner' => $loggedInUser], ['createdAt' => 'DESC']);
+        $resumes = $this->resumeRepository->findBy([
+            'owner' => $loggedInUser,
+        ], [
+            'createdAt' => 'DESC',
+        ]);
 
         return new JsonResponse(array_map([$this, 'normalizeResume'], $resumes));
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function normalizeResume(Resume $resume): array
     {
         return [

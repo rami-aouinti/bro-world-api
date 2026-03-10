@@ -5,28 +5,27 @@ declare(strict_types=1);
 namespace App\User\Transport\Controller\Api\V1\Profile;
 
 use App\Configuration\Domain\Entity\Configuration;
-use App\General\Application\Message\EntityCreated;
 use App\Configuration\Domain\Enum\ConfigurationScope;
+use App\General\Application\Message\EntityCreated;
 use App\Platform\Application\Resource\PlatformResource;
 use App\Platform\Application\Resource\PluginResource;
 use App\Platform\Application\Service\ApplicationPluginProvisioningService;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Entity\ApplicationPlugin;
-use App\Platform\Domain\Enum\PluginKey;
 use App\Platform\Domain\Enum\PlatformStatus;
+use App\Platform\Domain\Enum\PluginKey;
 use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use OpenApi\Attributes\JsonContent;
-use OpenApi\Attributes\Property;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Messenger\MessageBusInterface;
 use Throwable;
 
 use function array_values;
@@ -71,7 +70,9 @@ class ApplicationCreateController
                 'configurations' => [
                     [
                         'configurationKey' => 'app.theme',
-                        'configurationValue' => ['name' => 'dark'],
+                        'configurationValue' => [
+                            'name' => 'dark',
+                        ],
                     ],
                 ],
                 'plugins' => [
@@ -80,7 +81,9 @@ class ApplicationCreateController
                         'configurations' => [
                             [
                                 'configurationKey' => 'plugin.cache.ttl',
-                                'configurationValue' => ['seconds' => 120],
+                                'configurationValue' => [
+                                    'seconds' => 120,
+                                ],
                             ],
                         ],
                     ],

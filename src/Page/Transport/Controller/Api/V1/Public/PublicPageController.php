@@ -49,7 +49,9 @@ final class PublicPageController
         return $this->jsonContentOr404($this->publicPageReadService->getFaq($languageCode), $languageCode);
     }
 
-    /** @param array<string, mixed>|null $content */
+    /**
+     * @param array<string, mixed>|null $content
+     */
     private function jsonContentOr404(?array $content, string $languageCode): JsonResponse
     {
         if ($content === null) {

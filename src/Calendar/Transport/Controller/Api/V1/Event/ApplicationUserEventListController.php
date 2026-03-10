@@ -20,8 +20,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class ApplicationUserEventListController
 {
-    public function __construct(private readonly EventListService $eventListService)
-    {
+    public function __construct(
+        private readonly EventListService $eventListService
+    ) {
     }
 
     #[Route(path: '/v1/calendar/private/applications/{applicationSlug}/events', methods: [Request::METHOD_GET])]
@@ -30,9 +31,9 @@ class ApplicationUserEventListController
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
         $filters = [
-            'title' => trim((string) $request->query->get('title', '')),
-            'description' => trim((string) $request->query->get('description', '')),
-            'location' => trim((string) $request->query->get('location', '')),
+            'title' => trim((string)$request->query->get('title', '')),
+            'description' => trim((string)$request->query->get('description', '')),
+            'location' => trim((string)$request->query->get('location', '')),
         ];
 
         return new JsonResponse($this->eventListService->getByApplicationSlugAndUser($applicationSlug, $loggedInUser, $filters, $page, $limit));

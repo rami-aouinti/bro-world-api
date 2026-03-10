@@ -18,10 +18,28 @@ class Calendar extends RestDto
 
     protected string $title = '';
 
-    public function getUser(): ?User { return $this->user; }
-    public function setUser(?User $user): self { $this->setVisited('user'); $this->user = $user; return $this; }
-    public function getTitle(): string { return $this->title; }
-    public function setTitle(string $title): self { $this->setVisited('title'); $this->title = $title; return $this; }
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+    public function setUser(?User $user): self
+    {
+        $this->setVisited('user');
+        $this->user = $user;
+
+        return $this;
+    }
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+    public function setTitle(string $title): self
+    {
+        $this->setVisited('title');
+        $this->title = $title;
+
+        return $this;
+    }
 
     #[Override]
     public function load(EntityInterface $entity): self

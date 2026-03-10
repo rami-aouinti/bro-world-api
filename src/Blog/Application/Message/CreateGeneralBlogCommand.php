@@ -8,5 +8,10 @@ use App\General\Domain\Message\Interfaces\MessageHighInterface;
 
 final readonly class CreateGeneralBlogCommand implements MessageHighInterface
 {
-    public function __construct(public string $operationId, public string $actorUserId, public string $title) {}
+    public function __construct(
+        public string $operationId,
+        public string $actorUserId,
+        public string $title
+    ) {
+    }
 }

@@ -27,8 +27,9 @@ class ApplicationRepository extends BaseRepository implements ApplicationReposit
         'slug',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 
     public function createListQuery(array $filters, ?User $loggedInUser, ?array $esIds, int $page, int $limit): Query
@@ -62,7 +63,7 @@ class ApplicationRepository extends BaseRepository implements ApplicationReposit
 
     public function countList(array $filters, ?User $loggedInUser, ?array $esIds): int
     {
-        return (int) $this->createListIdsQueryBuilder($filters, $loggedInUser, $esIds)
+        return (int)$this->createListIdsQueryBuilder($filters, $loggedInUser, $esIds)
             ->select('COUNT(application.id)')
             ->resetDQLPart('orderBy')
             ->getQuery()

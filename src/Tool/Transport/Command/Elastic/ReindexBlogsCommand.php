@@ -38,7 +38,9 @@ final class ReindexBlogsCommand extends Command
         $indexed = 0;
 
         /** @var Blog $blog */
-        foreach ($this->blogRepository->findBy([], ['createdAt' => 'DESC']) as $blog) {
+        foreach ($this->blogRepository->findBy([], [
+            'createdAt' => 'DESC',
+        ]) as $blog) {
             $this->elasticsearchService->index(BlogProjection::INDEX_NAME, $blog->getId(), [
                 'id' => $blog->getId(),
                 'title' => $blog->getTitle(),
@@ -49,12 +51,12 @@ final class ReindexBlogsCommand extends Command
                 'ownerId' => $blog->getOwner()->getId(),
                 'postsCount' => $blog->getPosts()->count(),
                 'postContents' => array_map(
-                    static fn ($post): string => (string) $post->getContent(),
+                    static fn ($post): string => (string)$post->getContent(),
                     $blog->getPosts()->toArray(),
                 ),
                 'updatedAt' => $blog->getUpdatedAt()?->format(DATE_ATOM),
             ]);
-            ++$indexed;
+            $indexed++;
         }
 
         if ($input->isInteractive()) {

@@ -49,14 +49,46 @@ class Exam implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getSchoolClass(): ?SchoolClass { return $this->schoolClass; }
-    public function setSchoolClass(?SchoolClass $schoolClass): self { $this->schoolClass = $schoolClass; return $this; }
-    public function getTeacher(): ?Teacher { return $this->teacher; }
-    public function setTeacher(?Teacher $teacher): self { $this->teacher = $teacher; return $this; }
-    public function getTitle(): string { return $this->title; }
-    public function setTitle(string $title): self { $this->title = $title; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getSchoolClass(): ?SchoolClass
+    {
+        return $this->schoolClass;
+    }
+    public function setSchoolClass(?SchoolClass $schoolClass): self
+    {
+        $this->schoolClass = $schoolClass;
 
-    /** @return Collection<int, Grade>|ArrayCollection<int, Grade> */
-    public function getGrades(): Collection|ArrayCollection { return $this->grades; }
+        return $this;
+    }
+    public function getTeacher(): ?Teacher
+    {
+        return $this->teacher;
+    }
+    public function setTeacher(?Teacher $teacher): self
+    {
+        $this->teacher = $teacher;
+
+        return $this;
+    }
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+    public function setTitle(string $title): self
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Grade>|ArrayCollection<int, Grade>
+     */
+    public function getGrades(): Collection|ArrayCollection
+    {
+        return $this->grades;
+    }
 }

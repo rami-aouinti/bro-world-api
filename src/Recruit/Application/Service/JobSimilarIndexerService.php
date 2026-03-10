@@ -67,7 +67,7 @@ class JobSimilarIndexerService
             usort($scores, static fn (array $a, array $b): int => $b['score'] <=> $a['score']);
 
             $similarJobIds = array_values(array_map(
-                static fn (array $item): string => (string) $item['id'],
+                static fn (array $item): string => (string)$item['id'],
                 array_slice($scores, 0, 3),
             ));
 
@@ -128,8 +128,8 @@ class JobSimilarIndexerService
 
         $keys = array_keys($leftIndex + $rightIndex);
         foreach ($keys as $token) {
-            $leftCount = (int) ($leftIndex[$token] ?? 0);
-            $rightCount = (int) ($rightIndex[$token] ?? 0);
+            $leftCount = (int)($leftIndex[$token] ?? 0);
+            $rightCount = (int)($rightIndex[$token] ?? 0);
             $common += min($leftCount, $rightCount);
             $total += max($leftCount, $rightCount);
         }
@@ -151,7 +151,7 @@ class JobSimilarIndexerService
             return [];
         }
 
-        $normalized = (string) preg_replace('/[^\p{L}\p{N}\s]+/u', ' ', $normalized);
+        $normalized = (string)preg_replace('/[^\p{L}\p{N}\s]+/u', ' ', $normalized);
         $parts = preg_split('/\s+/u', $normalized) ?: [];
 
         return array_values(array_filter($parts, static fn (mixed $part): bool => is_string($part) && $part !== '' && !str_contains($part, '\n')));

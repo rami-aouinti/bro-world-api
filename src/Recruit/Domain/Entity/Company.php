@@ -31,15 +31,21 @@ class Company implements EntityInterface
     #[Groups(['Company', 'Company.name'])]
     private string $name = '';
 
-    #[ORM\Column(name: 'logo', type: Types::STRING, length: 25, options: ['default' => ''])]
+    #[ORM\Column(name: 'logo', type: Types::STRING, length: 25, options: [
+        'default' => '',
+    ])]
     #[Groups(['Company', 'Company.logo'])]
     private string $logo = '';
 
-    #[ORM\Column(name: 'sector', type: Types::STRING, length: 100, options: ['default' => ''])]
+    #[ORM\Column(name: 'sector', type: Types::STRING, length: 100, options: [
+        'default' => '',
+    ])]
     #[Groups(['Company', 'Company.sector'])]
     private string $sector = '';
 
-    #[ORM\Column(name: 'size', type: Types::STRING, length: 100, options: ['default' => ''])]
+    #[ORM\Column(name: 'size', type: Types::STRING, length: 100, options: [
+        'default' => '',
+    ])]
     #[Groups(['Company', 'Company.size'])]
     private string $size = '';
 
@@ -54,12 +60,44 @@ class Company implements EntityInterface
         return $this->id->toString();
     }
 
-    public function getName(): string { return $this->name; }
-    public function setName(string $name): self { $this->name = $name; return $this; }
-    public function getLogo(): string { return $this->logo; }
-    public function setLogo(string $logo): self { $this->logo = $logo; return $this; }
-    public function getSector(): string { return $this->sector; }
-    public function setSector(string $sector): self { $this->sector = $sector; return $this; }
-    public function getSize(): string { return $this->size; }
-    public function setSize(string $size): self { $this->size = $size; return $this; }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+    public function getLogo(): string
+    {
+        return $this->logo;
+    }
+    public function setLogo(string $logo): self
+    {
+        $this->logo = $logo;
+
+        return $this;
+    }
+    public function getSector(): string
+    {
+        return $this->sector;
+    }
+    public function setSector(string $sector): self
+    {
+        $this->sector = $sector;
+
+        return $this;
+    }
+    public function getSize(): string
+    {
+        return $this->size;
+    }
+    public function setSize(string $size): self
+    {
+        $this->size = $size;
+
+        return $this;
+    }
 }

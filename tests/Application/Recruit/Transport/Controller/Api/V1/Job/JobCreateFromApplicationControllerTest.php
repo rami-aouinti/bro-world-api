@@ -6,8 +6,8 @@ namespace App\Tests\Application\Recruit\Transport\Controller\Api\V1\Job;
 
 use App\General\Domain\Utils\JSON;
 use App\Platform\Domain\Entity\Application as PlatformApplication;
-use App\User\Domain\Entity\User;
 use App\Tests\TestCase\WebTestCase;
+use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,7 +15,9 @@ use Throwable;
 
 class JobCreateFromApplicationControllerTest extends WebTestCase
 {
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `POST /v1/recruit/applications/{applicationSlug}/jobs` creates a job for owner without requiring matchScore.')]
     public function testThatCreateFromApplicationCreatesJobWithoutMatchScore(): void
     {
@@ -43,7 +45,9 @@ class JobCreateFromApplicationControllerTest extends WebTestCase
         self::assertSame('Backend Engineer API', $payload['title']);
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `POST /v1/recruit/applications/{applicationSlug}/jobs` returns forbidden if application is not owned by logged user.')]
     public function testThatCreateFromApplicationRejectsForeignApplication(): void
     {

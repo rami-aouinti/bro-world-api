@@ -15,15 +15,33 @@ final class ApplicationProjection
     {
         return [
             'properties' => [
-                'id' => ['type' => 'keyword'],
-                'title' => ['type' => 'text'],
-                'description' => ['type' => 'text'],
-                'slug' => ['type' => 'keyword'],
-                'platformName' => ['type' => 'text'],
-                'platformKey' => ['type' => 'keyword'],
-                'status' => ['type' => 'keyword'],
-                'private' => ['type' => 'boolean'],
-                'updatedAt' => ['type' => 'date'],
+                'id' => [
+                    'type' => 'keyword',
+                ],
+                'title' => [
+                    'type' => 'text',
+                ],
+                'description' => [
+                    'type' => 'text',
+                ],
+                'slug' => [
+                    'type' => 'keyword',
+                ],
+                'platformName' => [
+                    'type' => 'text',
+                ],
+                'platformKey' => [
+                    'type' => 'keyword',
+                ],
+                'status' => [
+                    'type' => 'keyword',
+                ],
+                'private' => [
+                    'type' => 'boolean',
+                ],
+                'updatedAt' => [
+                    'type' => 'date',
+                ],
             ],
         ];
     }

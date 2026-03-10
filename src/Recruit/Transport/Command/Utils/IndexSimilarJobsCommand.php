@@ -22,12 +22,15 @@ class IndexSimilarJobsCommand extends Command
 
     final public const string NAME = 'recruit:jobs:index-similar';
 
-    public function __construct(private readonly JobSimilarIndexerService $jobSimilarIndexerService)
-    {
+    public function __construct(
+        private readonly JobSimilarIndexerService $jobSimilarIndexerService
+    ) {
         parent::__construct();
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = $this->getSymfonyStyle($input, $output);

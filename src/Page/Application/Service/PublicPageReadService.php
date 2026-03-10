@@ -34,25 +34,33 @@ final readonly class PublicPageReadService
     ) {
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getHome(string $languageCode): ?array
     {
         return $this->getPageContent('home', $languageCode);
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getAbout(string $languageCode): ?array
     {
         return $this->getPageContent('about', $languageCode);
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getContact(string $languageCode): ?array
     {
         return $this->getPageContent('contact', $languageCode);
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getFaq(string $languageCode): ?array
     {
         return $this->getPageContent('faq', $languageCode);
@@ -61,12 +69,16 @@ final readonly class PublicPageReadService
     public function resolveLanguage(string $languageCode): ?PageLanguage
     {
         /** @var PageLanguage|null $language */
-        $language = $this->pageLanguageRepository->findOneBy(['code' => $languageCode]);
+        $language = $this->pageLanguageRepository->findOneBy([
+            'code' => $languageCode,
+        ]);
 
         return $language;
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * @return array<string, mixed>|null
+     */
     private function getPageContent(string $page, string $languageCode): ?array
     {
         $cacheKey = $this->cacheKeyConventionService->buildPublicPageKey($page, $languageCode);
@@ -96,38 +108,54 @@ final readonly class PublicPageReadService
         return $content;
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * @return array<string, mixed>|null
+     */
     private function readHome(PageLanguage $language): ?array
     {
         /** @var Home|null $entity */
-        $entity = $this->homeRepository->findOneBy(['language' => $language]);
+        $entity = $this->homeRepository->findOneBy([
+            'language' => $language,
+        ]);
 
         return $entity?->getContent();
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * @return array<string, mixed>|null
+     */
     private function readAbout(PageLanguage $language): ?array
     {
         /** @var About|null $entity */
-        $entity = $this->aboutRepository->findOneBy(['language' => $language]);
+        $entity = $this->aboutRepository->findOneBy([
+            'language' => $language,
+        ]);
 
         return $entity?->getContent();
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * @return array<string, mixed>|null
+     */
     private function readContact(PageLanguage $language): ?array
     {
         /** @var Contact|null $entity */
-        $entity = $this->contactRepository->findOneBy(['language' => $language]);
+        $entity = $this->contactRepository->findOneBy([
+            'language' => $language,
+        ]);
 
         return $entity?->getContent();
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * @return array<string, mixed>|null
+     */
     private function readFaq(PageLanguage $language): ?array
     {
         /** @var Faq|null $entity */
-        $entity = $this->faqRepository->findOneBy(['language' => $language]);
+        $entity = $this->faqRepository->findOneBy([
+            'language' => $language,
+        ]);
 
         return $entity?->getContent();
     }

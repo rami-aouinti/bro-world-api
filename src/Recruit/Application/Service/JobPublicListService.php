@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Recruit\Application\Service;
 
-use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\General\Application\Service\CacheKeyConventionService;
-use App\Recruit\Domain\Entity\Application as RecruitApplication;
+use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\Recruit\Application\Projection\RecruitJobProjection;
+use App\Recruit\Domain\Entity\Application as RecruitApplication;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
 use App\Recruit\Domain\Entity\Resume;
@@ -35,8 +35,8 @@ use function floor;
 use function in_array;
 use function is_array;
 use function is_string;
-use function mb_strtolower;
 use function max;
+use function mb_strtolower;
 use function preg_match;
 use function preg_split;
 use function round;
@@ -56,8 +56,6 @@ class JobPublicListService
     }
 
     /**
-     * @param Request $request
-     * @param string $applicationSlug
      * @return array<string, mixed>
      * @throws InvalidArgumentException
      */
@@ -67,15 +65,15 @@ class JobPublicListService
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
 
         $filters = [
-            'company' => trim((string) $request->query->get('company', '')),
+            'company' => trim((string)$request->query->get('company', '')),
             'salaryMin' => max(0, $request->query->getInt('salaryMin', 0)),
             'salaryMax' => max(0, $request->query->getInt('salaryMax', 0)),
-            'contractType' => trim((string) $request->query->get('contractType', '')),
-            'workMode' => trim((string) $request->query->get('workMode', '')),
-            'schedule' => trim((string) $request->query->get('schedule', '')),
-            'postedAtLabel' => trim((string) $request->query->get('postedAtLabel', '')),
-            'location' => trim((string) $request->query->get('location', '')),
-            'q' => trim((string) $request->query->get('q', '')),
+            'contractType' => trim((string)$request->query->get('contractType', '')),
+            'workMode' => trim((string)$request->query->get('workMode', '')),
+            'schedule' => trim((string)$request->query->get('schedule', '')),
+            'postedAtLabel' => trim((string)$request->query->get('postedAtLabel', '')),
+            'location' => trim((string)$request->query->get('location', '')),
+            'q' => trim((string)$request->query->get('q', '')),
         ];
 
         $cacheKey = $this->cacheKeyConventionService->buildRecruitJobPublicListKey($applicationSlug, $loggedInUser?->getId(), $page, $limit, $filters);
@@ -97,7 +95,7 @@ class JobPublicListService
                 ->leftJoin('job.badges', 'badge')->addSelect('badge')
                 ->leftJoin('job.tags', 'tag')->addSelect('tag')
                 ->andWhere('job.recruit = :recruit')
-                ->setParameter('recruit', $recruit->getId() , UuidBinaryOrderedTimeType::NAME)
+                ->setParameter('recruit', $recruit->getId(), UuidBinaryOrderedTimeType::NAME)
                 ->orderBy('job.createdAt', 'DESC')
                 ->addOrderBy('job.id', 'DESC');
 
@@ -219,7 +217,7 @@ class JobPublicListService
                 $appliedJobIds = $this->getAppliedJobIds($loggedInUser, $jobIds);
 
                 $jobs = array_map(static function (array $job) use ($appliedJobIds): array {
-                    $isOwner = (bool) ($job['owner'] ?? false);
+                    $isOwner = (bool)($job['owner'] ?? false);
                     $jobId = $job['id'] ?? '';
 
                     $job['owner'] = $isOwner;
@@ -235,7 +233,7 @@ class JobPublicListService
                     'page' => $page,
                     'limit' => $limit,
                     'totalItems' => $totalItems,
-                    'totalPages' => $totalItems > 0 ? (int) ceil($totalItems / $limit) : 0,
+                    'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
                 ],
             ];
         });
@@ -263,7 +261,7 @@ class JobPublicListService
         }
 
         if ($diff->days !== false && $diff->days >= 7) {
-            $weeks = (int) floor($diff->days / 7);
+            $weeks = (int)floor($diff->days / 7);
 
             return 'vor ' . $weeks . ' Woche' . ($weeks > 1 ? 'n' : '');
         }
@@ -292,7 +290,7 @@ class JobPublicListService
             if ($filters['q'] !== '') {
                 $must[] = [
                     'multi_match' => [
-                        'query' => (string) $filters['q'],
+                        'query' => (string)$filters['q'],
                         'type' => 'phrase_prefix',
                         'fields' => [
                             'title^4',
@@ -308,11 +306,19 @@ class JobPublicListService
             }
 
             if ($filters['company'] !== '') {
-                $must[] = ['match_phrase_prefix' => ['companyName' => (string) $filters['company']]];
+                $must[] = [
+                    'match_phrase_prefix' => [
+                        'companyName' => (string)$filters['company'],
+                    ],
+                ];
             }
 
             if ($filters['location'] !== '') {
-                $must[] = ['match_phrase_prefix' => ['location' => (string) $filters['location']]];
+                $must[] = [
+                    'match_phrase_prefix' => [
+                        'location' => (string)$filters['location'],
+                    ],
+                ];
             }
 
             $response = $this->elasticsearchService->search(
@@ -368,7 +374,7 @@ class JobPublicListService
         }
 
         if (preg_match('/vor\s+(\d+)\s+tag(?:e)?/i', $postedAtLabel, $matches) === 1) {
-            $days = (int) ($matches[1] ?? 0);
+            $days = (int)($matches[1] ?? 0);
             if ($days > 0) {
                 $from = $now->modify(sprintf('-%d day', $days));
                 $to = $now->modify(sprintf('-%d day', $days - 1));
@@ -382,7 +388,7 @@ class JobPublicListService
         }
 
         if (preg_match('/vor\s+(\d+)\s+woche(?:n)?/i', $postedAtLabel, $matches) === 1) {
-            $weeks = (int) ($matches[1] ?? 0);
+            $weeks = (int)($matches[1] ?? 0);
             if ($weeks > 0) {
                 $from = $now->modify(sprintf('-%d week', $weeks));
                 $to = $now->modify(sprintf('-%d week', $weeks - 1));
@@ -396,7 +402,7 @@ class JobPublicListService
         }
 
         if (preg_match('/vor\s+(\d+)\s+monat(?:e)?/i', $postedAtLabel, $matches) === 1) {
-            $months = (int) ($matches[1] ?? 0);
+            $months = (int)($matches[1] ?? 0);
             if ($months > 0) {
                 $from = $now->modify(sprintf('-%d month', $months));
                 $to = $now->modify(sprintf('-%d month', $months - 1));
@@ -410,7 +416,7 @@ class JobPublicListService
         }
 
         if (preg_match('/vor\s+(\d+)\s+jahr(?:e|en)?/i', $postedAtLabel, $matches) === 1) {
-            $years = (int) ($matches[1] ?? 0);
+            $years = (int)($matches[1] ?? 0);
             if ($years > 0) {
                 $from = $now->modify(sprintf('-%d year', $years));
                 $to = $now->modify(sprintf('-%d year', $years - 1));
@@ -531,11 +537,11 @@ class JobPublicListService
         $matchedSkills = 0;
         foreach ($userSkillKeywords as $keyword) {
             if ($keyword !== '' && str_contains($jobCorpus, ' ' . $keyword . ' ')) {
-                ++$matchedSkills;
+                $matchedSkills++;
             }
         }
 
-        return (int) max(0, min(100, round(($matchedSkills / count($userSkillKeywords)) * 100)));
+        return (int)max(0, min(100, round(($matchedSkills / count($userSkillKeywords)) * 100)));
     }
 
     private function resolveRecruitByApplicationSlug(string $applicationSlug): Recruit
@@ -556,5 +562,4 @@ class JobPublicListService
 
         return $recruit;
     }
-
 }

@@ -19,18 +19,6 @@ use Throwable;
 final class LoadPluginData extends Fixture implements OrderedFixtureInterface
 {
     /**
-     * @var array<non-empty-string, non-empty-string>
-     */
-    public static array $uuids = [
-        'CRM Assistant' => '50000000-0000-1000-8000-000000000001',
-        'Analytics Booster' => '50000000-0000-1000-8000-000000000002',
-        'Private Beta Plugin' => '50000000-0000-1000-8000-000000000003',
-        'Disabled Public Plugin' => '50000000-0000-1000-8000-000000000004',
-        'Knowledge Base Connector' => '50000000-0000-1000-8000-000000000005',
-        'Quiz Master' => '50000000-0000-1000-8000-000000000006',
-    ];
-
-    /**
      * @var array<int, array{uuid: non-empty-string, key: non-empty-string, pluginKey: non-empty-string, name: non-empty-string, enabled: bool, private: bool, description: non-empty-string}>
      */
     private const array DATA = [
@@ -88,6 +76,17 @@ final class LoadPluginData extends Fixture implements OrderedFixtureInterface
             'private' => false,
             'description' => 'Gamified quiz module with categories, difficulty levels and answer scoring.',
         ],
+    ];
+    /**
+     * @var array<non-empty-string, non-empty-string>
+     */
+    public static array $uuids = [
+        'CRM Assistant' => '50000000-0000-1000-8000-000000000001',
+        'Analytics Booster' => '50000000-0000-1000-8000-000000000002',
+        'Private Beta Plugin' => '50000000-0000-1000-8000-000000000003',
+        'Disabled Public Plugin' => '50000000-0000-1000-8000-000000000004',
+        'Knowledge Base Connector' => '50000000-0000-1000-8000-000000000005',
+        'Quiz Master' => '50000000-0000-1000-8000-000000000006',
     ];
 
     /**

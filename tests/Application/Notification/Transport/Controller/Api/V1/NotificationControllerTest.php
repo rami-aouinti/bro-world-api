@@ -17,7 +17,9 @@ class NotificationControllerTest extends WebTestCase
 {
     private string $baseUrl = self::API_URL_PREFIX . '/v1/notifications';
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `GET /v1/notifications` requires authentication.')]
     public function testThatListRequiresAuthentication(): void
     {
@@ -28,7 +30,9 @@ class NotificationControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_UNAUTHORIZED, $client->getResponse()->getStatusCode());
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `GET /v1/notifications` returns only notifications for the authenticated user.')]
     public function testThatListReturnsOnlyCurrentUserNotifications(): void
     {
@@ -74,7 +78,9 @@ class NotificationControllerTest extends WebTestCase
         self::assertIsBool($rootNotificationInList['read']);
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `GET /v1/notifications/{id}` for another user notification is denied.')]
     public function testThatDetailForOtherUserNotificationIsDenied(): void
     {
@@ -89,9 +95,9 @@ class NotificationControllerTest extends WebTestCase
         self::assertContains($response->getStatusCode(), [Response::HTTP_FORBIDDEN, Response::HTTP_NOT_FOUND], "Response:\n" . $response);
     }
 
-
-
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `PATCH /v1/notifications/read-all` marks notifications as read for authenticated user only.')]
     public function testThatMarkAllAsReadUpdatesOnlyCurrentUserNotifications(): void
     {
@@ -107,8 +113,8 @@ class NotificationControllerTest extends WebTestCase
         $response = $client->getResponse();
         $content = $response->getContent();
         self::assertNotFalse($content);
-        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:
-" . $response);
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), 'Response:
+' . $response);
 
         $payload = JSON::decode($content, true);
         self::assertIsArray($payload);
@@ -131,7 +137,9 @@ class NotificationControllerTest extends WebTestCase
         self::assertFalse($otherDetail['read']);
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `POST /v1/notifications` with valid payload returns 201 and normalized from fields only.')]
     public function testThatCreateWithValidPayloadReturnsCreated(): void
     {
@@ -166,7 +174,9 @@ class NotificationControllerTest extends WebTestCase
         self::assertFalse($payload['read']);
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `POST /v1/notifications` with invalid payload returns 400.')]
     public function testThatCreateWithInvalidPayloadReturnsBadRequest(): void
     {

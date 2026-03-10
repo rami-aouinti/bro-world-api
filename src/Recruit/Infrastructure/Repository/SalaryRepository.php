@@ -22,7 +22,8 @@ class SalaryRepository extends BaseRepository implements SalaryRepositoryInterfa
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

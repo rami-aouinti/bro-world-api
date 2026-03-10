@@ -14,11 +14,16 @@ class QuizRepository extends BaseRepository
     protected static string $entityName = Quiz::class;
     protected static array $searchColumns = ['id'];
 
-    public function __construct(protected ManagerRegistry $managerRegistry) {}
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
+    }
 
     public function findOneByApplication(Application $application): ?Quiz
     {
-        $result = $this->findOneBy(['application' => $application]);
+        $result = $this->findOneBy([
+            'application' => $application,
+        ]);
 
         return $result instanceof Quiz ? $result : null;
     }

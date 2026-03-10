@@ -46,7 +46,9 @@ class ApplicationPlugin implements EntityInterface
     #[ORM\OneToMany(targetEntity: Configuration::class, mappedBy: 'applicationPlugin', cascade: ['persist', 'remove'])]
     private Collection | ArrayCollection $configurations;
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     public function __construct()
     {
         $this->id = $this->createUuid();
@@ -83,7 +85,9 @@ class ApplicationPlugin implements EntityInterface
         return $this;
     }
 
-    /** @return Collection<int, Configuration>|ArrayCollection<int, Configuration> */
+    /**
+     * @return Collection<int, Configuration>|ArrayCollection<int, Configuration>
+     */
     public function getConfigurations(): Collection | ArrayCollection
     {
         return $this->configurations;

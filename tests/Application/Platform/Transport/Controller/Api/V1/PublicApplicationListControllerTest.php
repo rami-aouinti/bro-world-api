@@ -14,7 +14,9 @@ class PublicApplicationListControllerTest extends WebTestCase
 {
     private string $baseUrl = self::API_URL_PREFIX . '/v1/application/public';
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `GET /v1/application/public` without authentication returns paginated public applications only.')]
     public function testThatPublicListWorksWithoutAuthentication(): void
     {
@@ -49,8 +51,9 @@ class PublicApplicationListControllerTest extends WebTestCase
         }
     }
 
-
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `GET /v1/application/public` paginates applications (not joined plugin rows) when an application has multiple plugins.')]
     public function testThatPublicListPaginationIsStableWithMultiplePlugins(): void
     {
@@ -60,8 +63,12 @@ class PublicApplicationListControllerTest extends WebTestCase
             'title' => 'AA Multi Plugin App',
             'description' => 'Pagination regression guard',
             'plugins' => [
-                ['pluginId' => '50000000-0000-1000-8000-000000000001'],
-                ['pluginId' => '50000000-0000-1000-8000-000000000002'],
+                [
+                    'pluginId' => '50000000-0000-1000-8000-000000000001',
+                ],
+                [
+                    'pluginId' => '50000000-0000-1000-8000-000000000002',
+                ],
             ],
         ]));
         self::assertSame(Response::HTTP_CREATED, $createClient->getResponse()->getStatusCode());
@@ -96,7 +103,9 @@ class PublicApplicationListControllerTest extends WebTestCase
         self::assertSame('CRM Growth App', $page2Data['items'][0]['title']);
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `GET /v1/application/public` supports filters and pagination.')]
     public function testThatPublicListSupportsFiltersAndPagination(): void
     {

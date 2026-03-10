@@ -227,35 +227,51 @@ class MyResumePatchController
         $payload = $request->toArray();
 
         if (is_array($payload['experiences'] ?? null)) {
-            $this->replaceSections($resume->getExperiences()->toArray(), $payload['experiences'], static fn (): Experience => new Experience(), static function (Resume $item, Experience $section): void { $item->addExperience($section); }, $resume);
+            $this->replaceSections($resume->getExperiences()->toArray(), $payload['experiences'], static fn (): Experience => new Experience(), static function (Resume $item, Experience $section): void {
+                $item->addExperience($section);
+            }, $resume);
         }
 
         if (is_array($payload['educations'] ?? null)) {
-            $this->replaceSections($resume->getEducations()->toArray(), $payload['educations'], static fn (): Education => new Education(), static function (Resume $item, Education $section): void { $item->addEducation($section); }, $resume);
+            $this->replaceSections($resume->getEducations()->toArray(), $payload['educations'], static fn (): Education => new Education(), static function (Resume $item, Education $section): void {
+                $item->addEducation($section);
+            }, $resume);
         }
 
         if (is_array($payload['skills'] ?? null)) {
-            $this->replaceSections($resume->getSkills()->toArray(), $payload['skills'], static fn (): Skill => new Skill(), static function (Resume $item, Skill $section): void { $item->addSkill($section); }, $resume);
+            $this->replaceSections($resume->getSkills()->toArray(), $payload['skills'], static fn (): Skill => new Skill(), static function (Resume $item, Skill $section): void {
+                $item->addSkill($section);
+            }, $resume);
         }
 
         if (is_array($payload['languages'] ?? null)) {
-            $this->replaceSections($resume->getLanguages()->toArray(), $payload['languages'], static fn (): Language => new Language(), static function (Resume $item, Language $section): void { $item->addLanguage($section); }, $resume);
+            $this->replaceSections($resume->getLanguages()->toArray(), $payload['languages'], static fn (): Language => new Language(), static function (Resume $item, Language $section): void {
+                $item->addLanguage($section);
+            }, $resume);
         }
 
         if (is_array($payload['certifications'] ?? null)) {
-            $this->replaceSections($resume->getCertifications()->toArray(), $payload['certifications'], static fn (): Certification => new Certification(), static function (Resume $item, Certification $section): void { $item->addCertification($section); }, $resume);
+            $this->replaceSections($resume->getCertifications()->toArray(), $payload['certifications'], static fn (): Certification => new Certification(), static function (Resume $item, Certification $section): void {
+                $item->addCertification($section);
+            }, $resume);
         }
 
         if (is_array($payload['projects'] ?? null)) {
-            $this->replaceSections($resume->getProjects()->toArray(), $payload['projects'], static fn (): Project => new Project(), static function (Resume $item, Project $section): void { $item->addProject($section); }, $resume);
+            $this->replaceSections($resume->getProjects()->toArray(), $payload['projects'], static fn (): Project => new Project(), static function (Resume $item, Project $section): void {
+                $item->addProject($section);
+            }, $resume);
         }
 
         if (is_array($payload['references'] ?? null)) {
-            $this->replaceSections($resume->getReferences()->toArray(), $payload['references'], static fn (): Reference => new Reference(), static function (Resume $item, Reference $section): void { $item->addReference($section); }, $resume);
+            $this->replaceSections($resume->getReferences()->toArray(), $payload['references'], static fn (): Reference => new Reference(), static function (Resume $item, Reference $section): void {
+                $item->addReference($section);
+            }, $resume);
         }
 
         if (is_array($payload['hobbies'] ?? null)) {
-            $this->replaceSections($resume->getHobbies()->toArray(), $payload['hobbies'], static fn (): Hobby => new Hobby(), static function (Resume $item, Hobby $section): void { $item->addHobby($section); }, $resume);
+            $this->replaceSections($resume->getHobbies()->toArray(), $payload['hobbies'], static fn (): Hobby => new Hobby(), static function (Resume $item, Hobby $section): void {
+                $item->addHobby($section);
+            }, $resume);
         }
 
         if (array_key_exists('documentUrl', $payload)) {

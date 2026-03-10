@@ -25,13 +25,22 @@ final class ConversationListServiceTest extends TestCase
             ->method('get')
             ->willReturn([
                 'items' => [],
-                'pagination' => ['page' => 1, 'limit' => 20, 'totalItems' => 0, 'totalPages' => 0],
+                'pagination' => [
+                    'page' => 1,
+                    'limit' => 20,
+                    'totalItems' => 0,
+                    'totalPages' => 0,
+                ],
             ]);
 
         $service = new ConversationListService($repo, $cache, $elastic);
-        $result = $service->getByUser($this->mockUser(), ['message' => 'foo'], 1, 20);
+        $result = $service->getByUser($this->mockUser(), [
+            'message' => 'foo',
+        ], 1, 20);
 
-        self::assertSame(['message' => 'foo'], $result['filters']);
+        self::assertSame([
+            'message' => 'foo',
+        ], $result['filters']);
     }
 
     public function testGetByUserCacheMissCallsRepository(): void
@@ -41,7 +50,11 @@ final class ConversationListServiceTest extends TestCase
         $repo->expects(self::once())->method('countByUser')->willReturn(0);
 
         $elastic = $this->createMock(ElasticsearchServiceInterface::class);
-        $elastic->expects(self::once())->method('search')->willReturn(['hits' => ['hits' => []]]);
+        $elastic->expects(self::once())->method('search')->willReturn([
+            'hits' => [
+                'hits' => [],
+            ],
+        ]);
 
         $item = $this->createMock(ItemInterface::class);
         $item->expects(self::once())->method('expiresAfter')->with(120);
@@ -52,7 +65,9 @@ final class ConversationListServiceTest extends TestCase
         });
 
         $service = new ConversationListService($repo, $cache, $elastic);
-        $result = $service->getByUser($this->mockUser(), ['message' => 'foo'], 1, 20);
+        $result = $service->getByUser($this->mockUser(), [
+            'message' => 'foo',
+        ], 1, 20);
 
         self::assertSame(0, $result['pagination']['totalItems']);
     }
@@ -75,7 +90,9 @@ final class ConversationListServiceTest extends TestCase
         });
 
         $service = new ConversationListService($repo, $cache, $elastic);
-        $result = $service->getByUser($this->mockUser(), ['message' => 'foo'], 1, 20);
+        $result = $service->getByUser($this->mockUser(), [
+            'message' => 'foo',
+        ], 1, 20);
 
         self::assertSame([], $result['items']);
     }

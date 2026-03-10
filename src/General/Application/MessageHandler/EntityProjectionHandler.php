@@ -66,46 +66,57 @@ final readonly class EntityProjectionHandler
 
         if ($message->entityType === self::PLATFORM_APPLICATION) {
             $this->projectPlatformApplication($message);
+
             return;
         }
 
         if ($message->entityType === self::RECRUIT_JOB) {
             $this->projectRecruitJob($message);
+
             return;
         }
 
         if ($message->entityType === self::SHOP_PRODUCT) {
             $this->projectShopProduct($message);
+
             return;
         }
 
         if ($message->entityType === self::SHOP_CATEGORY || $message->entityType === self::SHOP_TAG) {
             $this->projectShopCatalog();
+
             return;
         }
 
         if ($message->entityType === self::CRM_TASK) {
             $this->projectCrmTask($message);
+
             return;
         }
 
-        if ($message->entityType === self::CRM_COMPANY
+        if (
+            $message->entityType === self::CRM_COMPANY
             || $message->entityType === self::CRM_PROJECT
             || $message->entityType === self::CRM_TASK_REQUEST
-            || $message->entityType === self::CRM_SPRINT) {
+            || $message->entityType === self::CRM_SPRINT
+        ) {
             $this->projectCrmSupportEntities();
+
             return;
         }
 
         if ($message->entityType === self::SCHOOL_EXAM) {
             $this->projectSchoolExam($message);
+
             return;
         }
 
-        if ($message->entityType === self::SCHOOL_CLASS
+        if (
+            $message->entityType === self::SCHOOL_CLASS
             || $message->entityType === self::SCHOOL_TEACHER
             || $message->entityType === self::SCHOOL_STUDENT
-            || $message->entityType === self::SCHOOL_GRADE) {
+            || $message->entityType === self::SCHOOL_GRADE
+        ) {
             $this->projectSchoolSupportEntities();
         }
     }
@@ -143,7 +154,7 @@ final readonly class EntityProjectionHandler
 
     private function projectRecruitJob(EntityMutationMessage $message): void
     {
-        $applicationSlug = (string) ($message->context['applicationSlug'] ?? '');
+        $applicationSlug = (string)($message->context['applicationSlug'] ?? '');
 
         if ($message instanceof EntityDeleted) {
             $this->elasticsearchService->delete(RecruitJobProjection::INDEX_NAME, $message->entityId);
@@ -187,6 +198,7 @@ final readonly class EntityProjectionHandler
         if ($message instanceof EntityDeleted) {
             $this->elasticsearchService->delete(ShopProductProjection::INDEX_NAME, $message->entityId);
             $this->cacheInvalidationService->invalidateShopProductListCaches();
+
             return;
         }
 
@@ -213,6 +225,7 @@ final readonly class EntityProjectionHandler
         if ($message instanceof EntityDeleted) {
             $this->elasticsearchService->delete(CrmTaskProjection::INDEX_NAME, $message->entityId);
             $this->cacheInvalidationService->invalidateCrmTaskListCaches();
+
             return;
         }
 
@@ -238,6 +251,7 @@ final readonly class EntityProjectionHandler
         if ($message instanceof EntityDeleted) {
             $this->elasticsearchService->delete(SchoolExamProjection::INDEX_NAME, $message->entityId);
             $this->cacheInvalidationService->invalidateSchoolExamListCaches();
+
             return;
         }
 
@@ -272,5 +286,4 @@ final readonly class EntityProjectionHandler
     {
         $this->cacheInvalidationService->invalidateSchoolExamListCaches();
     }
-
 }

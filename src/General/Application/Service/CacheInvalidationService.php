@@ -38,7 +38,6 @@ class CacheInvalidationService
         }
     }
 
-
     public function invalidateShopProductListCaches(): void
     {
         if ($this->cache instanceof TagAwareCacheInterface) {

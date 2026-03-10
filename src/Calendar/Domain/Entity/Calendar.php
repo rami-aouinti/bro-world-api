@@ -101,7 +101,9 @@ class Calendar implements EntityInterface
         return $this;
     }
 
-    /** @return Collection<int, Event>|ArrayCollection<int, Event> */
+    /**
+     * @return Collection<int, Event>|ArrayCollection<int, Event>
+     */
     public function getEvents(): Collection|ArrayCollection
     {
         return $this->events;

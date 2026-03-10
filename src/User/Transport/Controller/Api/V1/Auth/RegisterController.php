@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\User\Transport\Controller\Api\V1\Auth;
 
-use OpenApi\Attributes as OA;
 use App\General\Domain\Service\Interfaces\MailerServiceInterface;
 use App\General\Domain\Utils\JSON;
 use App\Role\Application\Security\Interfaces\RolesServiceInterface;
@@ -14,6 +13,7 @@ use App\User\Domain\Repository\Interfaces\UserRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use JsonException;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -133,7 +133,7 @@ class RegisterController
 
         while (!$this->userRepository->isUsernameAvailable($username)) {
             $username = sprintf('%s%d', $baseUsername, $index);
-            ++$index;
+            $index++;
         }
 
         return $username;

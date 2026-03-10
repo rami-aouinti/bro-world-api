@@ -29,7 +29,10 @@ final readonly class MarkAllNotificationsAsReadCommandHandler
             $this->messageService->sendMessage(new EntityPatched(
                 entityType: 'notification',
                 entityId: $command->actorUserId,
-                context: ['recipientId' => $command->actorUserId, 'updatedCount' => $updatedCount],
+                context: [
+                    'recipientId' => $command->actorUserId,
+                    'updatedCount' => $updatedCount,
+                ],
             ));
         }
     }

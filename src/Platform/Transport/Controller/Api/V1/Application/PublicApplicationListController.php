@@ -18,8 +18,9 @@ use Throwable;
 #[OA\Tag(name: 'Application')]
 class PublicApplicationListController
 {
-    public function __construct(private readonly ApplicationListService $applicationListService)
-    {
+    public function __construct(
+        private readonly ApplicationListService $applicationListService
+    ) {
     }
 
     #[Route(path: '/v1/application/public', methods: [Request::METHOD_GET])]
@@ -97,7 +98,9 @@ class PublicApplicationListController
             ),
         ],
     )]
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     public function __invoke(Request $request): JsonResponse
     {
         return new JsonResponse($this->applicationListService->getPublicList($request));

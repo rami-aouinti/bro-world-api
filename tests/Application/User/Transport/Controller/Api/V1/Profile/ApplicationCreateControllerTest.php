@@ -31,8 +31,12 @@ class ApplicationCreateControllerTest extends WebTestCase
             'title' => 'App with calendar and chat',
             'description' => 'Provisioning integration test',
             'plugins' => [
-                ['pluginId' => '50000000-0000-1000-8000-000000000001'],
-                ['pluginId' => '50000000-0000-1000-8000-000000000002'],
+                [
+                    'pluginId' => '50000000-0000-1000-8000-000000000001',
+                ],
+                [
+                    'pluginId' => '50000000-0000-1000-8000-000000000002',
+                ],
             ],
         ];
 
@@ -65,7 +69,11 @@ class ApplicationCreateControllerTest extends WebTestCase
         $provisioningService->provision($application, [PluginKey::CALENDAR, PluginKey::CHAT]);
         $entityManager->flush();
 
-        self::assertCount(1, $calendarRepository->findBy(['application' => $application]));
-        self::assertCount(1, $chatRepository->findBy(['application' => $application]));
+        self::assertCount(1, $calendarRepository->findBy([
+            'application' => $application,
+        ]));
+        self::assertCount(1, $chatRepository->findBy([
+            'application' => $application,
+        ]));
     }
 }

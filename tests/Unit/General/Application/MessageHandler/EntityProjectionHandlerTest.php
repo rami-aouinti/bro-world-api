@@ -16,8 +16,8 @@ use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Entity\Platform;
 use App\Platform\Infrastructure\Repository\ApplicationRepository;
 use App\Recruit\Application\Projection\RecruitJobProjection;
-use App\Recruit\Domain\Entity\Recruit;
 use App\Recruit\Domain\Entity\Job;
+use App\Recruit\Domain\Entity\Recruit;
 use App\Recruit\Infrastructure\Repository\JobRepository;
 use PHPUnit\Framework\TestCase;
 
@@ -89,7 +89,9 @@ final class EntityProjectionHandlerTest extends TestCase
             $guard,
         );
 
-        $handler(new EntityDeleted('recruit_job', 'job-1', 'evt_2', ['applicationSlug' => 'slug-1']));
+        $handler(new EntityDeleted('recruit_job', 'job-1', 'evt_2', [
+            'applicationSlug' => 'slug-1',
+        ]));
     }
 
     public function testThatItIsIdempotentForRetries(): void
@@ -124,7 +126,9 @@ final class EntityProjectionHandlerTest extends TestCase
             $guard,
         );
 
-        $message = new EntityCreated('recruit_job', 'job-1', 'evt_same', ['applicationSlug' => 'slug-1']);
+        $message = new EntityCreated('recruit_job', 'job-1', 'evt_same', [
+            'applicationSlug' => 'slug-1',
+        ]);
         $handler($message);
         $handler($message);
     }

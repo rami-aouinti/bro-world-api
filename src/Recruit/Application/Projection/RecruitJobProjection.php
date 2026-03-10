@@ -15,17 +15,39 @@ final class RecruitJobProjection
     {
         return [
             'properties' => [
-                'id' => ['type' => 'keyword'],
-                'slug' => ['type' => 'keyword'],
-                'title' => ['type' => 'text'],
-                'summary' => ['type' => 'text'],
-                'location' => ['type' => 'text'],
-                'contractType' => ['type' => 'keyword'],
-                'workMode' => ['type' => 'keyword'],
-                'schedule' => ['type' => 'keyword'],
-                'tags' => ['type' => 'keyword'],
-                'applicationSlug' => ['type' => 'keyword'],
-                'updatedAt' => ['type' => 'date'],
+                'id' => [
+                    'type' => 'keyword',
+                ],
+                'slug' => [
+                    'type' => 'keyword',
+                ],
+                'title' => [
+                    'type' => 'text',
+                ],
+                'summary' => [
+                    'type' => 'text',
+                ],
+                'location' => [
+                    'type' => 'text',
+                ],
+                'contractType' => [
+                    'type' => 'keyword',
+                ],
+                'workMode' => [
+                    'type' => 'keyword',
+                ],
+                'schedule' => [
+                    'type' => 'keyword',
+                ],
+                'tags' => [
+                    'type' => 'keyword',
+                ],
+                'applicationSlug' => [
+                    'type' => 'keyword',
+                ],
+                'updatedAt' => [
+                    'type' => 'date',
+                ],
             ],
         ];
     }

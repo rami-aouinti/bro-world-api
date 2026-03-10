@@ -28,7 +28,8 @@ final readonly class CreateBlogCommentCommandHandler
         private UserRepository $userRepository,
         private BlogNotificationService $blogNotificationService,
         private CacheInvalidationService $cacheInvalidationService,
-    ) {}
+    ) {
+    }
 
     public function __invoke(CreateBlogCommentCommand $command): void
     {

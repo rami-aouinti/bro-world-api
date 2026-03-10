@@ -22,9 +22,12 @@ final readonly class BlogReadService
         private CacheInterface $cache,
         private ElasticsearchServiceInterface $elasticsearchService,
         private CacheKeyConventionService $cacheKeyConventionService,
-    ) {}
+    ) {
+    }
 
-    /** @throws InvalidArgumentException */
+    /**
+     * @throws InvalidArgumentException
+     */
     public function getGeneralBlogWithTree(?User $currentUser = null): array
     {
         $cacheKey = $this->buildBlogCacheKey('general', $currentUser);
@@ -44,7 +47,9 @@ final readonly class BlogReadService
         });
     }
 
-    /** @throws InvalidArgumentException */
+    /**
+     * @throws InvalidArgumentException
+     */
     public function getByApplicationSlug(string $applicationSlug, ?User $currentUser = null): array
     {
         $cacheKey = $this->buildBlogCacheKey('app/' . $applicationSlug, $currentUser);
@@ -94,7 +99,9 @@ final readonly class BlogReadService
         return $this->cacheKeyConventionService->buildPrivateBlogKey($currentUser->getUsername(), $scope);
     }
 
-    /** @param array<int, BlogComment> $comments */
+    /**
+     * @param array<int, BlogComment> $comments
+     */
     private function normalizeComments(array $comments, ?string $parentId, ?User $currentUser): array
     {
         $filtered = array_filter($comments, static fn (BlogComment $comment): bool => $comment->getParent()?->getId() === $parentId);
@@ -121,7 +128,7 @@ final readonly class BlogReadService
 
     private function isAuthor(User $author, ?User $currentUser): bool
     {
-        return null !== $currentUser && $author->getId() === $currentUser->getId();
+        return $currentUser !== null && $author->getId() === $currentUser->getId();
     }
 
     private function normalizeAuthor(User $author): array

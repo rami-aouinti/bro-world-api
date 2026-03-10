@@ -13,5 +13,8 @@ class BlogReactionRepository extends BaseRepository
     protected static string $entityName = BlogReaction::class;
     protected static array $searchColumns = ['id', 'type'];
 
-    public function __construct(protected ManagerRegistry $managerRegistry) {}
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
+    }
 }

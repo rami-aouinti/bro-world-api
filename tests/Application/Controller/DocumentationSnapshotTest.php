@@ -22,7 +22,7 @@ class DocumentationSnapshotTest extends WebTestCase
 
         static::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
-        $payload = json_decode((string) $client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $payload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $paths = $payload['paths'] ?? [];
 
         $snapshot = [

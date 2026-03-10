@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Chat\Application\Service;
 
-use App\Chat\Domain\Entity\Conversation;
 use App\Chat\Domain\Entity\ChatMessage;
 use App\Chat\Domain\Entity\ChatMessageReaction;
+use App\Chat\Domain\Entity\Conversation;
 use App\Chat\Domain\Entity\ConversationParticipant;
 use App\Chat\Domain\Repository\Interfaces\ConversationRepositoryInterface;
 use App\General\Application\Service\CacheKeyConventionService;
@@ -94,7 +94,7 @@ final readonly class ConversationListService
 
         $cacheKey = $user !== null
             ? $this->cacheKeyConventionService->buildPrivateConversationKey($user->getUsername(), $cachePayload)
-            : 'conversation_list_' . md5((string) json_encode($cachePayload, JSON_THROW_ON_ERROR));
+            : 'conversation_list_' . md5((string)json_encode($cachePayload, JSON_THROW_ON_ERROR));
 
         /** @var array<string, mixed> $result */
         $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($accessContext, $user, $chatId, $filters, $page, $limit): array {
@@ -136,7 +136,7 @@ final readonly class ConversationListService
                     'page' => $page,
                     'limit' => $limit,
                     'totalItems' => $totalItems,
-                    'totalPages' => $totalItems > 0 ? (int) ceil($totalItems / $limit) : 0,
+                    'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
                 ],
             ];
         });
@@ -164,7 +164,11 @@ final readonly class ConversationListService
                     'query' => [
                         'bool' => [
                             'must' => [
-                                ['match_phrase_prefix' => ['message' => $filters['message']]],
+                                [
+                                    'match_phrase_prefix' => [
+                                        'message' => $filters['message'],
+                                    ],
+                                ],
                             ],
                         ],
                     ],
@@ -216,7 +220,7 @@ final readonly class ConversationListService
                                 'firstName' => $participantUser?->getFirstName(),
                                 'lastName' => $participantUser?->getLastName(),
                                 'photo' => $participantUser?->getPhoto(),
-                                'owner' => null !== $connectedUserId && $participantUserId === $connectedUserId,
+                                'owner' => $connectedUserId !== null && $participantUserId === $connectedUserId,
                             ],
                         ];
                     },
@@ -251,7 +255,7 @@ final readonly class ConversationListService
                                 'firstName' => $sender?->getFirstName(),
                                 'lastName' => $sender?->getLastName(),
                                 'photo' => $sender?->getPhoto(),
-                                'owner' => null !== $connectedUserId && $senderId === $connectedUserId,
+                                'owner' => $connectedUserId !== null && $senderId === $connectedUserId,
                             ],
                             'attachments' => $message->getAttachments(),
                             'read' => $message->isRead(),

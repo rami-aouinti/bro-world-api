@@ -22,7 +22,8 @@ class BadgeRepository extends BaseRepository implements BadgeRepositoryInterface
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

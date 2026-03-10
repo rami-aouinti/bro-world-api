@@ -17,8 +17,9 @@ use function str_starts_with;
 
 class PhotoUploaderService
 {
-    public function __construct(private readonly MediaUploaderService $mediaUploaderService)
-    {
+    public function __construct(
+        private readonly MediaUploaderService $mediaUploaderService
+    ) {
     }
 
     public function upload(Request $request, UploadedFile $photo, string $relativeDirectory): string
@@ -39,16 +40,16 @@ class PhotoUploaderService
 
     private function isImageFile(UploadedFile $photo): bool
     {
-        if (str_starts_with((string) $photo->getMimeType(), 'image/')) {
+        if (str_starts_with((string)$photo->getMimeType(), 'image/')) {
             return true;
         }
 
-        if (str_starts_with((string) $photo->getClientMimeType(), 'image/')) {
+        if (str_starts_with((string)$photo->getClientMimeType(), 'image/')) {
             return true;
         }
 
         if (function_exists('exif_imagetype')) {
-            return false !== exif_imagetype($photo->getPathname());
+            return exif_imagetype($photo->getPathname()) !== false;
         }
 
         return false;

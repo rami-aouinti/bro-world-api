@@ -34,8 +34,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class UserConversationListController
 {
-    public function __construct(private readonly ConversationListService $conversationListService)
-    {
+    public function __construct(
+        private readonly ConversationListService $conversationListService
+    ) {
     }
 
     /**
@@ -48,7 +49,7 @@ class UserConversationListController
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
         $filters = [
-            'message' => trim((string) $request->query->get('message', '')),
+            'message' => trim((string)$request->query->get('message', '')),
         ];
 
         return ConversationJsonResponseFactory::create($this->conversationListService->getByUser($loggedInUser, $filters, $page, $limit));

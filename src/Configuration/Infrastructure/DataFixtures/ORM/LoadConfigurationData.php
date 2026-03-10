@@ -20,6 +20,60 @@ use Throwable;
 final class LoadConfigurationData extends Fixture implements OrderedFixtureInterface
 {
     /**
+     * @var array<int, array{uuid: non-empty-string, key: non-empty-string, value: array<string, mixed>, scope: ConfigurationScope, private: bool}>
+     */
+    private const array DATA = [
+        [
+            'uuid' => '50000000-0000-1000-8000-000000000001',
+            'key' => 'system.default.locale',
+            'value' => [
+                'locale' => 'en',
+            ],
+            'scope' => ConfigurationScope::SYSTEM,
+            'private' => false,
+        ],
+        [
+            'uuid' => '50000000-0000-1000-8000-000000000002',
+            'key' => 'public.branding',
+            'value' => [
+                'title' => 'BRO World',
+                'theme' => 'dark',
+            ],
+            'scope' => ConfigurationScope::PUBLIC,
+            'private' => false,
+        ],
+        [
+            'uuid' => '50000000-0000-1000-8000-000000000003',
+            'key' => 'plugin.crm.toggles',
+            'value' => [
+                'featureA' => true,
+                'featureB' => false,
+            ],
+            'scope' => ConfigurationScope::PLUGIN,
+            'private' => false,
+        ],
+        [
+            'uuid' => '50000000-0000-1000-8000-000000000004',
+            'key' => 'user.dashboard.preferences',
+            'value' => [
+                'layout' => 'compact',
+                'cards' => ['sales', 'tasks'],
+            ],
+            'scope' => ConfigurationScope::USER,
+            'private' => false,
+        ],
+        [
+            'uuid' => '50000000-0000-1000-8000-000000000005',
+            'key' => 'platform.secrets',
+            'value' => [
+                'apiSecret' => 'secret-value',
+                'rotation' => 30,
+            ],
+            'scope' => ConfigurationScope::PLATFORM,
+            'private' => true,
+        ],
+    ];
+    /**
      * @var array<non-empty-string, non-empty-string>
      */
     public static array $uuids = [
@@ -28,47 +82,6 @@ final class LoadConfigurationData extends Fixture implements OrderedFixtureInter
         'plugin-crm-toggles' => '50000000-0000-1000-8000-000000000003',
         'user-dashboard-preferences' => '50000000-0000-1000-8000-000000000004',
         'platform-secrets' => '50000000-0000-1000-8000-000000000005',
-    ];
-
-    /**
-     * @var array<int, array{uuid: non-empty-string, key: non-empty-string, value: array<string, mixed>, scope: ConfigurationScope, private: bool}>
-     */
-    private const array DATA = [
-        [
-            'uuid' => '50000000-0000-1000-8000-000000000001',
-            'key' => 'system.default.locale',
-            'value' => ['locale' => 'en'],
-            'scope' => ConfigurationScope::SYSTEM,
-            'private' => false,
-        ],
-        [
-            'uuid' => '50000000-0000-1000-8000-000000000002',
-            'key' => 'public.branding',
-            'value' => ['title' => 'BRO World', 'theme' => 'dark'],
-            'scope' => ConfigurationScope::PUBLIC,
-            'private' => false,
-        ],
-        [
-            'uuid' => '50000000-0000-1000-8000-000000000003',
-            'key' => 'plugin.crm.toggles',
-            'value' => ['featureA' => true, 'featureB' => false],
-            'scope' => ConfigurationScope::PLUGIN,
-            'private' => false,
-        ],
-        [
-            'uuid' => '50000000-0000-1000-8000-000000000004',
-            'key' => 'user.dashboard.preferences',
-            'value' => ['layout' => 'compact', 'cards' => ['sales', 'tasks']],
-            'scope' => ConfigurationScope::USER,
-            'private' => false,
-        ],
-        [
-            'uuid' => '50000000-0000-1000-8000-000000000005',
-            'key' => 'platform.secrets',
-            'value' => ['apiSecret' => 'secret-value', 'rotation' => 30],
-            'scope' => ConfigurationScope::PLATFORM,
-            'private' => true,
-        ],
     ];
 
     /**

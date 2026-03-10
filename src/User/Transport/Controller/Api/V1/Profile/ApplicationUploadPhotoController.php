@@ -21,7 +21,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-
 #[AsController]
 #[OA\Tag(name: 'Profile')]
 class ApplicationUploadPhotoController

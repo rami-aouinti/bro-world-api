@@ -24,7 +24,8 @@ class PageLanguageRepository extends BaseRepository implements PageLanguageRepos
         'label',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

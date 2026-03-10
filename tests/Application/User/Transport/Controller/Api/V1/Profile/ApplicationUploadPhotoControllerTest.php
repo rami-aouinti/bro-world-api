@@ -45,7 +45,9 @@ class ApplicationUploadPhotoControllerTest extends WebTestCase
     #[TestDox('Test that owner can upload application photo when MIME detection fallback is needed.')]
     public function testThatOwnerCanUploadApplicationPhoto(): void
     {
-        $client = $this->getTestClient('john-root', 'password-root', null, ['CONTENT_TYPE' => 'multipart/form-data']);
+        $client = $this->getTestClient('john-root', 'password-root', null, [
+            'CONTENT_TYPE' => 'multipart/form-data',
+        ]);
 
         $tmpImage = sys_get_temp_dir() . '/application_upload_' . bin2hex(random_bytes(8)) . '.png';
         file_put_contents($tmpImage, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO6p8b8AAAAASUVORK5CYII=', true));
@@ -81,7 +83,7 @@ class ApplicationUploadPhotoControllerTest extends WebTestCase
         $photoPath = parse_url($responseData['photo'], PHP_URL_PATH);
         self::assertIsString($photoPath);
 
-        $projectDir = (string) static::getContainer()->getParameter('kernel.project_dir');
+        $projectDir = (string)static::getContainer()->getParameter('kernel.project_dir');
         $absolutePhotoPath = $projectDir . '/public' . $photoPath;
 
         self::assertFileExists($absolutePhotoPath);
@@ -97,7 +99,9 @@ class ApplicationUploadPhotoControllerTest extends WebTestCase
     #[TestDox('Test that non owner cannot upload application photo.')]
     public function testThatNonOwnerCannotUploadApplicationPhoto(): void
     {
-        $client = $this->getTestClient('john-user', 'password-user', null, ['CONTENT_TYPE' => 'multipart/form-data']);
+        $client = $this->getTestClient('john-user', 'password-user', null, [
+            'CONTENT_TYPE' => 'multipart/form-data',
+        ]);
 
         $tmpImage = sys_get_temp_dir() . '/application_upload_' . bin2hex(random_bytes(8)) . '.png';
         file_put_contents($tmpImage, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO6p8b8AAAAASUVORK5CYII=', true));

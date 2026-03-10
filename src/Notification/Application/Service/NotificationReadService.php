@@ -10,7 +10,9 @@ use function array_map;
 
 final readonly class NotificationReadService
 {
-    /** @param Notification[] $notifications */
+    /**
+     * @param Notification[] $notifications
+     */
     public function normalizeList(array $notifications): array
     {
         return array_map(fn (Notification $notification): array => $this->normalize($notification), $notifications);

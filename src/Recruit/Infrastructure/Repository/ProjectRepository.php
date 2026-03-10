@@ -22,7 +22,8 @@ class ProjectRepository extends BaseRepository implements ProjectRepositoryInter
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

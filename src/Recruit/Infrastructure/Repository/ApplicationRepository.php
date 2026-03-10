@@ -22,7 +22,8 @@ class ApplicationRepository extends BaseRepository implements ApplicationReposit
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

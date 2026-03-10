@@ -42,10 +42,26 @@ class Teacher implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getName(): string { return $this->name; }
-    public function setName(string $name): self { $this->name = $name; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function setName(string $name): self
+    {
+        $this->name = $name;
 
-    /** @return Collection<int, SchoolClass>|ArrayCollection<int, SchoolClass> */
-    public function getClasses(): Collection|ArrayCollection { return $this->classes; }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, SchoolClass>|ArrayCollection<int, SchoolClass>
+     */
+    public function getClasses(): Collection|ArrayCollection
+    {
+        return $this->classes;
+    }
 }

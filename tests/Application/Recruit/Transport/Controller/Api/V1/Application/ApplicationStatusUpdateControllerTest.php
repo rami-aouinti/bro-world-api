@@ -20,7 +20,9 @@ use Throwable;
 
 class ApplicationStatusUpdateControllerTest extends WebTestCase
 {
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that transition to DISCUSSION creates conversation and participants for owner and applicant.')]
     public function testThatTransitionToDiscussionCreatesConversation(): void
     {
@@ -58,7 +60,9 @@ class ApplicationStatusUpdateControllerTest extends WebTestCase
         self::assertContains($recruitApplication->getApplicant()->getUser()->getId(), $participantUserIds);
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that repeated transition to DISCUSSION is idempotent and does not duplicate conversation or participants.')]
     public function testThatSecondTransitionToDiscussionDoesNotDuplicateConversation(): void
     {
@@ -97,7 +101,9 @@ class ApplicationStatusUpdateControllerTest extends WebTestCase
         self::assertCount(2, $participants);
     }
 
-    /** @return array{0: RecruitApplication, 1: PlatformApplication} */
+    /**
+     * @return array{0: RecruitApplication, 1: PlatformApplication}
+     */
     private function prepareApplicationForDiscussionTransition(): array
     {
         self::bootKernel();

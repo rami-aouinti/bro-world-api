@@ -22,7 +22,8 @@ class CompanyRepository extends BaseRepository implements CompanyRepositoryInter
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

@@ -20,7 +20,6 @@ use Doctrine\Persistence\ObjectManager;
 use Override;
 use Throwable;
 
-use function sprintf;
 use function str_contains;
 
 /**
@@ -53,14 +52,26 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'ownerReference' => 'User-john-root',
             'platformReference' => 'Platform-CR-CRM 1',
             'appConfigurations' => [
-                ['uuid' => '61000000-0000-1000-8000-000000000001', 'key' => 'application.crm.theme', 'value' => ['theme' => 'dark']],
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000001',
+                    'key' => 'application.crm.theme',
+                    'value' => [
+                        'theme' => 'dark',
+                    ],
+                ],
             ],
             'plugins' => [
                 [
                     'uuid' => '62000000-0000-1000-8000-000000000001',
                     'reference' => 'Plugin-CRM-Assistant',
                     'configurations' => [
-                        ['uuid' => '63000000-0000-1000-8000-000000000001', 'key' => 'plugin.crm-assistant.mode', 'value' => ['assistant' => 'sales']],
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000001',
+                            'key' => 'plugin.crm-assistant.mode',
+                            'value' => [
+                                'assistant' => 'sales',
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -75,14 +86,24 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'ownerReference' => 'User-john-admin',
             'platformReference' => 'Platform-CR-CRM 1',
             'appConfigurations' => [
-                ['uuid' => '61000000-0000-1000-8000-000000000002', 'key' => 'application.crm.forecast', 'value' => ['enabled' => true]],
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000002',
+                    'key' => 'application.crm.forecast',
+                    'value' => [
+                        'enabled' => true,
+                    ],
+                ],
             ],
             'plugins' => [
                 [
                     'uuid' => '62000000-0000-1000-8000-000000000002',
                     'reference' => 'Plugin-Analytics-Booster',
                     'configurations' => [
-                        ['uuid' => '63000000-0000-1000-8000-000000000002', 'key' => 'plugin.analytics.widgets', 'value' => ['pipeline', 'wonDeals']],
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000002',
+                            'key' => 'plugin.analytics.widgets',
+                            'value' => ['pipeline', 'wonDeals'],
+                        ],
                     ],
                 ],
             ],
@@ -97,14 +118,24 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'ownerReference' => 'User-john-user',
             'platformReference' => 'Platform-CR-CRM 2',
             'appConfigurations' => [
-                ['uuid' => '61000000-0000-1000-8000-000000000003', 'key' => 'application.crm.support', 'value' => ['slaHours' => 24]],
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000003',
+                    'key' => 'application.crm.support',
+                    'value' => [
+                        'slaHours' => 24,
+                    ],
+                ],
             ],
             'plugins' => [
                 [
                     'uuid' => '62000000-0000-1000-8000-000000000003',
                     'reference' => 'Plugin-Knowledge-Base-Connector',
                     'configurations' => [
-                        ['uuid' => '63000000-0000-1000-8000-000000000003', 'key' => 'plugin.kb.categories', 'value' => ['support', 'faq']],
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000003',
+                            'key' => 'plugin.kb.categories',
+                            'value' => ['support', 'faq'],
+                        ],
                     ],
                 ],
             ],
@@ -119,14 +150,26 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'ownerReference' => 'User-john-root',
             'platformReference' => 'Platform-SH-Shop Principal',
             'appConfigurations' => [
-                ['uuid' => '61000000-0000-1000-8000-000000000004', 'key' => 'application.shop.checkout', 'value' => ['guestCheckout' => true]],
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000004',
+                    'key' => 'application.shop.checkout',
+                    'value' => [
+                        'guestCheckout' => true,
+                    ],
+                ],
             ],
             'plugins' => [
                 [
                     'uuid' => '62000000-0000-1000-8000-000000000004',
                     'reference' => 'Plugin-Knowledge-Base-Connector',
                     'configurations' => [
-                        ['uuid' => '63000000-0000-1000-8000-000000000004', 'key' => 'plugin.kb.sync', 'value' => ['intervalMinutes' => 30]],
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000004',
+                            'key' => 'plugin.kb.sync',
+                            'value' => [
+                                'intervalMinutes' => 30,
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -141,7 +184,13 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'ownerReference' => 'User-john-api',
             'platformReference' => 'Platform-SH-Shop Principal',
             'appConfigurations' => [
-                ['uuid' => '61000000-0000-1000-8000-000000000005', 'key' => 'application.shop.catalog', 'value' => ['autoClassify' => false]],
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000005',
+                    'key' => 'application.shop.catalog',
+                    'value' => [
+                        'autoClassify' => false,
+                    ],
+                ],
             ],
             'plugins' => [],
         ],
@@ -155,14 +204,26 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'ownerReference' => 'User-john-logged',
             'platformReference' => 'Platform-SH-Shop Principal',
             'appConfigurations' => [
-                ['uuid' => '61000000-0000-1000-8000-000000000006', 'key' => 'application.shop.orders', 'value' => ['fraudScore' => true]],
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000006',
+                    'key' => 'application.shop.orders',
+                    'value' => [
+                        'fraudScore' => true,
+                    ],
+                ],
             ],
             'plugins' => [
                 [
                     'uuid' => '62000000-0000-1000-8000-000000000006',
                     'reference' => 'Plugin-Analytics-Booster',
                     'configurations' => [
-                        ['uuid' => '63000000-0000-1000-8000-000000000006', 'key' => 'plugin.analytics.orders', 'value' => ['daily' => true]],
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000006',
+                            'key' => 'plugin.analytics.orders',
+                            'value' => [
+                                'daily' => true,
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -177,7 +238,13 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'ownerReference' => 'User-john-root',
             'platformReference' => 'Platform-SC-School Principal',
             'appConfigurations' => [
-                ['uuid' => '61000000-0000-1000-8000-000000000007', 'key' => 'application.school.schedule', 'value' => ['timezone' => 'Europe/Paris']],
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000007',
+                    'key' => 'application.school.schedule',
+                    'value' => [
+                        'timezone' => 'Europe/Paris',
+                    ],
+                ],
             ],
             'plugins' => [],
         ],
@@ -191,14 +258,26 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'ownerReference' => 'User-john-admin',
             'platformReference' => 'Platform-SC-School Principal',
             'appConfigurations' => [
-                ['uuid' => '61000000-0000-1000-8000-000000000008', 'key' => 'application.school.course', 'value' => ['semester' => 'S1']],
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000008',
+                    'key' => 'application.school.course',
+                    'value' => [
+                        'semester' => 'S1',
+                    ],
+                ],
             ],
             'plugins' => [
                 [
                     'uuid' => '62000000-0000-1000-8000-000000000008',
                     'reference' => 'Plugin-Private-Beta-Plugin',
                     'configurations' => [
-                        ['uuid' => '63000000-0000-1000-8000-000000000008', 'key' => 'plugin.beta.flags', 'value' => ['classAssistant' => true]],
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000008',
+                            'key' => 'plugin.beta.flags',
+                            'value' => [
+                                'classAssistant' => true,
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -213,7 +292,13 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'ownerReference' => 'User-john-user',
             'platformReference' => 'Platform-SC-School Principal',
             'appConfigurations' => [
-                ['uuid' => '61000000-0000-1000-8000-000000000009', 'key' => 'application.school.grades', 'value' => ['scale' => 20]],
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000009',
+                    'key' => 'application.school.grades',
+                    'value' => [
+                        'scale' => 20,
+                    ],
+                ],
             ],
             'plugins' => [],
         ],
@@ -227,14 +312,26 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'ownerReference' => 'User-john-root',
             'platformReference' => 'Platform-RE-Recruit Principal',
             'appConfigurations' => [
-                ['uuid' => '61000000-0000-1000-8000-000000000010', 'key' => 'application.recruit.visibility', 'value' => ['publicJobs' => true]],
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000010',
+                    'key' => 'application.recruit.visibility',
+                    'value' => [
+                        'publicJobs' => true,
+                    ],
+                ],
             ],
             'plugins' => [
                 [
                     'uuid' => '62000000-0000-1000-8000-000000000010',
                     'reference' => 'Plugin-CRM-Assistant',
                     'configurations' => [
-                        ['uuid' => '63000000-0000-1000-8000-000000000010', 'key' => 'plugin.crm-assistant.recruit', 'value' => ['rankingHelp' => true]],
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000010',
+                            'key' => 'plugin.crm-assistant.recruit',
+                            'value' => [
+                                'rankingHelp' => true,
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -249,14 +346,26 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'ownerReference' => 'User-john-admin',
             'platformReference' => 'Platform-RE-Recruit Principal',
             'appConfigurations' => [
-                ['uuid' => '61000000-0000-1000-8000-000000000011', 'key' => 'application.recruit.pipeline', 'value' => ['stages' => ['screening', 'interview']]],
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000011',
+                    'key' => 'application.recruit.pipeline',
+                    'value' => [
+                        'stages' => ['screening', 'interview'],
+                    ],
+                ],
             ],
             'plugins' => [
                 [
                     'uuid' => '62000000-0000-1000-8000-000000000011',
                     'reference' => 'Plugin-Private-Beta-Plugin',
                     'configurations' => [
-                        ['uuid' => '63000000-0000-1000-8000-000000000011', 'key' => 'plugin.beta.recruit', 'value' => ['cvParsingV2' => true]],
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000011',
+                            'key' => 'plugin.beta.recruit',
+                            'value' => [
+                                'cvParsingV2' => true,
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -271,7 +380,13 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'ownerReference' => 'User-john-user',
             'platformReference' => 'Platform-RE-Recruit Principal',
             'appConfigurations' => [
-                ['uuid' => '61000000-0000-1000-8000-000000000012', 'key' => 'application.recruit.interview', 'value' => ['calendarSync' => false]],
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000012',
+                    'key' => 'application.recruit.interview',
+                    'value' => [
+                        'calendarSync' => false,
+                    ],
+                ],
             ],
             'plugins' => [],
         ],

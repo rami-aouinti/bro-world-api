@@ -45,12 +45,36 @@ class Student implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getSchoolClass(): ?SchoolClass { return $this->schoolClass; }
-    public function setSchoolClass(?SchoolClass $schoolClass): self { $this->schoolClass = $schoolClass; return $this; }
-    public function getName(): string { return $this->name; }
-    public function setName(string $name): self { $this->name = $name; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getSchoolClass(): ?SchoolClass
+    {
+        return $this->schoolClass;
+    }
+    public function setSchoolClass(?SchoolClass $schoolClass): self
+    {
+        $this->schoolClass = $schoolClass;
 
-    /** @return Collection<int, Grade>|ArrayCollection<int, Grade> */
-    public function getGrades(): Collection|ArrayCollection { return $this->grades; }
+        return $this;
+    }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Grade>|ArrayCollection<int, Grade>
+     */
+    public function getGrades(): Collection|ArrayCollection
+    {
+        return $this->grades;
+    }
 }

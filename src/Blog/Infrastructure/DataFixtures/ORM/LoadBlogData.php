@@ -58,7 +58,7 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
         foreach ($blogs as $blogIndex => $blog) {
             $postCount = $blog->getType() === BlogType::GENERAL ? 40 : 6;
 
-            for ($postIndex = 1; $postIndex <= $postCount; ++$postIndex) {
+            for ($postIndex = 1; $postIndex <= $postCount; $postIndex++) {
                 $author = $authors[($blogIndex + $postIndex) % count($authors)];
 
                 $post = (new BlogPost())
@@ -67,7 +67,7 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
                     ->setContent(sprintf('Fixture post %d for %s', $postIndex, $blog->getTitle()));
                 $manager->persist($post);
 
-                for ($tagIndex = 1; $tagIndex <= 2; ++$tagIndex) {
+                for ($tagIndex = 1; $tagIndex <= 2; $tagIndex++) {
                     $manager->persist((new BlogTag())
                         ->setBlog($blog)
                         ->setLabel(sprintf('tag-%d-%d-%d', $blogIndex + 1, $postIndex, $tagIndex)));

@@ -16,8 +16,9 @@ use function strtolower;
 
 class ResumeDocumentUploaderService
 {
-    public function __construct(private readonly MediaUploaderService $mediaUploaderService)
-    {
+    public function __construct(
+        private readonly MediaUploaderService $mediaUploaderService
+    ) {
     }
 
     public function upload(Request $request, UploadedFile $document, string $relativeDirectory): string
@@ -42,11 +43,11 @@ class ResumeDocumentUploaderService
 
     private function isPdfFile(UploadedFile $document): bool
     {
-        $mimeType = strtolower((string) $document->getMimeType());
-        $clientMimeType = strtolower((string) $document->getClientMimeType());
+        $mimeType = strtolower((string)$document->getMimeType());
+        $clientMimeType = strtolower((string)$document->getClientMimeType());
 
         return $mimeType === 'application/pdf'
             || $clientMimeType === 'application/pdf'
-            || str_contains(strtolower((string) $document->getClientOriginalName()), '.pdf');
+            || str_contains(strtolower((string)$document->getClientOriginalName()), '.pdf');
     }
 }

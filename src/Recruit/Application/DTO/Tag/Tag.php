@@ -12,8 +12,25 @@ use Override;
 class Tag extends RestDto
 {
     protected string $label = '';
-    public function getLabel(): string { return $this->label; }
-    public function setLabel(string $label): self { $this->setVisited('label'); $this->label = $label; return $this; }
+    public function getLabel(): string
+    {
+        return $this->label;
+    }
+    public function setLabel(string $label): self
+    {
+        $this->setVisited('label');
+        $this->label = $label;
+
+        return $this;
+    }
     #[Override]
-    public function load(EntityInterface $entity): self { if ($entity instanceof Entity) { $this->id=$entity->getId(); $this->label=$entity->getLabel(); } return $this; }
+    public function load(EntityInterface $entity): self
+    {
+        if ($entity instanceof Entity) {
+            $this->id = $entity->getId();
+            $this->label = $entity->getLabel();
+        }
+
+return $this;
+    }
 }

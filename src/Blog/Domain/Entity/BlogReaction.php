@@ -35,12 +35,42 @@ class BlogReaction implements EntityInterface
     #[ORM\Column(name: 'type', type: 'string', length: 40)]
     private string $type = 'like';
 
-    public function __construct() { $this->id = $this->createUuid(); }
-    #[Override] public function getId(): string { return $this->id->toString(); }
-    public function getComment(): BlogComment { return $this->comment; }
-    public function setComment(BlogComment $comment): self { $this->comment = $comment; return $this; }
-    public function getAuthor(): User { return $this->author; }
-    public function setAuthor(User $author): self { $this->author = $author; return $this; }
-    public function getType(): string { return $this->type; }
-    public function setType(string $type): self { $this->type = $type; return $this; }
+    public function __construct()
+    {
+        $this->id = $this->createUuid();
+    }
+    #[Override] public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getComment(): BlogComment
+    {
+        return $this->comment;
+    }
+    public function setComment(BlogComment $comment): self
+    {
+        $this->comment = $comment;
+
+        return $this;
+    }
+    public function getAuthor(): User
+    {
+        return $this->author;
+    }
+    public function setAuthor(User $author): self
+    {
+        $this->author = $author;
+
+        return $this;
+    }
+    public function getType(): string
+    {
+        return $this->type;
+    }
+    public function setType(string $type): self
+    {
+        $this->type = $type;
+
+        return $this;
+    }
 }

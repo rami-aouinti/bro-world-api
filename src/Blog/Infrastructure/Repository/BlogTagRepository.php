@@ -13,5 +13,8 @@ class BlogTagRepository extends BaseRepository
     protected static string $entityName = BlogTag::class;
     protected static array $searchColumns = ['id', 'label'];
 
-    public function __construct(protected ManagerRegistry $managerRegistry) {}
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
+    }
 }

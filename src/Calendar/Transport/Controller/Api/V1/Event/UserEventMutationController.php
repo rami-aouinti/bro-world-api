@@ -24,14 +24,15 @@ use Symfony\Component\Uid\Uuid;
 
 #[AsController]
 #[OA\Tag(name: 'Calendar Event')]
-#[OA\Post(path: '/v1/calendar/private/events', operationId: 'calendar_private_event_create', summary: 'Créer un événement personnel', tags: ['Calendar Event'], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['title','startAt','endAt'], properties: [new OA\Property(property: 'title', type: 'string', minLength: 1, maxLength: 255, example: 'Entretien RH'), new OA\Property(property: 'description', type: 'string', example: 'Point de cadrage'), new OA\Property(property: 'startAt', type: 'string', format: 'date-time', example: '2026-04-10T09:00:00+00:00'), new OA\Property(property: 'endAt', type: 'string', format: 'date-time', example: '2026-04-10T10:00:00+00:00'), new OA\Property(property: 'status', type: 'string', enum: ['confirmed','tentative','cancelled'], example: 'confirmed'), new OA\Property(property: 'location', type: 'string', nullable: true, example: 'Paris')])), responses: [new OA\Response(response: 202, description: 'Commande acceptée'), new OA\Response(response: 400, description: 'Payload invalide'), new OA\Response(response: 422, description: 'Règle date invalide')])]
+#[OA\Post(path: '/v1/calendar/private/events', operationId: 'calendar_private_event_create', summary: 'Créer un événement personnel', tags: ['Calendar Event'], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['title', 'startAt', 'endAt'], properties: [new OA\Property(property: 'title', type: 'string', minLength: 1, maxLength: 255, example: 'Entretien RH'), new OA\Property(property: 'description', type: 'string', example: 'Point de cadrage'), new OA\Property(property: 'startAt', type: 'string', format: 'date-time', example: '2026-04-10T09:00:00+00:00'), new OA\Property(property: 'endAt', type: 'string', format: 'date-time', example: '2026-04-10T10:00:00+00:00'), new OA\Property(property: 'status', type: 'string', enum: ['confirmed', 'tentative', 'cancelled'], example: 'confirmed'), new OA\Property(property: 'location', type: 'string', nullable: true, example: 'Paris')])), responses: [new OA\Response(response: 202, description: 'Commande acceptée'), new OA\Response(response: 400, description: 'Payload invalide'), new OA\Response(response: 422, description: 'Règle date invalide')])]
 #[OA\Patch(path: '/v1/calendar/private/events/{eventId}', operationId: 'calendar_private_event_patch', summary: 'Modifier un événement personnel', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'eventId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [new OA\Property(property: 'title', type: 'string', example: 'Entretien RH - décalé'), new OA\Property(property: 'startAt', type: 'string', format: 'date-time', example: '2026-04-10T09:30:00+00:00'), new OA\Property(property: 'endAt', type: 'string', format: 'date-time', example: '2026-04-10T10:30:00+00:00')])), responses: [new OA\Response(response: 202, description: 'Commande acceptée'), new OA\Response(response: 400, description: 'UUID/payload invalide')])]
 #[OA\Delete(path: '/v1/calendar/private/events/{eventId}', operationId: 'calendar_private_event_delete', summary: 'Supprimer un événement personnel', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'eventId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], responses: [new OA\Response(response: 202, description: 'Suppression acceptée')])]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class UserEventMutationController
 {
-    public function __construct(private readonly MessageServiceInterface $messageService)
-    {
+    public function __construct(
+        private readonly MessageServiceInterface $messageService
+    ) {
     }
 
     #[Route(path: '/v1/calendar/private/events', methods: [Request::METHOD_POST])]
@@ -47,14 +48,16 @@ class UserEventMutationController
             operationId: $operationId,
             actorUserId: $loggedInUser->getId(),
             title: $this->requireString($payload, 'title'),
-            description: (string) ($payload['description'] ?? ''),
+            description: (string)($payload['description'] ?? ''),
             startAt: $startAt,
             endAt: $endAt,
-            status: $this->parseStatus((string) ($payload['status'] ?? EventStatus::CONFIRMED->value)),
+            status: $this->parseStatus((string)($payload['status'] ?? EventStatus::CONFIRMED->value)),
             location: isset($payload['location']) && is_string($payload['location']) ? $payload['location'] : null,
         ));
 
-        return new JsonResponse(['operationId' => $operationId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     #[Route(path: '/v1/calendar/private/events/{eventId}', methods: [Request::METHOD_PATCH])]
@@ -81,7 +84,10 @@ class UserEventMutationController
             endAt: $endAt,
         ));
 
-        return new JsonResponse(['operationId' => $operationId, 'id' => $eventId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'id' => $eventId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     #[Route(path: '/v1/calendar/private/events/{eventId}', methods: [Request::METHOD_DELETE])]
@@ -96,7 +102,10 @@ class UserEventMutationController
             eventId: $eventId,
         ));
 
-        return new JsonResponse(['operationId' => $operationId, 'id' => $eventId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'id' => $eventId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     #[Route(path: '/v1/calendar/private/events/{eventId}/cancel', methods: [Request::METHOD_POST])]
@@ -111,10 +120,15 @@ class UserEventMutationController
             eventId: $eventId,
         ));
 
-        return new JsonResponse(['operationId' => $operationId, 'id' => $eventId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'id' => $eventId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
-    /** @param array<string, mixed> $payload */
+    /**
+     * @param array<string, mixed> $payload
+     */
     private function requireString(array $payload, string $field): string
     {
         $value = $payload[$field] ?? null;
@@ -125,7 +139,9 @@ class UserEventMutationController
         return $value;
     }
 
-    /** @param array<string, mixed> $payload */
+    /**
+     * @param array<string, mixed> $payload
+     */
     private function requireDate(array $payload, string $field): DateTimeImmutable
     {
         $value = $payload[$field] ?? null;

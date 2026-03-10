@@ -52,10 +52,13 @@ use Symfony\Component\Uid\Uuid;
     path: '/v1/configuration',
     operationId: 'configuration_create',
     summary: 'Créer une configuration',
-    requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['configurationKey','configurationValue','scope','private'], properties: [
+    requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['configurationKey', 'configurationValue', 'scope', 'private'], properties: [
         new OA\Property(property: 'configurationKey', type: 'string', minLength: 2, maxLength: 255, example: 'mail.smtp.timeout'),
-        new OA\Property(property: 'configurationValue', type: 'object', example: ['seconds' => 30, 'retry' => 3]),
-        new OA\Property(property: 'scope', type: 'string', enum: ['system','user','platform','plugin','public'], example: 'system'),
+        new OA\Property(property: 'configurationValue', type: 'object', example: [
+            'seconds' => 30,
+            'retry' => 3,
+        ]),
+        new OA\Property(property: 'scope', type: 'string', enum: ['system', 'user', 'platform', 'plugin', 'public'], example: 'system'),
         new OA\Property(property: 'private', type: 'boolean', example: false),
     ])),
     tags: ['Configuration Management'],
@@ -66,8 +69,10 @@ use Symfony\Component\Uid\Uuid;
     operationId: 'configuration_patch',
     summary: 'Modifier partiellement une configuration',
     requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [
-        new OA\Property(property: 'configurationValue', type: 'object', example: ['seconds' => 45]),
-        new OA\Property(property: 'scope', type: 'string', enum: ['system','user','platform','plugin','public'], example: 'platform'),
+        new OA\Property(property: 'configurationValue', type: 'object', example: [
+            'seconds' => 45,
+        ]),
+        new OA\Property(property: 'scope', type: 'string', enum: ['system', 'user', 'platform', 'plugin', 'public'], example: 'platform'),
         new OA\Property(property: 'private', type: 'boolean', example: true),
     ])),
     tags: ['Configuration Management'],
@@ -118,7 +123,9 @@ class ConfigurationController extends Controller
         $operationId = \Ramsey\Uuid\Uuid::uuid4()->toString();
         $this->messageService->sendMessage(new CreateConfigurationCommand($operationId, $restDto));
 
-        return new JsonResponse(['operationId' => $operationId], Response::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+        ], Response::HTTP_ACCEPTED);
     }
 
     public function patchMethod(
@@ -138,7 +145,10 @@ class ConfigurationController extends Controller
         $operationId = \Ramsey\Uuid\Uuid::uuid4()->toString();
         $this->messageService->sendMessage(new PatchConfigurationCommand($operationId, $id, $restDto));
 
-        return new JsonResponse(['operationId' => $operationId, 'id' => $id], Response::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'id' => $id,
+        ], Response::HTTP_ACCEPTED);
     }
 
     public function deleteMethod(Request $request, string $id, ?array $allowedHttpMethods = null): Response
@@ -150,6 +160,9 @@ class ConfigurationController extends Controller
         $operationId = \Ramsey\Uuid\Uuid::uuid4()->toString();
         $this->messageService->sendMessage(new DeleteConfigurationCommand($operationId, $id));
 
-        return new JsonResponse(['operationId' => $operationId, 'id' => $id], Response::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'id' => $id,
+        ], Response::HTTP_ACCEPTED);
     }
 }

@@ -18,9 +18,14 @@ class NotificationRepository extends BaseRepository
     protected static string $entityName = Notification::class;
     protected static array $searchColumns = ['id', 'title', 'description', 'type'];
 
-    public function __construct(protected ManagerRegistry $managerRegistry) {}
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
+    }
 
-    /** @return Notification[] */
+    /**
+     * @return Notification[]
+     */
     public function findByRecipient(User $user, int $limit = 50, int $offset = 0): array
     {
         $result = $this->createQueryBuilder('n')
@@ -37,7 +42,7 @@ class NotificationRepository extends BaseRepository
 
     public function countUnreadByRecipient(User $user): int
     {
-        return (int) $this->createQueryBuilder('n')
+        return (int)$this->createQueryBuilder('n')
             ->select('COUNT(n.id)')
             ->andWhere('n.recipient = :recipient')
             ->andWhere('n.isRead = :isRead')
@@ -65,5 +70,4 @@ class NotificationRepository extends BaseRepository
             ->getQuery()
             ->execute();
     }
-
 }

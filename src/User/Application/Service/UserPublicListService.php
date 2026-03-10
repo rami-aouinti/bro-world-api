@@ -31,11 +31,13 @@ readonly class UserPublicListService
     ) {
     }
 
-    /** @return array{users: array<int, array<string, string|null>>, filters: array<string, string>} */
+    /**
+     * @return array{users: array<int, array<string, string|null>>, filters: array<string, string>}
+     */
     public function getList(Request $request): array
     {
         $filters = [
-            'q' => trim((string) $request->query->get('q', '')),
+            'q' => trim((string)$request->query->get('q', '')),
         ];
 
         $cacheKey = $this->cacheKeyConventionService->buildPublicUserListKey($filters);
@@ -86,13 +88,17 @@ readonly class UserPublicListService
         ];
     }
 
-    /** @return array<int, string>|null */
+    /**
+     * @return array<int, string>|null
+     */
     private function searchIdsFromElastic(string $query): ?array
     {
         try {
             $body = [
                 'query' => $query === ''
-                    ? ['match_all' => (object) []]
+                    ? [
+                        'match_all' => (object)[],
+                    ]
                     : [
                         'multi_match' => [
                             'query' => $query,

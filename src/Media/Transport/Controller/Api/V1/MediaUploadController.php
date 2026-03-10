@@ -26,8 +26,9 @@ use function is_array;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class MediaUploadController
 {
-    public function __construct(private readonly MediaUploaderService $mediaUploaderService)
-    {
+    public function __construct(
+        private readonly MediaUploaderService $mediaUploaderService
+    ) {
     }
 
     #[Route(path: '/v1/media/upload', methods: [Request::METHOD_POST])]
@@ -88,7 +89,7 @@ class MediaUploadController
     public function __invoke(Request $request): JsonResponse
     {
         $files = $this->extractFiles($request);
-        if ([] === $files) {
+        if ($files === []) {
             throw new HttpException(Response::HTTP_BAD_REQUEST, 'No file found. Expected "file" or "files[]".');
         }
 
@@ -115,7 +116,9 @@ class MediaUploadController
         ], Response::HTTP_CREATED);
     }
 
-    /** @return list<UploadedFile> */
+    /**
+     * @return list<UploadedFile>
+     */
     private function extractFiles(Request $request): array
     {
         $files = [];

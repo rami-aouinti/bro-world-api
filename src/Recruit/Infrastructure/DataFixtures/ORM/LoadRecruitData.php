@@ -29,21 +29,52 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
 {
     private const int JOB_COUNT_PER_APPLICATION = 12;
 
-    /** @var array<int, array{name: string, logo: string, sector: string, size: string}> */
+    /**
+     * @var array<int, array{name: string, logo: string, sector: string, size: string}>
+     */
     private const array COMPANIES = [
-        ['name' => 'Aveyara Software GmbH', 'logo' => 'AS', 'sector' => 'IT & Tech', 'size' => '11-50 Mitarbeiter'],
-        ['name' => 'Bro Digital Studio', 'logo' => 'BD', 'sector' => 'Digital', 'size' => '51-200 Mitarbeiter'],
-        ['name' => 'Nordic Cloud Systems', 'logo' => 'NC', 'sector' => 'Cloud', 'size' => '201-500 Mitarbeiter'],
-        ['name' => 'FinOps Next', 'logo' => 'FN', 'sector' => 'FinTech', 'size' => '11-50 Mitarbeiter'],
-        ['name' => 'Green Mobility Tech', 'logo' => 'GM', 'sector' => 'Mobility', 'size' => '51-200 Mitarbeiter'],
+        [
+            'name' => 'Aveyara Software GmbH',
+            'logo' => 'AS',
+            'sector' => 'IT & Tech',
+            'size' => '11-50 Mitarbeiter',
+        ],
+        [
+            'name' => 'Bro Digital Studio',
+            'logo' => 'BD',
+            'sector' => 'Digital',
+            'size' => '51-200 Mitarbeiter',
+        ],
+        [
+            'name' => 'Nordic Cloud Systems',
+            'logo' => 'NC',
+            'sector' => 'Cloud',
+            'size' => '201-500 Mitarbeiter',
+        ],
+        [
+            'name' => 'FinOps Next',
+            'logo' => 'FN',
+            'sector' => 'FinTech',
+            'size' => '11-50 Mitarbeiter',
+        ],
+        [
+            'name' => 'Green Mobility Tech',
+            'logo' => 'GM',
+            'sector' => 'Mobility',
+            'size' => '51-200 Mitarbeiter',
+        ],
     ];
 
-    /** @var array<int, string> */
+    /**
+     * @var array<int, string>
+     */
     private const array TAGS = [
         'PHP', 'Laravel', 'React', 'Vue.js', 'Typescript', 'PostgreSQL', 'Docker', 'Kubernetes', 'AWS', 'CI/CD',
     ];
 
-    /** @var array<int, string> */
+    /**
+     * @var array<int, string>
+     */
     private const array BADGES = [
         'Bewerbungs-Update verfügbar',
         'Sei einer der ersten Bewerber',
@@ -52,10 +83,14 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
         'Remote Friendly',
     ];
 
-    /** @var array<int, string> */
+    /**
+     * @var array<int, string>
+     */
     private const array LOCATIONS = ['Stuttgart', 'Berlin', 'Hamburg', 'München', 'Köln', 'Frankfurt'];
 
-    /** @var array<int, string> */
+    /**
+     * @var array<int, string>
+     */
     private const array TITLES = [
         'Senior Full Stack Entwickler (m/w/d) - PHP/Laravel, React/Vue.js/Typescript',
         'Backend Engineer (m/w/d) - Symfony & API Platform',
@@ -129,7 +164,7 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
                 $manager->persist($recruit);
             }
 
-            for ($i = 1; $i <= self::JOB_COUNT_PER_APPLICATION; ++$i) {
+            for ($i = 1; $i <= self::JOB_COUNT_PER_APPLICATION; $i++) {
                 $loopIndex = ($applicationIndex * self::JOB_COUNT_PER_APPLICATION) + $i;
                 $title = self::TITLES[($loopIndex - 1) % count(self::TITLES)];
                 $company = $companies[($loopIndex - 1) % count($companies)];
@@ -189,8 +224,8 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
                 $job->addBadge($badges[($loopIndex - 1) % count($badges)]);
                 $job->addBadge($badges[$loopIndex % count($badges)]);
 
-                $tagStart = (int) floor($loopIndex % count($tags));
-                for ($offset = 0; $offset < 4; ++$offset) {
+                $tagStart = (int)floor($loopIndex % count($tags));
+                for ($offset = 0; $offset < 4; $offset++) {
                     $job->addTag($tags[($tagStart + $offset) % count($tags)]);
                 }
 
@@ -198,7 +233,7 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
                 $manager->persist($job);
                 $this->addReference(sprintf('Recruit-Job-%03d', $jobReferenceIndex), $job);
 
-                ++$jobReferenceIndex;
+                $jobReferenceIndex++;
             }
         }
 

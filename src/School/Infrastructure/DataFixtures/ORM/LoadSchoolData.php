@@ -19,7 +19,9 @@ use Override;
 
 final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
 {
-    /** @var array<non-empty-string, array<int, non-empty-string>> */
+    /**
+     * @var array<non-empty-string, array<int, non-empty-string>>
+     */
     private const array APPLICATION_KEYS_BY_PLATFORM = [
         PlatformKey::SCHOOL->value => [
             'school-campus-core',
@@ -85,7 +87,9 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
         return 11;
     }
 
-    /** @return array<int, Application> */
+    /**
+     * @return array<int, Application>
+     */
     private function getApplicationsByPlatform(PlatformKey $platformKey): array
     {
         $applications = [];

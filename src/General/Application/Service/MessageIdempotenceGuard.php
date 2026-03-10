@@ -9,8 +9,9 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 class MessageIdempotenceGuard
 {
-    public function __construct(private readonly CacheInterface $cache)
-    {
+    public function __construct(
+        private readonly CacheInterface $cache
+    ) {
     }
 
     public function shouldProcess(string $eventId): bool

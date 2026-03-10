@@ -36,7 +36,9 @@ final class ReindexNotificationsCommand extends Command
         $indexed = 0;
 
         /** @var Notification $notification */
-        foreach ($this->notificationRepository->findBy([], ['createdAt' => 'DESC']) as $notification) {
+        foreach ($this->notificationRepository->findBy([], [
+            'createdAt' => 'DESC',
+        ]) as $notification) {
             $this->elasticsearchService->index(NotificationProjection::INDEX_NAME, $notification->getId(), [
                 'id' => $notification->getId(),
                 'title' => $notification->getTitle(),
@@ -47,7 +49,7 @@ final class ReindexNotificationsCommand extends Command
                 'fromId' => $notification->getFrom()?->getId(),
                 'updatedAt' => $notification->getUpdatedAt()?->format(DATE_ATOM),
             ]);
-            ++$indexed;
+            $indexed++;
         }
 
         if ($input->isInteractive()) {

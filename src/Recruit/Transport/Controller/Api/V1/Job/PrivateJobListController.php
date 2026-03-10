@@ -19,8 +19,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class PrivateJobListController
 {
-    public function __construct(private readonly JobPublicListService $jobPublicListService)
-    {
+    public function __construct(
+        private readonly JobPublicListService $jobPublicListService
+    ) {
     }
 
     #[Route(path: '/v1/recruit/private/{applicationSlug}/jobs', methods: [Request::METHOD_GET])]

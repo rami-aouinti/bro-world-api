@@ -66,7 +66,6 @@ final class LoadNotificationData extends Fixture implements OrderedFixtureInterf
             'fromRef' => null,
             'read' => false,
         ],
-
     ];
 
     /**

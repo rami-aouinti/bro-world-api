@@ -58,11 +58,15 @@ class Application implements EntityInterface
     #[Assert\Length(min: 2, max: 255)]
     private string $title = '';
 
-    #[ORM\Column(name: 'slug', type: Types::STRING, length: 255, options: ['default' => ''])]
+    #[ORM\Column(name: 'slug', type: Types::STRING, length: 255, options: [
+        'default' => '',
+    ])]
     #[Assert\NotNull]
     private string $slug = '';
 
-    #[ORM\Column(name: 'description', type: Types::TEXT, options: ['default' => ''])]
+    #[ORM\Column(name: 'description', type: Types::TEXT, options: [
+        'default' => '',
+    ])]
     #[Assert\NotNull]
     private string $description = '';
 
@@ -76,11 +80,15 @@ class Application implements EntityInterface
     )]
     private string $photo = '';
 
-    #[ORM\Column(name: 'status', type: Types::STRING, length: 25, enumType: PlatformStatus::class, options: ['default' => PlatformStatus::ACTIVE->value])]
+    #[ORM\Column(name: 'status', type: Types::STRING, length: 25, enumType: PlatformStatus::class, options: [
+        'default' => PlatformStatus::ACTIVE->value,
+    ])]
     #[Assert\NotNull]
     private PlatformStatus $status = PlatformStatus::ACTIVE;
 
-    #[ORM\Column(name: 'private', type: Types::BOOLEAN, options: ['default' => false])]
+    #[ORM\Column(name: 'private', type: Types::BOOLEAN, options: [
+        'default' => false,
+    ])]
     #[Assert\NotNull]
     private bool $private = false;
 
@@ -96,7 +104,9 @@ class Application implements EntityInterface
     #[ORM\OneToMany(targetEntity: ApplicationPlugin::class, mappedBy: 'application', cascade: ['persist', 'remove'])]
     private Collection | ArrayCollection $applicationPlugins;
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     public function __construct()
     {
         $this->id = $this->createUuid();
@@ -229,7 +239,9 @@ class Application implements EntityInterface
         return $this;
     }
 
-    /** @return Collection<int, Configuration>|ArrayCollection<int, Configuration> */
+    /**
+     * @return Collection<int, Configuration>|ArrayCollection<int, Configuration>
+     */
     public function getConfigurations(): Collection | ArrayCollection
     {
         return $this->configurations;
@@ -245,7 +257,9 @@ class Application implements EntityInterface
         return $this;
     }
 
-    /** @return Collection<int, ApplicationPlugin>|ArrayCollection<int, ApplicationPlugin> */
+    /**
+     * @return Collection<int, ApplicationPlugin>|ArrayCollection<int, ApplicationPlugin>
+     */
     public function getApplicationPlugins(): Collection | ArrayCollection
     {
         return $this->applicationPlugins;

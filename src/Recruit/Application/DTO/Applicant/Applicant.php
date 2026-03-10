@@ -17,12 +17,39 @@ class Applicant extends RestDto
     protected ?Resume $resume = null;
     protected string $coverLetter = '';
 
-    public function getUser(): ?User { return $this->user; }
-    public function setUser(User $user): self { $this->setVisited('user'); $this->user = $user; return $this; }
-    public function getResume(): ?Resume { return $this->resume; }
-    public function setResume(Resume $resume): self { $this->setVisited('resume'); $this->resume = $resume; return $this; }
-    public function getCoverLetter(): string { return $this->coverLetter; }
-    public function setCoverLetter(string $coverLetter): self { $this->setVisited('coverLetter'); $this->coverLetter = $coverLetter; return $this; }
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+    public function setUser(User $user): self
+    {
+        $this->setVisited('user');
+        $this->user = $user;
+
+        return $this;
+    }
+    public function getResume(): ?Resume
+    {
+        return $this->resume;
+    }
+    public function setResume(Resume $resume): self
+    {
+        $this->setVisited('resume');
+        $this->resume = $resume;
+
+        return $this;
+    }
+    public function getCoverLetter(): string
+    {
+        return $this->coverLetter;
+    }
+    public function setCoverLetter(string $coverLetter): self
+    {
+        $this->setVisited('coverLetter');
+        $this->coverLetter = $coverLetter;
+
+        return $this;
+    }
 
     #[Override]
     public function load(EntityInterface $entity): self

@@ -29,7 +29,9 @@ final class ReindexElasticDomainsScheduledCommand extends Command
         parent::__construct();
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $message = $this->createScheduledCommand();
@@ -41,7 +43,9 @@ final class ReindexElasticDomainsScheduledCommand extends Command
         return Command::SUCCESS;
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     private function createScheduledCommand(): string
     {
         $entity = $this->scheduledCommandService->findByCommand(ReindexAllDomainsCommand::NAME);

@@ -83,15 +83,42 @@ class Resume implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getOwner(): User { return $this->owner; }
-    public function setOwner(User $owner): self { $this->owner = $owner; return $this; }
-    public function getApplicant(): ?Applicant { return $this->applicant; }
-    public function getDocumentUrl(): ?string { return $this->documentUrl; }
-    public function setDocumentUrl(?string $documentUrl): self { $this->documentUrl = $documentUrl; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getOwner(): User
+    {
+        return $this->owner;
+    }
+    public function setOwner(User $owner): self
+    {
+        $this->owner = $owner;
 
-    /** @return Collection<int, Experience>|ArrayCollection<int, Experience> */
-    public function getExperiences(): Collection|ArrayCollection { return $this->experiences; }
+        return $this;
+    }
+    public function getApplicant(): ?Applicant
+    {
+        return $this->applicant;
+    }
+    public function getDocumentUrl(): ?string
+    {
+        return $this->documentUrl;
+    }
+    public function setDocumentUrl(?string $documentUrl): self
+    {
+        $this->documentUrl = $documentUrl;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Experience>|ArrayCollection<int, Experience>
+     */
+    public function getExperiences(): Collection|ArrayCollection
+    {
+        return $this->experiences;
+    }
     public function addExperience(Experience $experience): self
     {
         if (!$this->experiences->contains($experience)) {
@@ -102,8 +129,13 @@ class Resume implements EntityInterface
         return $this;
     }
 
-    /** @return Collection<int, Education>|ArrayCollection<int, Education> */
-    public function getEducations(): Collection|ArrayCollection { return $this->educations; }
+    /**
+     * @return Collection<int, Education>|ArrayCollection<int, Education>
+     */
+    public function getEducations(): Collection|ArrayCollection
+    {
+        return $this->educations;
+    }
     public function addEducation(Education $education): self
     {
         if (!$this->educations->contains($education)) {
@@ -114,8 +146,13 @@ class Resume implements EntityInterface
         return $this;
     }
 
-    /** @return Collection<int, Skill>|ArrayCollection<int, Skill> */
-    public function getSkills(): Collection|ArrayCollection { return $this->skills; }
+    /**
+     * @return Collection<int, Skill>|ArrayCollection<int, Skill>
+     */
+    public function getSkills(): Collection|ArrayCollection
+    {
+        return $this->skills;
+    }
     public function addSkill(Skill $skill): self
     {
         if (!$this->skills->contains($skill)) {
@@ -126,8 +163,13 @@ class Resume implements EntityInterface
         return $this;
     }
 
-    /** @return Collection<int, Language>|ArrayCollection<int, Language> */
-    public function getLanguages(): Collection|ArrayCollection { return $this->languages; }
+    /**
+     * @return Collection<int, Language>|ArrayCollection<int, Language>
+     */
+    public function getLanguages(): Collection|ArrayCollection
+    {
+        return $this->languages;
+    }
     public function addLanguage(Language $language): self
     {
         if (!$this->languages->contains($language)) {
@@ -138,8 +180,13 @@ class Resume implements EntityInterface
         return $this;
     }
 
-    /** @return Collection<int, Certification>|ArrayCollection<int, Certification> */
-    public function getCertifications(): Collection|ArrayCollection { return $this->certifications; }
+    /**
+     * @return Collection<int, Certification>|ArrayCollection<int, Certification>
+     */
+    public function getCertifications(): Collection|ArrayCollection
+    {
+        return $this->certifications;
+    }
     public function addCertification(Certification $certification): self
     {
         if (!$this->certifications->contains($certification)) {
@@ -150,8 +197,13 @@ class Resume implements EntityInterface
         return $this;
     }
 
-    /** @return Collection<int, Project>|ArrayCollection<int, Project> */
-    public function getProjects(): Collection|ArrayCollection { return $this->projects; }
+    /**
+     * @return Collection<int, Project>|ArrayCollection<int, Project>
+     */
+    public function getProjects(): Collection|ArrayCollection
+    {
+        return $this->projects;
+    }
     public function addProject(Project $project): self
     {
         if (!$this->projects->contains($project)) {
@@ -162,8 +214,13 @@ class Resume implements EntityInterface
         return $this;
     }
 
-    /** @return Collection<int, Reference>|ArrayCollection<int, Reference> */
-    public function getReferences(): Collection|ArrayCollection { return $this->references; }
+    /**
+     * @return Collection<int, Reference>|ArrayCollection<int, Reference>
+     */
+    public function getReferences(): Collection|ArrayCollection
+    {
+        return $this->references;
+    }
     public function addReference(Reference $reference): self
     {
         if (!$this->references->contains($reference)) {
@@ -174,8 +231,13 @@ class Resume implements EntityInterface
         return $this;
     }
 
-    /** @return Collection<int, Hobby>|ArrayCollection<int, Hobby> */
-    public function getHobbies(): Collection|ArrayCollection { return $this->hobbies; }
+    /**
+     * @return Collection<int, Hobby>|ArrayCollection<int, Hobby>
+     */
+    public function getHobbies(): Collection|ArrayCollection
+    {
+        return $this->hobbies;
+    }
     public function addHobby(Hobby $hobby): self
     {
         if (!$this->hobbies->contains($hobby)) {

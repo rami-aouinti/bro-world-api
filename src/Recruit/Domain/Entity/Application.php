@@ -35,7 +35,9 @@ class Application implements EntityInterface
     #[ORM\JoinColumn(name: 'job_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private Job $job;
 
-    #[ORM\Column(name: 'status', type: Types::STRING, length: 25, enumType: ApplicationStatus::class, options: ['default' => 'WAITING'])]
+    #[ORM\Column(name: 'status', type: Types::STRING, length: 25, enumType: ApplicationStatus::class, options: [
+        'default' => 'WAITING',
+    ])]
     private ApplicationStatus $status = ApplicationStatus::WAITING;
 
     public function __construct()
@@ -44,12 +46,42 @@ class Application implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getApplicant(): Applicant { return $this->applicant; }
-    public function setApplicant(Applicant $applicant): self { $this->applicant = $applicant; return $this; }
-    public function getJob(): Job { return $this->job; }
-    public function setJob(Job $job): self { $this->job = $job; return $this; }
-    public function getStatus(): ApplicationStatus { return $this->status; }
-    public function getStatusValue(): string { return $this->status->value; }
-    public function setStatus(ApplicationStatus|string $status): self { $this->status = $status instanceof ApplicationStatus ? $status : ApplicationStatus::from($status); return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getApplicant(): Applicant
+    {
+        return $this->applicant;
+    }
+    public function setApplicant(Applicant $applicant): self
+    {
+        $this->applicant = $applicant;
+
+        return $this;
+    }
+    public function getJob(): Job
+    {
+        return $this->job;
+    }
+    public function setJob(Job $job): self
+    {
+        $this->job = $job;
+
+        return $this;
+    }
+    public function getStatus(): ApplicationStatus
+    {
+        return $this->status;
+    }
+    public function getStatusValue(): string
+    {
+        return $this->status->value;
+    }
+    public function setStatus(ApplicationStatus|string $status): self
+    {
+        $this->status = $status instanceof ApplicationStatus ? $status : ApplicationStatus::from($status);
+
+        return $this;
+    }
 }

@@ -14,7 +14,9 @@ class PrivateApplicationListControllerTest extends WebTestCase
 {
     private string $baseUrl = self::API_URL_PREFIX . '/v1/application/private';
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `GET /v1/application/private` requires authentication.')]
     public function testThatPrivateListRequiresAuthentication(): void
     {
@@ -26,7 +28,9 @@ class PrivateApplicationListControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_UNAUTHORIZED, $response->getStatusCode(), "Response:\n" . $response);
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `GET /v1/application/private` returns public and current user applications with pagination.')]
     public function testThatPrivateListReturnsPublicAndCurrentUserApplications(): void
     {
@@ -51,7 +55,9 @@ class PrivateApplicationListControllerTest extends WebTestCase
         }
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `GET /v1/application/private` supports ownership and filtering.')]
     public function testThatPrivateListOwnershipIsFalseForNonOwner(): void
     {
@@ -72,6 +78,7 @@ class PrivateApplicationListControllerTest extends WebTestCase
 
             if ($application['title'] === 'John User Private App') {
                 self::assertTrue($application['isOwner']);
+
                 continue;
             }
 

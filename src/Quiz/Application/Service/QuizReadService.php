@@ -13,9 +13,16 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 final readonly class QuizReadService
 {
-    public function __construct(private QuizRepository $quizRepository, private CacheInterface $cache, private ElasticsearchServiceInterface $elasticsearchService) {}
+    public function __construct(
+        private QuizRepository $quizRepository,
+        private CacheInterface $cache,
+        private ElasticsearchServiceInterface $elasticsearchService
+    ) {
+    }
 
-    /** @throws InvalidArgumentException */
+    /**
+     * @throws InvalidArgumentException
+     */
     public function getByApplicationSlug(string $slug): array
     {
         return $this->cache->get('quiz_' . $slug, function (ItemInterface $item) use ($slug): array {
@@ -39,7 +46,11 @@ final readonly class QuizReadService
                     'title' => $q->getTitle(),
                     'level' => $q->getLevel(),
                     'category' => $q->getCategory(),
-                    'answers' => array_map(static fn ($a): array => ['id' => $a->getId(), 'label' => $a->getLabel(), 'correct' => $a->isCorrect()], $q->getAnswers()->toArray()),
+                    'answers' => array_map(static fn ($a): array => [
+                        'id' => $a->getId(),
+                        'label' => $a->getLabel(),
+                        'correct' => $a->isCorrect(),
+                    ], $q->getAnswers()->toArray()),
                 ], $quiz->getQuestions()->toArray()),
             ];
         });

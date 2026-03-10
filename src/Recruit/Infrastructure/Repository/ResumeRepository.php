@@ -22,7 +22,8 @@ class ResumeRepository extends BaseRepository implements ResumeRepositoryInterfa
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

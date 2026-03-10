@@ -36,7 +36,9 @@ class Applicant implements EntityInterface
     #[ORM\JoinColumn(name: 'resume_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE', unique: true)]
     private Resume $resume;
 
-    #[ORM\Column(name: 'cover_letter', type: Types::TEXT, options: ['default' => ''])]
+    #[ORM\Column(name: 'cover_letter', type: Types::TEXT, options: [
+        'default' => '',
+    ])]
     private string $coverLetter = '';
 
     /** @var Collection<int, Application>|ArrayCollection<int, Application> */
@@ -50,16 +52,48 @@ class Applicant implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getUser(): User { return $this->user; }
-    public function setUser(User $user): self { $this->user = $user; return $this; }
-    public function getResume(): Resume { return $this->resume; }
-    public function setResume(Resume $resume): self { $this->resume = $resume; return $this; }
-    public function getCoverLetter(): string { return $this->coverLetter; }
-    public function setCoverLetter(string $coverLetter): self { $this->coverLetter = $coverLetter; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getUser(): User
+    {
+        return $this->user;
+    }
+    public function setUser(User $user): self
+    {
+        $this->user = $user;
 
-    /** @return Collection<int, Application>|ArrayCollection<int, Application> */
-    public function getApplications(): Collection|ArrayCollection { return $this->applications; }
+        return $this;
+    }
+    public function getResume(): Resume
+    {
+        return $this->resume;
+    }
+    public function setResume(Resume $resume): self
+    {
+        $this->resume = $resume;
+
+        return $this;
+    }
+    public function getCoverLetter(): string
+    {
+        return $this->coverLetter;
+    }
+    public function setCoverLetter(string $coverLetter): self
+    {
+        $this->coverLetter = $coverLetter;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Application>|ArrayCollection<int, Application>
+     */
+    public function getApplications(): Collection|ArrayCollection
+    {
+        return $this->applications;
+    }
     public function addApplication(Application $application): self
     {
         if (!$this->applications->contains($application)) {

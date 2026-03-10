@@ -38,19 +38,65 @@ class QuizQuestion implements EntityInterface
     #[ORM\Column(name: 'category', type: 'string', length: 100)]
     private string $category = '';
 
-    /** @var Collection<int, QuizAnswer> */
+    /**
+     * @var Collection<int, QuizAnswer>
+     */
     #[ORM\OneToMany(targetEntity: QuizAnswer::class, mappedBy: 'question', cascade: ['remove'])]
     private Collection $answers;
 
-    public function __construct() { $this->id = $this->createUuid(); $this->answers = new ArrayCollection(); }
-    #[Override] public function getId(): string { return $this->id->toString(); }
-    public function getQuiz(): Quiz { return $this->quiz; }
-    public function setQuiz(Quiz $quiz): self { $this->quiz = $quiz; return $this; }
-    public function getTitle(): string { return $this->title; }
-    public function setTitle(string $title): self { $this->title = $title; return $this; }
-    public function getLevel(): string { return $this->level; }
-    public function setLevel(string $level): self { $this->level = $level; return $this; }
-    public function getCategory(): string { return $this->category; }
-    public function setCategory(string $category): self { $this->category = $category; return $this; }
-    /** @return Collection<int, QuizAnswer> */ public function getAnswers(): Collection { return $this->answers; }
+    public function __construct()
+    {
+        $this->id = $this->createUuid();
+        $this->answers = new ArrayCollection();
+    }
+    #[Override] public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getQuiz(): Quiz
+    {
+        return $this->quiz;
+    }
+    public function setQuiz(Quiz $quiz): self
+    {
+        $this->quiz = $quiz;
+
+        return $this;
+    }
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+    public function setTitle(string $title): self
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+    public function getLevel(): string
+    {
+        return $this->level;
+    }
+    public function setLevel(string $level): self
+    {
+        $this->level = $level;
+
+        return $this;
+    }
+    public function getCategory(): string
+    {
+        return $this->category;
+    }
+    public function setCategory(string $category): self
+    {
+        $this->category = $category;
+
+        return $this;
+    }
+    /**
+     * @return Collection<int, QuizAnswer>
+     */ public function getAnswers(): Collection
+    {
+        return $this->answers;
+    }
 }

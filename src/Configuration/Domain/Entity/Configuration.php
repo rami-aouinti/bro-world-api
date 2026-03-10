@@ -49,7 +49,6 @@ class Configuration implements EntityInterface
     #[Groups(['Configuration', 'Configuration.id'])]
     private UuidInterface $id;
 
-
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'configurations')]
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?User $user = null;
@@ -90,7 +89,9 @@ class Configuration implements EntityInterface
     #[Assert\NotNull]
     private ConfigurationScope $scope = ConfigurationScope::SYSTEM;
 
-    #[ORM\Column(name: 'private', type: Types::BOOLEAN, options: ['default' => false])]
+    #[ORM\Column(name: 'private', type: Types::BOOLEAN, options: [
+        'default' => false,
+    ])]
     #[Groups(['Configuration', 'Configuration.private'])]
     #[Assert\NotNull]
     private bool $private = false;
@@ -98,7 +99,9 @@ class Configuration implements EntityInterface
     /**
      * @var array<string, string>|null
      */
-    #[ORM\Column(name: 'configuration_value_parameters', type: Types::JSON, nullable: true, options: ['comment' => 'Configuration value decrypt parameters when encrypted'])]
+    #[ORM\Column(name: 'configuration_value_parameters', type: Types::JSON, nullable: true, options: [
+        'comment' => 'Configuration value decrypt parameters when encrypted',
+    ])]
     #[Groups(['Configuration.configurationValueParameters'])]
     private ?array $configurationValueParameters = null;
 
@@ -115,7 +118,6 @@ class Configuration implements EntityInterface
     {
         return $this->id->toString();
     }
-
 
     public function getUser(): ?User
     {

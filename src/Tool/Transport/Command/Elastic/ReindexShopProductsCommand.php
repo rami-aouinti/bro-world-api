@@ -38,7 +38,9 @@ final class ReindexShopProductsCommand extends Command
         $indexed = 0;
 
         /** @var Product $product */
-        foreach ($this->productRepository->findBy([], ['createdAt' => 'DESC']) as $product) {
+        foreach ($this->productRepository->findBy([], [
+            'createdAt' => 'DESC',
+        ]) as $product) {
             $this->elasticsearchService->index(ShopProductProjection::INDEX_NAME, $product->getId(), [
                 'id' => $product->getId(),
                 'name' => $product->getName(),
@@ -48,7 +50,7 @@ final class ReindexShopProductsCommand extends Command
                 'tags' => array_map(static fn ($tag): string => $tag->getLabel(), $product->getTags()->toArray()),
                 'updatedAt' => $product->getUpdatedAt()?->format(DATE_ATOM),
             ]);
-            ++$indexed;
+            $indexed++;
         }
 
         if ($input->isInteractive()) {

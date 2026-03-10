@@ -24,14 +24,15 @@ use Symfony\Component\Uid\Uuid;
 
 #[AsController]
 #[OA\Tag(name: 'Calendar Event')]
-#[OA\Post(path: '/v1/calendar/private/applications/{applicationSlug}/events', operationId: 'calendar_application_event_create', summary: 'Créer un événement application', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['title','startAt','endAt'], properties: [new OA\Property(property: 'title', type: 'string', example: 'Demo client'), new OA\Property(property: 'startAt', type: 'string', format: 'date-time', example: '2026-05-12T13:00:00+00:00'), new OA\Property(property: 'endAt', type: 'string', format: 'date-time', example: '2026-05-12T14:00:00+00:00'), new OA\Property(property: 'status', type: 'string', enum: ['confirmed','tentative','cancelled'], example: 'tentative')])), responses: [new OA\Response(response: 202, description: 'Commande acceptée'), new OA\Response(response: 422, description: 'Dates invalides')])]
+#[OA\Post(path: '/v1/calendar/private/applications/{applicationSlug}/events', operationId: 'calendar_application_event_create', summary: 'Créer un événement application', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['title', 'startAt', 'endAt'], properties: [new OA\Property(property: 'title', type: 'string', example: 'Demo client'), new OA\Property(property: 'startAt', type: 'string', format: 'date-time', example: '2026-05-12T13:00:00+00:00'), new OA\Property(property: 'endAt', type: 'string', format: 'date-time', example: '2026-05-12T14:00:00+00:00'), new OA\Property(property: 'status', type: 'string', enum: ['confirmed', 'tentative', 'cancelled'], example: 'tentative')])), responses: [new OA\Response(response: 202, description: 'Commande acceptée'), new OA\Response(response: 422, description: 'Dates invalides')])]
 #[OA\Patch(path: '/v1/calendar/private/applications/{applicationSlug}/events/{eventId}', operationId: 'calendar_application_event_patch', summary: 'Modifier un événement application', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world')), new OA\Parameter(name: 'eventId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [new OA\Property(property: 'title', type: 'string', example: 'Demo client confirmée')])), responses: [new OA\Response(response: 202, description: 'Commande acceptée')])]
 #[OA\Delete(path: '/v1/calendar/private/applications/{applicationSlug}/events/{eventId}', operationId: 'calendar_application_event_delete', summary: 'Supprimer un événement application', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world')), new OA\Parameter(name: 'eventId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], responses: [new OA\Response(response: 202, description: 'Suppression acceptée')])]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class ApplicationOwnerEventMutationController
 {
-    public function __construct(private readonly MessageServiceInterface $messageService)
-    {
+    public function __construct(
+        private readonly MessageServiceInterface $messageService
+    ) {
     }
 
     #[Route(path: '/v1/calendar/private/applications/{applicationSlug}/events', methods: [Request::METHOD_POST])]
@@ -49,15 +50,17 @@ class ApplicationOwnerEventMutationController
             operationId: $operationId,
             actorUserId: $loggedInUser->getId(),
             title: $this->requireString($payload, 'title'),
-            description: (string) ($payload['description'] ?? ''),
+            description: (string)($payload['description'] ?? ''),
             startAt: $startAt,
             endAt: $endAt,
-            status: $this->parseStatus((string) ($payload['status'] ?? EventStatus::CONFIRMED->value)),
+            status: $this->parseStatus((string)($payload['status'] ?? EventStatus::CONFIRMED->value)),
             location: isset($payload['location']) && is_string($payload['location']) ? $payload['location'] : null,
             applicationSlug: $applicationSlug,
         ));
 
-        return new JsonResponse(['operationId' => $operationId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     #[Route(path: '/v1/calendar/private/applications/{applicationSlug}/events/{eventId}', methods: [Request::METHOD_PATCH])]
@@ -86,7 +89,10 @@ class ApplicationOwnerEventMutationController
             applicationSlug: $applicationSlug,
         ));
 
-        return new JsonResponse(['operationId' => $operationId, 'id' => $eventId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'id' => $eventId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     #[Route(path: '/v1/calendar/private/applications/{applicationSlug}/events/{eventId}', methods: [Request::METHOD_DELETE])]
@@ -103,7 +109,10 @@ class ApplicationOwnerEventMutationController
             applicationSlug: $applicationSlug,
         ));
 
-        return new JsonResponse(['operationId' => $operationId, 'id' => $eventId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'id' => $eventId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     #[Route(path: '/v1/calendar/private/applications/{applicationSlug}/events/{eventId}/cancel', methods: [Request::METHOD_POST])]
@@ -120,10 +129,15 @@ class ApplicationOwnerEventMutationController
             applicationSlug: $applicationSlug,
         ));
 
-        return new JsonResponse(['operationId' => $operationId, 'id' => $eventId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'id' => $eventId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
-    /** @param array<string, mixed> $payload */
+    /**
+     * @param array<string, mixed> $payload
+     */
     private function requireString(array $payload, string $field): string
     {
         $value = $payload[$field] ?? null;
@@ -134,7 +148,9 @@ class ApplicationOwnerEventMutationController
         return $value;
     }
 
-    /** @param array<string, mixed> $payload */
+    /**
+     * @param array<string, mixed> $payload
+     */
     private function requireDate(array $payload, string $field): DateTimeImmutable
     {
         $value = $payload[$field] ?? null;

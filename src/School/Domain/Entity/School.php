@@ -46,12 +46,36 @@ class School implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getName(): string { return $this->name; }
-    public function setName(string $name): self { $this->name = $name; return $this; }
-    public function getApplication(): ?PlatformApplication { return $this->application; }
-    public function setApplication(?PlatformApplication $application): self { $this->application = $application; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function setName(string $name): self
+    {
+        $this->name = $name;
 
-    /** @return Collection<int, SchoolClass>|ArrayCollection<int, SchoolClass> */
-    public function getClasses(): Collection|ArrayCollection { return $this->classes; }
+        return $this;
+    }
+    public function getApplication(): ?PlatformApplication
+    {
+        return $this->application;
+    }
+    public function setApplication(?PlatformApplication $application): self
+    {
+        $this->application = $application;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, SchoolClass>|ArrayCollection<int, SchoolClass>
+     */
+    public function getClasses(): Collection|ArrayCollection
+    {
+        return $this->classes;
+    }
 }

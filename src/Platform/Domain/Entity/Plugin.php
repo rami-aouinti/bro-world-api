@@ -6,9 +6,9 @@ namespace App\Platform\Domain\Entity;
 
 use App\Configuration\Domain\Entity\Configuration;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
-use App\Platform\Domain\Enum\PluginKey;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use App\Platform\Domain\Enum\PluginKey;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -74,7 +74,6 @@ class Plugin implements EntityInterface
     ])]
     #[Assert\NotNull]
     private string $description = '';
-
 
     #[ORM\Column(
         name: 'plugin_key',
@@ -186,7 +185,6 @@ class Plugin implements EntityInterface
 
         return $this;
     }
-
 
     public function getPluginKey(): PluginKey
     {

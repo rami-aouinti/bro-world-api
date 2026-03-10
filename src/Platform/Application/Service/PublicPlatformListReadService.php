@@ -22,7 +22,9 @@ final readonly class PublicPlatformListReadService
     ) {
     }
 
-    /** @return array<int, Platform> */
+    /**
+     * @return array<int, Platform>
+     */
     public function getPublicEnabled(): array
     {
         $cacheKey = $this->cacheKeyConventionService->buildPublicPlatformsListKey();

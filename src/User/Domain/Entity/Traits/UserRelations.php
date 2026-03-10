@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\User\Domain\Entity\Traits;
 
+use App\Configuration\Domain\Entity\Configuration;
 use App\Log\Domain\Entity\LogLogin;
 use App\Log\Domain\Entity\LogLoginFailure;
-use App\Configuration\Domain\Entity\Configuration;
 use App\Log\Domain\Entity\LogRequest;
 use App\User\Domain\Entity\Social;
 use App\User\Domain\Entity\User;
@@ -70,7 +70,6 @@ trait UserRelations
         'User.logsLoginFailure',
     ])]
     protected Collection | ArrayCollection $logsLoginFailure;
-
 
     /**
      * @var Collection<int, Configuration>|ArrayCollection<int, Configuration>
@@ -155,7 +154,6 @@ trait UserRelations
     {
         return $this->logsLoginFailure;
     }
-
 
     /**
      * Getter for user configurations collection.

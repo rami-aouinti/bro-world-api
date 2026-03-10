@@ -21,8 +21,9 @@ class ShopRepository extends BaseRepository
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 
     public function findOneByApplicationSlug(string $applicationSlug): ?Entity
@@ -38,4 +39,3 @@ class ShopRepository extends BaseRepository
         return $entity instanceof Entity ? $entity : null;
     }
 }
-

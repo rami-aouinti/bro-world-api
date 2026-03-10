@@ -16,14 +16,50 @@ class Salary extends RestDto
     protected string $currency = 'EUR';
     protected string $period = 'year';
 
-    public function getMin(): int { return $this->min; }
-    public function setMin(int $min): self { $this->setVisited('min'); $this->min = $min; return $this; }
-    public function getMax(): int { return $this->max; }
-    public function setMax(int $max): self { $this->setVisited('max'); $this->max = $max; return $this; }
-    public function getCurrency(): string { return $this->currency; }
-    public function setCurrency(string $currency): self { $this->setVisited('currency'); $this->currency = $currency; return $this; }
-    public function getPeriod(): string { return $this->period; }
-    public function setPeriod(string $period): self { $this->setVisited('period'); $this->period = $period; return $this; }
+    public function getMin(): int
+    {
+        return $this->min;
+    }
+    public function setMin(int $min): self
+    {
+        $this->setVisited('min');
+        $this->min = $min;
+
+        return $this;
+    }
+    public function getMax(): int
+    {
+        return $this->max;
+    }
+    public function setMax(int $max): self
+    {
+        $this->setVisited('max');
+        $this->max = $max;
+
+        return $this;
+    }
+    public function getCurrency(): string
+    {
+        return $this->currency;
+    }
+    public function setCurrency(string $currency): self
+    {
+        $this->setVisited('currency');
+        $this->currency = $currency;
+
+        return $this;
+    }
+    public function getPeriod(): string
+    {
+        return $this->period;
+    }
+    public function setPeriod(string $period): self
+    {
+        $this->setVisited('period');
+        $this->period = $period;
+
+        return $this;
+    }
 
     #[Override]
     public function load(EntityInterface $entity): self

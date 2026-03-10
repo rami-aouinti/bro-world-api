@@ -22,7 +22,8 @@ class CertificationRepository extends BaseRepository implements CertificationRep
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

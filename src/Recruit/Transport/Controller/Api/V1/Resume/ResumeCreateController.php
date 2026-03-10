@@ -62,8 +62,14 @@ class ResumeCreateController
                     ],
                     type: 'object',
                     example: [
-                        'experiences' => [['title' => 'Backend Developer', 'description' => 'Symfony API']],
-                        'skills' => [['title' => 'PHP', 'description' => '8.x']],
+                        'experiences' => [[
+                            'title' => 'Backend Developer',
+                            'description' => 'Symfony API',
+                        ]],
+                        'skills' => [[
+                            'title' => 'PHP',
+                            'description' => '8.x',
+                        ]],
                     ],
                 ),
             ),
@@ -133,7 +139,9 @@ class ResumeCreateController
         ], JsonResponse::HTTP_CREATED);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function extractPayload(Request $request): array
     {
         if ($request->request->count() > 0) {

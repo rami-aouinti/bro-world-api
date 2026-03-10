@@ -60,7 +60,11 @@ final readonly class CreateConversationCommandHandler
 
             $entityManager->flush();
 
-            return ['chatId' => $chat->getId(), 'actorId' => $actor->getId(), 'targetId' => $targetUser->getId()];
+            return [
+                'chatId' => $chat->getId(),
+                'actorId' => $actor->getId(),
+                'targetId' => $targetUser->getId(),
+            ];
         });
 
         $this->cacheInvalidationService->invalidateConversationCaches($result['chatId'], $result['actorId']);

@@ -88,7 +88,9 @@ final class LoadUserFriendRelationData extends Fixture implements DependentFixtu
         $manager->flush();
     }
 
-    /** @return array<int, class-string> */
+    /**
+     * @return array<int, class-string>
+     */
     #[Override]
     public function getDependencies(): array
     {

@@ -15,8 +15,9 @@ use Symfony\Component\Routing\Attribute\Route;
 #[OA\Tag(name: 'User Management')]
 class PublicUserListController
 {
-    public function __construct(private readonly UserPublicListService $userPublicListService)
-    {
+    public function __construct(
+        private readonly UserPublicListService $userPublicListService
+    ) {
     }
 
     #[Route(path: '/v1/public/users', methods: [Request::METHOD_GET])]

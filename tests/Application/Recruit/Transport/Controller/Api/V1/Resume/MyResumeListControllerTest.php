@@ -14,7 +14,9 @@ class MyResumeListControllerTest extends WebTestCase
 {
     private string $baseUrl = self::API_URL_PREFIX . '/v1/recruit/private/me/resumes';
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `GET /v1/recruit/private/me/resumes` requires authentication.')]
     public function testThatMyResumeListRequiresAuthentication(): void
     {
@@ -25,7 +27,9 @@ class MyResumeListControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_UNAUTHORIZED, $client->getResponse()->getStatusCode());
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `GET /v1/recruit/private/me/resumes` returns only connected user resumes.')]
     public function testThatMyResumeListReturnsOnlyConnectedUserResumes(): void
     {

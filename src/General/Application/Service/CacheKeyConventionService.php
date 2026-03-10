@@ -82,7 +82,7 @@ class CacheKeyConventionService
      */
     public function buildApplicationListKey(?string $userId, int $page, int $limit, array $filters): string
     {
-        return 'application_list_' . md5((string) json_encode([
+        return 'application_list_' . md5((string)json_encode([
             'userId' => $userId,
             'page' => $page,
             'limit' => $limit,
@@ -95,7 +95,7 @@ class CacheKeyConventionService
      */
     public function buildRecruitJobPublicListKey(string $applicationSlug, ?string $userId, int $page, int $limit, array $filters): string
     {
-        return 'recruit_job_public_' . md5((string) json_encode([
+        return 'recruit_job_public_' . md5((string)json_encode([
             'applicationSlug' => $applicationSlug,
             'userId' => $userId,
             'page' => $page,
@@ -104,13 +104,12 @@ class CacheKeyConventionService
         ], JSON_THROW_ON_ERROR));
     }
 
-
     /**
      * @param array<string, mixed> $filters
      */
     public function buildShopProductListKey(int $page, int $limit, array $filters): string
     {
-        return 'shop_product_list_' . md5((string) json_encode([
+        return 'shop_product_list_' . md5((string)json_encode([
             'page' => $page,
             'limit' => $limit,
             'filters' => $filters,
@@ -122,7 +121,7 @@ class CacheKeyConventionService
      */
     public function buildCrmTaskListKey(int $page, int $limit, array $filters): string
     {
-        return 'crm_task_list_' . md5((string) json_encode([
+        return 'crm_task_list_' . md5((string)json_encode([
             'page' => $page,
             'limit' => $limit,
             'filters' => $filters,
@@ -134,7 +133,7 @@ class CacheKeyConventionService
      */
     public function buildSchoolExamListKey(int $page, int $limit, array $filters): string
     {
-        return 'school_exam_list_' . md5((string) json_encode([
+        return 'school_exam_list_' . md5((string)json_encode([
             'page' => $page,
             'limit' => $limit,
             'filters' => $filters,
@@ -236,13 +235,13 @@ class CacheKeyConventionService
      */
     private function buildHash(array $payload): string
     {
-        return md5((string) json_encode($payload, JSON_THROW_ON_ERROR));
+        return md5((string)json_encode($payload, JSON_THROW_ON_ERROR));
     }
 
     private function sanitizeSegment(string $segment): string
     {
         $normalized = strtolower(trim($segment));
-        $normalized = (string) preg_replace('/[^a-z0-9_.-]+/', '_', $normalized);
+        $normalized = (string)preg_replace('/[^a-z0-9_.-]+/', '_', $normalized);
         $normalized = trim($normalized, '._-');
 
         return $normalized !== '' ? $normalized : 'default';

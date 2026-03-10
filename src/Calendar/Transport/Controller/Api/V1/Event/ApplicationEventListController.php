@@ -16,8 +16,9 @@ use Symfony\Component\Routing\Attribute\Route;
 #[OA\Get(path: '/v1/calendar/applications/{applicationSlug}/events', operationId: 'calendar_application_event_list', summary: 'Lister les événements publics de une application', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world')), new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, example: 1)), new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, example: 20))], responses: [new OA\Response(response: 200, description: 'Liste paginée'), new OA\Response(response: 404, description: 'Application inconnue')])]
 class ApplicationEventListController
 {
-    public function __construct(private readonly EventListService $eventListService)
-    {
+    public function __construct(
+        private readonly EventListService $eventListService
+    ) {
     }
 
     #[Route(path: '/v1/calendar/applications/{applicationSlug}/events', methods: [Request::METHOD_GET])]
@@ -26,9 +27,9 @@ class ApplicationEventListController
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
         $filters = [
-            'title' => trim((string) $request->query->get('title', '')),
-            'description' => trim((string) $request->query->get('description', '')),
-            'location' => trim((string) $request->query->get('location', '')),
+            'title' => trim((string)$request->query->get('title', '')),
+            'description' => trim((string)$request->query->get('description', '')),
+            'location' => trim((string)$request->query->get('location', '')),
         ];
 
         return new JsonResponse($this->eventListService->getByApplicationSlug($applicationSlug, $filters, $page, $limit));

@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Platform\Application\Service;
 
+use App\Blog\Domain\Entity\Blog;
+use App\Blog\Domain\Enum\BlogType;
+use App\Blog\Infrastructure\Repository\BlogRepository;
 use App\Calendar\Domain\Entity\Calendar;
 use App\Calendar\Infrastructure\Repository\CalendarRepository;
 use App\Chat\Domain\Entity\Chat;
 use App\Chat\Infrastructure\Repository\ChatRepository;
-use App\Blog\Domain\Entity\Blog;
-use App\Blog\Domain\Enum\BlogType;
-use App\Blog\Infrastructure\Repository\BlogRepository;
 use App\Platform\Domain\Entity\Application;
+use App\Platform\Domain\Enum\PluginKey;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Quiz\Infrastructure\Repository\QuizRepository;
-use App\Platform\Domain\Enum\PluginKey;
 use Doctrine\ORM\EntityManagerInterface;
 
 use function in_array;
@@ -107,5 +107,4 @@ final class ApplicationPluginProvisioningService
 
         $this->entityManager->persist($quiz);
     }
-
 }

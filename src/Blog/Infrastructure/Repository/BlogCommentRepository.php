@@ -13,5 +13,8 @@ class BlogCommentRepository extends BaseRepository
     protected static string $entityName = BlogComment::class;
     protected static array $searchColumns = ['id', 'content'];
 
-    public function __construct(protected ManagerRegistry $managerRegistry) {}
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
+    }
 }

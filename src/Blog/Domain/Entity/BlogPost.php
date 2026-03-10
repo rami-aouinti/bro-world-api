@@ -40,19 +40,65 @@ class BlogPost implements EntityInterface
     #[ORM\Column(name: 'file_path', type: 'string', length: 255, nullable: true)]
     private ?string $filePath = null;
 
-    /** @var Collection<int, BlogComment> */
+    /**
+     * @var Collection<int, BlogComment>
+     */
     #[ORM\OneToMany(targetEntity: BlogComment::class, mappedBy: 'post', cascade: ['remove'])]
     private Collection $comments;
 
-    public function __construct() { $this->id = $this->createUuid(); $this->comments = new ArrayCollection(); }
-    #[Override] public function getId(): string { return $this->id->toString(); }
-    public function getBlog(): Blog { return $this->blog; }
-    public function setBlog(Blog $blog): self { $this->blog = $blog; return $this; }
-    public function getAuthor(): User { return $this->author; }
-    public function setAuthor(User $author): self { $this->author = $author; return $this; }
-    public function getContent(): ?string { return $this->content; }
-    public function setContent(?string $content): self { $this->content = $content; return $this; }
-    public function getFilePath(): ?string { return $this->filePath; }
-    public function setFilePath(?string $filePath): self { $this->filePath = $filePath; return $this; }
-    /** @return Collection<int, BlogComment> */ public function getComments(): Collection { return $this->comments; }
+    public function __construct()
+    {
+        $this->id = $this->createUuid();
+        $this->comments = new ArrayCollection();
+    }
+    #[Override] public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getBlog(): Blog
+    {
+        return $this->blog;
+    }
+    public function setBlog(Blog $blog): self
+    {
+        $this->blog = $blog;
+
+        return $this;
+    }
+    public function getAuthor(): User
+    {
+        return $this->author;
+    }
+    public function setAuthor(User $author): self
+    {
+        $this->author = $author;
+
+        return $this;
+    }
+    public function getContent(): ?string
+    {
+        return $this->content;
+    }
+    public function setContent(?string $content): self
+    {
+        $this->content = $content;
+
+        return $this;
+    }
+    public function getFilePath(): ?string
+    {
+        return $this->filePath;
+    }
+    public function setFilePath(?string $filePath): self
+    {
+        $this->filePath = $filePath;
+
+        return $this;
+    }
+    /**
+     * @return Collection<int, BlogComment>
+     */ public function getComments(): Collection
+    {
+        return $this->comments;
+    }
 }

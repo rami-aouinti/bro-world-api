@@ -19,8 +19,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class UserMeController
 {
-    public function __construct(private readonly UserMeService $userMeService)
-    {
+    public function __construct(
+        private readonly UserMeService $userMeService
+    ) {
     }
 
     #[Route(path: '/v1/users/me', methods: [Request::METHOD_GET])]
@@ -67,7 +68,9 @@ class UserMeController
 
         $this->userMeService->changePassword($loggedInUser, $payload);
 
-        return new JsonResponse(['status' => 'ok']);
+        return new JsonResponse([
+            'status' => 'ok',
+        ]);
     }
 
     #[Route(path: '/v1/users/me', methods: [Request::METHOD_DELETE])]

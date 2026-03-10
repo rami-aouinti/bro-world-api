@@ -25,12 +25,17 @@ readonly class ExamListService
     ) {
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     public function getList(Request $request): array
     {
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
-        $filters = ['q' => trim((string) $request->query->get('q', '')), 'title' => trim((string) $request->query->get('title', ''))];
+        $filters = [
+            'q' => trim((string)$request->query->get('q', '')),
+            'title' => trim((string)$request->query->get('title', '')),
+        ];
         $cacheKey = $this->cacheKeyConventionService->buildSchoolExamListKey($page, $limit, $filters);
 
         /** @var array<string,mixed> $result */
@@ -42,7 +47,15 @@ readonly class ExamListService
 
             $esIds = $this->searchIdsFromElastic($filters);
             if ($esIds === []) {
-                return ['items' => [], 'pagination' => ['page' => $page, 'limit' => $limit, 'totalItems' => 0, 'totalPages' => 0]];
+                return [
+                    'items' => [],
+                    'pagination' => [
+                        'page' => $page,
+                        'limit' => $limit,
+                        'totalItems' => 0,
+                        'totalPages' => 0,
+                    ],
+                ];
             }
 
             $qb = $this->examRepository->createQueryBuilder('exam')->leftJoin('exam.schoolClass', 'class')->leftJoin('exam.teacher', 'teacher')
@@ -55,8 +68,13 @@ readonly class ExamListService
             }
 
             $items = array_map(static fn (Exam $exam): array => [
-                'id' => $exam->getId(), 'title' => $exam->getTitle(), 'classId' => $exam->getSchoolClass()?->getId(), 'className' => $exam->getSchoolClass()?->getName(),
-                'teacherId' => $exam->getTeacher()?->getId(), 'teacherName' => $exam->getTeacher()?->getName(), 'updatedAt' => $exam->getUpdatedAt()?->format(DATE_ATOM),
+                'id' => $exam->getId(),
+                'title' => $exam->getTitle(),
+                'classId' => $exam->getSchoolClass()?->getId(),
+                'className' => $exam->getSchoolClass()?->getName(),
+                'teacherId' => $exam->getTeacher()?->getId(),
+                'teacherName' => $exam->getTeacher()?->getName(),
+                'updatedAt' => $exam->getUpdatedAt()?->format(DATE_ATOM),
             ], $qb->getQuery()->getResult());
 
             $countQb = $this->examRepository->createQueryBuilder('exam')->select('COUNT(exam.id)');
@@ -67,11 +85,21 @@ readonly class ExamListService
                 $countQb->andWhere('exam.id IN (:ids)')->setParameter('ids', $esIds);
             }
 
-            $totalItems = (int) $countQb->getQuery()->getSingleScalarResult();
-            return ['items' => $items, 'pagination' => ['page' => $page, 'limit' => $limit, 'totalItems' => $totalItems, 'totalPages' => $totalItems > 0 ? (int) ceil($totalItems / $limit) : 0]];
+            $totalItems = (int)$countQb->getQuery()->getSingleScalarResult();
+
+            return [
+                'items' => $items,
+                'pagination' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'totalItems' => $totalItems,
+                    'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
+                ],
+            ];
         });
 
         $result['filters'] = array_filter($filters, static fn (string $value): bool => $value !== '');
+
         return $result;
     }
 
@@ -86,7 +114,13 @@ readonly class ExamListService
 
         try {
             $response = $this->elasticsearchService->search(SchoolExamProjection::INDEX_NAME, [
-                'query' => ['multi_match' => ['query' => $filters['q'], 'type' => 'phrase_prefix', 'fields' => ['title^3', 'className^2', 'teacherName', 'grades']]],
+                'query' => [
+                    'multi_match' => [
+                        'query' => $filters['q'],
+                        'type' => 'phrase_prefix',
+                        'fields' => ['title^3', 'className^2', 'teacherName', 'grades'],
+                    ],
+                ],
                 '_source' => ['id'],
             ], 0, 200);
         } catch (Throwable) {
@@ -94,6 +128,7 @@ readonly class ExamListService
         }
 
         $hits = $response['hits']['hits'] ?? [];
+
         return array_values(array_filter(array_map(static fn (array $hit): ?string => $hit['_source']['id'] ?? $hit['_id'] ?? null, $hits)));
     }
 }

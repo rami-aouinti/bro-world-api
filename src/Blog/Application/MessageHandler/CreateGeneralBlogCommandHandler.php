@@ -18,7 +18,12 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 final readonly class CreateGeneralBlogCommandHandler
 {
-    public function __construct(private BlogRepository $blogRepository, private UserRepository $userRepository, private CacheInvalidationService $cacheInvalidationService) {}
+    public function __construct(
+        private BlogRepository $blogRepository,
+        private UserRepository $userRepository,
+        private CacheInvalidationService $cacheInvalidationService
+    ) {
+    }
 
     public function __invoke(CreateGeneralBlogCommand $command): void
     {

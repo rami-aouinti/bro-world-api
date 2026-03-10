@@ -22,7 +22,8 @@ class ContactRepository extends BaseRepository implements ContactRepositoryInter
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

@@ -7,10 +7,10 @@ namespace App\Chat\Transport\Controller\Api\V1\Reaction;
 use App\Chat\Domain\Entity\ChatMessage;
 use App\Chat\Domain\Entity\ChatMessageReaction;
 use App\Chat\Domain\Entity\ConversationParticipant;
-use App\General\Application\Service\CacheInvalidationService;
 use App\Chat\Infrastructure\Repository\ChatMessageReactionRepository;
 use App\Chat\Infrastructure\Repository\ChatMessageRepository;
 use App\Chat\Infrastructure\Repository\ConversationParticipantRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,8 +23,16 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Chat Message Reaction')]
-#[OA\Post(path: '/v1/chat/private/messages/{messageId}/reactions', operationId: 'chat_reaction_create', summary: 'Créer une réaction', tags: ['Chat Message Reaction'], parameters: [new OA\Parameter(name: 'messageId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['reaction'], properties: [new OA\Property(property: 'reaction', type: 'string', example: 'like')], example: ['reaction' => 'like'])), responses: [new OA\Response(response: 201, description: 'Réaction créée', content: new OA\JsonContent(example: ['id' => '8f210e56-6550-4b61-b7f3-8994f5f6dc41'])), new OA\Response(response: 400, description: 'Payload invalide'), new OA\Response(response: 404, description: 'Message introuvable')])]
-#[OA\Patch(path: '/v1/chat/private/reactions/{reactionId}', operationId: 'chat_reaction_patch', summary: 'Modifier une réaction', tags: ['Chat Message Reaction'], parameters: [new OA\Parameter(name: 'reactionId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [new OA\Property(property: 'reaction', type: 'string', example: 'love')], example: ['reaction' => 'love'])), responses: [new OA\Response(response: 200, description: 'Réaction modifiée', content: new OA\JsonContent(example: ['id' => '8f210e56-6550-4b61-b7f3-8994f5f6dc41'])), new OA\Response(response: 404, description: 'Réaction introuvable')])]
+#[OA\Post(path: '/v1/chat/private/messages/{messageId}/reactions', operationId: 'chat_reaction_create', summary: 'Créer une réaction', tags: ['Chat Message Reaction'], parameters: [new OA\Parameter(name: 'messageId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['reaction'], properties: [new OA\Property(property: 'reaction', type: 'string', example: 'like')], example: [
+    'reaction' => 'like',
+])), responses: [new OA\Response(response: 201, description: 'Réaction créée', content: new OA\JsonContent(example: [
+    'id' => '8f210e56-6550-4b61-b7f3-8994f5f6dc41',
+])), new OA\Response(response: 400, description: 'Payload invalide'), new OA\Response(response: 404, description: 'Message introuvable')])]
+#[OA\Patch(path: '/v1/chat/private/reactions/{reactionId}', operationId: 'chat_reaction_patch', summary: 'Modifier une réaction', tags: ['Chat Message Reaction'], parameters: [new OA\Parameter(name: 'reactionId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [new OA\Property(property: 'reaction', type: 'string', example: 'love')], example: [
+    'reaction' => 'love',
+])), responses: [new OA\Response(response: 200, description: 'Réaction modifiée', content: new OA\JsonContent(example: [
+    'id' => '8f210e56-6550-4b61-b7f3-8994f5f6dc41',
+])), new OA\Response(response: 404, description: 'Réaction introuvable')])]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class UserReactionMutationController
 {
@@ -55,7 +63,9 @@ class UserReactionMutationController
         $this->reactionRepository->save($reaction);
         $this->cacheInvalidationService->invalidateConversationCaches($message->getConversation()->getChat()->getId(), $loggedInUser->getId());
 
-        return new JsonResponse(['id' => $reaction->getId()], JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $reaction->getId(),
+        ], JsonResponse::HTTP_CREATED);
     }
 
     #[Route(path: '/v1/chat/private/reactions/{reactionId}', methods: [Request::METHOD_PATCH])]
@@ -70,7 +80,9 @@ class UserReactionMutationController
             $this->cacheInvalidationService->invalidateConversationCaches($reaction->getMessage()->getConversation()->getChat()->getId(), $loggedInUser->getId());
         }
 
-        return new JsonResponse(['id' => $reaction->getId()]);
+        return new JsonResponse([
+            'id' => $reaction->getId(),
+        ]);
     }
 
     #[Route(path: '/v1/chat/private/reactions/{reactionId}', methods: [Request::METHOD_DELETE])]

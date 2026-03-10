@@ -16,7 +16,10 @@ final readonly class BlogNotificationService
 {
     public const string BLOG_NOTIFICATION_TYPE = 'blog_notification';
 
-    public function __construct(private NotificationPublisher $notificationPublisher) {}
+    public function __construct(
+        private NotificationPublisher $notificationPublisher
+    ) {
+    }
 
     public function notifyCommentCreated(BlogComment $comment): void
     {
@@ -82,7 +85,7 @@ final readonly class BlogNotificationService
 
     private function formatPostTitle(BlogPost $post): string
     {
-        $content = trim((string) $post->getContent());
+        $content = trim((string)$post->getContent());
 
         if ($content === '') {
             return '"(no title)"';
@@ -93,7 +96,7 @@ final readonly class BlogNotificationService
 
     private function formatCommentPreview(BlogComment $comment): string
     {
-        $content = trim((string) $comment->getContent());
+        $content = trim((string)$comment->getContent());
 
         if ($content === '') {
             return '"(comment)"';

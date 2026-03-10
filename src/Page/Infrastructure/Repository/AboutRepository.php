@@ -22,7 +22,8 @@ class AboutRepository extends BaseRepository implements AboutRepositoryInterface
         'id',
     ];
 
-    public function __construct(protected ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

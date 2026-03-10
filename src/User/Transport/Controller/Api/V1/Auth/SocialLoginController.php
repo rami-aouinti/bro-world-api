@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\User\Transport\Controller\Api\V1\Auth;
 
-use OpenApi\Attributes as OA;
 use App\General\Domain\Utils\JSON;
 use App\Role\Application\Security\Interfaces\RolesServiceInterface;
 use App\User\Application\Security\SecurityUser;
@@ -14,6 +13,7 @@ use App\User\Domain\Repository\Interfaces\UserRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use JsonException;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -33,7 +33,9 @@ use function trim;
 #[OA\Tag(name: 'Authentication')]
 class SocialLoginController
 {
-    /** @var array<int, string> */
+    /**
+     * @var array<int, string>
+     */
     private const array ALLOWED_PROVIDERS = ['github', 'instagram', 'facebook', 'google'];
 
     public function __construct(
@@ -149,13 +151,15 @@ class SocialLoginController
 
         while (!$this->userRepository->isUsernameAvailable($username)) {
             $username = sprintf('%s%d', $baseUsername, $index);
-            ++$index;
+            $index++;
         }
 
         return $username;
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     private function generateRandomPassword(): string
     {
         return bin2hex(random_bytes(16));

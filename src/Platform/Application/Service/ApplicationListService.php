@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Platform\Application\Service;
 
-use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\General\Application\Service\CacheKeyConventionService;
+use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\Platform\Application\Projection\ApplicationProjection;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Repository\Interfaces\ApplicationRepositoryInterface;
@@ -21,14 +21,13 @@ readonly class ApplicationListService
 {
     public function __construct(
         private ApplicationRepositoryInterface $applicationRepository,
-        private CacheInterface                 $cache,
-        private ElasticsearchServiceInterface  $elasticsearchService,
+        private CacheInterface $cache,
+        private ElasticsearchServiceInterface $elasticsearchService,
         private CacheKeyConventionService $cacheKeyConventionService,
     ) {
     }
 
     /**
-     * @param Request $request
      * @return array<string, mixed>
      * @throws \JsonException
      */
@@ -38,8 +37,6 @@ readonly class ApplicationListService
     }
 
     /**
-     * @param Request $request
-     * @param User $loggedInUser
      * @return array<string, mixed>
      * @throws \JsonException
      */
@@ -49,8 +46,6 @@ readonly class ApplicationListService
     }
 
     /**
-     * @param Request $request
-     * @param User|null $loggedInUser
      * @return array<string, mixed>
      * @throws \JsonException
      * @throws InvalidArgumentException
@@ -61,10 +56,10 @@ readonly class ApplicationListService
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
 
         $filters = [
-            'title' => trim((string) $request->query->get('title', '')),
-            'description' => trim((string) $request->query->get('description', '')),
-            'platformName' => trim((string) $request->query->get('platformName', '')),
-            'platformKey' => trim((string) $request->query->get('platformKey', '')),
+            'title' => trim((string)$request->query->get('title', '')),
+            'description' => trim((string)$request->query->get('description', '')),
+            'platformName' => trim((string)$request->query->get('platformName', '')),
+            'platformKey' => trim((string)$request->query->get('platformKey', '')),
         ];
 
         $cacheKey = $this->cacheKeyConventionService->buildPublicApplicationsListKey([
@@ -140,7 +135,7 @@ readonly class ApplicationListService
                     'page' => $page,
                     'limit' => $limit,
                     'totalItems' => $totalItems,
-                    'totalPages' => $totalItems > 0 ? (int) ceil($totalItems / $limit) : 0,
+                    'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
                 ],
             ];
         });
@@ -165,19 +160,35 @@ readonly class ApplicationListService
             $must = [];
 
             if ($filters['title'] !== '') {
-                $must[] = ['match_phrase_prefix' => ['title' => $filters['title']]];
+                $must[] = [
+                    'match_phrase_prefix' => [
+                        'title' => $filters['title'],
+                    ],
+                ];
             }
             if ($filters['description'] !== '') {
-                $must[] = ['match_phrase_prefix' => ['description' => $filters['description']]];
+                $must[] = [
+                    'match_phrase_prefix' => [
+                        'description' => $filters['description'],
+                    ],
+                ];
             }
             if ($filters['platformName'] !== '') {
-                $must[] = ['match_phrase_prefix' => ['platformName' => $filters['platformName']]];
+                $must[] = [
+                    'match_phrase_prefix' => [
+                        'platformName' => $filters['platformName'],
+                    ],
+                ];
             }
 
             $response = $this->elasticsearchService->search(
                 ApplicationProjection::INDEX_NAME,
                 [
-                    'query' => ['bool' => ['must' => $must]],
+                    'query' => [
+                        'bool' => [
+                            'must' => $must,
+                        ],
+                    ],
                     '_source' => ['id'],
                 ],
                 0,

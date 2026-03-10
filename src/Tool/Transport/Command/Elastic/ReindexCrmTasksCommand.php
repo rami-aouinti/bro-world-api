@@ -38,7 +38,9 @@ final class ReindexCrmTasksCommand extends Command
         $indexed = 0;
 
         /** @var Task $task */
-        foreach ($this->taskRepository->findBy([], ['createdAt' => 'DESC']) as $task) {
+        foreach ($this->taskRepository->findBy([], [
+            'createdAt' => 'DESC',
+        ]) as $task) {
             $this->elasticsearchService->index(CrmTaskProjection::INDEX_NAME, $task->getId(), [
                 'id' => $task->getId(),
                 'title' => $task->getTitle(),
@@ -47,7 +49,7 @@ final class ReindexCrmTasksCommand extends Command
                 'taskRequests' => array_map(static fn ($request): string => $request->getTitle(), $task->getTaskRequests()->toArray()),
                 'updatedAt' => $task->getUpdatedAt()?->format(DATE_ATOM),
             ]);
-            ++$indexed;
+            $indexed++;
         }
 
         if ($input->isInteractive()) {

@@ -36,6 +36,12 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
         $manager->flush();
     }
 
+    #[Override]
+    public function getOrder(): int
+    {
+        return 10;
+    }
+
     private function persistPages(ObjectManager $manager, PageLanguage $language, array $home, array $about, array $contact, array $faq): void
     {
         $manager->persist((new Home())
@@ -55,7 +61,9 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
             ->setContent($faq));
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function getFrenchHome(): array
     {
         return [
@@ -89,9 +97,18 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
                 ],
             ],
             'metrics' => [
-                ['value' => '250+', 'label' => 'Utilisateurs actifs / semaine'],
-                ['value' => '99.9%', 'label' => 'Disponibilité service'],
-                ['value' => '4.8/5', 'label' => 'Note moyenne client'],
+                [
+                    'value' => '250+',
+                    'label' => 'Utilisateurs actifs / semaine',
+                ],
+                [
+                    'value' => '99.9%',
+                    'label' => 'Disponibilité service',
+                ],
+                [
+                    'value' => '4.8/5',
+                    'label' => 'Note moyenne client',
+                ],
             ],
             'steps' => [
                 [
@@ -119,7 +136,9 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function getEnglishHome(): array
     {
         return [
@@ -153,9 +172,18 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
                 ],
             ],
             'metrics' => [
-                ['value' => '250+', 'label' => 'Active users / week'],
-                ['value' => '99.9%', 'label' => 'Service availability'],
-                ['value' => '4.8/5', 'label' => 'Average customer rating'],
+                [
+                    'value' => '250+',
+                    'label' => 'Active users / week',
+                ],
+                [
+                    'value' => '99.9%',
+                    'label' => 'Service availability',
+                ],
+                [
+                    'value' => '4.8/5',
+                    'label' => 'Average customer rating',
+                ],
             ],
             'steps' => [
                 [
@@ -183,7 +211,9 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function getFrenchAbout(): array
     {
         return [
@@ -221,9 +251,24 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
                 ],
             ],
             'metrics' => [
-                ['value' => '120+', 'label' => 'Projets livrés', 'context' => 'sur 24 derniers mois', 'icon' => 'mdi-briefcase-outline'],
-                ['value' => '98%', 'label' => 'Satisfaction client', 'context' => 'NPS trimestriel', 'icon' => 'mdi-thumb-up-outline'],
-                ['value' => '35%', 'label' => 'Gain de productivité', 'context' => 'moyenne observée', 'icon' => 'mdi-chart-line'],
+                [
+                    'value' => '120+',
+                    'label' => 'Projets livrés',
+                    'context' => 'sur 24 derniers mois',
+                    'icon' => 'mdi-briefcase-outline',
+                ],
+                [
+                    'value' => '98%',
+                    'label' => 'Satisfaction client',
+                    'context' => 'NPS trimestriel',
+                    'icon' => 'mdi-thumb-up-outline',
+                ],
+                [
+                    'value' => '35%',
+                    'label' => 'Gain de productivité',
+                    'context' => 'moyenne observée',
+                    'icon' => 'mdi-chart-line',
+                ],
             ],
             'timelineTitle' => 'Timeline',
             'timeline' => [
@@ -251,7 +296,9 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function getEnglishAbout(): array
     {
         return [
@@ -289,9 +336,24 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
                 ],
             ],
             'metrics' => [
-                ['value' => '120+', 'label' => 'Delivered projects', 'context' => 'over the last 24 months', 'icon' => 'mdi-briefcase-outline'],
-                ['value' => '98%', 'label' => 'Customer satisfaction', 'context' => 'quarterly NPS', 'icon' => 'mdi-thumb-up-outline'],
-                ['value' => '35%', 'label' => 'Productivity gain', 'context' => 'observed average', 'icon' => 'mdi-chart-line'],
+                [
+                    'value' => '120+',
+                    'label' => 'Delivered projects',
+                    'context' => 'over the last 24 months',
+                    'icon' => 'mdi-briefcase-outline',
+                ],
+                [
+                    'value' => '98%',
+                    'label' => 'Customer satisfaction',
+                    'context' => 'quarterly NPS',
+                    'icon' => 'mdi-thumb-up-outline',
+                ],
+                [
+                    'value' => '35%',
+                    'label' => 'Productivity gain',
+                    'context' => 'observed average',
+                    'icon' => 'mdi-chart-line',
+                ],
             ],
             'timelineTitle' => 'Timeline',
             'timeline' => [
@@ -319,7 +381,9 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function getFrenchContact(): array
     {
         return [
@@ -332,15 +396,31 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
                 'secondaryCta' => 'Ouvrir un ticket',
             ],
             'channels' => [
-                ['label' => 'Email', 'value' => 'support@bro-world.io', 'details' => 'Réponse sous 24h', 'icon' => 'mdi-email-outline'],
-                ['label' => 'Téléphone', 'value' => '+33 1 23 45 67 89', 'details' => 'Lundi au vendredi', 'icon' => 'mdi-phone-outline'],
+                [
+                    'label' => 'Email',
+                    'value' => 'support@bro-world.io',
+                    'details' => 'Réponse sous 24h',
+                    'icon' => 'mdi-email-outline',
+                ],
+                [
+                    'label' => 'Téléphone',
+                    'value' => '+33 1 23 45 67 89',
+                    'details' => 'Lundi au vendredi',
+                    'icon' => 'mdi-phone-outline',
+                ],
             ],
             'availability' => [
                 'title' => 'Disponibilité',
                 'description' => 'Créneaux de réponse gérés par l’équipe support.',
                 'windows' => [
-                    ['label' => 'Support standard', 'value' => '09:00 - 18:00 CET'],
-                    ['label' => 'Urgences', 'value' => '24/7 pour incidents critiques'],
+                    [
+                        'label' => 'Support standard',
+                        'value' => '09:00 - 18:00 CET',
+                    ],
+                    [
+                        'label' => 'Urgences',
+                        'value' => '24/7 pour incidents critiques',
+                    ],
                 ],
                 'escalationTitle' => 'Escalade',
                 'escalationBullets' => ['Niveau 1: support', 'Niveau 2: équipe produit', 'Niveau 3: engineering lead'],
@@ -357,9 +437,18 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
                     'messagePlaceholder' => 'Décrivez votre demande…',
                 ],
                 'topics' => [
-                    ['value' => 'sales', 'label' => 'Demande commerciale'],
-                    ['value' => 'support', 'label' => 'Support technique'],
-                    ['value' => 'partnership', 'label' => 'Partenariat'],
+                    [
+                        'value' => 'sales',
+                        'label' => 'Demande commerciale',
+                    ],
+                    [
+                        'value' => 'support',
+                        'label' => 'Support technique',
+                    ],
+                    [
+                        'value' => 'partnership',
+                        'label' => 'Partenariat',
+                    ],
                 ],
                 'privacyNote' => 'En soumettant ce formulaire, vous acceptez le traitement de vos données.',
                 'submit' => 'Envoyer',
@@ -369,14 +458,22 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
                 'title' => 'Autres canaux',
                 'description' => 'Ces actions peuvent aussi être gérées dynamiquement côté backend.',
                 'actions' => [
-                    ['label' => 'Chat en direct', 'variant' => 'primary'],
-                    ['label' => 'Centre d’aide', 'variant' => 'outlined'],
+                    [
+                        'label' => 'Chat en direct',
+                        'variant' => 'primary',
+                    ],
+                    [
+                        'label' => 'Centre d’aide',
+                        'variant' => 'outlined',
+                    ],
                 ],
             ],
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function getEnglishContact(): array
     {
         return [
@@ -389,15 +486,31 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
                 'secondaryCta' => 'Open a ticket',
             ],
             'channels' => [
-                ['label' => 'Email', 'value' => 'support@bro-world.io', 'details' => 'Reply within 24h', 'icon' => 'mdi-email-outline'],
-                ['label' => 'Phone', 'value' => '+33 1 23 45 67 89', 'details' => 'Monday to Friday', 'icon' => 'mdi-phone-outline'],
+                [
+                    'label' => 'Email',
+                    'value' => 'support@bro-world.io',
+                    'details' => 'Reply within 24h',
+                    'icon' => 'mdi-email-outline',
+                ],
+                [
+                    'label' => 'Phone',
+                    'value' => '+33 1 23 45 67 89',
+                    'details' => 'Monday to Friday',
+                    'icon' => 'mdi-phone-outline',
+                ],
             ],
             'availability' => [
                 'title' => 'Availability',
                 'description' => 'Response windows managed by the support team.',
                 'windows' => [
-                    ['label' => 'Standard support', 'value' => '09:00 - 18:00 CET'],
-                    ['label' => 'Emergency', 'value' => '24/7 for critical incidents'],
+                    [
+                        'label' => 'Standard support',
+                        'value' => '09:00 - 18:00 CET',
+                    ],
+                    [
+                        'label' => 'Emergency',
+                        'value' => '24/7 for critical incidents',
+                    ],
                 ],
                 'escalationTitle' => 'Escalation',
                 'escalationBullets' => ['Level 1: support', 'Level 2: product team', 'Level 3: engineering lead'],
@@ -414,9 +527,18 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
                     'messagePlaceholder' => 'Describe your request…',
                 ],
                 'topics' => [
-                    ['value' => 'sales', 'label' => 'Sales inquiry'],
-                    ['value' => 'support', 'label' => 'Technical support'],
-                    ['value' => 'partnership', 'label' => 'Partnership'],
+                    [
+                        'value' => 'sales',
+                        'label' => 'Sales inquiry',
+                    ],
+                    [
+                        'value' => 'support',
+                        'label' => 'Technical support',
+                    ],
+                    [
+                        'value' => 'partnership',
+                        'label' => 'Partnership',
+                    ],
                 ],
                 'privacyNote' => 'By submitting this form, you agree to the processing of your data.',
                 'submit' => 'Send',
@@ -426,14 +548,22 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
                 'title' => 'Other channels',
                 'description' => 'These actions can also be managed dynamically by the backend.',
                 'actions' => [
-                    ['label' => 'Live chat', 'variant' => 'primary'],
-                    ['label' => 'Help center', 'variant' => 'outlined'],
+                    [
+                        'label' => 'Live chat',
+                        'variant' => 'primary',
+                    ],
+                    [
+                        'label' => 'Help center',
+                        'variant' => 'outlined',
+                    ],
                 ],
             ],
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function getFrenchFaq(): array
     {
         return [
@@ -449,10 +579,30 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
                 'placeholder' => 'Ex: facturation, sécurité, délais…',
             ],
             'categories' => [
-                ['key' => 'all', 'label' => 'Toutes', 'color' => 'primary', 'description' => 'Toutes les catégories'],
-                ['key' => 'billing', 'label' => 'Facturation', 'color' => 'indigo', 'description' => 'Paiements, abonnements, factures'],
-                ['key' => 'security', 'label' => 'Sécurité', 'color' => 'teal', 'description' => 'Protection des données et accès'],
-                ['key' => 'product', 'label' => 'Produit', 'color' => 'deep-orange', 'description' => 'Fonctionnalités et roadmap'],
+                [
+                    'key' => 'all',
+                    'label' => 'Toutes',
+                    'color' => 'primary',
+                    'description' => 'Toutes les catégories',
+                ],
+                [
+                    'key' => 'billing',
+                    'label' => 'Facturation',
+                    'color' => 'indigo',
+                    'description' => 'Paiements, abonnements, factures',
+                ],
+                [
+                    'key' => 'security',
+                    'label' => 'Sécurité',
+                    'color' => 'teal',
+                    'description' => 'Protection des données et accès',
+                ],
+                [
+                    'key' => 'product',
+                    'label' => 'Produit',
+                    'color' => 'deep-orange',
+                    'description' => 'Fonctionnalités et roadmap',
+                ],
             ],
             'items' => [
                 [
@@ -478,7 +628,9 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function getEnglishFaq(): array
     {
         return [
@@ -494,10 +646,30 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
                 'placeholder' => 'Ex: billing, security, timelines…',
             ],
             'categories' => [
-                ['key' => 'all', 'label' => 'All', 'color' => 'primary', 'description' => 'All categories'],
-                ['key' => 'billing', 'label' => 'Billing', 'color' => 'indigo', 'description' => 'Payments, subscriptions, invoices'],
-                ['key' => 'security', 'label' => 'Security', 'color' => 'teal', 'description' => 'Data protection and access'],
-                ['key' => 'product', 'label' => 'Product', 'color' => 'deep-orange', 'description' => 'Features and roadmap'],
+                [
+                    'key' => 'all',
+                    'label' => 'All',
+                    'color' => 'primary',
+                    'description' => 'All categories',
+                ],
+                [
+                    'key' => 'billing',
+                    'label' => 'Billing',
+                    'color' => 'indigo',
+                    'description' => 'Payments, subscriptions, invoices',
+                ],
+                [
+                    'key' => 'security',
+                    'label' => 'Security',
+                    'color' => 'teal',
+                    'description' => 'Data protection and access',
+                ],
+                [
+                    'key' => 'product',
+                    'label' => 'Product',
+                    'color' => 'deep-orange',
+                    'description' => 'Features and roadmap',
+                ],
             ],
             'items' => [
                 [
@@ -521,11 +693,5 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
                 'suggestion' => 'Try another keyword or switch category.',
             ],
         ];
-    }
-
-    #[Override]
-    public function getOrder(): int
-    {
-        return 10;
     }
 }

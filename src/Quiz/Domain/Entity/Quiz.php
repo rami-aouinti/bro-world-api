@@ -36,7 +36,9 @@ class Quiz implements EntityInterface
     #[ORM\JoinColumn(name: 'owner_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private User $owner;
 
-    /** @var Collection<int, QuizQuestion> */
+    /**
+     * @var Collection<int, QuizQuestion>
+     */
     #[ORM\OneToMany(targetEntity: QuizQuestion::class, mappedBy: 'quiz', cascade: ['remove'])]
     private Collection $questions;
 
@@ -44,13 +46,49 @@ class Quiz implements EntityInterface
     #[ORM\JoinColumn(name: 'configuration_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?Configuration $configuration = null;
 
-    public function __construct() { $this->id = $this->createUuid(); $this->questions = new ArrayCollection(); }
-    #[Override] public function getId(): string { return $this->id->toString(); }
-    public function getApplication(): Application { return $this->application; }
-    public function setApplication(Application $application): self { $this->application = $application; return $this; }
-    public function getOwner(): User { return $this->owner; }
-    public function setOwner(User $owner): self { $this->owner = $owner; return $this; }
-    /** @return Collection<int, QuizQuestion> */ public function getQuestions(): Collection { return $this->questions; }
-    public function getConfiguration(): ?Configuration { return $this->configuration; }
-    public function setConfiguration(?Configuration $configuration): self { $this->configuration = $configuration; return $this; }
+    public function __construct()
+    {
+        $this->id = $this->createUuid();
+        $this->questions = new ArrayCollection();
+    }
+    #[Override] public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getApplication(): Application
+    {
+        return $this->application;
+    }
+    public function setApplication(Application $application): self
+    {
+        $this->application = $application;
+
+        return $this;
+    }
+    public function getOwner(): User
+    {
+        return $this->owner;
+    }
+    public function setOwner(User $owner): self
+    {
+        $this->owner = $owner;
+
+        return $this;
+    }
+    /**
+     * @return Collection<int, QuizQuestion>
+     */ public function getQuestions(): Collection
+    {
+        return $this->questions;
+    }
+    public function getConfiguration(): ?Configuration
+    {
+        return $this->configuration;
+    }
+    public function setConfiguration(?Configuration $configuration): self
+    {
+        $this->configuration = $configuration;
+
+        return $this;
+    }
 }

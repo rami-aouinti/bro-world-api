@@ -8,4 +8,3 @@ final class BlogProjection
 {
     public const string INDEX_NAME = 'blogs';
 }
-

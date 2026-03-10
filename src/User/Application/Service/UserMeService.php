@@ -7,9 +7,9 @@ namespace App\User\Application\Service;
 use App\General\Application\Message\EntityDeleted;
 use App\General\Application\Message\EntityPatched;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
+use App\Log\Domain\Entity\LogLogin;
 use App\Log\Infrastructure\Repository\LogLoginRepository;
 use App\User\Application\Security\SecurityUser;
-use App\Log\Domain\Entity\LogLogin;
 use App\User\Domain\Entity\Social;
 use App\User\Domain\Entity\User;
 use App\User\Domain\Entity\UserProfile;
@@ -44,7 +44,9 @@ readonly class UserMeService
     ) {
     }
 
-    /** @return array<int,array<string,string>> */
+    /**
+     * @return array<int,array<string,string>>
+     */
     public function getSessions(User $user): array
     {
         $cacheKey = sprintf('user_sessions_%s', $user->getId());
@@ -77,7 +79,9 @@ readonly class UserMeService
         return $sessions;
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     public function getMe(User $user): array
     {
         $profile = $this->ensureProfile($user);
@@ -98,13 +102,19 @@ readonly class UserMeService
         ];
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     public function patchProfile(User $user, array $payload): array
     {
         $profile = $this->ensureProfile($user);
 
-        if (array_key_exists('title', $payload)) { $profile->setTitle($this->nullableString($payload['title'])); }
-        if (array_key_exists('information', $payload)) { $profile->setInformation($this->nullableString($payload['information'])); }
+        if (array_key_exists('title', $payload)) {
+            $profile->setTitle($this->nullableString($payload['title']));
+        }
+        if (array_key_exists('information', $payload)) {
+            $profile->setInformation($this->nullableString($payload['information']));
+        }
         if (array_key_exists('gender', $payload)) {
             $gender = $this->nullableString($payload['gender']);
             if ($gender !== null && in_array($gender, ['Female', 'Male'], true) === false) {
@@ -113,13 +123,23 @@ readonly class UserMeService
             $profile->setGender($gender);
         }
         if (array_key_exists('birthday', $payload)) {
-            $profile->setBirthday($payload['birthday'] !== null && $payload['birthday'] !== '' ? new DateTimeImmutable((string) $payload['birthday']) : null);
+            $profile->setBirthday($payload['birthday'] !== null && $payload['birthday'] !== '' ? new DateTimeImmutable((string)$payload['birthday']) : null);
         }
-        if (array_key_exists('location', $payload)) { $profile->setLocation($this->nullableString($payload['location'])); }
-        if (array_key_exists('phone', $payload)) { $profile->setPhone($this->nullableString($payload['phone'])); }
-        if (array_key_exists('firstName', $payload)) { $user->setFirstName($this->nullableString($payload['firstName'])); }
-        if (array_key_exists('lastName', $payload)) { $user->setLastName($this->nullableString($payload['lastName'])); }
-        if (array_key_exists('email', $payload)) { $user->setEmail($this->nullableString($payload['email'])); }
+        if (array_key_exists('location', $payload)) {
+            $profile->setLocation($this->nullableString($payload['location']));
+        }
+        if (array_key_exists('phone', $payload)) {
+            $profile->setPhone($this->nullableString($payload['phone']));
+        }
+        if (array_key_exists('firstName', $payload)) {
+            $user->setFirstName($this->nullableString($payload['firstName']));
+        }
+        if (array_key_exists('lastName', $payload)) {
+            $user->setLastName($this->nullableString($payload['lastName']));
+        }
+        if (array_key_exists('email', $payload)) {
+            $user->setEmail($this->nullableString($payload['email']));
+        }
 
         if (array_key_exists('socials', $payload) && is_array($payload['socials'])) {
             foreach ($user->getSocials()->toArray() as $social) {
@@ -134,8 +154,8 @@ readonly class UserMeService
 
                 $social = new Social();
                 $social
-                    ->setProvider((string) $socialData['provider'])
-                    ->setProviderId((string) $socialData['providerId']);
+                    ->setProvider((string)$socialData['provider'])
+                    ->setProviderId((string)$socialData['providerId']);
 
                 $user->addSocial($social);
                 $this->entityManager->persist($social);
@@ -152,11 +172,13 @@ readonly class UserMeService
         return $this->normalizeProfile($profile);
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     public function changePassword(User $user, array $payload): void
     {
-        $currentPassword = (string) ($payload['currentPassword'] ?? '');
-        $newPassword = (string) ($payload['newPassword'] ?? '');
+        $currentPassword = (string)($payload['currentPassword'] ?? '');
+        $newPassword = (string)($payload['newPassword'] ?? '');
 
         if ($this->passwordHasher->isPasswordValid(new SecurityUser($user, []), $currentPassword) === false) {
             throw new BadRequestHttpException('Current password is invalid');
@@ -196,7 +218,9 @@ readonly class UserMeService
         return $profile;
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     private function normalizeProfile(UserProfile $profile): array
     {
         return [
@@ -233,7 +257,7 @@ readonly class UserMeService
             return null;
         }
 
-        $normalized = trim((string) $value);
+        $normalized = trim((string)$value);
 
         return $normalized === '' ? null : $normalized;
     }

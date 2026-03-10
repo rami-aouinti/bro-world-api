@@ -26,7 +26,9 @@ class ResumeCreateControllerTest extends WebTestCase
 {
     private string $baseUrl = self::API_URL_PREFIX . '/v1/recruit/resumes';
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `POST /v1/recruit/resumes` requires authentication.')]
     public function testThatCreateResumeRequiresAuthentication(): void
     {
@@ -37,11 +39,15 @@ class ResumeCreateControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_UNAUTHORIZED, $client->getResponse()->getStatusCode());
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `POST /v1/recruit/resumes` creates resume with uploaded PDF document.')]
     public function testThatCreateResumeWithPdfUploadWorks(): void
     {
-        $client = $this->getTestClient('john-root', 'password-root', null, ['CONTENT_TYPE' => 'multipart/form-data']);
+        $client = $this->getTestClient('john-root', 'password-root', null, [
+            'CONTENT_TYPE' => 'multipart/form-data',
+        ]);
 
         $tmpPdf = sys_get_temp_dir() . '/resume_upload_' . bin2hex(random_bytes(8)) . '.pdf';
         file_put_contents($tmpPdf, "%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF");
@@ -59,7 +65,10 @@ class ResumeCreateControllerTest extends WebTestCase
             $this->baseUrl,
             [
                 'experiences' => json_encode([
-                    ['title' => 'Backend Developer', 'description' => 'API development'],
+                    [
+                        'title' => 'Backend Developer',
+                        'description' => 'API development',
+                    ],
                 ], JSON_THROW_ON_ERROR),
             ],
             [
@@ -81,7 +90,7 @@ class ResumeCreateControllerTest extends WebTestCase
         $documentPath = parse_url($payload['documentUrl'], PHP_URL_PATH);
         self::assertIsString($documentPath);
 
-        $projectDir = (string) static::getContainer()->getParameter('kernel.project_dir');
+        $projectDir = (string)static::getContainer()->getParameter('kernel.project_dir');
         $absoluteDocumentPath = $projectDir . '/public' . $documentPath;
         self::assertFileExists($absoluteDocumentPath);
 

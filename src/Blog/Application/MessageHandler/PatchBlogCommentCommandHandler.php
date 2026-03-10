@@ -15,7 +15,11 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 final readonly class PatchBlogCommentCommandHandler
 {
-    public function __construct(private BlogCommentRepository $commentRepository, private CacheInvalidationService $cacheInvalidationService) {}
+    public function __construct(
+        private BlogCommentRepository $commentRepository,
+        private CacheInvalidationService $cacheInvalidationService
+    ) {
+    }
 
     public function __invoke(PatchBlogCommentCommand $command): void
     {

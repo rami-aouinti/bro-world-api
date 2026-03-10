@@ -43,10 +43,36 @@ final class PublicPageControllerTest extends WebTestCase
      */
     public static function providePublicPageRoutesForFrench(): iterable
     {
-        yield 'home-fr' => ['/v1/page/public/home', ['hero' => ['title' => 'Pilotez votre activité depuis un espace unique'], 'featuresTitle' => 'Fonctionnalités principales']];
-        yield 'about-fr' => ['/v1/page/public/about', ['hero' => ['badge' => 'À propos'], 'metricsTitle' => 'Chiffres clés']];
-        yield 'contact-fr' => ['/v1/page/public/contact', ['title' => 'Contact', 'form' => ['submit' => 'Envoyer']]];
-        yield 'faq-fr' => ['/v1/page/public/faq', ['hero' => ['title' => 'Questions fréquentes'], 'emptyState' => ['title' => 'Aucun résultat']]];
+        yield 'home-fr' => [
+            '/v1/page/public/home', [
+                'hero' => [
+                    'title' => 'Pilotez votre activité depuis un espace unique',
+                ],
+                'featuresTitle' => 'Fonctionnalités principales',
+            ]];
+        yield 'about-fr' => [
+            '/v1/page/public/about', [
+                'hero' => [
+                    'badge' => 'À propos',
+                ],
+                'metricsTitle' => 'Chiffres clés',
+            ]];
+        yield 'contact-fr' => [
+            '/v1/page/public/contact', [
+                'title' => 'Contact',
+                'form' => [
+                    'submit' => 'Envoyer',
+                ],
+            ]];
+        yield 'faq-fr' => [
+            '/v1/page/public/faq', [
+                'hero' => [
+                    'title' => 'Questions fréquentes',
+                ],
+                'emptyState' => [
+                    'title' => 'Aucun résultat',
+                ],
+            ]];
     }
 
     /**
@@ -54,10 +80,36 @@ final class PublicPageControllerTest extends WebTestCase
      */
     public static function providePublicPageRoutesForEnglish(): iterable
     {
-        yield 'home-en' => ['/v1/page/public/home', ['hero' => ['title' => 'Manage your business from one unified space'], 'featuresTitle' => 'Key features']];
-        yield 'about-en' => ['/v1/page/public/about', ['hero' => ['badge' => 'About'], 'metricsTitle' => 'Key figures']];
-        yield 'contact-en' => ['/v1/page/public/contact', ['title' => 'Contact', 'form' => ['submit' => 'Send']]];
-        yield 'faq-en' => ['/v1/page/public/faq', ['hero' => ['title' => 'Frequently asked questions'], 'emptyState' => ['title' => 'No results']]];
+        yield 'home-en' => [
+            '/v1/page/public/home', [
+                'hero' => [
+                    'title' => 'Manage your business from one unified space',
+                ],
+                'featuresTitle' => 'Key features',
+            ]];
+        yield 'about-en' => [
+            '/v1/page/public/about', [
+                'hero' => [
+                    'badge' => 'About',
+                ],
+                'metricsTitle' => 'Key figures',
+            ]];
+        yield 'contact-en' => [
+            '/v1/page/public/contact', [
+                'title' => 'Contact',
+                'form' => [
+                    'submit' => 'Send',
+                ],
+            ]];
+        yield 'faq-en' => [
+            '/v1/page/public/faq', [
+                'hero' => [
+                    'title' => 'Frequently asked questions',
+                ],
+                'emptyState' => [
+                    'title' => 'No results',
+                ],
+            ]];
     }
 
     /**
@@ -71,7 +123,9 @@ final class PublicPageControllerTest extends WebTestCase
         yield 'faq' => ['/v1/page/public/faq'];
     }
 
-    /** @param array<string, mixed> $expectedSubset */
+    /**
+     * @param array<string, mixed> $expectedSubset
+     */
     private function assertRouteResponseContainsSubset(string $route, string $language, array $expectedSubset): void
     {
         $client = $this->getTestClient();

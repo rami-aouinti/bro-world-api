@@ -13,5 +13,8 @@ class QuizQuestionRepository extends BaseRepository
     protected static string $entityName = QuizQuestion::class;
     protected static array $searchColumns = ['id', 'title', 'category'];
 
-    public function __construct(protected ManagerRegistry $managerRegistry) {}
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
+    }
 }

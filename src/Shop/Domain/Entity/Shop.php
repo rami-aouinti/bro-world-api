@@ -51,16 +51,45 @@ class Shop implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
 
-    public function getName(): string { return $this->name; }
-    public function setName(string $name): self { $this->name = $name; return $this; }
-    public function getApplication(): ?PlatformApplication { return $this->application; }
-    public function setApplication(?PlatformApplication $application): self { $this->application = $application; return $this; }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function setName(string $name): self
+    {
+        $this->name = $name;
 
-    /** @return Collection<int, Category>|ArrayCollection<int, Category> */
-    public function getCategories(): Collection|ArrayCollection { return $this->categories; }
+        return $this;
+    }
+    public function getApplication(): ?PlatformApplication
+    {
+        return $this->application;
+    }
+    public function setApplication(?PlatformApplication $application): self
+    {
+        $this->application = $application;
 
-    /** @return Collection<int, Product>|ArrayCollection<int, Product> */
-    public function getProducts(): Collection|ArrayCollection { return $this->products; }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Category>|ArrayCollection<int, Category>
+     */
+    public function getCategories(): Collection|ArrayCollection
+    {
+        return $this->categories;
+    }
+
+    /**
+     * @return Collection<int, Product>|ArrayCollection<int, Product>
+     */
+    public function getProducts(): Collection|ArrayCollection
+    {
+        return $this->products;
+    }
 }

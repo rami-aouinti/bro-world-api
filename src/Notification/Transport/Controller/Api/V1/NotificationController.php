@@ -19,7 +19,6 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Uid\Uuid;
 
 use function is_string;
 use function trim;
@@ -33,7 +32,8 @@ final readonly class NotificationController
         private NotificationRepository $notificationRepository,
         private NotificationReadService $notificationReadService,
         private MessageServiceInterface $messageService,
-    ) {}
+    ) {
+    }
 
     #[Route('/v1/notifications', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'List notifications for the logged-in user.')]
@@ -101,8 +101,8 @@ final readonly class NotificationController
     #[OA\Response(response: 403, description: 'Access denied.')]
     public function list(Request $request, User $loggedInUser): JsonResponse
     {
-        $limit = max(1, (int) $request->query->get('limit', 50));
-        $offset = max(0, (int) $request->query->get('offset', 0));
+        $limit = max(1, (int)$request->query->get('limit', 50));
+        $offset = max(0, (int)$request->query->get('offset', 0));
 
         $notifications = $this->notificationRepository->findByRecipient($loggedInUser, $limit, $offset);
 
@@ -134,9 +134,10 @@ final readonly class NotificationController
             actorUserId: $loggedInUser->getId(),
         ));
 
-        return new JsonResponse(['operationId' => $operationId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
-
 
     #[Route('/v1/notifications/{notification}', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'Get a notification detail by id.')]
@@ -226,6 +227,8 @@ final readonly class NotificationController
             fromId: $fromId,
         ));
 
-        return new JsonResponse(['operationId' => $operationId], JsonResponse::HTTP_ACCEPTED);
+        return new JsonResponse([
+            'operationId' => $operationId,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 }

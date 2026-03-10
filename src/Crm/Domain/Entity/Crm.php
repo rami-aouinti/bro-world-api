@@ -36,7 +36,9 @@ class Crm implements EntityInterface
     #[ORM\OneToMany(targetEntity: Company::class, mappedBy: 'crm')]
     private Collection|ArrayCollection $companies;
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     public function __construct()
     {
         $this->id = $this->createUuid();
@@ -61,7 +63,9 @@ class Crm implements EntityInterface
         return $this;
     }
 
-    /** @return Collection<int, Company>|ArrayCollection<int, Company> */
+    /**
+     * @return Collection<int, Company>|ArrayCollection<int, Company>
+     */
     public function getCompanies(): Collection|ArrayCollection
     {
         return $this->companies;

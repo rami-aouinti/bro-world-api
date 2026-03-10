@@ -45,12 +45,36 @@ class Category implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getShop(): ?Shop { return $this->shop; }
-    public function setShop(?Shop $shop): self { $this->shop = $shop; return $this; }
-    public function getName(): string { return $this->name; }
-    public function setName(string $name): self { $this->name = $name; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getShop(): ?Shop
+    {
+        return $this->shop;
+    }
+    public function setShop(?Shop $shop): self
+    {
+        $this->shop = $shop;
 
-    /** @return Collection<int, Product>|ArrayCollection<int, Product> */
-    public function getProducts(): Collection|ArrayCollection { return $this->products; }
+        return $this;
+    }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Product>|ArrayCollection<int, Product>
+     */
+    public function getProducts(): Collection|ArrayCollection
+    {
+        return $this->products;
+    }
 }

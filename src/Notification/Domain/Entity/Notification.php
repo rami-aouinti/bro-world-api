@@ -34,7 +34,9 @@ class Notification implements EntityInterface
     #[ORM\Column(name: 'type', type: Types::STRING, length: 100)]
     private string $type = '';
 
-    #[ORM\Column(name: 'is_read', type: Types::BOOLEAN, options: ['default' => false])]
+    #[ORM\Column(name: 'is_read', type: Types::BOOLEAN, options: [
+        'default' => false,
+    ])]
     private bool $isRead = false;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
@@ -45,18 +47,72 @@ class Notification implements EntityInterface
     #[ORM\JoinColumn(name: 'recipient_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private User $recipient;
 
-    public function __construct() { $this->id = $this->createUuid(); }
-    #[Override] public function getId(): string { return $this->id->toString(); }
-    public function getTitle(): string { return $this->title; }
-    public function setTitle(string $title): self { $this->title = $title; return $this; }
-    public function getDescription(): string { return $this->description; }
-    public function setDescription(string $description): self { $this->description = $description; return $this; }
-    public function getType(): string { return $this->type; }
-    public function setType(string $type): self { $this->type = $type; return $this; }
-    public function isRead(): bool { return $this->isRead; }
-    public function setRead(bool $isRead): self { $this->isRead = $isRead; return $this; }
-    public function getFrom(): ?User { return $this->from; }
-    public function setFrom(?User $from): self { $this->from = $from; return $this; }
-    public function getRecipient(): User { return $this->recipient; }
-    public function setRecipient(User $recipient): self { $this->recipient = $recipient; return $this; }
+    public function __construct()
+    {
+        $this->id = $this->createUuid();
+    }
+    #[Override] public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+    public function setTitle(string $title): self
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+    public function getDescription(): string
+    {
+        return $this->description;
+    }
+    public function setDescription(string $description): self
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+    public function getType(): string
+    {
+        return $this->type;
+    }
+    public function setType(string $type): self
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+    public function isRead(): bool
+    {
+        return $this->isRead;
+    }
+    public function setRead(bool $isRead): self
+    {
+        $this->isRead = $isRead;
+
+        return $this;
+    }
+    public function getFrom(): ?User
+    {
+        return $this->from;
+    }
+    public function setFrom(?User $from): self
+    {
+        $this->from = $from;
+
+        return $this;
+    }
+    public function getRecipient(): User
+    {
+        return $this->recipient;
+    }
+    public function setRecipient(User $recipient): self
+    {
+        $this->recipient = $recipient;
+
+        return $this;
+    }
 }

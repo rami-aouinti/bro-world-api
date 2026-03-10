@@ -24,7 +24,6 @@ interface UserRelationshipRepositoryInterface
      */
     public function findOutgoingRequests(User $user): array;
 
-
     /**
      * @return array<int, UserRelationship>
      */

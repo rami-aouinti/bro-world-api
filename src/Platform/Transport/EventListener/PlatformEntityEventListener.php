@@ -133,7 +133,9 @@ class PlatformEntityEventListener
         $this->entityManager->persist($recruit);
     }
 
-    /** @return array<int, string> */
+    /**
+     * @return array<int, string>
+     */
     private function extractPluginNames(Application $application): array
     {
         $pluginNames = array_map(static function (ApplicationPlugin $applicationPlugin): string {

@@ -38,7 +38,9 @@ class Recruit implements EntityInterface
     #[ORM\OneToMany(targetEntity: Job::class, mappedBy: 'recruit')]
     private Collection|ArrayCollection $jobs;
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     public function __construct()
     {
         $this->id = $this->createUuid();
@@ -63,10 +65,11 @@ class Recruit implements EntityInterface
         return $this;
     }
 
-    /** @return Collection<int, Job>|ArrayCollection<int, Job> */
+    /**
+     * @return Collection<int, Job>|ArrayCollection<int, Job>
+     */
     public function getJobs(): Collection|ArrayCollection
     {
         return $this->jobs;
     }
 }
-

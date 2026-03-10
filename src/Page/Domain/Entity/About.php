@@ -38,13 +38,38 @@ class About implements EntityInterface
     #[Groups(['About', 'About.content'])]
     private array $content = [];
 
-    public function __construct() { $this->id = $this->createUuid(); }
+    public function __construct()
+    {
+        $this->id = $this->createUuid();
+    }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getLanguage(): PageLanguage { return $this->language; }
-    public function getLanguageId(): string { return $this->language->getId(); }
-    public function setLanguage(PageLanguage $language): self { $this->language = $language; return $this; }
-    public function getContent(): array { return $this->content; }
-    public function setContent(array $content): self { $this->content = $content; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getLanguage(): PageLanguage
+    {
+        return $this->language;
+    }
+    public function getLanguageId(): string
+    {
+        return $this->language->getId();
+    }
+    public function setLanguage(PageLanguage $language): self
+    {
+        $this->language = $language;
+
+        return $this;
+    }
+    public function getContent(): array
+    {
+        return $this->content;
+    }
+    public function setContent(array $content): self
+    {
+        $this->content = $content;
+
+        return $this;
+    }
 }

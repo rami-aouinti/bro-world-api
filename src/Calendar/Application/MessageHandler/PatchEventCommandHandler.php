@@ -6,10 +6,10 @@ namespace App\Calendar\Application\MessageHandler;
 
 use App\Calendar\Application\Message\PatchEventCommand;
 use App\Calendar\Domain\Entity\Event;
+use App\Calendar\Infrastructure\Repository\EventRepository;
 use App\General\Application\Service\CacheInvalidationService;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Infrastructure\Repository\ApplicationRepository;
-use App\Calendar\Infrastructure\Repository\EventRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -34,7 +34,9 @@ final readonly class PatchEventCommandHandler
             }
 
             if ($command->applicationSlug !== null) {
-                $application = $this->applicationRepository->findOneBy(['slug' => $command->applicationSlug]);
+                $application = $this->applicationRepository->findOneBy([
+                    'slug' => $command->applicationSlug,
+                ]);
                 if (!$application instanceof Application || $application->getUser()?->getId() !== $command->actorUserId) {
                     throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Application not found.');
                 }

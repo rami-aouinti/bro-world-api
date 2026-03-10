@@ -24,7 +24,9 @@ class MediaUploadControllerTest extends WebTestCase
 {
     private string $baseUrl = self::API_URL_PREFIX . '/v1/media/upload';
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `POST /v1/media/upload` requires authentication.')]
     public function testThatUploadRequiresAuthentication(): void
     {
@@ -35,16 +37,22 @@ class MediaUploadControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_UNAUTHORIZED, $client->getResponse()->getStatusCode());
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that single media upload works.')]
     public function testThatSingleMediaUploadWorks(): void
     {
-        $client = $this->getTestClient('john-root', 'password-root', null, ['CONTENT_TYPE' => 'multipart/form-data']);
+        $client = $this->getTestClient('john-root', 'password-root', null, [
+            'CONTENT_TYPE' => 'multipart/form-data',
+        ]);
 
         $tmpFile = $this->createTempPng('media_single_');
         $uploadedFile = new UploadedFile($tmpFile, 'single.png', 'image/png', null, true);
 
-        $client->request('POST', $this->baseUrl, [], ['file' => $uploadedFile]);
+        $client->request('POST', $this->baseUrl, [], [
+            'file' => $uploadedFile,
+        ]);
 
         $response = $client->getResponse();
         $content = $response->getContent();
@@ -64,11 +72,15 @@ class MediaUploadControllerTest extends WebTestCase
         }
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that multiple media upload works.')]
     public function testThatMultipleMediaUploadWorks(): void
     {
-        $client = $this->getTestClient('john-root', 'password-root', null, ['CONTENT_TYPE' => 'multipart/form-data']);
+        $client = $this->getTestClient('john-root', 'password-root', null, [
+            'CONTENT_TYPE' => 'multipart/form-data',
+        ]);
 
         $tmpPngA = $this->createTempPng('media_multi_a_');
         $tmpPngB = $this->createTempPng('media_multi_b_');
@@ -103,11 +115,15 @@ class MediaUploadControllerTest extends WebTestCase
         }
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that upload with unsupported media type fails.')]
     public function testThatUploadWithUnsupportedTypeFails(): void
     {
-        $client = $this->getTestClient('john-root', 'password-root', null, ['CONTENT_TYPE' => 'multipart/form-data']);
+        $client = $this->getTestClient('john-root', 'password-root', null, [
+            'CONTENT_TYPE' => 'multipart/form-data',
+        ]);
 
         $tmpExe = sys_get_temp_dir() . '/media_bad_' . bin2hex(random_bytes(8)) . '.exe';
         file_put_contents($tmpExe, 'MZ');
@@ -143,7 +159,7 @@ class MediaUploadControllerTest extends WebTestCase
         self::assertIsString($path);
         self::assertTrue(str_starts_with($path, '/uploads/media/'));
 
-        $projectDir = (string) static::getContainer()->getParameter('kernel.project_dir');
+        $projectDir = (string)static::getContainer()->getParameter('kernel.project_dir');
         $absoluteFilePath = $projectDir . '/public' . $path;
         self::assertFileExists($absoluteFilePath);
 

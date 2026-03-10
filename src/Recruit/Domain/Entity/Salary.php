@@ -35,24 +35,66 @@ class Salary implements EntityInterface
     #[Groups(['Salary', 'Salary.max'])]
     private int $max = 0;
 
-    #[ORM\Column(name: 'currency', type: Types::STRING, length: 5, options: ['default' => 'EUR'])]
+    #[ORM\Column(name: 'currency', type: Types::STRING, length: 5, options: [
+        'default' => 'EUR',
+    ])]
     #[Groups(['Salary', 'Salary.currency'])]
     private string $currency = 'EUR';
 
-    #[ORM\Column(name: 'period', type: Types::STRING, length: 20, options: ['default' => 'year'])]
+    #[ORM\Column(name: 'period', type: Types::STRING, length: 20, options: [
+        'default' => 'year',
+    ])]
     #[Groups(['Salary', 'Salary.period'])]
     private string $period = 'year';
 
-    public function __construct() { $this->id = $this->createUuid(); }
+    public function __construct()
+    {
+        $this->id = $this->createUuid();
+    }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getMin(): int { return $this->min; }
-    public function setMin(int $min): self { $this->min = $min; return $this; }
-    public function getMax(): int { return $this->max; }
-    public function setMax(int $max): self { $this->max = $max; return $this; }
-    public function getCurrency(): string { return $this->currency; }
-    public function setCurrency(string $currency): self { $this->currency = $currency; return $this; }
-    public function getPeriod(): string { return $this->period; }
-    public function setPeriod(string $period): self { $this->period = $period; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getMin(): int
+    {
+        return $this->min;
+    }
+    public function setMin(int $min): self
+    {
+        $this->min = $min;
+
+        return $this;
+    }
+    public function getMax(): int
+    {
+        return $this->max;
+    }
+    public function setMax(int $max): self
+    {
+        $this->max = $max;
+
+        return $this;
+    }
+    public function getCurrency(): string
+    {
+        return $this->currency;
+    }
+    public function setCurrency(string $currency): self
+    {
+        $this->currency = $currency;
+
+        return $this;
+    }
+    public function getPeriod(): string
+    {
+        return $this->period;
+    }
+    public function setPeriod(string $period): self
+    {
+        $this->period = $period;
+
+        return $this;
+    }
 }

@@ -9,8 +9,8 @@ use App\Configuration\Domain\Entity\Configuration;
 use App\General\Domain\Utils\JSON;
 use App\Tests\TestCase\WebTestCase;
 use App\User\Application\Resource\UserResource;
-use App\User\Infrastructure\DataFixtures\ORM\LoadUserGroupData;
 use App\User\Domain\Entity\User;
+use App\User\Infrastructure\DataFixtures\ORM\LoadUserGroupData;
 use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -70,8 +70,6 @@ class ConfigurationControllerTest extends WebTestCase
         self::assertFalse($responseData['configurationValue'][0]['switchState']);
     }
 
-
-
     /**
      * @throws Throwable
      */
@@ -96,8 +94,8 @@ class ConfigurationControllerTest extends WebTestCase
         $response = $client->getResponse();
         $content = $response->getContent();
         self::assertNotFalse($content);
-        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode(), "Response:
-" . $response);
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode(), 'Response:
+' . $response);
 
         $responseData = JSON::decode($content, true);
         self::assertSame($createPayload['configurationKey'], $responseData['configurationKey']);
@@ -106,7 +104,9 @@ class ConfigurationControllerTest extends WebTestCase
 
         $userResource = static::getContainer()->get(UserResource::class);
         $configurationResource = static::getContainer()->get(ConfigurationResource::class);
-        $user = $userResource->findOneBy(['username' => 'john-user']);
+        $user = $userResource->findOneBy([
+            'username' => 'john-user',
+        ]);
         self::assertInstanceOf(User::class, $user);
 
         $createdConfiguration = $configurationResource->findOneBy([
@@ -146,7 +146,9 @@ class ConfigurationControllerTest extends WebTestCase
 
         $userResource = static::getContainer()->get(UserResource::class);
         $configurationResource = static::getContainer()->get(ConfigurationResource::class);
-        $user = $userResource->findOneBy(['username' => 'test-config-user']);
+        $user = $userResource->findOneBy([
+            'username' => 'test-config-user',
+        ]);
         self::assertInstanceOf(User::class, $user);
         $configuration = $configurationResource->findOneBy([
             'configurationKey' => self::CONFIGURATION_KEY,

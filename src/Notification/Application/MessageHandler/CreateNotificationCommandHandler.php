@@ -60,7 +60,9 @@ final readonly class CreateNotificationCommandHandler
         $this->messageService->sendMessage(new EntityCreated(
             entityType: 'notification',
             entityId: $notification->getId(),
-            context: ['recipientId' => $notification->getRecipient()->getId()],
+            context: [
+                'recipientId' => $notification->getRecipient()->getId(),
+            ],
         ));
     }
 }

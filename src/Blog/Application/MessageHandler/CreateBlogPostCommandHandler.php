@@ -26,7 +26,8 @@ final readonly class CreateBlogPostCommandHandler
         private BlogRepository $blogRepository,
         private UserRepository $userRepository,
         private CacheInvalidationService $cacheInvalidationService,
-    ) {}
+    ) {
+    }
 
     public function __invoke(CreateBlogPostCommand $command): void
     {
@@ -49,8 +50,7 @@ final readonly class CreateBlogPostCommandHandler
             ->setBlog($blog)
             ->setAuthor($user)
             ->setContent($command->content)
-            ->setFilePath($command->filePath)
-        );
+            ->setFilePath($command->filePath));
 
         $this->cacheInvalidationService->invalidateBlogCaches($blog->getApplication()?->getSlug(), $command->actorUserId);
     }

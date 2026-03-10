@@ -53,18 +53,70 @@ class Product implements EntityInterface
     }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getShop(): ?Shop { return $this->shop; }
-    public function setShop(?Shop $shop): self { $this->shop = $shop; return $this; }
-    public function getCategory(): ?Category { return $this->category; }
-    public function setCategory(?Category $category): self { $this->category = $category; return $this; }
-    public function getName(): string { return $this->name; }
-    public function setName(string $name): self { $this->name = $name; return $this; }
-    public function getPrice(): float { return $this->price; }
-    public function setPrice(float $price): self { $this->price = $price; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getShop(): ?Shop
+    {
+        return $this->shop;
+    }
+    public function setShop(?Shop $shop): self
+    {
+        $this->shop = $shop;
 
-    /** @return Collection<int, Tag>|ArrayCollection<int, Tag> */
-    public function getTags(): Collection|ArrayCollection { return $this->tags; }
-    public function addTag(Tag $tag): self { if (!$this->tags->contains($tag)) { $this->tags->add($tag); } return $this; }
-    public function removeTag(Tag $tag): self { $this->tags->removeElement($tag); return $this; }
+        return $this;
+    }
+    public function getCategory(): ?Category
+    {
+        return $this->category;
+    }
+    public function setCategory(?Category $category): self
+    {
+        $this->category = $category;
+
+        return $this;
+    }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+    public function getPrice(): float
+    {
+        return $this->price;
+    }
+    public function setPrice(float $price): self
+    {
+        $this->price = $price;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Tag>|ArrayCollection<int, Tag>
+     */
+    public function getTags(): Collection|ArrayCollection
+    {
+        return $this->tags;
+    }
+    public function addTag(Tag $tag): self
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags->add($tag);
+        }
+
+return $this;
+    }
+    public function removeTag(Tag $tag): self
+    {
+        $this->tags->removeElement($tag);
+
+        return $this;
+    }
 }

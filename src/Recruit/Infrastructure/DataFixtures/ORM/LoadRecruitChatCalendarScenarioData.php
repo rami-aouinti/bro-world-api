@@ -75,6 +75,12 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         $manager->flush();
     }
 
+    #[Override]
+    public function getOrder(): int
+    {
+        return 10;
+    }
+
     private function createJohnRootPrivateDirectMessageScenarios(ObjectManager $manager): void
     {
         /** @var User $johnRoot */
@@ -147,7 +153,6 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             $this->addReference('Recruit-Conversation-john-root-private-' . ($index + 1), $conversation);
         }
     }
-
 
     private function createDedicatedDirectConversationFixture(ObjectManager $manager): void
     {
@@ -286,7 +291,10 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             $conversation,
             $john,
             'Salut, je voulais faire un point rapide sur les candidatures de cette semaine.',
-            ['attachmentType' => 'note', 'name' => 'weekly-review.txt']
+            [
+                'attachmentType' => 'note',
+                'name' => 'weekly-review.txt',
+            ]
         );
 
         $replyMessage = $this->ensureMessage(
@@ -395,7 +403,7 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
     ): void {
         $prefix = 'John Root private event - ' . $application->getSlug();
 
-        for ($dayOffset = 1; $dayOffset <= 8; ++$dayOffset) {
+        for ($dayOffset = 1; $dayOffset <= 8; $dayOffset++) {
             $this->ensureEvent(
                 $manager,
                 $calendar,
@@ -507,8 +515,8 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
     {
         static $participantsByConversationAndUser = [];
 
-        $conversationKey = (string) ($conversation->getId() ?? 'new-' . spl_object_id($conversation));
-        $userKey = (string) ($user->getId() ?? 'new-' . spl_object_id($user));
+        $conversationKey = (string)($conversation->getId() ?? 'new-' . spl_object_id($conversation));
+        $userKey = (string)($user->getId() ?? 'new-' . spl_object_id($user));
         $participantKey = $conversationKey . '::' . $userKey;
 
         if (isset($participantsByConversationAndUser[$participantKey])) {
@@ -534,7 +542,9 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         $participantsByConversationAndUser[$participantKey] = true;
     }
 
-    /** @param array<int|string, mixed> $attachments */
+    /**
+     * @param array<int|string, mixed> $attachments
+     */
     private function ensureMessage(
         ObjectManager $manager,
         Conversation $conversation,
@@ -583,11 +593,5 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             ->setReaction($emoji);
 
         $manager->persist($reaction);
-    }
-
-    #[Override]
-    public function getOrder(): int
-    {
-        return 10;
     }
 }

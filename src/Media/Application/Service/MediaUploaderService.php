@@ -44,7 +44,7 @@ class MediaUploaderService
         $uploadedFiles = [];
         foreach ($files as $file) {
             $originalName = $file->getClientOriginalName();
-            $mimeType = (string) ($file->getMimeType() ?? $file->getClientMimeType() ?? 'application/octet-stream');
+            $mimeType = (string)($file->getMimeType() ?? $file->getClientMimeType() ?? 'application/octet-stream');
             $size = $this->extractSize($file);
             $extension = strtolower($file->guessExtension() ?? $file->getClientOriginalExtension() ?: 'bin');
             $fileName = bin2hex(random_bytes(16)) . '.' . $extension;
@@ -76,14 +76,14 @@ class MediaUploaderService
         }
 
         $allowedMimeTypes = $validationPolicy->getAllowedMimeTypes();
-        $detectedMimeType = strtolower((string) ($file->getMimeType() ?? $file->getClientMimeType() ?? ''));
-        if ([] !== $allowedMimeTypes && !in_array($detectedMimeType, $allowedMimeTypes, true)) {
+        $detectedMimeType = strtolower((string)($file->getMimeType() ?? $file->getClientMimeType() ?? ''));
+        if ($allowedMimeTypes !== [] && !in_array($detectedMimeType, $allowedMimeTypes, true)) {
             throw new HttpException(Response::HTTP_BAD_REQUEST, 'File at index ' . $index . ' has unsupported MIME type.');
         }
 
         $allowedExtensions = $validationPolicy->getAllowedExtensions();
         $extension = strtolower($file->guessExtension() ?? $file->getClientOriginalExtension() ?: '');
-        if ([] !== $allowedExtensions && !in_array($extension, $allowedExtensions, true)) {
+        if ($allowedExtensions !== [] && !in_array($extension, $allowedExtensions, true)) {
             throw new HttpException(Response::HTTP_BAD_REQUEST, 'File at index ' . $index . ' has unsupported extension.');
         }
     }

@@ -93,7 +93,7 @@ final readonly class EventListService
 
         $cacheKey = $user !== null
             ? $this->cacheKeyConventionService->buildPrivateEventKey($user->getUsername(), $cachePayload)
-            : 'event_list_' . md5((string) json_encode($cachePayload, JSON_THROW_ON_ERROR));
+            : 'event_list_' . md5((string)json_encode($cachePayload, JSON_THROW_ON_ERROR));
 
         /** @var array<string, mixed> $result */
         $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($accessContext, $user, $applicationSlug, $filters, $page, $limit): array {
@@ -135,7 +135,7 @@ final readonly class EventListService
                     'page' => $page,
                     'limit' => $limit,
                     'totalItems' => $totalItems,
-                    'totalPages' => $totalItems > 0 ? (int) ceil($totalItems / $limit) : 0,
+                    'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
                 ],
             ];
         });
@@ -159,19 +159,35 @@ final readonly class EventListService
         try {
             $must = [];
             if ($filters['title'] !== '') {
-                $must[] = ['match_phrase_prefix' => ['title' => $filters['title']]];
+                $must[] = [
+                    'match_phrase_prefix' => [
+                        'title' => $filters['title'],
+                    ],
+                ];
             }
             if ($filters['description'] !== '') {
-                $must[] = ['match_phrase_prefix' => ['description' => $filters['description']]];
+                $must[] = [
+                    'match_phrase_prefix' => [
+                        'description' => $filters['description'],
+                    ],
+                ];
             }
             if ($filters['location'] !== '') {
-                $must[] = ['match_phrase_prefix' => ['location' => $filters['location']]];
+                $must[] = [
+                    'match_phrase_prefix' => [
+                        'location' => $filters['location'],
+                    ],
+                ];
             }
 
             $response = $this->elasticsearchService->search(
                 ElasticsearchServiceInterface::INDEX_PREFIX . '_*',
                 [
-                    'query' => ['bool' => ['must' => $must]],
+                    'query' => [
+                        'bool' => [
+                            'must' => $must,
+                        ],
+                    ],
                     '_source' => ['id'],
                 ],
                 0,

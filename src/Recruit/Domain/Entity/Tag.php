@@ -31,10 +31,24 @@ class Tag implements EntityInterface
     #[Groups(['Tag', 'Tag.label'])]
     private string $label = '';
 
-    public function __construct() { $this->id = $this->createUuid(); }
+    public function __construct()
+    {
+        $this->id = $this->createUuid();
+    }
 
     #[Override]
-    public function getId(): string { return $this->id->toString(); }
-    public function getLabel(): string { return $this->label; }
-    public function setLabel(string $label): self { $this->label = $label; return $this; }
+    public function getId(): string
+    {
+        return $this->id->toString();
+    }
+    public function getLabel(): string
+    {
+        return $this->label;
+    }
+    public function setLabel(string $label): self
+    {
+        $this->label = $label;
+
+        return $this;
+    }
 }

@@ -25,7 +25,9 @@ class JobPublicDetailService
     ) {
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     public function getDetail(string $applicationSlug, string $jobSlug): array
     {
         $recruit = $this->resolveRecruitByApplicationSlug($applicationSlug);
@@ -48,7 +50,9 @@ class JobPublicDetailService
         ];
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     private function getSimilarJobIds(string $jobId): array
     {
         try {
@@ -118,7 +122,9 @@ class JobPublicDetailService
         return array_map(fn (Job $item): array => $this->buildJobPayload($item), array_values(array_filter($jobs, static fn (Job $item): bool => in_array($item->getId(), $similarJobIds, true))));
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function buildJobPayload(Job $job): array
     {
         return [
@@ -170,5 +176,4 @@ class JobPublicDetailService
 
         return $recruit;
     }
-
 }

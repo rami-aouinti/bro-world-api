@@ -76,7 +76,9 @@ class ConfigurationCreateControllerTest extends WebTestCase
 
         /** @var ConfigurationRepository $repository */
         $repository = static::getContainer()->get(ConfigurationRepository::class);
-        self::assertNull($repository->findOneBy(['configurationKey' => $requestData['configurationKey']]));
+        self::assertNull($repository->findOneBy([
+            'configurationKey' => $requestData['configurationKey'],
+        ]));
     }
 
     /**
@@ -86,14 +88,18 @@ class ConfigurationCreateControllerTest extends WebTestCase
     {
         yield [[
             'configurationKey' => '',
-            'configurationValue' => ['enabled' => true],
+            'configurationValue' => [
+                'enabled' => true,
+            ],
             'scope' => 'system',
             'private' => false,
         ], 'This value should not be blank.'];
 
         yield [[
             'configurationKey' => 'test.invalid.scope',
-            'configurationValue' => ['enabled' => true],
+            'configurationValue' => [
+                'enabled' => true,
+            ],
             'scope' => 'invalid',
             'private' => false,
         ], 'The value you selected is not a valid choice.'];
@@ -106,7 +112,10 @@ class ConfigurationCreateControllerTest extends WebTestCase
     {
         return [
             'configurationKey' => 'system.feature.flags',
-            'configurationValue' => ['featureX' => true, 'featureY' => false],
+            'configurationValue' => [
+                'featureX' => true,
+                'featureY' => false,
+            ],
             'scope' => 'system',
             'private' => false,
         ];
