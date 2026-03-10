@@ -6,22 +6,25 @@ namespace App\General\Application\Service;
 
 use function json_encode;
 use function md5;
+use function preg_replace;
+use function strtolower;
+use function trim;
 
 class CacheKeyConventionService
 {
     public function buildPublicPageKey(string $page, string $lang): string
     {
-        return 'public/page/' . $page . '/' . $lang;
+        return 'public_page_' . $this->sanitizeSegment($page) . '_' . $this->sanitizeSegment($lang);
     }
 
     public function buildPublicBlogKey(string $scope): string
     {
-        return 'public/blog/' . $scope;
+        return 'public_blog_' . $this->sanitizeSegment($scope);
     }
 
     public function buildPublicPlatformsListKey(): string
     {
-        return 'public/platform/list';
+        return 'public_platform_list';
     }
 
     /**
@@ -29,12 +32,12 @@ class CacheKeyConventionService
      */
     public function buildPublicApplicationsListKey(array $filters): string
     {
-        return 'public/applications/list/' . $this->buildHash($filters);
+        return 'public_applications_list_' . $this->buildHash($filters);
     }
 
     public function buildPrivateProfileKey(string $username): string
     {
-        return 'private/' . $username . '/profile';
+        return 'private_' . $this->sanitizeSegment($username) . '_profile';
     }
 
     /**
@@ -42,7 +45,7 @@ class CacheKeyConventionService
      */
     public function buildPrivateConversationKey(string $username, array $filters): string
     {
-        return 'private/' . $username . '/conversation/' . $this->buildHash($filters);
+        return 'private_' . $this->sanitizeSegment($username) . '_conversation_' . $this->buildHash($filters);
     }
 
     /**
@@ -50,7 +53,7 @@ class CacheKeyConventionService
      */
     public function buildPrivateNotificationKey(string $username, array $filters): string
     {
-        return 'private/' . $username . '/notifications/' . $this->buildHash($filters);
+        return 'private_' . $this->sanitizeSegment($username) . '_notifications_' . $this->buildHash($filters);
     }
 
     /**
@@ -58,12 +61,12 @@ class CacheKeyConventionService
      */
     public function buildPrivateEventKey(string $username, array $filters): string
     {
-        return 'private/' . $username . '/events/' . $this->buildHash($filters);
+        return 'private_' . $this->sanitizeSegment($username) . '_events_' . $this->buildHash($filters);
     }
 
     public function buildPrivateBlogKey(string $username, string $scope): string
     {
-        return 'private/' . $username . '/blog/' . $scope;
+        return 'private_' . $this->sanitizeSegment($username) . '_blog_' . $this->sanitizeSegment($scope);
     }
 
     /**
@@ -137,82 +140,82 @@ class CacheKeyConventionService
 
     public function recruitJobListTag(string $applicationSlug): string
     {
-        return 'cache:recruit:job:list:' . $applicationSlug;
+        return 'cache_recruit_job_list_' . $this->sanitizeSegment($applicationSlug);
     }
 
     public function tagPublicPage(): string
     {
-        return 'cache:page:public';
+        return 'cache_page_public';
     }
 
     public function tagPublicBlog(): string
     {
-        return 'cache:public:blog';
+        return 'cache_public_blog';
     }
 
     public function tagPublicBlogByApplication(?string $applicationSlug): string
     {
-        return 'cache:public:blog:' . ($applicationSlug !== null && $applicationSlug !== '' ? $applicationSlug : 'general');
+        return 'cache_public_blog_' . $this->sanitizeSegment($applicationSlug !== null && $applicationSlug !== '' ? $applicationSlug : 'general');
     }
 
     public function tagPublicPlatformsList(): string
     {
-        return 'cache:platform:public:list';
+        return 'cache_platform_public_list';
     }
 
     public function tagPublicApplicationsList(): string
     {
-        return 'cache:public:applications:list';
+        return 'cache_public_applications_list';
     }
 
     public function tagPrivateProfile(string $userId): string
     {
-        return 'cache:private:' . $userId . ':profile';
+        return 'cache_private_' . $this->sanitizeSegment($userId) . '_profile';
     }
 
     public function tagPrivateConversation(string $userId): string
     {
-        return 'cache:private:' . $userId . ':conversation';
+        return 'cache_private_' . $this->sanitizeSegment($userId) . '_conversation';
     }
 
     public function tagPublicConversationByChat(string $chatId): string
     {
-        return 'cache:public:conversation:' . $chatId;
+        return 'cache_public_conversation_' . $this->sanitizeSegment($chatId);
     }
 
     public function tagPrivateNotification(string $userId): string
     {
-        return 'cache:private:' . $userId . ':notifications';
+        return 'cache_private_' . $this->sanitizeSegment($userId) . '_notifications';
     }
 
     public function tagPrivateEvents(string $userId): string
     {
-        return 'cache:private:' . $userId . ':events';
+        return 'cache_private_' . $this->sanitizeSegment($userId) . '_events';
     }
 
     public function tagPublicEventsByApplication(string $applicationSlug): string
     {
-        return 'cache:public:events:' . $applicationSlug;
+        return 'cache_public_events_' . $this->sanitizeSegment($applicationSlug);
     }
 
     public function tagPrivateBlog(string $userId): string
     {
-        return 'cache:private:' . $userId . ':blog';
+        return 'cache_private_' . $this->sanitizeSegment($userId) . '_blog';
     }
 
     public function shopProductListTag(): string
     {
-        return 'cache:shop:product:list';
+        return 'cache_shop_product_list';
     }
 
     public function crmTaskListTag(): string
     {
-        return 'cache:crm:task:list';
+        return 'cache_crm_task_list';
     }
 
     public function schoolExamListTag(): string
     {
-        return 'cache:school:exam:list';
+        return 'cache_school_exam_list';
     }
 
     /**
@@ -221,5 +224,14 @@ class CacheKeyConventionService
     private function buildHash(array $payload): string
     {
         return md5((string) json_encode($payload, JSON_THROW_ON_ERROR));
+    }
+
+    private function sanitizeSegment(string $segment): string
+    {
+        $normalized = strtolower(trim($segment));
+        $normalized = (string) preg_replace('/[^a-z0-9_.-]+/', '_', $normalized);
+        $normalized = trim($normalized, '._-');
+
+        return $normalized !== '' ? $normalized : 'default';
     }
 }
