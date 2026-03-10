@@ -53,18 +53,6 @@ class ConfigurationCreateController
             ],
         ),
     )]
-    #[OA\Response(
-        response: 201,
-        description: 'Created logged in user configuration',
-        content: new JsonContent(
-            properties: [
-                new Property(property: 'configurationKey', type: 'string', example: 'user.dashboard.filters'),
-                new Property(property: 'configurationValue', type: 'array', items: new OA\Items(type: 'object')),
-                new Property(property: 'scope', type: 'string', example: 'user'),
-            ],
-            type: 'object',
-        ),
-    )]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
         /** @var array<string, mixed> $payload */

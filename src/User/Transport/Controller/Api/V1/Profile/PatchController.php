@@ -70,33 +70,6 @@ class PatchController
             ],
         ),
     )]
-    #[OA\Response(
-        response: 200,
-        description: 'Patched user profile data',
-        content: new JsonContent(
-            ref: new Model(type: User::class, groups: ['set.UserProfile']),
-            type: 'object',
-        ),
-    )]
-    #[OA\Response(
-        response: 400,
-        description: 'Validation or payload error',
-    )]
-    #[OA\Response(
-        response: 401,
-        description: 'Invalid token (not found or expired)',
-        content: new JsonContent(
-            properties: [
-                new Property(property: 'code', description: 'Error code', type: 'integer'),
-                new Property(property: 'message', description: 'Error description', type: 'string'),
-            ],
-            type: 'object',
-            example: [
-                'code' => 401,
-                'message' => 'JWT Token not found',
-            ],
-        ),
-    )]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
         /** @var array<string, mixed> $payload */

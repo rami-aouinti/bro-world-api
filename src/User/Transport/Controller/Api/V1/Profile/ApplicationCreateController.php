@@ -88,22 +88,6 @@ class ApplicationCreateController
             ],
         ),
     )]
-    #[OA\Response(
-        response: 201,
-        description: 'Application created for logged in user',
-        content: new JsonContent(
-            properties: [
-                new Property(property: 'id', type: 'string'),
-                new Property(property: 'platformId', type: 'string'),
-                new Property(property: 'title', type: 'string'),
-                new Property(property: 'slug', type: 'string'),
-                new Property(property: 'description', type: 'string'),
-                new Property(property: 'status', type: 'string'),
-                new Property(property: 'private', type: 'boolean'),
-            ],
-            type: 'object',
-        ),
-    )]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
         /** @var array<string, mixed> $payload */

@@ -49,7 +49,6 @@ class UserMeController
     #[Route(path: '/v1/users/me/profile', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(summary: 'PATCH /v1/users/me/profile', tags: ['User Me'], parameters: [], responses: [new OA\Response(response: 200, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object'))]
-    #[OA\Response(response: 200, description: 'Updated profile')]
     public function patchProfile(Request $request, User $loggedInUser): JsonResponse
     {
         /** @var array<string,mixed> $payload */
@@ -61,7 +60,6 @@ class UserMeController
     #[Route(path: '/v1/users/me/password', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(summary: 'PATCH /v1/users/me/password', tags: ['User Me'], parameters: [], responses: [new OA\Response(response: 200, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object', required: ['currentPassword', 'newPassword']))]
-    #[OA\Response(response: 200, description: 'Password changed', content: new OA\JsonContent(example: ['status' => 'ok']))]
     public function changePassword(Request $request, User $loggedInUser): JsonResponse
     {
         /** @var array<string,mixed> $payload */

@@ -51,7 +51,7 @@ final readonly class ShopController
     }
 
     #[Route('/v1/shop/products', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/shop/products', tags: ['Shop'], parameters: [], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
+    #[OA\Post(summary: 'POST /v1/shop/products', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), tags: ['Shop'], parameters: [], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createProduct(Request $request): JsonResponse
     {
         $payload = (array) json_decode((string) $request->getContent(), true);
@@ -101,7 +101,7 @@ final readonly class ShopController
     }
 
     #[Route('/v1/shop/categories', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/shop/categories', tags: ['Shop'], parameters: [], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
+    #[OA\Post(summary: 'POST /v1/shop/categories', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), tags: ['Shop'], parameters: [], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createCategory(Request $request): JsonResponse
     {
         $payload = (array) json_decode((string) $request->getContent(), true);
@@ -141,7 +141,7 @@ final readonly class ShopController
     }
 
     #[Route('/v1/shop/tags', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/shop/tags', tags: ['Shop'], parameters: [], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
+    #[OA\Post(summary: 'POST /v1/shop/tags', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), tags: ['Shop'], parameters: [], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     public function createTag(Request $request): JsonResponse
     {
         $payload = (array) json_decode((string) $request->getContent(), true);
@@ -191,18 +191,17 @@ final readonly class ShopController
     #[OA\RequestBody(
         required: true,
         content: new OA\JsonContent(
-            type: 'object',
             required: ['name', 'price'],
             properties: [
                 new OA\Property(property: 'name', type: 'string', minLength: 1, example: 'Clavier mecanique'),
                 new OA\Property(property: 'price', type: 'number', format: 'float', example: 129.9),
-                new OA\Property(property: 'categoryId', type: 'string', format: 'uuid', nullable: true, example: null),
+                new OA\Property(property: 'categoryId', type: 'string', format: 'uuid', example: null, nullable: true),
                 new OA\Property(property: 'tagIds', type: 'array', items: new OA\Items(type: 'string', format: 'uuid'), example: []),
             ],
+            type: 'object',
             example: ['name' => 'Clavier mecanique', 'price' => 129.9, 'categoryId' => null, 'tagIds' => []],
         )
     )]
-    #[OA\Response(response: 201, description: 'Product created for the application shop.', content: new OA\JsonContent(example: ['id' => 'uuid', 'shopId' => 'uuid', 'applicationSlug' => 'shop-ops-center']))]
     public function createProductByApplication(string $applicationSlug, Request $request): JsonResponse
     {
         $shop = $this->resolveOrCreateShopByApplicationSlug($applicationSlug);

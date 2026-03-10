@@ -65,10 +65,6 @@ class UploadPhotoController
             ],
         ),
     )]
-    #[OA\Response(
-        response: 400,
-        description: 'File upload error',
-    )]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
         /** @var UploadedFile|null $photo */

@@ -50,60 +50,10 @@ class AttachUserController
         ],
         methods: [Request::METHOD_POST],
     )]
-    #[OA\Post(summary: 'POST /v1/user_group/{userGroup}/user/{user}', tags: ['UserGroup Management'], parameters: [new OA\Parameter(name: 'userGroup', in: 'path', required: true, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
+    #[OA\Post(summary: 'POST /v1/user_group/{userGroup}/user/{user}', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [new OA\Property(property: 'payload', type: 'object', example: ['value' => 'example'])], example: ['payload' => ['value' => 'example']])), tags: ['UserGroup Management'], parameters: [new OA\Parameter(name: 'userGroup', in: 'path', required: true, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Success.'), new OA\Response(response: 400, description: 'Bad request.'), new OA\Response(response: 401, description: 'Unauthorized.'), new OA\Response(response: 404, description: 'Not found.'), new OA\Response(response: 422, description: 'Validation error.')])]
     #[IsGranted(Role::ROOT->value)]
     #[OA\Parameter(name: 'userGroup', description: 'User Group GUID', in: 'path', required: true)]
     #[OA\Parameter(name: 'user', description: 'User GUID', in: 'path', required: true)]
-    #[OA\Response(
-        response: 200,
-        description: 'List of user group users - specified user already exists on this group',
-        content: new JsonContent(
-            type: 'array',
-            items: new OA\Items(
-                ref: new Model(type: User::class, groups: ['User']),
-            ),
-        ),
-    )]
-    #[OA\Response(
-        response: 201,
-        description: 'List of user group users - specified user has been attached to this group',
-        content: new JsonContent(
-            type: 'array',
-            items: new OA\Items(
-                ref: new Model(type: User::class, groups: ['User']),
-            ),
-        ),
-    )]
-    #[OA\Response(
-        response: 401,
-        description: 'Invalid token (not found or expired)',
-        content: new JsonContent(
-            properties: [
-                new Property(property: 'code', description: 'Error code', type: 'integer'),
-                new Property(property: 'message', description: 'Error description', type: 'string'),
-            ],
-            type: 'object',
-            example: [
-                'code' => 401,
-                'message' => 'JWT Token not found',
-            ],
-        ),
-    )]
-    #[OA\Response(
-        response: 403,
-        description: 'Access denied',
-        content: new JsonContent(
-            properties: [
-                new Property(property: 'code', description: 'Error code', type: 'integer'),
-                new Property(property: 'message', description: 'Error description', type: 'string'),
-            ],
-            type: 'object',
-            example: [
-                'code' => 403,
-                'message' => 'Access denied',
-            ],
-        ),
-    )]
     public function __invoke(UserGroup $userGroup, User $user): JsonResponse
     {
         $status = $userGroup->getUsers()->contains($user) ? Response::HTTP_OK : Response::HTTP_CREATED;

@@ -53,17 +53,6 @@ class ConfigurationPatchController
             ],
         ),
     )]
-    #[OA\Response(
-        response: 200,
-        description: 'Updated logged in user configuration',
-        content: new JsonContent(
-            properties: [
-                new Property(property: 'configurationKey', type: 'string', example: 'user.notifications.preferences'),
-                new Property(property: 'configurationValue', type: 'array', items: new OA\Items(type: 'object')),
-            ],
-            type: 'object',
-        ),
-    )]
     public function __invoke(Request $request, User $loggedInUser, string $configurationKey): JsonResponse
     {
         /** @var array<string, mixed> $payload */

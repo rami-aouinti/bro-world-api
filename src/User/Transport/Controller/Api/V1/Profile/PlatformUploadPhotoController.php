@@ -49,23 +49,6 @@ class PlatformUploadPhotoController
             ),
         ),
     )]
-    #[OA\Response(
-        response: 200,
-        description: 'Uploaded platform photo URL',
-        content: new JsonContent(
-            properties: [
-                new Property(property: 'photo', description: 'Uploaded photo URL', type: 'string'),
-            ],
-            type: 'object',
-            example: [
-                'photo' => 'https://localhost/uploads/platforms/0af6fe1514bdbce22f637d970a6e6042.jpg',
-            ],
-        ),
-    )]
-    #[OA\Response(
-        response: 400,
-        description: 'File upload error',
-    )]
     public function __invoke(Request $request, Platform $platform): JsonResponse
     {
         /** @var UploadedFile|null $photo */
