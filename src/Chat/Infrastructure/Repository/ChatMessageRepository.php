@@ -23,4 +23,21 @@ class ChatMessageRepository extends BaseRepository
         protected ManagerRegistry $managerRegistry
     ) {
     }
+
+    public function markConversationMessagesAsRead(string $conversationId): int
+    {
+        return $this->getEntityManager()->createQueryBuilder()
+            ->update(Entity::class, 'm')
+            ->set('m.read', ':read')
+            ->set('m.readAt', ':readAt')
+            ->where('m.conversation = :conversationId')
+            ->andWhere('m.read = :unread')
+            ->setParameter('read', true)
+            ->setParameter('unread', false)
+            ->setParameter('readAt', new \DateTimeImmutable())
+            ->setParameter('conversationId', $conversationId)
+            ->getQuery()
+            ->execute();
+    }
 }
+

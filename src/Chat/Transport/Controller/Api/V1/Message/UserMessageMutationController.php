@@ -7,6 +7,7 @@ namespace App\Chat\Transport\Controller\Api\V1\Message;
 use App\Chat\Application\Message\CreateMessageCommand;
 use App\Chat\Application\Message\DeleteMessageCommand;
 use App\Chat\Application\Message\PatchMessageCommand;
+use App\Chat\Application\Message\MarkConversationMessagesAsReadCommand;
 use App\Chat\Domain\Entity\Conversation;
 use App\Chat\Domain\Entity\ConversationParticipant;
 use App\Chat\Infrastructure\Repository\ConversationParticipantRepository;
@@ -86,6 +87,19 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
     responses: [
         new OA\Response(response: 202, description: 'Commande acceptée'),
         new OA\Response(response: 404, description: 'Message introuvable'),
+    ]
+)]
+#[OA\Post(
+    path: '/v1/chat/private/conversations/{conversationId}/messages/read',
+    operationId: 'chat_message_mark_conversation_read',
+    summary: 'Marquer tous les messages d\'une conversation comme lus',
+    tags: ['Chat Message'],
+    parameters: [
+        new OA\Parameter(name: 'conversationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000')),
+    ],
+    responses: [
+        new OA\Response(response: 202, description: 'Commande acceptée'),
+        new OA\Response(response: 404, description: 'Conversation introuvable'),
     ]
 )]
 #[OA\Delete(path: '/v1/chat/private/messages/{messageId}', operationId: 'chat_message_delete', summary: 'Supprimer son message', tags: ['Chat Message'], parameters: [new OA\Parameter(name: 'messageId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], responses: [new OA\Response(response: 202, description: 'Commande acceptée'), new OA\Response(response: 404, description: 'Message introuvable')])]
@@ -189,6 +203,22 @@ class UserMessageMutationController
         return new JsonResponse([
             'operationId' => $operationId,
             'id' => $messageId,
+        ], JsonResponse::HTTP_ACCEPTED);
+    }
+
+    #[Route(path: '/v1/chat/private/conversations/{conversationId}/messages/read', methods: [Request::METHOD_POST])]
+    public function markConversationAsRead(string $conversationId, User $loggedInUser): JsonResponse
+    {
+        $operationId = \Ramsey\Uuid\Uuid::uuid4()->toString();
+        $this->messageService->sendMessage(new MarkConversationMessagesAsReadCommand(
+            operationId: $operationId,
+            actorUserId: $loggedInUser->getId(),
+            conversationId: $conversationId,
+        ));
+
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'conversationId' => $conversationId,
         ], JsonResponse::HTTP_ACCEPTED);
     }
 
