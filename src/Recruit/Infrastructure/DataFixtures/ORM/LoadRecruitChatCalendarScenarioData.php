@@ -65,6 +65,7 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         }
 
         $this->createJohnRootPrivateDirectMessageScenarios($manager);
+        $this->createDedicatedDirectConversationFixture($manager);
 
         $manager->flush();
     }
@@ -140,6 +141,29 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
 
             $this->addReference('Recruit-Conversation-john-root-private-' . ($index + 1), $conversation);
         }
+    }
+
+
+    private function createDedicatedDirectConversationFixture(ObjectManager $manager): void
+    {
+        /** @var User $johnRoot */
+        $johnRoot = $this->getReference('User-john-root', User::class);
+        /** @var User $johnAdmin */
+        $johnAdmin = $this->getReference('User-john-admin', User::class);
+        /** @var PlatformApplication $application */
+        $application = $this->getReference('Application-crm-pipeline-pro', PlatformApplication::class);
+
+        $chat = $this->ensureChat($manager, $application);
+
+        $conversation = (new Conversation())
+            ->setChat($chat);
+
+        $manager->persist($conversation);
+
+        $this->ensureParticipant($manager, $conversation, $johnRoot);
+        $this->ensureParticipant($manager, $conversation, $johnAdmin);
+
+        $this->addReference('Recruit-Conversation-direct-john-root-john-admin', $conversation);
     }
 
     private function ensurePluginAttached(ObjectManager $manager, PlatformApplication $application, Plugin $plugin): void
@@ -519,6 +543,7 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             ->setSender($sender)
             ->setContent($content)
             ->setAttachments($attachments)
+            ->setRead(true)
             ->setReadAt(new DateTimeImmutable());
 
         $manager->persist($message);

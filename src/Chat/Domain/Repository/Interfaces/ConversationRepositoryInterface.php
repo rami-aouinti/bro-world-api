@@ -32,4 +32,6 @@ interface ConversationRepositoryInterface
     public function findByChatIdAndUser(string $chatId, User $user, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array;
 
     public function countByChatIdAndUser(string $chatId, User $user, array $filters = [], ?array $esIds = null): int;
+
+    public function findDirectConversationBetweenUsers(User $firstUser, User $secondUser): ?Conversation;
 }

@@ -12,11 +12,14 @@ use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 readonly class UserFriendService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
+        private CacheInterface $cache,
     ) {
     }
 
@@ -47,6 +50,8 @@ readonly class UserFriendService
 
         $this->entityManager->persist($relation);
         $this->entityManager->flush();
+        $this->invalidateUserCaches($loggedInUser);
+        $this->invalidateUserCaches($targetUser);
 
         return ['status' => 'request_sent'];
     }
@@ -61,6 +66,8 @@ readonly class UserFriendService
 
         $relation->setStatus(FriendStatus::ACCEPTED);
         $this->entityManager->flush();
+        $this->invalidateUserCaches($loggedInUser);
+        $this->invalidateUserCaches($requester);
 
         return ['status' => 'accepted'];
     }
@@ -75,6 +82,8 @@ readonly class UserFriendService
 
         $relation->setStatus(FriendStatus::REJECTED);
         $this->entityManager->flush();
+        $this->invalidateUserCaches($loggedInUser);
+        $this->invalidateUserCaches($requester);
 
         return ['status' => 'rejected'];
     }
@@ -91,6 +100,8 @@ readonly class UserFriendService
 
         $this->entityManager->remove($relation);
         $this->entityManager->flush();
+        $this->invalidateUserCaches($loggedInUser);
+        $this->invalidateUserCaches($targetUser);
 
         return ['status' => 'request_cancelled'];
     }
@@ -111,6 +122,8 @@ readonly class UserFriendService
 
         $relation->setStatus(FriendStatus::BLOCKED);
         $this->entityManager->flush();
+        $this->invalidateUserCaches($loggedInUser);
+        $this->invalidateUserCaches($targetUser);
 
         return ['status' => 'blocked'];
     }
@@ -126,6 +139,8 @@ readonly class UserFriendService
 
         $this->entityManager->remove($relation);
         $this->entityManager->flush();
+        $this->invalidateUserCaches($loggedInUser);
+        $this->invalidateUserCaches($targetUser);
 
         return ['status' => 'unblocked'];
     }
@@ -143,10 +158,16 @@ readonly class UserFriendService
             ->setParameter('me', $loggedInUser->getId(), UuidBinaryOrderedTimeType::NAME)
             ->setParameter('status', FriendStatus::ACCEPTED->value);
 
-        /** @var array<int,UserFriendRelation> $relations */
-        $relations = $qb->getQuery()->getResult();
+        $cacheKey = 'user_friends_accepted_' . $loggedInUser->getId();
 
-        return array_map(static function (UserFriendRelation $relation) use ($loggedInUser): array {
+        /** @var array<int,array<string,string>> $payload */
+        $payload = $this->cache->get($cacheKey, function (ItemInterface $item) use ($qb, $loggedInUser): array {
+            $item->expiresAfter(120);
+
+            /** @var array<int,UserFriendRelation> $relations */
+            $relations = $qb->getQuery()->getResult();
+
+            return array_map(static function (UserFriendRelation $relation) use ($loggedInUser): array {
             $friend = $relation->getRequester()->getId() === $loggedInUser->getId()
                 ? $relation->getAddressee()
                 : $relation->getRequester();
@@ -156,9 +177,12 @@ readonly class UserFriendService
                 'username' => $friend->getUsername(),
                 'firstName' => $friend->getFirstName(),
                 'lastName' => $friend->getLastName(),
-                'photo' => $relation->getRequester()->getPhoto(),
+                'photo' => $friend->getPhoto(),
             ];
-        }, $relations);
+            }, $relations);
+        });
+
+        return $payload;
     }
 
     /** @return array<int,array<string,string>> */
@@ -173,16 +197,25 @@ readonly class UserFriendService
             ->setParameter('me', $loggedInUser->getId(), UuidBinaryOrderedTimeType::NAME)
             ->setParameter('status', FriendStatus::PENDING->value);
 
-        /** @var array<int,UserFriendRelation> $relations */
-        $relations = $qb->getQuery()->getResult();
+        $cacheKey = 'user_friends_incoming_' . $loggedInUser->getId();
 
-        return array_map(static fn (UserFriendRelation $relation): array => [
-            'id' => $relation->getRequester()->getId(),
+        /** @var array<int,array<string,string>> $payload */
+        $payload = $this->cache->get($cacheKey, function (ItemInterface $item) use ($qb): array {
+            $item->expiresAfter(120);
+
+            /** @var array<int,UserFriendRelation> $relations */
+            $relations = $qb->getQuery()->getResult();
+
+            return array_map(static fn (UserFriendRelation $relation): array => [
+                'id' => $relation->getRequester()->getId(),
             'username' => $relation->getRequester()->getUsername(),
             'firstName' => $relation->getRequester()->getFirstName(),
             'lastName' => $relation->getRequester()->getLastName(),
             'photo' => $relation->getRequester()->getPhoto(),
-        ], $relations);
+            ], $relations);
+        });
+
+        return $payload;
     }
 
     /** @return array<int,array<string,string>> */
@@ -197,16 +230,25 @@ readonly class UserFriendService
             ->setParameter('me', $loggedInUser->getId(), UuidBinaryOrderedTimeType::NAME)
             ->setParameter('status', FriendStatus::PENDING->value);
 
-        /** @var array<int,UserFriendRelation> $relations */
-        $relations = $qb->getQuery()->getResult();
+        $cacheKey = 'user_friends_sent_' . $loggedInUser->getId();
 
-        return array_map(static fn (UserFriendRelation $relation): array => [
-            'id' => $relation->getAddressee()->getId(),
-            'username' => $relation->getAddressee()->getUsername(),
-            'firstName' => $relation->getAddressee()->getFirstName(),
-            'lastName' => $relation->getAddressee()->getLastName(),
-            'photo' => $relation->getAddressee()->getPhoto(),
-        ], $relations);
+        /** @var array<int,array<string,string>> $payload */
+        $payload = $this->cache->get($cacheKey, function (ItemInterface $item) use ($qb): array {
+            $item->expiresAfter(120);
+
+            /** @var array<int,UserFriendRelation> $relations */
+            $relations = $qb->getQuery()->getResult();
+
+            return array_map(static fn (UserFriendRelation $relation): array => [
+                'id' => $relation->getAddressee()->getId(),
+                'username' => $relation->getAddressee()->getUsername(),
+                'firstName' => $relation->getAddressee()->getFirstName(),
+                'lastName' => $relation->getAddressee()->getLastName(),
+                'photo' => $relation->getAddressee()->getPhoto(),
+            ], $relations);
+        });
+
+        return $payload;
     }
 
     /** @return array<int,array<string,string>> */
@@ -221,16 +263,34 @@ readonly class UserFriendService
             ->setParameter('me', $loggedInUser->getId(), UuidBinaryOrderedTimeType::NAME)
             ->setParameter('status', FriendStatus::BLOCKED->value);
 
-        /** @var array<int,UserFriendRelation> $relations */
-        $relations = $qb->getQuery()->getResult();
+        $cacheKey = 'user_friends_blocked_' . $loggedInUser->getId();
 
-        return array_map(static fn (UserFriendRelation $relation): array => [
-            'id' => $relation->getAddressee()->getId(),
-            'username' => $relation->getAddressee()->getUsername(),
-            'firstName' => $relation->getAddressee()->getFirstName(),
-            'lastName' => $relation->getAddressee()->getLastName(),
-            'photo' => $relation->getAddressee()->getPhoto(),
-        ], $relations);
+        /** @var array<int,array<string,string>> $payload */
+        $payload = $this->cache->get($cacheKey, function (ItemInterface $item) use ($qb): array {
+            $item->expiresAfter(120);
+
+            /** @var array<int,UserFriendRelation> $relations */
+            $relations = $qb->getQuery()->getResult();
+
+            return array_map(static fn (UserFriendRelation $relation): array => [
+                'id' => $relation->getAddressee()->getId(),
+                'username' => $relation->getAddressee()->getUsername(),
+                'firstName' => $relation->getAddressee()->getFirstName(),
+                'lastName' => $relation->getAddressee()->getLastName(),
+                'photo' => $relation->getAddressee()->getPhoto(),
+            ], $relations);
+        });
+
+        return $payload;
+    }
+
+    private function invalidateUserCaches(User $user): void
+    {
+        $userId = $user->getId();
+        $this->cache->delete('user_friends_accepted_' . $userId);
+        $this->cache->delete('user_friends_incoming_' . $userId);
+        $this->cache->delete('user_friends_sent_' . $userId);
+        $this->cache->delete('user_friends_blocked_' . $userId);
     }
 
     private function guardNotSelf(User $loggedInUser, User $targetUser): void
