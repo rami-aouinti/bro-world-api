@@ -41,16 +41,14 @@ final readonly class CreateApplicationProductController
 
         $this->entityManager->persist($product);
         $this->entityManager->flush();
-        $operationId = \Ramsey\Uuid\Uuid::uuid4()->toString();
         $this->messageBus->dispatch(new EntityCreated('shop_product', $product->getId(), context: [
             'applicationSlug' => $applicationSlug,
-            'operationId' => $operationId,
         ]));
 
         return new JsonResponse([
-            'operationId' => $operationId,
+            'id' => $product->getId(),
             'shopId' => $shop->getId(),
             'applicationSlug' => $applicationSlug,
-        ], JsonResponse::HTTP_ACCEPTED);
+        ], JsonResponse::HTTP_CREATED);
     }
 }
