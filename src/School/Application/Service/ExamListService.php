@@ -7,13 +7,14 @@ namespace App\School\Application\Service;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\School\Application\Projection\SchoolExamProjection;
-use App\School\Domain\Entity\Exam;
 use App\School\Infrastructure\Repository\ExamRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Throwable;
+use App\School\Application\Serializer\SchoolApiResponseSerializer;
+use App\School\Application\Serializer\SchoolViewMapper;
 
 readonly class ExamListService
 {
@@ -22,6 +23,8 @@ readonly class ExamListService
         private CacheInterface $cache,
         private ElasticsearchServiceInterface $elasticsearchService,
         private CacheKeyConventionService $cacheKeyConventionService,
+        private SchoolViewMapper $viewMapper,
+        private SchoolApiResponseSerializer $responseSerializer,
     ) {
     }
 
@@ -47,15 +50,12 @@ readonly class ExamListService
 
             $esIds = $this->searchIdsFromElastic($filters);
             if ($esIds === []) {
-                return [
-                    'items' => [],
-                    'pagination' => [
-                        'page' => $page,
-                        'limit' => $limit,
-                        'totalItems' => 0,
-                        'totalPages' => 0,
-                    ],
-                ];
+                return $this->responseSerializer->list([], [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'totalItems' => 0,
+                    'totalPages' => 0,
+                ]);
             }
 
             $qb = $this->examRepository->createQueryBuilder('exam')->leftJoin('exam.schoolClass', 'class')->leftJoin('exam.teacher', 'teacher')
@@ -67,15 +67,7 @@ readonly class ExamListService
                 $qb->andWhere('exam.id IN (:ids)')->setParameter('ids', $esIds);
             }
 
-            $items = array_map(static fn (Exam $exam): array => [
-                'id' => $exam->getId(),
-                'title' => $exam->getTitle(),
-                'classId' => $exam->getSchoolClass()?->getId(),
-                'className' => $exam->getSchoolClass()?->getName(),
-                'teacherId' => $exam->getTeacher()?->getId(),
-                'teacherName' => $exam->getTeacher()?->getName(),
-                'updatedAt' => $exam->getUpdatedAt()?->format(DATE_ATOM),
-            ], $qb->getQuery()->getResult());
+            $items = $this->viewMapper->mapExamCollection($qb->getQuery()->getResult());
 
             $countQb = $this->examRepository->createQueryBuilder('exam')->select('COUNT(exam.id)');
             if ($filters['title'] !== '') {
@@ -87,16 +79,16 @@ readonly class ExamListService
 
             $totalItems = (int)$countQb->getQuery()->getSingleScalarResult();
 
-            return [
-                'items' => $items,
-                'pagination' => [
+            return $this->responseSerializer->list(
+                $items,
+                [
                     'page' => $page,
                     'limit' => $limit,
                     'totalItems' => $totalItems,
                     'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
                 ],
-                'meta' => ['module' => 'school'],
-            ];
+                ['module' => 'school'],
+            );
         });
 
         $result['meta']['filters'] = array_filter($filters, static fn (string $value): bool => $value !== '');

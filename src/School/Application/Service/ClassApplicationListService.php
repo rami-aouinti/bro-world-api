@@ -6,12 +6,13 @@ namespace App\School\Application\Service;
 
 use App\General\Application\Service\CacheKeyConventionService;
 use App\School\Domain\Entity\School;
-use App\School\Domain\Entity\SchoolClass;
 use App\School\Infrastructure\Repository\SchoolClassRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use App\School\Application\Serializer\SchoolApiResponseSerializer;
+use App\School\Application\Serializer\SchoolViewMapper;
 
 readonly class ClassApplicationListService
 {
@@ -19,6 +20,8 @@ readonly class ClassApplicationListService
         private SchoolClassRepository $classRepository,
         private CacheInterface $cache,
         private CacheKeyConventionService $cacheKeyConventionService,
+        private SchoolViewMapper $viewMapper,
+        private SchoolApiResponseSerializer $responseSerializer,
     ) {
     }
 
@@ -45,7 +48,7 @@ readonly class ClassApplicationListService
                 $qb->andWhere('LOWER(class.name) LIKE LOWER(:q)')->setParameter('q', '%' . $filters['q'] . '%');
             }
 
-            $items = array_map(static fn (SchoolClass $class): array => ['id' => $class->getId(), 'name' => $class->getName()], $qb->getQuery()->getResult());
+            $items = $this->viewMapper->mapClassCollection($qb->getQuery()->getResult());
 
             $countQb = $this->classRepository->createQueryBuilder('class')->select('COUNT(class.id)')
                 ->andWhere('class.school = :school')->setParameter('school', $school);
@@ -54,11 +57,11 @@ readonly class ClassApplicationListService
             }
             $totalItems = (int)$countQb->getQuery()->getSingleScalarResult();
 
-            return [
-                'items' => $items,
-                'pagination' => ['page' => $page, 'limit' => $limit, 'totalItems' => $totalItems, 'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0],
-                'meta' => ['applicationSlug' => $applicationSlug, 'schoolId' => $school->getId(), 'filters' => array_filter($filters)],
-            ];
+            return $this->responseSerializer->list(
+                $items,
+                ['page' => $page, 'limit' => $limit, 'totalItems' => $totalItems, 'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0],
+                ['applicationSlug' => $applicationSlug, 'schoolId' => $school->getId(), 'filters' => array_filter($filters)],
+            );
         });
     }
 }

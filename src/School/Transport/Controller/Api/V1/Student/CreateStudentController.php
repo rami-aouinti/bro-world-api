@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\School\Transport\Controller\Api\V1\Student;
+
+use App\School\Application\Service\CreateStudentService;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+#[AsController]
+#[OA\Tag(name: 'School')]
+#[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
+final readonly class CreateStudentController
+{
+    public function __construct(private CreateStudentService $createStudentService)
+    {
+    }
+
+    #[Route('/v1/school/students', methods: [Request::METHOD_POST])]
+    public function __invoke(Request $request): JsonResponse
+    {
+        $payload = (array)json_decode((string)$request->getContent(), true);
+        $student = $this->createStudentService->create((string)($payload['name'] ?? ''), is_string($payload['classId'] ?? null) ? $payload['classId'] : null);
+
+        return new JsonResponse(['id' => $student->getId()], JsonResponse::HTTP_CREATED);
+    }
+}
