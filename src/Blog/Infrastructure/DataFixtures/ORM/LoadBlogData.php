@@ -103,6 +103,15 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
                     ->setAuthor($authors[($blogIndex + $postIndex + 2) % count($authors)])
                     ->setContent('Sub child comment #' . $postIndex)
                     ->setParent($child);
+
+                if ($child->getParent()?->getPost()->getId() !== $child->getPost()->getId()) {
+                    throw new \LogicException('Fixture integrity error: child comment parent must belong to the same post.');
+                }
+
+                if ($subChild->getParent()?->getPost()->getId() !== $subChild->getPost()->getId()) {
+                    throw new \LogicException('Fixture integrity error: sub-child comment parent must belong to the same post.');
+                }
+
                 $manager->persist($parent);
                 $manager->persist($child);
                 $manager->persist($subChild);

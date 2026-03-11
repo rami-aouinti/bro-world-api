@@ -59,6 +59,14 @@ final readonly class CreateBlogCommentCommandHandler
             if (!$parent instanceof BlogComment) {
                 throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Parent comment not found.');
             }
+
+            if ($parent->getPost()->getId() !== $post->getId()) {
+                throw new HttpException(
+                    JsonResponse::HTTP_UNPROCESSABLE_ENTITY,
+                    'Parent comment must belong to the same post.',
+                );
+            }
+
             $comment->setParent($parent);
         }
 
