@@ -17,8 +17,10 @@ use App\Shop\Infrastructure\Repository\CategoryRepository;
 use App\Shop\Infrastructure\Repository\ProductRepository;
 use App\Shop\Infrastructure\Repository\ShopRepository;
 use App\Shop\Infrastructure\Repository\TagRepository;
+use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -41,6 +43,7 @@ final readonly class ShopController
         private ProductListService $productListService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
+        private Security $security,
     ) {
     }
 
@@ -298,23 +301,32 @@ final readonly class ShopController
     {
         $shop = $this->shopRepository->findOneByApplicationSlug($applicationSlug);
         if ($shop instanceof Shop) {
+            $this->assertApplicationAccess($shop->getApplication(), PlatformKey::SHOP);
+
             return $shop;
         }
 
         $application = $this->entityManager->getRepository(Application::class)->findOneBy([
             'slug' => $applicationSlug,
         ]);
-        if (!$application instanceof Application || $application->getPlatform()?->getPlatformKey() !== PlatformKey::SHOP) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "applicationSlug" for Shop platform.');
+        if (!$application instanceof Application) {
+            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Unknown "applicationSlug".');
         }
 
-        $shop = (new Shop())
-            ->setApplication($application)
-            ->setName($application->getTitle() . ' Catalog');
+        $this->assertApplicationAccess($application, PlatformKey::SHOP);
 
-        $this->entityManager->persist($shop);
-        $this->entityManager->flush();
+        throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Shop root entity not found for this application.');
+    }
 
-        return $shop;
+    private function assertApplicationAccess(?Application $application, PlatformKey $platformKey): void
+    {
+        if (!$application instanceof Application || $application->getPlatform()?->getPlatformKey() !== $platformKey) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Invalid "applicationSlug" for the requested platform.');
+        }
+
+        $user = $this->security->getUser();
+        if (!$user instanceof User || $application->getUser()?->getId() !== $user->getId()) {
+            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You cannot access this application scope.');
+        }
     }
 }

@@ -20,6 +20,7 @@ class PublicJobDetailController
     ) {
     }
 
+    #[Route(path: '/v1/recruit/applications/{applicationSlug}/public/jobs/{jobSlug}', methods: [Request::METHOD_GET])]
     #[Route(path: '/v1/recruit/public/{applicationSlug}/jobs/{jobSlug}', methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'Détail public d\'un job avec jobs similaires indexés.',

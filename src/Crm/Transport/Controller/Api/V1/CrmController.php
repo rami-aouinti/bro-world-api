@@ -21,8 +21,10 @@ use App\General\Application\Message\EntityCreated;
 use App\General\Application\Message\EntityDeleted;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PlatformKey;
+use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -47,6 +49,7 @@ final readonly class CrmController
         private TaskListService $taskListService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
+        private Security $security,
     ) {
     }
 
@@ -397,20 +400,33 @@ final readonly class CrmController
     {
         $crm = $this->crmRepository->findOneByApplicationSlug($applicationSlug);
         if ($crm instanceof Crm) {
+            $this->assertApplicationAccess($crm->getApplication(), PlatformKey::CRM);
+
             return $crm;
         }
 
         $application = $this->entityManager->getRepository(Application::class)->findOneBy([
             'slug' => $applicationSlug,
         ]);
-        if (!$application instanceof Application || $application->getPlatform()?->getPlatformKey() !== PlatformKey::CRM) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "applicationSlug" for CRM platform.');
+        if (!$application instanceof Application) {
+            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Unknown "applicationSlug".');
         }
 
-        $crm = (new Crm())->setApplication($application);
-        $this->entityManager->persist($crm);
-        $this->entityManager->flush();
+        $this->assertApplicationAccess($application, PlatformKey::CRM);
 
-        return $crm;
+        throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'CRM root entity not found for this application.');
+
+    }
+
+    private function assertApplicationAccess(?Application $application, PlatformKey $platformKey): void
+    {
+        if (!$application instanceof Application || $application->getPlatform()?->getPlatformKey() !== $platformKey) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Invalid "applicationSlug" for the requested platform.');
+        }
+
+        $user = $this->security->getUser();
+        if (!$user instanceof User || $application->getUser()?->getId() !== $user->getId()) {
+            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You cannot access this application scope.');
+        }
     }
 }

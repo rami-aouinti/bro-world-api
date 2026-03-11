@@ -21,8 +21,10 @@ use App\School\Infrastructure\Repository\SchoolClassRepository;
 use App\School\Infrastructure\Repository\SchoolRepository;
 use App\School\Infrastructure\Repository\StudentRepository;
 use App\School\Infrastructure\Repository\TeacherRepository;
+use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -47,6 +49,7 @@ final readonly class SchoolController
         private ExamListService $examListService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
+        private Security $security,
     ) {
     }
 
@@ -397,23 +400,32 @@ final readonly class SchoolController
     {
         $school = $this->schoolRepository->findOneByApplicationSlug($applicationSlug);
         if ($school instanceof School) {
+            $this->assertApplicationAccess($school->getApplication(), PlatformKey::SCHOOL);
+
             return $school;
         }
 
         $application = $this->entityManager->getRepository(Application::class)->findOneBy([
             'slug' => $applicationSlug,
         ]);
-        if (!$application instanceof Application || $application->getPlatform()?->getPlatformKey() !== PlatformKey::SCHOOL) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "applicationSlug" for School platform.');
+        if (!$application instanceof Application) {
+            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Unknown "applicationSlug".');
         }
 
-        $school = (new School())
-            ->setApplication($application)
-            ->setName($application->getTitle() . ' Academy');
+        $this->assertApplicationAccess($application, PlatformKey::SCHOOL);
 
-        $this->entityManager->persist($school);
-        $this->entityManager->flush();
+        throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'School root entity not found for this application.');
+    }
 
-        return $school;
+    private function assertApplicationAccess(?Application $application, PlatformKey $platformKey): void
+    {
+        if (!$application instanceof Application || $application->getPlatform()?->getPlatformKey() !== $platformKey) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Invalid "applicationSlug" for the requested platform.');
+        }
+
+        $user = $this->security->getUser();
+        if (!$user instanceof User || $application->getUser()?->getId() !== $user->getId()) {
+            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You cannot access this application scope.');
+        }
     }
 }
