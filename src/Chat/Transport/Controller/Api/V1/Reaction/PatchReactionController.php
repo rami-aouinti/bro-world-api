@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Chat\Transport\Controller\Api\V1\Reaction;
 
-use App\Chat\Domain\Entity\ChatMessageReaction;
+use App\Chat\Application\Service\ChatAccessResolverService;
+use App\Chat\Application\Service\ReactionTypeParser;
 use App\Chat\Domain\Enum\ChatReactionType;
 use App\Chat\Infrastructure\Repository\ChatMessageReactionRepository;
 use App\General\Application\Service\CacheInvalidationService;
@@ -13,7 +14,6 @@ use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -30,6 +30,8 @@ class PatchReactionController
 {
     public function __construct(
         private readonly ChatMessageReactionRepository $reactionRepository,
+        private readonly ChatAccessResolverService $chatAccessResolverService,
+        private readonly ReactionTypeParser $reactionTypeParser,
         private readonly CacheInvalidationService $cacheInvalidationService,
     ) {
     }
@@ -37,11 +39,11 @@ class PatchReactionController
     #[Route(path: '/v1/chat/private/reactions/{reactionId}', methods: [Request::METHOD_PATCH])]
     public function __invoke(string $reactionId, Request $request, User $loggedInUser): JsonResponse
     {
-        $reaction = $this->findOwnReaction($reactionId, $loggedInUser);
+        $reaction = $this->chatAccessResolverService->resolveOwnReaction($reactionId, $loggedInUser);
         $payload = $request->toArray();
 
         if (array_key_exists('reaction', $payload)) {
-            $reaction->setReaction($this->parseReactionType($payload['reaction']));
+            $reaction->setReaction($this->reactionTypeParser->parse($payload['reaction']));
             $this->reactionRepository->save($reaction);
             $this->cacheInvalidationService->invalidateConversationCaches($reaction->getMessage()->getConversation()->getChat()->getId(), $loggedInUser->getId());
         }
@@ -49,32 +51,5 @@ class PatchReactionController
         return new JsonResponse([
             'id' => $reaction->getId(),
         ]);
-    }
-
-    private function parseReactionType(mixed $reaction): ChatReactionType
-    {
-        if (!is_string($reaction) || $reaction === '') {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "reaction" must be a non-empty string.');
-        }
-
-        $reactionType = ChatReactionType::tryFrom($reaction);
-        if (!$reactionType instanceof ChatReactionType) {
-            throw new HttpException(
-                JsonResponse::HTTP_BAD_REQUEST,
-                sprintf('Invalid reaction "%s". Allowed values: %s.', $reaction, implode(', ', ChatReactionType::VALUES)),
-            );
-        }
-
-        return $reactionType;
-    }
-
-    private function findOwnReaction(string $reactionId, User $loggedInUser): ChatMessageReaction
-    {
-        $reaction = $this->reactionRepository->find($reactionId);
-        if (!$reaction instanceof ChatMessageReaction || $reaction->getUser()->getId() !== $loggedInUser->getId()) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Reaction not found.');
-        }
-
-        return $reaction;
     }
 }

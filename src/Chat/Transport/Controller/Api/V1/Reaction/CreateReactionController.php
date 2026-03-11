@@ -4,20 +4,17 @@ declare(strict_types=1);
 
 namespace App\Chat\Transport\Controller\Api\V1\Reaction;
 
-use App\Chat\Domain\Entity\ChatMessage;
+use App\Chat\Application\Service\ChatAccessResolverService;
+use App\Chat\Application\Service\ReactionTypeParser;
 use App\Chat\Domain\Entity\ChatMessageReaction;
-use App\Chat\Domain\Entity\ConversationParticipant;
 use App\Chat\Domain\Enum\ChatReactionType;
 use App\Chat\Infrastructure\Repository\ChatMessageReactionRepository;
-use App\Chat\Infrastructure\Repository\ChatMessageRepository;
-use App\Chat\Infrastructure\Repository\ConversationParticipantRepository;
 use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -33,9 +30,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class CreateReactionController
 {
     public function __construct(
-        private readonly ChatMessageRepository $messageRepository,
         private readonly ChatMessageReactionRepository $reactionRepository,
-        private readonly ConversationParticipantRepository $participantRepository,
+        private readonly ChatAccessResolverService $chatAccessResolverService,
+        private readonly ReactionTypeParser $reactionTypeParser,
         private readonly CacheInvalidationService $cacheInvalidationService,
     ) {
     }
@@ -43,10 +40,10 @@ class CreateReactionController
     #[Route(path: '/v1/chat/private/messages/{messageId}/reactions', methods: [Request::METHOD_POST])]
     public function __invoke(string $messageId, Request $request, User $loggedInUser): JsonResponse
     {
-        $message = $this->findParticipantMessage($messageId, $loggedInUser);
+        $message = $this->chatAccessResolverService->resolveAccessibleMessage($messageId, $loggedInUser);
         $payload = $request->toArray();
 
-        $reactionType = $this->parseReactionType($payload['reaction'] ?? null);
+        $reactionType = $this->reactionTypeParser->parse($payload['reaction'] ?? null);
 
         $reaction = (new ChatMessageReaction())
             ->setMessage($message)
@@ -59,37 +56,5 @@ class CreateReactionController
         return new JsonResponse([
             'id' => $reaction->getId(),
         ], JsonResponse::HTTP_CREATED);
-    }
-
-    private function parseReactionType(mixed $reaction): ChatReactionType
-    {
-        if (!is_string($reaction) || $reaction === '') {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "reaction" must be a non-empty string.');
-        }
-
-        $reactionType = ChatReactionType::tryFrom($reaction);
-        if (!$reactionType instanceof ChatReactionType) {
-            throw new HttpException(
-                JsonResponse::HTTP_BAD_REQUEST,
-                sprintf('Invalid reaction "%s". Allowed values: %s.', $reaction, implode(', ', ChatReactionType::VALUES)),
-            );
-        }
-
-        return $reactionType;
-    }
-
-    private function findParticipantMessage(string $messageId, User $loggedInUser): ChatMessage
-    {
-        $message = $this->messageRepository->find($messageId);
-        if (!$message instanceof ChatMessage) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Message not found.');
-        }
-
-        $participant = $this->participantRepository->findOneByConversationAndUser($message->getConversation(), $loggedInUser);
-        if (!$participant instanceof ConversationParticipant) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Message not found.');
-        }
-
-        return $message;
     }
 }

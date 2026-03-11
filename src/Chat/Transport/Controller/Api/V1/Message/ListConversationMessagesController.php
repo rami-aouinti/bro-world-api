@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace App\Chat\Transport\Controller\Api\V1\Message;
 
-use App\Chat\Domain\Entity\Conversation;
-use App\Chat\Domain\Entity\ConversationParticipant;
-use App\Chat\Infrastructure\Repository\ConversationParticipantRepository;
-use App\Chat\Infrastructure\Repository\ConversationRepository;
+use App\Chat\Application\Service\ChatAccessResolverService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -37,15 +33,14 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class ListConversationMessagesController
 {
     public function __construct(
-        private readonly ConversationRepository $conversationRepository,
-        private readonly ConversationParticipantRepository $participantRepository,
+        private readonly ChatAccessResolverService $chatAccessResolverService,
     ) {
     }
 
     #[Route(path: '/v1/chat/private/conversations/{conversationId}', methods: [Request::METHOD_GET])]
     public function __invoke(string $conversationId, User $loggedInUser): JsonResponse
     {
-        $conversation = $this->findParticipantConversation($conversationId, $loggedInUser);
+        $conversation = $this->chatAccessResolverService->resolveParticipantConversation($conversationId, $loggedInUser);
 
         $items = [];
         foreach ($conversation->getMessages()->toArray() as $message) {
@@ -73,20 +68,5 @@ class ListConversationMessagesController
             'conversationId' => $conversation->getId(),
             'items' => $items,
         ]);
-    }
-
-    private function findParticipantConversation(string $conversationId, User $loggedInUser): Conversation
-    {
-        $conversation = $this->conversationRepository->find($conversationId);
-        if (!$conversation instanceof Conversation) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Conversation not found.');
-        }
-
-        $participant = $this->participantRepository->findOneByConversationAndUser($conversation, $loggedInUser);
-        if (!$participant instanceof ConversationParticipant) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Conversation not found.');
-        }
-
-        return $conversation;
     }
 }

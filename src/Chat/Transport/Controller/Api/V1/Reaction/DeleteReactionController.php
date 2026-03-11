@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chat\Transport\Controller\Api\V1\Reaction;
 
-use App\Chat\Domain\Entity\ChatMessageReaction;
+use App\Chat\Application\Service\ChatAccessResolverService;
 use App\Chat\Infrastructure\Repository\ChatMessageReactionRepository;
 use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
@@ -12,7 +12,6 @@ use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -25,6 +24,7 @@ class DeleteReactionController
 {
     public function __construct(
         private readonly ChatMessageReactionRepository $reactionRepository,
+        private readonly ChatAccessResolverService $chatAccessResolverService,
         private readonly CacheInvalidationService $cacheInvalidationService,
     ) {
     }
@@ -32,21 +32,11 @@ class DeleteReactionController
     #[Route(path: '/v1/chat/private/reactions/{reactionId}', methods: [Request::METHOD_DELETE])]
     public function __invoke(string $reactionId, User $loggedInUser): JsonResponse
     {
-        $reaction = $this->findOwnReaction($reactionId, $loggedInUser);
+        $reaction = $this->chatAccessResolverService->resolveOwnReaction($reactionId, $loggedInUser);
         $chatId = $reaction->getMessage()->getConversation()->getChat()->getId();
         $this->reactionRepository->remove($reaction);
         $this->cacheInvalidationService->invalidateConversationCaches($chatId, $loggedInUser->getId());
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
-    }
-
-    private function findOwnReaction(string $reactionId, User $loggedInUser): ChatMessageReaction
-    {
-        $reaction = $this->reactionRepository->find($reactionId);
-        if (!$reaction instanceof ChatMessageReaction || $reaction->getUser()->getId() !== $loggedInUser->getId()) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Reaction not found.');
-        }
-
-        return $reaction;
     }
 }
