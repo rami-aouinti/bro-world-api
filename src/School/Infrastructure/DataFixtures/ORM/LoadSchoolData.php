@@ -44,10 +44,17 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
         foreach ($this->getApplicationsByPlatform(PlatformKey::SCHOOL) as $applicationIndex => $application) {
             $appKey = $applicationKeys[$applicationIndex] ?? $application->getSlug();
 
-            $school = (new School())
-                ->setName($application->getTitle() . ' Academy')
-                ->setApplication($application);
-            $manager->persist($school);
+            $school = $manager->getRepository(School::class)->findOneBy([
+                'application' => $application,
+            ]);
+
+            if (!$school instanceof School) {
+                $school = (new School())
+                    ->setApplication($application);
+                $manager->persist($school);
+            }
+
+            $school->setName($application->getTitle() . ' Academy');
             $this->addReference('School-' . $appKey, $school);
 
             $classes = [];
