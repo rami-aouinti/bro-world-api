@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class ApplicationEventListController
 {
     public function __construct(
-        private readonly EventListService $eventListService
+        public readonly EventListService $eventListService
     ) {
     }
 

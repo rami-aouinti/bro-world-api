@@ -20,7 +20,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class UserEventListController
 {
     public function __construct(
-        private readonly EventListService $eventListService
+        public readonly EventListService $eventListService
     ) {
     }
 

@@ -22,8 +22,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class CancelApplicationEventController
 {
     public function __construct(
-        private readonly MessageServiceInterface $messageService,
-        private readonly EventMutationInputFactory $eventMutationInputFactory,
+        public readonly MessageServiceInterface $messageService,
+        public readonly EventMutationInputFactory $eventMutationInputFactory,
     ) {
     }
 
