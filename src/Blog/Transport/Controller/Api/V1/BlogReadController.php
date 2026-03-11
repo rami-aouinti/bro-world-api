@@ -14,13 +14,15 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 final readonly class BlogReadController
 {
     public function __construct(
-        private BlogReadService $blogReadService
+        private BlogReadService $blogReadService,
+        private Security $security,
     ) {
     }
 
@@ -113,11 +115,11 @@ final readonly class BlogReadController
             ]],
         ]),
     )]
-    public function byApplication(string $applicationSlug, Request $request): JsonResponse
+    public function byApplication(string $applicationSlug): JsonResponse
     {
-        $user = $this->getCurrentUserFromRequest($request);
+        $user = $this->security->getUser();
 
-        return new JsonResponse($this->blogReadService->getByApplicationSlug($applicationSlug, $user));
+        return new JsonResponse($this->blogReadService->getByApplicationSlug($applicationSlug, $user instanceof User ? $user : null));
     }
 
     #[Route('/v1/blogs/reactions/types', methods: [Request::METHOD_GET])]
@@ -133,10 +135,4 @@ final readonly class BlogReadController
         ]);
     }
 
-    private function getCurrentUserFromRequest(Request $request): ?User
-    {
-        $user = $request->getUser();
-
-        return $user instanceof User ? $user : null;
-    }
 }
