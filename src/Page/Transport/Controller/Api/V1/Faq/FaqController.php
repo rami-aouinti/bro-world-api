@@ -19,7 +19,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[AsController]
 #[Route(path: '/v1/page/faq')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-#[OA\Tag(name: 'Page Faq Management')]
+#[OA\Tag(name: 'Page Management')]
 class FaqController extends Controller
 {
     use Actions\Root\CountAction;

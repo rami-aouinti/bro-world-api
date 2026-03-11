@@ -19,7 +19,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[AsController]
 #[Route(path: '/v1/page/home')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-#[OA\Tag(name: 'Page Home Management')]
+#[OA\Tag(name: 'Page Management')]
 class HomeController extends Controller
 {
     use Actions\Root\CountAction;
