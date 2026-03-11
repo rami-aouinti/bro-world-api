@@ -27,6 +27,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 use function sprintf;
@@ -39,6 +40,7 @@ final readonly class BlogMutationController
     public function __construct(
         private MessageBusInterface $messageBus,
         private MediaUploaderService $mediaUploaderService,
+        private Security $security,
     ) {
     }
 
@@ -52,7 +54,7 @@ final readonly class BlogMutationController
     ]))]
     public function createGeneral(Request $request): JsonResponse
     {
-        $user = $request->getUser();
+        $user = $this->security->getUser();
         if (!$user instanceof User || !in_array('ROLE_ROOT', $user->getRoles(), true)) {
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Only root can create General blog.');
         }
