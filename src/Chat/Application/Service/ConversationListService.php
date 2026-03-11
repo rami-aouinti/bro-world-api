@@ -265,7 +265,7 @@ final readonly class ConversationListService
                                 static fn (ChatMessageReaction $reaction): array => [
                                     'id' => $reaction->getId(),
                                     'userId' => $reaction->getUser(),
-                                    'reaction' => $reaction->getReaction(),
+                                    'reaction' => $reaction->getReaction()->value,
                                 ],
                                 $message->getReactions()->toArray()
                             ),

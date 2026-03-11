@@ -13,6 +13,7 @@ use App\Chat\Domain\Entity\ChatMessage;
 use App\Chat\Domain\Entity\ChatMessageReaction;
 use App\Chat\Domain\Entity\Conversation;
 use App\Chat\Domain\Entity\ConversationParticipant;
+use App\Chat\Domain\Enum\ChatReactionType;
 use App\Platform\Domain\Entity\Application as PlatformApplication;
 use App\Platform\Domain\Entity\Plugin;
 use App\Recruit\Domain\Entity\Application as RecruitApplication;
@@ -90,24 +91,24 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
                 'partner' => $johnAdmin,
                 'firstMessage' => 'Hello John Admin, on peut échanger en privé sur les prochaines étapes ?',
                 'replyMessage' => 'Oui, je te confirme le plan et je garde cette conversation en direct.',
-                'rootReaction' => '🤝',
-                'partnerReaction' => '✅',
+                'rootReaction' => 'love',
+                'partnerReaction' => 'love',
             ],
             [
                 'application' => $this->getReference('Application-shop-orders-watch', PlatformApplication::class),
                 'partner' => $johnUser,
                 'firstMessage' => 'Salut John User, je te partage ici les points sensibles côté commandes.',
                 'replyMessage' => 'Parfait, je m’en occupe et je te fais un retour rapidement.',
-                'rootReaction' => '👍',
-                'partnerReaction' => '👀',
+                'rootReaction' => 'like',
+                'partnerReaction' => 'wow',
             ],
             [
                 'application' => $this->getReference('Application-school-course-flow', PlatformApplication::class),
                 'partner' => $johnApi,
                 'firstMessage' => 'Hello John API, on valide ensemble la synchro de ce soir en privé ?',
                 'replyMessage' => 'Oui, je lance la synchro et je confirme dès que c’est terminé.',
-                'rootReaction' => '🚀',
-                'partnerReaction' => '👌',
+                'rootReaction' => 'love',
+                'partnerReaction' => 'like',
             ],
         ];
 
@@ -296,8 +297,8 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             []
         );
 
-        $this->ensureReaction($manager, $replyMessage, $john, '👍');
-        $this->ensureReaction($manager, $introMessage, $johnAdmin, '✅');
+        $this->ensureReaction($manager, $replyMessage, $john, 'like');
+        $this->ensureReaction($manager, $introMessage, $johnAdmin, 'love');
     }
 
     private function createJohnRootConversationScenario(ObjectManager $manager, Chat $chat, Calendar $calendar): void
@@ -373,10 +374,10 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             []
         );
 
-        $this->ensureReaction($manager, $ownerReplyMessage, $johnRoot, '✅');
-        $this->ensureReaction($manager, $ownerReplyMessage, $johnAdmin, '👍');
-        $this->ensureReaction($manager, $johnUserMessage, $johnAdmin, '👀');
-        $this->ensureReaction($manager, $johnRootMessage, $otherOwner, '👏');
+        $this->ensureReaction($manager, $ownerReplyMessage, $johnRoot, 'love');
+        $this->ensureReaction($manager, $ownerReplyMessage, $johnAdmin, 'like');
+        $this->ensureReaction($manager, $johnUserMessage, $johnAdmin, 'wow');
+        $this->ensureReaction($manager, $johnRootMessage, $otherOwner, 'laugh');
 
         $event = $this->ensureJohnRootScenarioEvent($manager, $calendar, $johnRoot);
 
@@ -566,12 +567,12 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         return $message;
     }
 
-    private function ensureReaction(ObjectManager $manager, ChatMessage $message, User $user, string $emoji): void
+    private function ensureReaction(ObjectManager $manager, ChatMessage $message, User $user, string $reaction): void
     {
         $existing = $manager->getRepository(ChatMessageReaction::class)->findOneBy([
             'message' => $message,
             'user' => $user,
-            'reaction' => $emoji,
+            'reaction' => $reaction,
         ]);
 
         if ($existing instanceof ChatMessageReaction) {
@@ -581,7 +582,7 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         $reaction = (new ChatMessageReaction())
             ->setMessage($message)
             ->setUser($user)
-            ->setReaction($emoji);
+            ->setReaction(ChatReactionType::from($reaction));
 
         $manager->persist($reaction);
     }

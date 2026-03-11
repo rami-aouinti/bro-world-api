@@ -7,6 +7,7 @@ namespace App\Chat\Transport\Controller\Api\V1\Reaction;
 use App\Chat\Domain\Entity\ChatMessage;
 use App\Chat\Domain\Entity\ChatMessageReaction;
 use App\Chat\Domain\Entity\ConversationParticipant;
+use App\Chat\Domain\Enum\ChatReactionType;
 use App\Chat\Infrastructure\Repository\ChatMessageReactionRepository;
 use App\Chat\Infrastructure\Repository\ChatMessageRepository;
 use App\Chat\Infrastructure\Repository\ConversationParticipantRepository;
@@ -23,12 +24,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Chat Message Reaction')]
-#[OA\Post(path: '/v1/chat/private/messages/{messageId}/reactions', operationId: 'chat_reaction_create', summary: 'Créer une réaction', tags: ['Chat Message Reaction'], parameters: [new OA\Parameter(name: 'messageId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['reaction'], properties: [new OA\Property(property: 'reaction', type: 'string', example: 'like')], example: [
+#[OA\Post(path: '/v1/chat/private/messages/{messageId}/reactions', operationId: 'chat_reaction_create', summary: 'Créer une réaction', tags: ['Chat Message Reaction'], parameters: [new OA\Parameter(name: 'messageId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['reaction'], properties: [new OA\Property(property: 'reaction', type: 'string', enum: ChatReactionType::VALUES, example: 'like')], example: [
     'reaction' => 'like',
 ])), responses: [new OA\Response(response: 201, description: 'Réaction créée', content: new OA\JsonContent(example: [
     'id' => '8f210e56-6550-4b61-b7f3-8994f5f6dc41',
 ])), new OA\Response(response: 400, description: 'Payload invalide'), new OA\Response(response: 404, description: 'Message introuvable')])]
-#[OA\Patch(path: '/v1/chat/private/reactions/{reactionId}', operationId: 'chat_reaction_patch', summary: 'Modifier une réaction', tags: ['Chat Message Reaction'], parameters: [new OA\Parameter(name: 'reactionId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [new OA\Property(property: 'reaction', type: 'string', example: 'love')], example: [
+#[OA\Patch(path: '/v1/chat/private/reactions/{reactionId}', operationId: 'chat_reaction_patch', summary: 'Modifier une réaction', tags: ['Chat Message Reaction'], parameters: [new OA\Parameter(name: 'reactionId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [new OA\Property(property: 'reaction', type: 'string', enum: ChatReactionType::VALUES, example: 'love')], example: [
     'reaction' => 'love',
 ])), responses: [new OA\Response(response: 200, description: 'Réaction modifiée', content: new OA\JsonContent(example: [
     'id' => '8f210e56-6550-4b61-b7f3-8994f5f6dc41',
@@ -50,10 +51,7 @@ class UserReactionMutationController
         $message = $this->findParticipantMessage($messageId, $loggedInUser);
         $payload = $request->toArray();
 
-        $reactionType = $payload['reaction'] ?? null;
-        if (!is_string($reactionType) || $reactionType === '') {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "reaction" is required.');
-        }
+        $reactionType = $this->parseReactionType($payload['reaction'] ?? null);
 
         $reaction = (new ChatMessageReaction())
             ->setMessage($message)
@@ -74,8 +72,8 @@ class UserReactionMutationController
         $reaction = $this->findOwnReaction($reactionId, $loggedInUser);
         $payload = $request->toArray();
 
-        if (isset($payload['reaction']) && is_string($payload['reaction']) && $payload['reaction'] !== '') {
-            $reaction->setReaction($payload['reaction']);
+        if (array_key_exists('reaction', $payload)) {
+            $reaction->setReaction($this->parseReactionType($payload['reaction']));
             $this->reactionRepository->save($reaction);
             $this->cacheInvalidationService->invalidateConversationCaches($reaction->getMessage()->getConversation()->getChat()->getId(), $loggedInUser->getId());
         }
@@ -94,6 +92,24 @@ class UserReactionMutationController
         $this->cacheInvalidationService->invalidateConversationCaches($chatId, $loggedInUser->getId());
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
+    }
+
+
+    private function parseReactionType(mixed $reaction): ChatReactionType
+    {
+        if (!is_string($reaction) || $reaction === '') {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "reaction" must be a non-empty string.');
+        }
+
+        $reactionType = ChatReactionType::tryFrom($reaction);
+        if (!$reactionType instanceof ChatReactionType) {
+            throw new HttpException(
+                JsonResponse::HTTP_BAD_REQUEST,
+                sprintf('Invalid reaction "%s". Allowed values: %s.', $reaction, implode(', ', ChatReactionType::VALUES)),
+            );
+        }
+
+        return $reactionType;
     }
 
     private function findParticipantMessage(string $messageId, User $loggedInUser): ChatMessage
