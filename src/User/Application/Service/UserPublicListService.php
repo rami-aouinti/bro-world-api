@@ -49,9 +49,11 @@ readonly class UserPublicListService
                 $item->tag($this->cacheKeyConventionService->publicUserListTag());
             }
 
-            $esIds = $this->searchIdsFromElastic($filters['q']);
+            $esIds = $filters['q'] !== ''
+                ? $this->searchIdsFromElastic($filters['q'])
+                : null;
 
-            if ($esIds === []) {
+            if ($filters['q'] !== '' && $esIds === []) {
                 return [];
             }
 
