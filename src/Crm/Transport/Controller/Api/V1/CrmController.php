@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1;
 
+use App\Crm\Application\Service\CompanyApplicationListService;
 use App\Crm\Application\Service\TaskListService;
 use App\Crm\Domain\Entity\Company;
 use App\Crm\Domain\Entity\Crm;
@@ -47,6 +48,7 @@ final readonly class CrmController
         private SprintRepository $sprintRepository,
         private CrmRepository $crmRepository,
         private TaskListService $taskListService,
+        private CompanyApplicationListService $companyApplicationListService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
         private Security $security,
@@ -339,23 +341,11 @@ final readonly class CrmController
     #[Route('/v1/crm/applications/{applicationSlug}/companies', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'crm-sales-hub')]
     #[OA\Response(response: 200, description: 'Companies list scoped to CRM application.')]
-    public function companiesByApplication(string $applicationSlug): JsonResponse
+    public function companiesByApplication(string $applicationSlug, Request $request): JsonResponse
     {
         $crm = $this->resolveOrCreateCrmByApplicationSlug($applicationSlug);
-        $items = array_map(static fn (Company $company): array => [
-            'id' => $company->getId(),
-            'name' => $company->getName(),
-        ], $this->companyRepository->findBy([
-            'crm' => $crm,
-        ], [
-            'createdAt' => 'DESC',
-        ], 200));
 
-        return new JsonResponse([
-            'applicationSlug' => $applicationSlug,
-            'crmId' => $crm->getId(),
-            'items' => $items,
-        ]);
+        return new JsonResponse($this->companyApplicationListService->getList($request, $applicationSlug, $crm));
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/companies', methods: [Request::METHOD_POST])]

@@ -8,6 +8,7 @@ use App\General\Application\Message\EntityCreated;
 use App\General\Application\Message\EntityDeleted;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PlatformKey;
+use App\Shop\Application\Service\ProductApplicationListService;
 use App\Shop\Application\Service\ProductListService;
 use App\Shop\Domain\Entity\Category;
 use App\Shop\Domain\Entity\Product;
@@ -41,6 +42,7 @@ final readonly class ShopController
         private TagRepository $tagRepository,
         private ShopRepository $shopRepository,
         private ProductListService $productListService,
+        private ProductApplicationListService $productApplicationListService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
         private Security $security,
@@ -221,22 +223,7 @@ final readonly class ShopController
     public function productsByApplication(string $applicationSlug, Request $request): JsonResponse
     {
         $shop = $this->resolveOrCreateShopByApplicationSlug($applicationSlug);
-        $items = array_map(static fn (Product $product): array => [
-            'id' => $product->getId(),
-            'name' => $product->getName(),
-            'price' => $product->getPrice(),
-            'categoryId' => $product->getCategory()?->getId(),
-        ], $this->productRepository->findBy([
-            'shop' => $shop,
-        ], [
-            'createdAt' => 'DESC',
-        ], max(1, min(200, $request->query->getInt('limit', 50)))));
-
-        return new JsonResponse([
-            'applicationSlug' => $applicationSlug,
-            'shopId' => $shop->getId(),
-            'items' => $items,
-        ]);
+        return new JsonResponse($this->productApplicationListService->getList($request, $applicationSlug, $shop));
     }
 
     #[Route('/v1/shop/applications/{applicationSlug}/products', methods: [Request::METHOD_POST])]

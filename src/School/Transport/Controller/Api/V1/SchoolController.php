@@ -8,6 +8,7 @@ use App\General\Application\Message\EntityCreated;
 use App\General\Application\Message\EntityDeleted;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PlatformKey;
+use App\School\Application\Service\ClassApplicationListService;
 use App\School\Application\Service\ExamListService;
 use App\School\Domain\Entity\Exam;
 use App\School\Domain\Entity\Grade;
@@ -47,6 +48,7 @@ final readonly class SchoolController
         private GradeRepository $gradeRepository,
         private SchoolRepository $schoolRepository,
         private ExamListService $examListService,
+        private ClassApplicationListService $classApplicationListService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
         private Security $security,
@@ -339,23 +341,11 @@ final readonly class SchoolController
     #[Route('/v1/school/applications/{applicationSlug}/classes', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'school-campus-core')]
     #[OA\Response(response: 200, description: 'Classes list scoped to school application.')]
-    public function classesByApplication(string $applicationSlug): JsonResponse
+    public function classesByApplication(string $applicationSlug, Request $request): JsonResponse
     {
         $school = $this->resolveOrCreateSchoolByApplicationSlug($applicationSlug);
-        $items = array_map(static fn (SchoolClass $class): array => [
-            'id' => $class->getId(),
-            'name' => $class->getName(),
-        ], $this->classRepository->findBy([
-            'school' => $school,
-        ], [
-            'createdAt' => 'DESC',
-        ], 200));
 
-        return new JsonResponse([
-            'applicationSlug' => $applicationSlug,
-            'schoolId' => $school->getId(),
-            'items' => $items,
-        ]);
+        return new JsonResponse($this->classApplicationListService->getList($request, $applicationSlug, $school));
     }
 
     #[Route('/v1/school/applications/{applicationSlug}/classes', methods: [Request::METHOD_POST])]

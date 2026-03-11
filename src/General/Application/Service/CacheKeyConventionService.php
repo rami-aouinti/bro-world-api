@@ -119,6 +119,19 @@ class CacheKeyConventionService
     /**
      * @param array<string, mixed> $filters
      */
+    public function buildShopProductApplicationListKey(string $applicationSlug, int $page, int $limit, array $filters): string
+    {
+        return 'shop_product_application_list_' . md5((string)json_encode([
+            'applicationSlug' => $applicationSlug,
+            'page' => $page,
+            'limit' => $limit,
+            'filters' => $filters,
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     */
     public function buildCrmTaskListKey(int $page, int $limit, array $filters): string
     {
         return 'crm_task_list_' . md5((string)json_encode([
@@ -131,9 +144,35 @@ class CacheKeyConventionService
     /**
      * @param array<string, mixed> $filters
      */
+    public function buildCrmCompanyApplicationListKey(string $applicationSlug, int $page, int $limit, array $filters): string
+    {
+        return 'crm_company_application_list_' . md5((string)json_encode([
+            'applicationSlug' => $applicationSlug,
+            'page' => $page,
+            'limit' => $limit,
+            'filters' => $filters,
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     */
     public function buildSchoolExamListKey(int $page, int $limit, array $filters): string
     {
         return 'school_exam_list_' . md5((string)json_encode([
+            'page' => $page,
+            'limit' => $limit,
+            'filters' => $filters,
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     */
+    public function buildSchoolClassApplicationListKey(string $applicationSlug, int $page, int $limit, array $filters): string
+    {
+        return 'school_class_application_list_' . md5((string)json_encode([
+            'applicationSlug' => $applicationSlug,
             'page' => $page,
             'limit' => $limit,
             'filters' => $filters,
@@ -220,14 +259,29 @@ class CacheKeyConventionService
         return 'cache_shop_product_list';
     }
 
+    public function shopProductListByApplicationTag(string $applicationSlug): string
+    {
+        return 'cache_shop_product_list_' . $this->sanitizeSegment($applicationSlug);
+    }
+
     public function crmTaskListTag(): string
     {
         return 'cache_crm_task_list';
     }
 
+    public function crmCompanyListByApplicationTag(string $applicationSlug): string
+    {
+        return 'cache_crm_company_list_' . $this->sanitizeSegment($applicationSlug);
+    }
+
     public function schoolExamListTag(): string
     {
         return 'cache_school_exam_list';
+    }
+
+    public function schoolClassListByApplicationTag(string $applicationSlug): string
+    {
+        return 'cache_school_class_list_' . $this->sanitizeSegment($applicationSlug);
     }
 
     /**

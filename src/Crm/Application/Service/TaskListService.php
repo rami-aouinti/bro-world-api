@@ -96,10 +96,11 @@ readonly class TaskListService
                     'totalItems' => $totalItems,
                     'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
                 ],
+                'meta' => ['module' => 'crm'],
             ];
         });
 
-        $result['filters'] = array_filter($filters, static fn (string $value): bool => $value !== '');
+        $result['meta']['filters'] = array_filter($filters, static fn (string $value): bool => $value !== '');
 
         return $result;
     }

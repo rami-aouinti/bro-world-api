@@ -140,7 +140,7 @@ class JobPublicListService
             if ($esIds !== null) {
                 if ($esIds === []) {
                     return [
-                        'jobs' => [],
+                        'items' => [],
                         'pagination' => [
                             'page' => $page,
                             'limit' => $limit,
@@ -166,7 +166,7 @@ class JobPublicListService
             $paginator = new Paginator($query, true);
             $totalItems = $paginator->count();
 
-            $jobs = [];
+            $items = [];
             $jobIds = [];
             /** @var Job $job */
             foreach ($paginator as $job) {
@@ -210,13 +210,13 @@ class JobPublicListService
                     $jobPayload['owner'] = $ownerId !== null && $ownerId === $loggedInUser->getId();
                 }
 
-                $jobs[] = $jobPayload;
+                $items[] = $jobPayload;
             }
 
-            if ($loggedInUser instanceof User && $jobs !== []) {
+            if ($loggedInUser instanceof User && $items !== []) {
                 $appliedJobIds = $this->getAppliedJobIds($loggedInUser, $jobIds);
 
-                $jobs = array_map(static function (array $job) use ($appliedJobIds): array {
+                $items = array_map(static function (array $job) use ($appliedJobIds): array {
                     $isOwner = (bool)($job['owner'] ?? false);
                     $jobId = $job['id'] ?? '';
 
@@ -224,11 +224,11 @@ class JobPublicListService
                     $job['apply'] = in_array($jobId, $appliedJobIds, true);
 
                     return $job;
-                }, $jobs);
+                }, $items);
             }
 
             return [
-                'jobs' => $jobs,
+                'items' => $items,
                 'pagination' => [
                     'page' => $page,
                     'limit' => $limit,
@@ -238,7 +238,10 @@ class JobPublicListService
             ];
         });
 
-        $result['filters'] = array_filter($filters, static fn (string|int $value): bool => $value !== '' && $value !== 0);
+        $result['meta'] = [
+            'applicationSlug' => $applicationSlug,
+            'filters' => array_filter($filters, static fn (string|int $value): bool => $value !== '' && $value !== 0),
+        ];
 
         return $result;
     }
