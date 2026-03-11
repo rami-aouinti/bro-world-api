@@ -1,0 +1,68 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Shop\Infrastructure\Payment;
+
+use App\Shop\Domain\Service\Interfaces\PaymentProviderInterface;
+
+use function is_array;
+use function is_string;
+use function sprintf;
+use function trim;
+use function uniqid;
+
+final class MockPaymentProvider implements PaymentProviderInterface
+{
+    public function createIntent(string $orderId, float $amount, string $currency, array $metadata = []): array
+    {
+        $reference = sprintf('mock_intent_%s', uniqid('', true));
+
+        return [
+            'provider' => 'mock',
+            'providerReference' => $reference,
+            'status' => 'requires_confirmation',
+            'payload' => [
+                'orderId' => $orderId,
+                'amount' => $amount,
+                'currency' => $currency,
+                'metadata' => $metadata,
+            ],
+        ];
+    }
+
+    public function confirm(string $providerReference, array $payload = []): array
+    {
+        $shouldFail = (bool) ($payload['forceFail'] ?? false);
+
+        return [
+            'provider' => 'mock',
+            'providerReference' => trim($providerReference),
+            'status' => $shouldFail ? 'failed' : 'succeeded',
+            'payload' => [
+                'confirmed' => true,
+                'forceFail' => $shouldFail,
+                ...$payload,
+            ],
+        ];
+    }
+
+    public function verifyWebhook(array $payload, ?string $signature = null): ?array
+    {
+        $providerReference = $payload['providerReference'] ?? null;
+        $status = $payload['status'] ?? null;
+        $eventId = $payload['eventId'] ?? null;
+
+        if (!is_string($providerReference) || !is_string($status) || !is_string($eventId)) {
+            return null;
+        }
+
+        return [
+            'provider' => 'mock',
+            'providerReference' => trim($providerReference),
+            'status' => trim($status),
+            'webhookKey' => trim($eventId),
+            'payload' => is_array($payload['payload'] ?? null) ? $payload['payload'] : $payload,
+        ];
+    }
+}
