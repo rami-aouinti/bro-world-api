@@ -18,15 +18,30 @@ use App\Platform\Domain\Entity\Application as PlatformApplication;
 use App\Platform\Domain\Entity\Plugin;
 use App\Recruit\Domain\Entity\Application as RecruitApplication;
 use App\Recruit\Domain\Enum\ApplicationStatus;
+use App\General\Domain\Rest\UuidHelper;
+use App\Tests\Utils\PhpUnitUtil;
 use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Override;
+use Throwable;
 
 final class LoadRecruitChatCalendarScenarioData extends Fixture implements OrderedFixtureInterface
 {
+    /**
+     * @var array<non-empty-string, non-empty-string>
+     */
+    public static array $uuids = [
+        'chat-crm-pipeline-pro' => '91000000-0000-1000-8000-000000000001',
+        'conversation-direct-john-root-john-admin' => '91000000-0000-1000-8000-000000000002',
+        'conversation-john-root-scenario' => '91000000-0000-1000-8000-000000000003',
+        'message-john-root-scenario-from-john-root' => '91000000-0000-1000-8000-000000000004',
+        'message-john-root-scenario-from-owner' => '91000000-0000-1000-8000-000000000005',
+        'reaction-john-root-scenario-owner-on-root-message' => '91000000-0000-1000-8000-000000000006',
+    ];
+
     /**
      * @var array<string, Chat>
      */
@@ -72,6 +87,11 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
     public function getOrder(): int
     {
         return 10;
+    }
+
+    public static function getUuidByKey(string $key): string
+    {
+        return self::$uuids[$key];
     }
 
     private function createJohnRootPrivateDirectMessageScenarios(ObjectManager $manager): void
@@ -147,6 +167,9 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         }
     }
 
+    /**
+     * @throws Throwable
+     */
     private function createDedicatedDirectConversationFixture(ObjectManager $manager): void
     {
         /** @var User $johnRoot */
@@ -160,6 +183,8 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
 
         $conversation = (new Conversation())
             ->setChat($chat);
+
+        PhpUnitUtil::setProperty('id', UuidHelper::fromString(self::$uuids['conversation-direct-john-root-john-admin']), $conversation);
 
         $manager->persist($conversation);
 
@@ -187,6 +212,9 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         return array_values(array_filter($results, static fn (mixed $item): bool => $item instanceof PlatformApplication));
     }
 
+    /**
+     * @throws Throwable
+     */
     private function ensureChat(ObjectManager $manager, PlatformApplication $application): Chat
     {
         $application->ensureGeneratedSlug();
@@ -209,6 +237,10 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         $chat = (new Chat())
             ->setApplication($application)
             ->setApplicationSlug($slug);
+
+        if ($slug === 'crm-pipeline-pro') {
+            PhpUnitUtil::setProperty('id', UuidHelper::fromString(self::$uuids['chat-crm-pipeline-pro']), $chat);
+        }
 
         $manager->persist($chat);
 
@@ -301,6 +333,9 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         $this->ensureReaction($manager, $introMessage, $johnAdmin, 'love');
     }
 
+    /**
+     * @throws Throwable
+     */
     private function createJohnRootConversationScenario(ObjectManager $manager, Chat $chat, Calendar $calendar): void
     {
         /** @var RecruitApplication $johnRootRecruitApplication */
@@ -320,6 +355,9 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         }
 
         $conversation = $this->ensureConversation($manager, $chat);
+        if ($chat->getApplicationSlug() === 'crm-pipeline-pro') {
+            PhpUnitUtil::setProperty('id', UuidHelper::fromString(self::$uuids['conversation-john-root-scenario']), $conversation);
+        }
         $this->ensureParticipant($manager, $conversation, $johnRoot);
 
         if ($johnRoot->getId() !== $otherOwner->getId()) {
@@ -350,6 +388,9 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             []
         );
 
+        PhpUnitUtil::setProperty('id', UuidHelper::fromString(self::$uuids['message-john-root-scenario-from-john-root']), $johnRootMessage);
+        PhpUnitUtil::setProperty('id', UuidHelper::fromString(self::$uuids['message-john-root-scenario-from-owner']), $ownerReplyMessage);
+
         $johnUserMessage = $this->ensureMessage(
             $manager,
             $conversation,
@@ -377,7 +418,13 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         $this->ensureReaction($manager, $ownerReplyMessage, $johnRoot, 'love');
         $this->ensureReaction($manager, $ownerReplyMessage, $johnAdmin, 'like');
         $this->ensureReaction($manager, $johnUserMessage, $johnAdmin, 'wow');
-        $this->ensureReaction($manager, $johnRootMessage, $otherOwner, 'laugh');
+        $this->ensureReaction(
+            $manager,
+            $johnRootMessage,
+            $otherOwner,
+            'laugh',
+            self::$uuids['reaction-john-root-scenario-owner-on-root-message']
+        );
 
         $event = $this->ensureJohnRootScenarioEvent($manager, $calendar, $johnRoot);
 
@@ -497,6 +544,8 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         $conversation = (new Conversation())
             ->setChat($chat);
 
+        PhpUnitUtil::setProperty('id', UuidHelper::fromString(self::$uuids['conversation-direct-john-root-john-admin']), $conversation);
+
         $manager->persist($conversation);
         $conversationByChat[$chatKey] = $conversation;
 
@@ -567,7 +616,10 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         return $message;
     }
 
-    private function ensureReaction(ObjectManager $manager, ChatMessage $message, User $user, string $reaction): void
+    /**
+     * @throws Throwable
+     */
+    private function ensureReaction(ObjectManager $manager, ChatMessage $message, User $user, string $reaction, ?string $forcedUuid = null): void
     {
         $existing = $manager->getRepository(ChatMessageReaction::class)->findOneBy([
             'message' => $message,
@@ -583,6 +635,10 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             ->setMessage($message)
             ->setUser($user)
             ->setReaction(ChatReactionType::from($reaction));
+
+        if ($forcedUuid !== null) {
+            PhpUnitUtil::setProperty('id', UuidHelper::fromString($forcedUuid), $reaction);
+        }
 
         $manager->persist($reaction);
     }
