@@ -33,7 +33,16 @@ final readonly class CreateBlogPostController
         $payload = $this->requestService->extractPayload($request);
         $payload['filePath'] = $this->requestService->resolveUploadedFileUrl($request, (string)($payload['filePath'] ?? ''));
 
-        $this->messageBus->dispatch(new CreateBlogPostCommand((string)uniqid('op_', true), $loggedInUser->getId(), $blogId, (string)($payload['title'] ?? 'Untitled post'), $payload['content'] ?? null, $payload['filePath'] ?: null, (bool)($payload['isPinned'] ?? false)));
+        $this->messageBus->dispatch(
+            new CreateBlogPostCommand(
+                (string)uniqid('op_', true),
+                $loggedInUser->getId(),
+                $blogId, (string)($payload['title'] ?? 'Untitled post'),
+                    $payload['content'] ?? null,
+                $payload['filePath'] ?: null,
+                (bool)($payload['isPinned'] ?? false)
+            )
+        );
 
         return new JsonResponse([
             'status' => 'accepted',

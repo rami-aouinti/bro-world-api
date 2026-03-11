@@ -12,6 +12,8 @@ use App\Blog\Infrastructure\Repository\BlogRepository;
 use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -29,6 +31,10 @@ final readonly class CreateBlogPostCommandHandler
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function __invoke(CreateBlogPostCommand $command): void
     {
         $blog = $this->blogRepository->find($command->blogId);
@@ -46,7 +52,7 @@ final readonly class CreateBlogPostCommandHandler
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Post requires content and/or filePath.');
         }
 
-        $this->postRepository->save((new BlogPost())
+        $this->postRepository->save(new BlogPost()
             ->setBlog($blog)
             ->setAuthor($user)
             ->setTitle($command->title)
