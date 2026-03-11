@@ -41,6 +41,37 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         self::assertSame('Updated job title', $payload['title']);
     }
 
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('Test that PATCH /v1/recruit/applications/{applicationSlug}/jobs/{jobId} returns bad request for unknown application slug.')]
+    public function testThatPatchFromApplicationRejectsUnknownApplicationSlug(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/unknown-slug/jobs/11111111-1111-1111-1111-111111111111', content: JSON::encode([
+            'title' => 'Should fail',
+        ]));
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('Test that PATCH /v1/recruit/applications/{applicationSlug}/jobs/{jobId} returns not found for missing job.')]
+    public function testThatPatchFromApplicationReturnsNotFoundWhenJobIsMissing(): void
+    {
+        [$applicationSlug, ] = $this->getApplicationSlugAndJobIdForUsername('john-root');
+
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs/11111111-1111-1111-1111-111111111111', content: JSON::encode([
+            'title' => 'Should fail',
+        ]));
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+    }
+
     /**
      * @throws Throwable
      */
@@ -76,6 +107,48 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         $deletedJob = $entityManager->getRepository(Job::class)->find($jobId);
         self::assertNull($deletedJob);
     }
+
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('Test that DELETE /v1/recruit/applications/{applicationSlug}/jobs/{jobId} returns bad request for unknown application slug.')]
+    public function testThatDeleteFromApplicationRejectsUnknownApplicationSlug(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/recruit/applications/unknown-slug/jobs/11111111-1111-1111-1111-111111111111');
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('Test that DELETE /v1/recruit/applications/{applicationSlug}/jobs/{jobId} returns forbidden for foreign application.')]
+    public function testThatDeleteFromApplicationRejectsForeignApplication(): void
+    {
+        [$applicationSlug, $jobId] = $this->createDedicatedJobForUser('john-root');
+
+        $client = $this->getTestClient('john-user', 'password-user');
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs/' . $jobId);
+
+        self::assertSame(Response::HTTP_FORBIDDEN, $client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('Test that DELETE /v1/recruit/applications/{applicationSlug}/jobs/{jobId} returns not found for missing job.')]
+    public function testThatDeleteFromApplicationReturnsNotFoundWhenJobIsMissing(): void
+    {
+        [$applicationSlug, ] = $this->getApplicationSlugAndJobIdForUsername('john-root');
+
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs/11111111-1111-1111-1111-111111111111');
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+    }
+
 
     /**
      * @return array{0: string, 1: string}

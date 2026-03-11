@@ -6,7 +6,7 @@ namespace App\Recruit\Transport\Controller\Api\V1\Job;
 
 use App\General\Application\Message\EntityCreated;
 use App\Recruit\Application\Service\JobPayloadHydratorService;
-use App\Recruit\Application\Service\RecruitResolverService;
+use App\Recruit\Application\Service\ApplicationJobAccessService;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Infrastructure\Repository\JobRepository;
 use App\User\Domain\Entity\User;
@@ -29,7 +29,7 @@ use function trim;
 class JobCreateFromApplicationController
 {
     public function __construct(
-        private readonly RecruitResolverService $recruitResolverService,
+        private readonly ApplicationJobAccessService $applicationJobAccessService,
         private readonly JobRepository $jobRepository,
         private readonly MessageBusInterface $messageBus,
         private readonly JobPayloadHydratorService $jobPayloadHydratorService,
@@ -47,12 +47,12 @@ class JobCreateFromApplicationController
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "title" is required and must be a non-empty string.');
         }
 
-        $recruit = $this->recruitResolverService->resolveByApplicationSlug($applicationSlug);
+        $recruit = $this->applicationJobAccessService->resolveOwnedRecruitByApplicationSlug(
+            $applicationSlug,
+            $loggedInUser,
+            'You cannot create a job for this application.'
+        );
         $application = $recruit->getApplication();
-
-        if ($application?->getUser()?->getId() !== $loggedInUser->getId()) {
-            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You cannot create a job for this application.');
-        }
 
         $job = (new Job())
             ->setRecruit($recruit)

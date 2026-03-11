@@ -6,15 +6,13 @@ namespace App\Recruit\Transport\Controller\Api\V1\Job;
 
 use App\General\Application\Message\EntityPatched;
 use App\Recruit\Application\Service\JobPayloadHydratorService;
-use App\Recruit\Application\Service\RecruitResolverService;
-use App\Recruit\Domain\Entity\Job;
+use App\Recruit\Application\Service\ApplicationJobAccessService;
 use App\Recruit\Infrastructure\Repository\JobRepository;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
@@ -26,7 +24,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class JobPatchFromApplicationController
 {
     public function __construct(
-        private readonly RecruitResolverService $recruitResolverService,
+        private readonly ApplicationJobAccessService $applicationJobAccessService,
         private readonly JobRepository $jobRepository,
         private readonly MessageBusInterface $messageBus,
         private readonly JobPayloadHydratorService $jobPayloadHydratorService,
@@ -37,21 +35,14 @@ class JobPatchFromApplicationController
     #[Route(path: '/v1/recruit/private/{applicationSlug}/jobs/{jobId}', methods: [Request::METHOD_PATCH])]
     public function __invoke(string $applicationSlug, string $jobId, Request $request, User $loggedInUser): JsonResponse
     {
-        $recruit = $this->recruitResolverService->resolveByApplicationSlug($applicationSlug);
+        $recruit = $this->applicationJobAccessService->resolveOwnedRecruitByApplicationSlug(
+            $applicationSlug,
+            $loggedInUser,
+            'You cannot update a job for this application.'
+        );
         $application = $recruit->getApplication();
 
-        if ($application?->getUser()?->getId() !== $loggedInUser->getId()) {
-            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You cannot update a job for this application.');
-        }
-
-        $job = $this->jobRepository->find($jobId);
-        if (!$job instanceof Job) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Job not found.');
-        }
-
-        if ($job->getRecruit()?->getId() !== $recruit->getId()) {
-            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'This job does not belong to the given application.');
-        }
+        $job = $this->applicationJobAccessService->resolveJobForRecruit($jobId, $recruit);
 
         /** @var array<string, mixed> $payload */
         $payload = $request->toArray();
