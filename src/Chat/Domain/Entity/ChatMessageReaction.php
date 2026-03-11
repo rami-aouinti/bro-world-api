@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chat\Domain\Entity;
 
+use App\Chat\Domain\Enum\ChatReactionType;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
@@ -37,8 +38,8 @@ class ChatMessageReaction implements EntityInterface
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
-    #[ORM\Column(name: 'reaction', type: Types::STRING, length: 32)]
-    private string $reaction = '';
+    #[ORM\Column(name: 'reaction', type: Types::STRING, enumType: ChatReactionType::class, length: 32)]
+    private ChatReactionType $reaction = ChatReactionType::LIKE;
 
     public function __construct()
     {
@@ -75,12 +76,12 @@ class ChatMessageReaction implements EntityInterface
         return $this;
     }
 
-    public function getReaction(): string
+    public function getReaction(): ChatReactionType
     {
         return $this->reaction;
     }
 
-    public function setReaction(string $reaction): self
+    public function setReaction(ChatReactionType $reaction): self
     {
         $this->reaction = $reaction;
 
