@@ -34,6 +34,11 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
     public function load(ObjectManager $manager): void
     {
         foreach ($this->getApplicationsByPlatform(PlatformKey::SHOP) as $application) {
+            $existingCatalog = $manager->getRepository(Shop::class)->findOneBy(['application' => $application]);
+            if ($existingCatalog instanceof Shop) {
+                continue;
+            }
+
             $catalog = (new Shop())
                 ->setName($application->getTitle() . ' Catalog')
                 ->setDescription('Catalogue principal de l\'application ' . $application->getSlug())
@@ -62,10 +67,10 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             }
 
             $products = [
-                (new Product())->setShop($catalog)->setCategory($categories['Electronique'])->setName('Casque Bluetooth')->setSku('SKU-BT-HEADSET')->setDescription('Casque sans fil reduction de bruit')->setPrice(89.99)->setCurrencyCode('EUR')->setStock(32)->setStatus(ProductStatus::ACTIVE)->setIsFeatured(true)->addTag($tags['Nouveau'])->addTag($tags['Promo']),
-                (new Product())->setShop($catalog)->setCategory($categories['Maison'])->setName('Lampe LED connectee')->setSku('SKU-SMART-LAMP')->setDescription('Lampe connectee basse consommation')->setPrice(59.90)->setCurrencyCode('EUR')->setStock(54)->setStatus(ProductStatus::ACTIVE)->addTag($tags['Eco']),
-                (new Product())->setShop($catalog)->setCategory($categories['Bureau'])->setName('Chaise ergonomique')->setSku('SKU-ERG-CHAIR')->setDescription('Chaise bureau confort premium')->setPrice(229.00)->setCurrencyCode('EUR')->setStock(8)->setStatus(ProductStatus::DRAFT)->addTag($tags['Promo']),
-                (new Product())->setShop($catalog)->setCategory($categories['Electronique'])->setName('Souris sans fil')->setSku('SKU-WIRELESS-MOUSE')->setDescription('Souris ergonomique rechargeable')->setPrice(34.50)->setCurrencyCode('EUR')->setStock(65)->setStatus(ProductStatus::ACTIVE)->addTag($tags['Nouveau'])->addTag($tags['Eco']),
+                (new Product())->setShop($catalog)->setCategory($categories['Electronique'])->setName('Casque Bluetooth')->setSku($application->getSlug() . '-SKU-BT-HEADSET')->setDescription('Casque sans fil reduction de bruit')->setPrice(89.99)->setCurrencyCode('EUR')->setStock(32)->setStatus(ProductStatus::ACTIVE)->setIsFeatured(true)->addTag($tags['Nouveau'])->addTag($tags['Promo']),
+                (new Product())->setShop($catalog)->setCategory($categories['Maison'])->setName('Lampe LED connectee')->setSku($application->getSlug() . '-SKU-SMART-LAMP')->setDescription('Lampe connectee basse consommation')->setPrice(59.90)->setCurrencyCode('EUR')->setStock(54)->setStatus(ProductStatus::ACTIVE)->addTag($tags['Eco']),
+                (new Product())->setShop($catalog)->setCategory($categories['Bureau'])->setName('Chaise ergonomique')->setSku($application->getSlug() . '-SKU-ERG-CHAIR')->setDescription('Chaise bureau confort premium')->setPrice(229.00)->setCurrencyCode('EUR')->setStock(8)->setStatus(ProductStatus::DRAFT)->addTag($tags['Promo']),
+                (new Product())->setShop($catalog)->setCategory($categories['Electronique'])->setName('Souris sans fil')->setSku($application->getSlug() . '-SKU-WIRELESS-MOUSE')->setDescription('Souris ergonomique rechargeable')->setPrice(34.50)->setCurrencyCode('EUR')->setStock(65)->setStatus(ProductStatus::ACTIVE)->addTag($tags['Nouveau'])->addTag($tags['Eco']),
             ];
 
             foreach ($products as $product) {
