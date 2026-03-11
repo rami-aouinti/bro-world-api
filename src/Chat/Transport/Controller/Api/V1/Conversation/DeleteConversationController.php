@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Chat\Transport\Controller\Api\V1\Conversation;
 
 use App\Chat\Application\Message\DeleteConversationCommand;
+use App\General\Application\Service\OperationIdGeneratorService;
 use App\General\Domain\Service\Interfaces\MessageServiceInterface;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
@@ -23,13 +24,14 @@ class DeleteConversationController
 {
     public function __construct(
         private readonly MessageServiceInterface $messageService,
+        private readonly OperationIdGeneratorService $operationIdGeneratorService,
     ) {
     }
 
     #[Route(path: '/v1/chat/private/conversations/{conversationId}', methods: [Request::METHOD_DELETE])]
     public function __invoke(string $conversationId, User $loggedInUser): JsonResponse
     {
-        $operationId = \Ramsey\Uuid\Uuid::uuid4()->toString();
+        $operationId = $this->operationIdGeneratorService->generate();
         $this->messageService->sendMessage(new DeleteConversationCommand(
             operationId: $operationId,
             actorUserId: $loggedInUser->getId(),

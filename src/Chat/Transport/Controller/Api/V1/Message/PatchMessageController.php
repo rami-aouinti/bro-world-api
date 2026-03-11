@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Chat\Transport\Controller\Api\V1\Message;
 
 use App\Chat\Application\Message\PatchMessageCommand;
+use App\Chat\Application\Service\MessagePayloadService;
+use App\General\Application\Service\OperationIdGeneratorService;
 use App\General\Domain\Service\Interfaces\MessageServiceInterface;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -49,39 +50,23 @@ class PatchMessageController
 {
     public function __construct(
         private readonly MessageServiceInterface $messageService,
+        private readonly MessagePayloadService $messagePayloadService,
+        private readonly OperationIdGeneratorService $operationIdGeneratorService,
     ) {
     }
 
     #[Route(path: '/v1/chat/private/messages/{messageId}', methods: [Request::METHOD_PATCH])]
     public function __invoke(string $messageId, Request $request, User $loggedInUser): JsonResponse
     {
-        $payload = $request->toArray();
+        $fields = $this->messagePayloadService->extractPatchFields($request->toArray());
+        $operationId = $this->operationIdGeneratorService->generate();
 
-        $content = null;
-        if (isset($payload['content'])) {
-            if (!is_string($payload['content']) || $payload['content'] === '') {
-                throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "content" must be a non-empty string when provided.');
-            }
-
-            $content = $payload['content'];
-        }
-
-        $read = null;
-        if (array_key_exists('read', $payload)) {
-            if (!is_bool($payload['read'])) {
-                throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "read" must be a boolean when provided.');
-            }
-
-            $read = $payload['read'];
-        }
-
-        $operationId = \Ramsey\Uuid\Uuid::uuid4()->toString();
         $this->messageService->sendMessage(new PatchMessageCommand(
             operationId: $operationId,
             actorUserId: $loggedInUser->getId(),
             messageId: $messageId,
-            content: $content,
-            read: $read,
+            content: $fields['content'],
+            read: $fields['read'],
         ));
 
         return new JsonResponse([

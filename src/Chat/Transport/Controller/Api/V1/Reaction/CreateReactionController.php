@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Chat\Transport\Controller\Api\V1\Reaction;
 
 use App\Chat\Application\Service\ChatAccessResolverService;
-use App\Chat\Application\Service\ReactionTypeParser;
+use App\Chat\Application\Service\ReactionPayloadService;
 use App\Chat\Domain\Entity\ChatMessageReaction;
 use App\Chat\Domain\Enum\ChatReactionType;
-use App\Chat\Infrastructure\Repository\ChatMessageReactionRepository;
+use App\Chat\Domain\Repository\Interfaces\ChatMessageReactionRepositoryInterface;
 use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
@@ -30,9 +30,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class CreateReactionController
 {
     public function __construct(
-        private readonly ChatMessageReactionRepository $reactionRepository,
+        private readonly ChatMessageReactionRepositoryInterface $reactionRepository,
         private readonly ChatAccessResolverService $chatAccessResolverService,
-        private readonly ReactionTypeParser $reactionTypeParser,
+        private readonly ReactionPayloadService $reactionPayloadService,
         private readonly CacheInvalidationService $cacheInvalidationService,
     ) {
     }
@@ -41,9 +41,7 @@ class CreateReactionController
     public function __invoke(string $messageId, Request $request, User $loggedInUser): JsonResponse
     {
         $message = $this->chatAccessResolverService->resolveAccessibleMessage($messageId, $loggedInUser);
-        $payload = $request->toArray();
-
-        $reactionType = $this->reactionTypeParser->parse($payload['reaction'] ?? null);
+        $reactionType = $this->reactionPayloadService->extractRequiredReaction($request->toArray());
 
         $reaction = (new ChatMessageReaction())
             ->setMessage($message)

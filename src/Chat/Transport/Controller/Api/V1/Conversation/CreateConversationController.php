@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Chat\Transport\Controller\Api\V1\Conversation;
 
 use App\Chat\Application\Message\CreateConversationCommand;
+use App\Chat\Application\Service\ConversationPayloadService;
+use App\General\Application\Service\OperationIdGeneratorService;
 use App\General\Domain\Service\Interfaces\MessageServiceInterface;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -24,19 +25,17 @@ class CreateConversationController
 {
     public function __construct(
         private readonly MessageServiceInterface $messageService,
+        private readonly ConversationPayloadService $conversationPayloadService,
+        private readonly OperationIdGeneratorService $operationIdGeneratorService,
     ) {
     }
 
     #[Route(path: '/v1/chat/private/chats/{chatId}/conversations', methods: [Request::METHOD_POST])]
     public function __invoke(string $chatId, Request $request, User $loggedInUser): JsonResponse
     {
-        $payload = $request->toArray();
-        $targetUserId = $payload['userId'] ?? null;
-        if (!is_string($targetUserId) || $targetUserId === '') {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "userId" is required.');
-        }
+        $targetUserId = $this->conversationPayloadService->extractRequiredUserId($request->toArray());
+        $operationId = $this->operationIdGeneratorService->generate();
 
-        $operationId = \Ramsey\Uuid\Uuid::uuid4()->toString();
         $this->messageService->sendMessage(new CreateConversationCommand(
             operationId: $operationId,
             actorUserId: $loggedInUser->getId(),

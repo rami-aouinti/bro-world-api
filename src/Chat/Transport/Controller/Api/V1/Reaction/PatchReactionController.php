@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Chat\Transport\Controller\Api\V1\Reaction;
 
 use App\Chat\Application\Service\ChatAccessResolverService;
-use App\Chat\Application\Service\ReactionTypeParser;
+use App\Chat\Application\Service\ReactionPayloadService;
 use App\Chat\Domain\Enum\ChatReactionType;
-use App\Chat\Infrastructure\Repository\ChatMessageReactionRepository;
+use App\Chat\Domain\Repository\Interfaces\ChatMessageReactionRepositoryInterface;
 use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
@@ -29,9 +29,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class PatchReactionController
 {
     public function __construct(
-        private readonly ChatMessageReactionRepository $reactionRepository,
+        private readonly ChatMessageReactionRepositoryInterface $reactionRepository,
         private readonly ChatAccessResolverService $chatAccessResolverService,
-        private readonly ReactionTypeParser $reactionTypeParser,
+        private readonly ReactionPayloadService $reactionPayloadService,
         private readonly CacheInvalidationService $cacheInvalidationService,
     ) {
     }
@@ -40,10 +40,10 @@ class PatchReactionController
     public function __invoke(string $reactionId, Request $request, User $loggedInUser): JsonResponse
     {
         $reaction = $this->chatAccessResolverService->resolveOwnReaction($reactionId, $loggedInUser);
-        $payload = $request->toArray();
+        $reactionType = $this->reactionPayloadService->extractOptionalReaction($request->toArray());
 
-        if (array_key_exists('reaction', $payload)) {
-            $reaction->setReaction($this->reactionTypeParser->parse($payload['reaction']));
+        if (null !== $reactionType) {
+            $reaction->setReaction($reactionType);
             $this->reactionRepository->save($reaction);
             $this->cacheInvalidationService->invalidateConversationCaches($reaction->getMessage()->getConversation()->getChat()->getId(), $loggedInUser->getId());
         }
