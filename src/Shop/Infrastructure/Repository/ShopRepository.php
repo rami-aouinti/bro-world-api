@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Shop\Infrastructure\Repository;
 
 use App\General\Infrastructure\Repository\BaseRepository;
+use App\Platform\Domain\Entity\Application;
 use App\Shop\Domain\Entity\Shop as Entity;
 use Doctrine\DBAL\LockMode;
 use Doctrine\Persistence\ManagerRegistry;
@@ -37,5 +38,14 @@ class ShopRepository extends BaseRepository
             ->getOneOrNullResult();
 
         return $entity instanceof Entity ? $entity : null;
+    }
+
+    public function findApplicationBySlug(string $applicationSlug): ?Application
+    {
+        $application = $this->getEntityManager()->getRepository(Application::class)->findOneBy([
+            'slug' => $applicationSlug,
+        ]);
+
+        return $application instanceof Application ? $application : null;
     }
 }
