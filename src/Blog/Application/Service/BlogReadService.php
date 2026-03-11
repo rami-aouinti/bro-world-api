@@ -26,11 +26,14 @@ final readonly class BlogReadService
     /**
      * @throws InvalidArgumentException
      */
-    public function getGeneralBlogWithTree(?User $currentUser = null): array
+    public function getGeneralBlogWithTree(?User $currentUser = null, int $page = 1, int $limit = 20): array
     {
-        $cacheKey = $this->buildBlogCacheKey('general', $currentUser);
+        $page = max(1, $page);
+        $limit = max(1, min(100, $limit));
 
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($currentUser): array {
+        $cacheKey = $this->buildBlogCacheKey(sprintf('general?page=%d&limit=%d', $page, $limit), $currentUser);
+
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($currentUser, $page, $limit): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->tagPublicBlog());
@@ -41,7 +44,7 @@ final readonly class BlogReadService
             }
             $blog = $this->blogRepository->findGeneralBlog();
 
-            return $blog instanceof Blog ? $this->normalizeBlog($blog, $currentUser) : [];
+            return $blog instanceof Blog ? $this->normalizeBlog($blog, $currentUser, $page, $limit) : [];
         });
     }
 
@@ -67,8 +70,16 @@ final readonly class BlogReadService
         });
     }
 
-    private function normalizeBlog(Blog $blog, ?User $currentUser): array
+    private function normalizeBlog(Blog $blog, ?User $currentUser, int $page = 1, int $limit = 20): array
     {
+        $posts = $blog->getPosts()->toArray();
+
+        usort($posts, static fn ($left, $right): int => $right->getCreatedAt() <=> $left->getCreatedAt());
+
+        $totalItems = count($posts);
+        $offset = ($page - 1) * $limit;
+        $posts = array_slice($posts, $offset, $limit);
+
         return [
             'id' => $blog->getId(),
             'title' => $blog->getTitle(),
@@ -96,7 +107,13 @@ final readonly class BlogReadService
                     'type' => $r->getType()->value,
                 ], $p->getReactions()->toArray()),
                 'comments' => $this->normalizeComments($p->getComments()->toArray(), null, $currentUser),
-            ], $blog->getPosts()->toArray()),
+            ], $posts),
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'totalItems' => $totalItems,
+                'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
+            ],
         ];
     }
 

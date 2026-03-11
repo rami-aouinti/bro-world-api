@@ -24,9 +24,18 @@ final readonly class GetGeneralBlogController
     }
 
     #[Route('/v1/blogs/general', methods: [Request::METHOD_GET])]
+    #[OA\Get(
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1, minimum: 1)),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20, minimum: 1, maximum: 100)),
+        ]
+    )]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-    public function __invoke(User $loggedInUser): JsonResponse
+    public function __invoke(User $loggedInUser, Request $request): JsonResponse
     {
-        return new JsonResponse($this->blogReadService->getGeneralBlogWithTree($loggedInUser));
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = max(1, min(100, $request->query->getInt('limit', 20)));
+
+        return new JsonResponse($this->blogReadService->getGeneralBlogWithTree($loggedInUser, $page, $limit));
     }
 }
