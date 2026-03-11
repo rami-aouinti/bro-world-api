@@ -7,7 +7,7 @@ namespace App\Shop\Transport\Controller\Api\V1\Product;
 use App\General\Application\Message\EntityCreated;
 use App\Shop\Application\Service\ProductListService;
 use App\Shop\Domain\Entity\Product;
-use App\Shop\Transport\Controller\Api\V1\Support\ProductPayloadHydrator;
+use App\Shop\Application\Service\ProductHydratorService;
 use App\Shop\Infrastructure\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
@@ -26,7 +26,7 @@ final readonly class PatchProductController
 {
     public function __construct(
         private ProductRepository $productRepository,
-        private ProductPayloadHydrator $productPayloadHydrator,
+        private ProductHydratorService $productHydratorService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -41,7 +41,7 @@ final readonly class PatchProductController
         }
 
         $payload = (array) json_decode((string) $request->getContent(), true);
-        $this->productPayloadHydrator->hydrate($product, $payload, true);
+        $this->productHydratorService->hydrateProduct($product, $payload, true);
 
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityCreated('shop_product', $product->getId()));

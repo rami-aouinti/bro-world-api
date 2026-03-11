@@ -6,6 +6,7 @@ namespace App\Shop\Transport\Controller\Api\V1\Category;
 
 use App\General\Application\Message\EntityCreated;
 use App\Shop\Domain\Entity\Category;
+use App\Shop\Application\Service\SlugBuilderService;
 use App\Shop\Infrastructure\Repository\ShopRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
@@ -24,6 +25,7 @@ final readonly class CreateCategoryController
 {
     public function __construct(
         private ShopRepository $shopRepository,
+        private SlugBuilderService $slugBuilderService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -35,7 +37,7 @@ final readonly class CreateCategoryController
         $payload = (array) json_decode((string) $request->getContent(), true);
         $category = (new Category())
             ->setName((string) ($payload['name'] ?? ''))
-            ->setSlug($this->buildSlug((string) ($payload['slug'] ?? $payload['name'] ?? '')))
+            ->setSlug($this->slugBuilderService->buildSlug((string) ($payload['slug'] ?? $payload['name'] ?? '')))
             ->setDescription(($payload['description'] ?? null) !== null ? (string) $payload['description'] : null);
 
         if (is_string($payload['shopId'] ?? null)) {
@@ -47,10 +49,5 @@ final readonly class CreateCategoryController
         $this->messageBus->dispatch(new EntityCreated('shop_category', $category->getId()));
 
         return new JsonResponse(['id' => $category->getId()], JsonResponse::HTTP_CREATED);
-    }
-
-    private function buildSlug(string $value): string
-    {
-        return trim((string) preg_replace('/[^a-z0-9]+/', '-', strtolower($value)), '-');
     }
 }

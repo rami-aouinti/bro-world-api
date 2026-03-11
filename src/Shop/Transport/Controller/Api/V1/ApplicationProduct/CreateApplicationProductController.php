@@ -6,8 +6,8 @@ namespace App\Shop\Transport\Controller\Api\V1\ApplicationProduct;
 
 use App\General\Application\Message\EntityCreated;
 use App\Shop\Domain\Entity\Product;
-use App\Shop\Transport\Controller\Api\V1\Support\ProductPayloadHydrator;
-use App\Shop\Transport\Controller\Api\V1\Support\ShopApplicationResolver;
+use App\Shop\Application\Service\ProductHydratorService;
+use App\Shop\Application\Service\ShopApplicationResolverService;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,8 +24,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class CreateApplicationProductController
 {
     public function __construct(
-        private ShopApplicationResolver $shopApplicationResolver,
-        private ProductPayloadHydrator $productPayloadHydrator,
+        private ShopApplicationResolverService $shopApplicationResolverService,
+        private ProductHydratorService $productHydratorService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -34,10 +34,10 @@ final readonly class CreateApplicationProductController
     #[Route('/v1/shop/applications/{applicationSlug}/products', methods: [Request::METHOD_POST])]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
-        $shop = $this->shopApplicationResolver->resolveOrCreateShopByApplicationSlug($applicationSlug);
+        $shop = $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
         $payload = (array) json_decode((string) $request->getContent(), true);
 
-        $product = $this->productPayloadHydrator->hydrate((new Product())->setShop($shop), $payload);
+        $product = $this->productHydratorService->hydrateProduct((new Product())->setShop($shop), $payload);
 
         $this->entityManager->persist($product);
         $this->entityManager->flush();
