@@ -545,8 +545,6 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         $conversation = (new Conversation())
             ->setChat($chat);
 
-        PhpUnitUtil::setProperty('id', UuidHelper::fromString(self::$uuids['conversation-direct-john-root-john-admin']), $conversation);
-
         $manager->persist($conversation);
         $conversationByChat[$chatKey] = $conversation;
 
