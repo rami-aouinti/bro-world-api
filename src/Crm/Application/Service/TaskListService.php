@@ -35,6 +35,8 @@ readonly class TaskListService
         $filters = [
             'q' => trim((string)$request->query->get('q', '')),
             'title' => trim((string)$request->query->get('title', '')),
+            'status' => trim((string)$request->query->get('status', '')),
+            'priority' => trim((string)$request->query->get('priority', '')),
         ];
         $cacheKey = $this->cacheKeyConventionService->buildCrmTaskListKey($page, $limit, $filters);
 
@@ -64,6 +66,12 @@ readonly class TaskListService
             if ($filters['title'] !== '') {
                 $qb->andWhere('LOWER(task.title) LIKE LOWER(:title)')->setParameter('title', '%' . $filters['title'] . '%');
             }
+            if ($filters['status'] !== '') {
+                $qb->andWhere('task.status = :status')->setParameter('status', $filters['status']);
+            }
+            if ($filters['priority'] !== '') {
+                $qb->andWhere('task.priority = :priority')->setParameter('priority', $filters['priority']);
+            }
             if ($esIds !== null) {
                 $qb->andWhere('task.id IN (:ids)')->setParameter('ids', $esIds);
             }
@@ -75,12 +83,22 @@ readonly class TaskListService
                 'projectName' => $task->getProject()?->getName(),
                 'sprintId' => $task->getSprint()?->getId(),
                 'sprintName' => $task->getSprint()?->getName(),
+                'status' => $task->getStatus()->value,
+                'priority' => $task->getPriority()->value,
+                'dueAt' => $task->getDueAt()?->format(DATE_ATOM),
+                'estimatedHours' => $task->getEstimatedHours(),
                 'updatedAt' => $task->getUpdatedAt()?->format(DATE_ATOM),
             ], $qb->getQuery()->getResult());
 
             $countQb = $this->taskRepository->createQueryBuilder('task')->select('COUNT(task.id)');
             if ($filters['title'] !== '') {
                 $countQb->andWhere('LOWER(task.title) LIKE LOWER(:title)')->setParameter('title', '%' . $filters['title'] . '%');
+            }
+            if ($filters['status'] !== '') {
+                $countQb->andWhere('task.status = :status')->setParameter('status', $filters['status']);
+            }
+            if ($filters['priority'] !== '') {
+                $countQb->andWhere('task.priority = :priority')->setParameter('priority', $filters['priority']);
             }
             if ($esIds !== null) {
                 $countQb->andWhere('task.id IN (:ids)')->setParameter('ids', $esIds);

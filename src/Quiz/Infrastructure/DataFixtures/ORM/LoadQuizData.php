@@ -11,6 +11,8 @@ use App\Platform\Domain\Entity\Plugin;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Quiz\Domain\Entity\QuizAnswer;
 use App\Quiz\Domain\Entity\QuizQuestion;
+use App\Quiz\Domain\Enum\QuizCategory;
+use App\Quiz\Domain\Enum\QuizLevel;
 use App\User\Domain\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
@@ -58,6 +60,10 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
             $quiz = (new Quiz())
                 ->setApplication($application)
                 ->setOwner($users[$applicationIndex % count($users)])
+                ->setTitle(sprintf('%s technical quiz', $application->getTitle()))
+                ->setDescription('Assess core application knowledge with progressive difficulty questions.')
+                ->setPassScore(70)
+                ->setPublished(true)
                 ->setConfiguration($configuration);
             $manager->persist($quiz);
 
@@ -65,14 +71,17 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
                 $question = (new QuizQuestion())
                     ->setQuiz($quiz)
                     ->setTitle('Question fixture #' . $questionIndex . ' app #' . ($applicationIndex + 1))
-                    ->setLevel($questionIndex % 3 === 0 ? 'hard' : ($questionIndex % 2 === 0 ? 'medium' : 'easy'))
-                    ->setCategory($questionIndex % 2 === 0 ? 'backend' : 'frontend');
+                    ->setLevel($questionIndex % 3 === 0 ? QuizLevel::HARD : ($questionIndex % 2 === 0 ? QuizLevel::MEDIUM : QuizLevel::EASY))
+                    ->setCategory($questionIndex % 2 === 0 ? QuizCategory::BACKEND : QuizCategory::FRONTEND)
+                    ->setPosition($questionIndex)
+                    ->setPoints($questionIndex % 3 === 0 ? 3 : 1)
+                    ->setExplanation('This explanation helps users understand the expected reasoning.');
                 $manager->persist($question);
 
-                $manager->persist((new QuizAnswer())->setQuestion($question)->setLabel('Right answer ' . $questionIndex)->setCorrect(true));
-                $manager->persist((new QuizAnswer())->setQuestion($question)->setLabel('Wrong answer A ' . $questionIndex)->setCorrect(false));
-                $manager->persist((new QuizAnswer())->setQuestion($question)->setLabel('Wrong answer B ' . $questionIndex)->setCorrect(false));
-                $manager->persist((new QuizAnswer())->setQuestion($question)->setLabel('Wrong answer C ' . $questionIndex)->setCorrect(false));
+                $manager->persist((new QuizAnswer())->setQuestion($question)->setLabel('Right answer ' . $questionIndex)->setCorrect(true)->setPosition(1));
+                $manager->persist((new QuizAnswer())->setQuestion($question)->setLabel('Wrong answer A ' . $questionIndex)->setCorrect(false)->setPosition(2));
+                $manager->persist((new QuizAnswer())->setQuestion($question)->setLabel('Wrong answer B ' . $questionIndex)->setCorrect(false)->setPosition(3));
+                $manager->persist((new QuizAnswer())->setQuestion($question)->setLabel('Wrong answer C ' . $questionIndex)->setCorrect(false)->setPosition(4));
             }
         }
 

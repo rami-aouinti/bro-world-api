@@ -12,8 +12,10 @@ final readonly class PatchBlogPostCommand implements MessageHighInterface
         public string $operationId,
         public string $actorUserId,
         public string $postId,
+        public ?string $title,
         public ?string $content,
-        public ?string $filePath
+        public ?string $filePath,
+        public ?bool $isPinned
     ) {
     }
 }

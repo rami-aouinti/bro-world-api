@@ -49,6 +49,10 @@ readonly class CompanyApplicationListService
             $items = array_map(static fn (Company $company): array => [
                 'id' => $company->getId(),
                 'name' => $company->getName(),
+                'industry' => $company->getIndustry(),
+                'website' => $company->getWebsite(),
+                'contactEmail' => $company->getContactEmail(),
+                'phone' => $company->getPhone(),
             ], $qb->getQuery()->getResult());
 
             $countQb = $this->companyRepository->createQueryBuilder('company')

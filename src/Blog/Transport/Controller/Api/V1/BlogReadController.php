@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Blog\Transport\Controller\Api\V1;
 
+use App\Blog\Domain\Enum\BlogReactionType;
+
 use App\Blog\Application\Service\BlogReadService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
@@ -116,6 +118,19 @@ final readonly class BlogReadController
         $user = $this->getCurrentUserFromRequest($request);
 
         return new JsonResponse($this->blogReadService->getByApplicationSlug($applicationSlug, $user));
+    }
+
+    #[Route('/v1/blogs/reactions/types', methods: [Request::METHOD_GET])]
+    #[OA\Tag(name: 'Blog')]
+    #[OA\Get(security: [])]
+    #[OA\Response(response: 200, description: 'Available reaction types.', content: new OA\JsonContent(example: [
+        'items' => ['like', 'heart', 'laugh', 'celebrate'],
+    ]))]
+    public function reactionTypes(): JsonResponse
+    {
+        return new JsonResponse([
+            'items' => BlogReactionType::values(),
+        ]);
     }
 
     private function getCurrentUserFromRequest(Request $request): ?User

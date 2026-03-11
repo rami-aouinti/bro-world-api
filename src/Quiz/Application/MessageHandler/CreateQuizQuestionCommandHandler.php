@@ -13,6 +13,8 @@ use App\Quiz\Application\Message\CreateQuizQuestionCommand;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Quiz\Domain\Entity\QuizAnswer;
 use App\Quiz\Domain\Entity\QuizQuestion;
+use App\Quiz\Domain\Enum\QuizCategory;
+use App\Quiz\Domain\Enum\QuizLevel;
 use App\Quiz\Infrastructure\Repository\QuizQuestionRepository;
 use App\Quiz\Infrastructure\Repository\QuizRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -48,17 +50,25 @@ final readonly class CreateQuizQuestionCommandHandler
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Only application owner can create quiz questions.');
         }
 
+        if (count($command->answers) < 2) {
+            throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'At least two answers are required.');
+        }
+
         $question = (new QuizQuestion())
             ->setQuiz($quiz)
             ->setTitle($command->title)
-            ->setLevel($command->level)
-            ->setCategory($command->category);
+            ->setLevel(QuizLevel::fromString($command->level))
+            ->setCategory(QuizCategory::fromString($command->category))
+            ->setPoints($command->points)
+            ->setExplanation($command->explanation)
+            ->setPosition($this->questionRepository->nextPositionForQuiz($quiz));
 
-        foreach ($command->answers as $answerItem) {
+        foreach (array_values($command->answers) as $index => $answerItem) {
             $answer = (new QuizAnswer())
                 ->setQuestion($question)
-                ->setLabel((string)($answerItem['label'] ?? ''))
-                ->setCorrect((bool)($answerItem['correct'] ?? false));
+                ->setLabel((string) ($answerItem['label'] ?? ''))
+                ->setCorrect((bool) ($answerItem['correct'] ?? false))
+                ->setPosition($index + 1);
             $this->questionRepository->getEntityManager()->persist($answer);
         }
 

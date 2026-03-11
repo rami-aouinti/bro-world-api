@@ -12,7 +12,7 @@ use Doctrine\Persistence\ManagerRegistry;
 class QuizRepository extends BaseRepository
 {
     protected static string $entityName = Quiz::class;
-    protected static array $searchColumns = ['id'];
+    protected static array $searchColumns = ['id', 'title', 'description'];
 
     public function __construct(
         protected ManagerRegistry $managerRegistry

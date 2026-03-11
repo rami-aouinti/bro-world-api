@@ -34,6 +34,18 @@ class Company implements EntityInterface
     #[ORM\Column(name: 'name', type: Types::STRING, length: 255)]
     private string $name = '';
 
+    #[ORM\Column(name: 'industry', type: Types::STRING, length: 120, nullable: true)]
+    private ?string $industry = null;
+
+    #[ORM\Column(name: 'website', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $website = null;
+
+    #[ORM\Column(name: 'contact_email', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $contactEmail = null;
+
+    #[ORM\Column(name: 'phone', type: Types::STRING, length: 60, nullable: true)]
+    private ?string $phone = null;
+
     /** @var Collection<int, Project>|ArrayCollection<int, Project> */
     #[ORM\OneToMany(targetEntity: Project::class, mappedBy: 'company')]
     private Collection|ArrayCollection $projects;
@@ -49,23 +61,75 @@ class Company implements EntityInterface
     {
         return $this->id->toString();
     }
+
     public function getCrm(): ?Crm
     {
         return $this->crm;
     }
+
     public function setCrm(?Crm $crm): self
     {
         $this->crm = $crm;
 
         return $this;
     }
+
     public function getName(): string
     {
         return $this->name;
     }
+
     public function setName(string $name): self
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getIndustry(): ?string
+    {
+        return $this->industry;
+    }
+
+    public function setIndustry(?string $industry): self
+    {
+        $this->industry = $industry;
+
+        return $this;
+    }
+
+    public function getWebsite(): ?string
+    {
+        return $this->website;
+    }
+
+    public function setWebsite(?string $website): self
+    {
+        $this->website = $website;
+
+        return $this;
+    }
+
+    public function getContactEmail(): ?string
+    {
+        return $this->contactEmail;
+    }
+
+    public function setContactEmail(?string $contactEmail): self
+    {
+        $this->contactEmail = $contactEmail;
+
+        return $this;
+    }
+
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+
+    public function setPhone(?string $phone): self
+    {
+        $this->phone = $phone;
 
         return $this;
     }

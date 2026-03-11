@@ -33,9 +33,17 @@ final readonly class PatchBlogPostCommandHandler
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Only post owner can patch.');
         }
 
+        if ($command->title !== null) {
+            $post->setTitle($command->title);
+        }
+
         $post
             ->setContent($command->content)
             ->setFilePath($command->filePath);
+
+        if ($command->isPinned !== null) {
+            $post->setIsPinned($command->isPinned);
+        }
 
         $this->postRepository->save($post);
         $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $command->actorUserId);

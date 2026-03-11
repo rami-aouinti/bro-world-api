@@ -7,6 +7,8 @@ namespace App\Platform\Application\Service\PluginProvisioning;
 use App\Platform\Domain\Entity\Application;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Quiz\Domain\Entity\QuizQuestion;
+use App\Quiz\Domain\Enum\QuizCategory;
+use App\Quiz\Domain\Enum\QuizLevel;
 use App\Quiz\Infrastructure\Repository\QuizQuestionRepository;
 use App\Quiz\Infrastructure\Repository\QuizRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -26,7 +28,9 @@ final readonly class QuizPluginProvisioner
         if (!$quiz instanceof Quiz) {
             $quiz = (new Quiz())
                 ->setApplication($application)
-                ->setOwner($application->getUser());
+                ->setOwner($application->getUser())
+                ->setTitle($application->getTitle() . ' onboarding quiz')
+                ->setDescription('Short onboarding quiz generated from plugin provisioning flow.');
 
             $this->entityManager->persist($quiz);
         }
@@ -43,8 +47,9 @@ final readonly class QuizPluginProvisioner
         $question = (new QuizQuestion())
             ->setQuiz($quiz)
             ->setTitle('What is the first step to launch this app?')
-            ->setCategory('onboarding')
-            ->setLevel('easy');
+            ->setCategory(QuizCategory::ONBOARDING)
+            ->setLevel(QuizLevel::EASY)
+            ->setPosition(1);
 
         $this->entityManager->persist($question);
     }

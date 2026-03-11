@@ -19,6 +19,8 @@ final readonly class CreateQuizQuestionCommand implements MessageHighInterface
         public string $level,
         public string $category,
         public array $answers,
+        public int $points = 1,
+        public ?string $explanation = null,
         public ?array $configuration = null
     ) {
     }

@@ -49,8 +49,10 @@ final readonly class CreateBlogPostCommandHandler
         $this->postRepository->save((new BlogPost())
             ->setBlog($blog)
             ->setAuthor($user)
+            ->setTitle($command->title)
             ->setContent($command->content)
-            ->setFilePath($command->filePath));
+            ->setFilePath($command->filePath)
+            ->setIsPinned($command->isPinned));
 
         $this->cacheInvalidationService->invalidateBlogCaches($blog->getApplication()?->getSlug(), $command->actorUserId);
     }

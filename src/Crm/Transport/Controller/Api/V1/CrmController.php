@@ -12,6 +12,11 @@ use App\Crm\Domain\Entity\Project;
 use App\Crm\Domain\Entity\Sprint;
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Domain\Entity\TaskRequest;
+use App\Crm\Domain\Enum\ProjectStatus;
+use App\Crm\Domain\Enum\SprintStatus;
+use App\Crm\Domain\Enum\TaskPriority;
+use App\Crm\Domain\Enum\TaskRequestStatus;
+use App\Crm\Domain\Enum\TaskStatus;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\Crm\Infrastructure\Repository\CrmRepository;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
@@ -23,6 +28,7 @@ use App\General\Application\Message\EntityDeleted;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PlatformKey;
 use App\User\Domain\Entity\User;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -61,6 +67,10 @@ final readonly class CrmController
         $items = array_map(static fn (Company $company): array => [
             'id' => $company->getId(),
             'name' => $company->getName(),
+            'industry' => $company->getIndustry(),
+            'website' => $company->getWebsite(),
+            'contactEmail' => $company->getContactEmail(),
+            'phone' => $company->getPhone(),
         ], $this->companyRepository->findBy([], [
             'createdAt' => 'DESC',
         ], 200));
@@ -83,7 +93,11 @@ final readonly class CrmController
     {
         $payload = (array)json_decode((string)$request->getContent(), true);
         $company = new Company();
-        $company->setName((string)($payload['name'] ?? ''));
+        $company->setName((string)($payload['name'] ?? ''))
+            ->setIndustry(isset($payload['industry']) ? (string)$payload['industry'] : null)
+            ->setWebsite(isset($payload['website']) ? (string)$payload['website'] : null)
+            ->setContactEmail(isset($payload['contactEmail']) ? (string)$payload['contactEmail'] : null)
+            ->setPhone(isset($payload['phone']) ? (string)$payload['phone'] : null);
         if (is_string($payload['crmId'] ?? null)) {
             $company->setCrm($this->crmRepository->find($payload['crmId']));
         }
@@ -119,6 +133,10 @@ final readonly class CrmController
             'id' => $project->getId(),
             'name' => $project->getName(),
             'companyId' => $project->getCompany()?->getId(),
+            'code' => $project->getCode(),
+            'status' => $project->getStatus()->value,
+            'startedAt' => $project->getStartedAt()?->format(DATE_ATOM),
+            'dueAt' => $project->getDueAt()?->format(DATE_ATOM),
         ], $this->projectRepository->findBy([], [
             'createdAt' => 'DESC',
         ], 200));
@@ -141,7 +159,12 @@ final readonly class CrmController
     {
         $payload = (array)json_decode((string)$request->getContent(), true);
         $project = new Project();
-        $project->setName((string)($payload['name'] ?? ''));
+        $project->setName((string)($payload['name'] ?? ''))
+            ->setCode(isset($payload['code']) ? (string)$payload['code'] : null)
+            ->setDescription(isset($payload['description']) ? (string)$payload['description'] : null)
+            ->setStatus(ProjectStatus::tryFrom((string)($payload['status'] ?? '')) ?? ProjectStatus::PLANNED)
+            ->setStartedAt(isset($payload['startedAt']) ? new DateTimeImmutable((string)$payload['startedAt']) : null)
+            ->setDueAt(isset($payload['dueAt']) ? new DateTimeImmutable((string)$payload['dueAt']) : null);
         if (is_string($payload['companyId'] ?? null)) {
             $project->setCompany($this->companyRepository->find($payload['companyId']));
         }
@@ -189,7 +212,12 @@ final readonly class CrmController
     {
         $payload = (array)json_decode((string)$request->getContent(), true);
         $task = new Task();
-        $task->setTitle((string)($payload['title'] ?? ''));
+        $task->setTitle((string)($payload['title'] ?? ''))
+            ->setDescription(isset($payload['description']) ? (string)$payload['description'] : null)
+            ->setStatus(TaskStatus::tryFrom((string)($payload['status'] ?? '')) ?? TaskStatus::TODO)
+            ->setPriority(TaskPriority::tryFrom((string)($payload['priority'] ?? '')) ?? TaskPriority::MEDIUM)
+            ->setDueAt(isset($payload['dueAt']) ? new DateTimeImmutable((string)$payload['dueAt']) : null)
+            ->setEstimatedHours(isset($payload['estimatedHours']) ? (float)$payload['estimatedHours'] : null);
         if (is_string($payload['projectId'] ?? null)) {
             $task->setProject($this->projectRepository->find($payload['projectId']));
         }
@@ -227,7 +255,9 @@ final readonly class CrmController
         $items = array_map(static fn (TaskRequest $taskRequest): array => [
             'id' => $taskRequest->getId(),
             'title' => $taskRequest->getTitle(),
-            'status' => $taskRequest->getStatus(),
+            'status' => $taskRequest->getStatus()->value,
+            'requestedAt' => $taskRequest->getRequestedAt()->format(DATE_ATOM),
+            'resolvedAt' => $taskRequest->getResolvedAt()?->format(DATE_ATOM),
             'taskId' => $taskRequest->getTask()?->getId(),
         ], $this->taskRequestRepository->findBy([], [
             'createdAt' => 'DESC',
@@ -251,7 +281,10 @@ final readonly class CrmController
     {
         $payload = (array)json_decode((string)$request->getContent(), true);
         $taskRequest = new TaskRequest();
-        $taskRequest->setTitle((string)($payload['title'] ?? ''))->setStatus((string)($payload['status'] ?? 'pending'));
+        $taskRequest->setTitle((string)($payload['title'] ?? ''))
+            ->setDescription(isset($payload['description']) ? (string)$payload['description'] : null)
+            ->setStatus(TaskRequestStatus::tryFrom((string)($payload['status'] ?? '')) ?? TaskRequestStatus::PENDING)
+            ->setResolvedAt(isset($payload['resolvedAt']) ? new DateTimeImmutable((string)$payload['resolvedAt']) : null);
         if (is_string($payload['taskId'] ?? null)) {
             $taskRequest->setTask($this->taskRepository->find($payload['taskId']));
         }
@@ -287,6 +320,9 @@ final readonly class CrmController
             'id' => $sprint->getId(),
             'name' => $sprint->getName(),
             'projectId' => $sprint->getProject()?->getId(),
+            'status' => $sprint->getStatus()->value,
+            'startDate' => $sprint->getStartDate()?->format('Y-m-d'),
+            'endDate' => $sprint->getEndDate()?->format('Y-m-d'),
         ], $this->sprintRepository->findBy([], [
             'createdAt' => 'DESC',
         ], 200));
@@ -309,7 +345,11 @@ final readonly class CrmController
     {
         $payload = (array)json_decode((string)$request->getContent(), true);
         $sprint = new Sprint();
-        $sprint->setName((string)($payload['name'] ?? ''));
+        $sprint->setName((string)($payload['name'] ?? ''))
+            ->setGoal(isset($payload['goal']) ? (string)$payload['goal'] : null)
+            ->setStatus(SprintStatus::tryFrom((string)($payload['status'] ?? '')) ?? SprintStatus::PLANNED)
+            ->setStartDate(isset($payload['startDate']) ? new DateTimeImmutable((string)$payload['startDate']) : null)
+            ->setEndDate(isset($payload['endDate']) ? new DateTimeImmutable((string)$payload['endDate']) : null);
         if (is_string($payload['projectId'] ?? null)) {
             $sprint->setProject($this->projectRepository->find($payload['projectId']));
         }
@@ -371,7 +411,11 @@ final readonly class CrmController
 
         $company = (new Company())
             ->setCrm($crm)
-            ->setName((string)($payload['name'] ?? ''));
+            ->setName((string)($payload['name'] ?? ''))
+            ->setIndustry(isset($payload['industry']) ? (string)$payload['industry'] : null)
+            ->setWebsite(isset($payload['website']) ? (string)$payload['website'] : null)
+            ->setContactEmail(isset($payload['contactEmail']) ? (string)$payload['contactEmail'] : null)
+            ->setPhone(isset($payload['phone']) ? (string)$payload['phone'] : null);
 
         $this->entityManager->persist($company);
         $this->entityManager->flush();
@@ -384,6 +428,22 @@ final readonly class CrmController
             'crmId' => $crm->getId(),
             'applicationSlug' => $applicationSlug,
         ], JsonResponse::HTTP_CREATED);
+    }
+
+
+    #[Route('/v1/crm/dashboard', methods: [Request::METHOD_GET])]
+    public function dashboard(): JsonResponse
+    {
+        return new JsonResponse([
+            'companies' => $this->companyRepository->count([]),
+            'projects' => $this->projectRepository->count([]),
+            'tasks' => $this->taskRepository->count([]),
+            'taskRequests' => [
+                TaskRequestStatus::PENDING->value => $this->taskRequestRepository->count(['status' => TaskRequestStatus::PENDING]),
+                TaskRequestStatus::APPROVED->value => $this->taskRequestRepository->count(['status' => TaskRequestStatus::APPROVED]),
+                TaskRequestStatus::REJECTED->value => $this->taskRequestRepository->count(['status' => TaskRequestStatus::REJECTED]),
+            ],
+        ]);
     }
 
     private function resolveOrCreateCrmByApplicationSlug(string $applicationSlug): Crm

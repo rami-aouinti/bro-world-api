@@ -6,12 +6,14 @@ namespace App\Shop\Transport\Controller\Api\V1;
 
 use App\General\Application\Message\EntityCreated;
 use App\General\Application\Message\EntityDeleted;
+use App\General\Domain\Service\Interfaces\MessageServiceInterface;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PlatformKey;
+use App\Shop\Application\Message\CreateProductCommand;
+use App\Shop\Application\Message\DeleteProductCommand;
 use App\Shop\Application\Service\ProductApplicationListService;
 use App\Shop\Application\Service\ProductListService;
 use App\Shop\Domain\Entity\Category;
-use App\Shop\Domain\Entity\Product;
 use App\Shop\Domain\Entity\Shop;
 use App\Shop\Domain\Entity\Tag;
 use App\Shop\Domain\Enum\ProductStatus;
@@ -47,6 +49,7 @@ final readonly class ShopController
         private ProductApplicationListService $productApplicationListService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
+        private MessageServiceInterface $messageService,
         private Security $security,
     ) {
     }
@@ -105,16 +108,16 @@ final readonly class ShopController
     #[Route('/v1/shop/products/{id}', methods: [Request::METHOD_DELETE])]
     public function deleteProduct(string $id): JsonResponse
     {
-        $product = $this->productRepository->find($id);
-        if (!$product instanceof Product) {
-            return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
-        }
+        $operationId = \Ramsey\Uuid\Uuid::uuid4()->toString();
+        $this->messageService->sendMessage(new DeleteProductCommand(
+            operationId: $operationId,
+            productId: $id,
+        ));
 
-        $this->entityManager->remove($product);
-        $this->entityManager->flush();
-        $this->messageBus->dispatch(new EntityDeleted('shop_product', $id));
-
-        return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'id' => $id,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     #[Route('/v1/shop/categories', methods: [Request::METHOD_GET])]
@@ -230,10 +233,10 @@ final readonly class ShopController
         ]));
 
         return new JsonResponse([
-            'id' => $product->getId(),
+            'operationId' => $operationId,
             'shopId' => $shop->getId(),
             'applicationSlug' => $applicationSlug,
-        ], JsonResponse::HTTP_CREATED);
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     /** @param array<string,mixed> $payload */

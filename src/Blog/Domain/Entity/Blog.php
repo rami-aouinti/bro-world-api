@@ -6,6 +6,7 @@ namespace App\Blog\Domain\Entity;
 
 use App\Blog\Domain\Enum\BlogStatus;
 use App\Blog\Domain\Enum\BlogType;
+use App\Blog\Domain\Enum\BlogVisibility;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
@@ -33,6 +34,12 @@ class Blog implements EntityInterface
     #[ORM\Column(name: 'title', type: 'string', length: 255)]
     private string $title = '';
 
+    #[ORM\Column(name: 'slug', type: 'string', length: 150, unique: true)]
+    private string $slug = '';
+
+    #[ORM\Column(name: 'description', type: 'text', nullable: true)]
+    private ?string $description = null;
+
     #[ORM\Column(name: 'type', type: 'string', length: 20, enumType: BlogType::class)]
     private BlogType $type = BlogType::APPLICATION;
 
@@ -41,6 +48,9 @@ class Blog implements EntityInterface
 
     #[ORM\Column(name: 'comment_status', type: 'string', length: 20, enumType: BlogStatus::class)]
     private BlogStatus $commentStatus = BlogStatus::OPEN;
+
+    #[ORM\Column(name: 'visibility', type: 'string', length: 20, enumType: BlogVisibility::class)]
+    private BlogVisibility $visibility = BlogVisibility::PUBLIC;
 
     #[ORM\ManyToOne(targetEntity: Application::class)]
     #[ORM\JoinColumn(name: 'application_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
@@ -78,6 +88,26 @@ class Blog implements EntityInterface
 
         return $this;
     }
+    public function getSlug(): string
+    {
+        return $this->slug;
+    }
+    public function setSlug(string $slug): self
+    {
+        $this->slug = $slug;
+
+        return $this;
+    }
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+    public function setDescription(?string $description): self
+    {
+        $this->description = $description;
+
+        return $this;
+    }
     public function getType(): BlogType
     {
         return $this->type;
@@ -105,6 +135,16 @@ class Blog implements EntityInterface
     public function setCommentStatus(BlogStatus $commentStatus): self
     {
         $this->commentStatus = $commentStatus;
+
+        return $this;
+    }
+    public function getVisibility(): BlogVisibility
+    {
+        return $this->visibility;
+    }
+    public function setVisibility(BlogVisibility $visibility): self
+    {
+        $this->visibility = $visibility;
 
         return $this;
     }

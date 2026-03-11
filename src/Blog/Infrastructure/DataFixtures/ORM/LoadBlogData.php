@@ -9,6 +9,7 @@ use App\Blog\Domain\Entity\BlogComment;
 use App\Blog\Domain\Entity\BlogPost;
 use App\Blog\Domain\Entity\BlogReaction;
 use App\Blog\Domain\Entity\BlogTag;
+use App\Blog\Domain\Enum\BlogReactionType;
 use App\Blog\Domain\Enum\BlogType;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Entity\Plugin;
@@ -41,6 +42,8 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
 
         $generalBlog = (new Blog())
             ->setTitle('General Blog Root')
+            ->setSlug('general')
+            ->setDescription('Blog communautaire global pour toute la plateforme.')
             ->setOwner($johnRoot)
             ->setType(BlogType::GENERAL);
         $manager->persist($generalBlog);
@@ -54,6 +57,8 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
 
             $blog = (new Blog())
                 ->setTitle(sprintf('Application Blog %d', $index + 1))
+                ->setSlug(sprintf('application-blog-%d', $index + 1))
+                ->setDescription(sprintf('Espace communautaire pour %s', $application->getTitle()))
                 ->setOwner($johnRoot)
                 ->setType(BlogType::APPLICATION)
                 ->setApplication($application);
@@ -62,7 +67,7 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
         }
 
         $authors = [$johnRoot, $johnAdmin, $johnUser];
-        $reactionTypes = ['like', 'heart', 'laugh'];
+        $reactionTypes = [BlogReactionType::LIKE, BlogReactionType::HEART, BlogReactionType::LAUGH, BlogReactionType::CELEBRATE];
 
         foreach ($blogs as $blogIndex => $blog) {
             $postCount = $blog->getType() === BlogType::GENERAL ? 40 : 6;
@@ -73,7 +78,9 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
                 $post = (new BlogPost())
                     ->setBlog($blog)
                     ->setAuthor($author)
-                    ->setContent(sprintf('Fixture post %d for %s', $postIndex, $blog->getTitle()));
+                    ->setTitle(sprintf('Post fixture %d', $postIndex))
+                    ->setContent(sprintf('Fixture post %d for %s', $postIndex, $blog->getTitle()))
+                    ->setIsPinned($postIndex === 1);
                 $manager->persist($post);
 
                 for ($tagIndex = 1; $tagIndex <= 2; $tagIndex++) {

@@ -14,6 +14,7 @@ use App\Blog\Application\Message\DeleteBlogReactionCommand;
 use App\Blog\Application\Message\PatchBlogCommentCommand;
 use App\Blog\Application\Message\PatchBlogPostCommand;
 use App\Blog\Application\Message\PatchBlogReactionCommand;
+use App\Blog\Domain\Enum\BlogReactionType;
 use App\Media\Application\Service\MediaUploaderService;
 use App\Media\Application\Service\MediaUploadValidationPolicy;
 use App\User\Domain\Entity\User;
@@ -27,6 +28,8 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+use function sprintf;
 
 #[AsController]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
@@ -55,7 +58,7 @@ final readonly class BlogMutationController
         }
 
         $payload = $this->extractPayload($request);
-        $this->messageBus->dispatch(new CreateGeneralBlogCommand((string)uniqid('op_', true), $user->getId(), (string)($payload['title'] ?? 'General Blog')));
+        $this->messageBus->dispatch(new CreateGeneralBlogCommand((string)uniqid('op_', true), $user->getId(), (string)($payload['title'] ?? 'General Blog'), isset($payload['description']) ? (string)$payload['description'] : null));
 
         return new JsonResponse([
             'status' => 'accepted',
@@ -81,8 +84,10 @@ final readonly class BlogMutationController
             (string)uniqid('op_', true),
             $loggedInUser->getId(),
             $blogId,
+            (string)($payload['title'] ?? 'Untitled post'),
             $payload['content'] ?? null,
             $payload['filePath'] ?: null,
+            (bool)($payload['isPinned'] ?? false),
         ));
 
         return new JsonResponse([
@@ -103,7 +108,7 @@ final readonly class BlogMutationController
         $payload = $this->extractPayload($request);
         $payload['filePath'] = $this->resolveUploadedFileUrl($request, (string)($payload['filePath'] ?? ''));
 
-        $this->messageBus->dispatch(new PatchBlogPostCommand((string)uniqid('op_', true), $loggedInUser->getId(), $postId, $payload['content'] ?? null, $payload['filePath'] ?: null));
+        $this->messageBus->dispatch(new PatchBlogPostCommand((string)uniqid('op_', true), $loggedInUser->getId(), $postId, isset($payload['title']) ? (string)$payload['title'] : null, $payload['content'] ?? null, $payload['filePath'] ?: null, isset($payload['isPinned']) ? (bool)$payload['isPinned'] : null));
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
@@ -186,7 +191,7 @@ final readonly class BlogMutationController
     public function createReaction(string $commentId, Request $request, User $loggedInUser): JsonResponse
     {
         $payload = $this->extractPayload($request);
-        $this->messageBus->dispatch(new CreateBlogReactionCommand((string)uniqid('op_', true), $loggedInUser->getId(), $commentId, (string)($payload['type'] ?? 'like')));
+        $this->messageBus->dispatch(new CreateBlogReactionCommand((string)uniqid('op_', true), $loggedInUser->getId(), $commentId, $this->parseReactionType((string)($payload['type'] ?? 'like'))));
 
         return new JsonResponse([
             'status' => 'accepted',
@@ -203,7 +208,7 @@ final readonly class BlogMutationController
     public function patchReaction(string $reactionId, Request $request, User $loggedInUser): JsonResponse
     {
         $payload = $this->extractPayload($request);
-        $this->messageBus->dispatch(new PatchBlogReactionCommand((string)uniqid('op_', true), $loggedInUser->getId(), $reactionId, (string)($payload['type'] ?? 'like')));
+        $this->messageBus->dispatch(new PatchBlogReactionCommand((string)uniqid('op_', true), $loggedInUser->getId(), $reactionId, $this->parseReactionType((string)($payload['type'] ?? 'like'))));
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
@@ -227,6 +232,17 @@ final readonly class BlogMutationController
         }
 
         return $payload;
+    }
+
+    private function parseReactionType(string $reactionType): BlogReactionType
+    {
+        $parsed = BlogReactionType::tryFrom($reactionType);
+
+        if ($parsed instanceof BlogReactionType) {
+            return $parsed;
+        }
+
+        throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, sprintf('Unsupported reaction type "%s".', $reactionType));
     }
 
     private function resolveUploadedFileUrl(Request $request, string $fallbackUrl): string
