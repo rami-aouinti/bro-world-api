@@ -73,6 +73,20 @@ final readonly class BlogNotificationService
         );
     }
 
+
+    public function notifyPostReactionCreated(BlogPost $post, User $actor, string $reactionType): void
+    {
+        $actionLabel = $reactionType === 'like' ? 'liked' : ('reacted (' . $reactionType . ') to');
+
+        $this->notificationPublisher->publish(
+            from: $actor,
+            recipient: $post->getAuthor(),
+            title: $this->buildTitle($actor, $actionLabel . ' your post', $this->formatPostTitle($post)),
+            type: self::BLOG_NOTIFICATION_TYPE,
+            description: $this->buildPostLinkDescription($post),
+        );
+    }
+
     private function buildPostLinkDescription(BlogPost $post): string
     {
         return '/blog/post/' . $post->getId();

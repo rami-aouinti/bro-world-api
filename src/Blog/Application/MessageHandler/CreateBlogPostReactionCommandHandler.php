@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Blog\Application\MessageHandler;
 
-use App\Blog\Application\Message\CreateBlogReactionCommand;
+use App\Blog\Application\Message\CreateBlogPostReactionCommand;
 use App\Blog\Application\Service\BlogNotificationService;
-use App\Blog\Domain\Entity\BlogComment;
+use App\Blog\Domain\Entity\BlogPost;
 use App\Blog\Domain\Entity\BlogReaction;
-use App\Blog\Infrastructure\Repository\BlogCommentRepository;
+use App\Blog\Infrastructure\Repository\BlogPostRepository;
 use App\Blog\Infrastructure\Repository\BlogReactionRepository;
 use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
@@ -18,43 +18,43 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler]
-final readonly class CreateBlogReactionCommandHandler
+final readonly class CreateBlogPostReactionCommandHandler
 {
     public function __construct(
         private BlogReactionRepository $reactionRepository,
-        private BlogCommentRepository $commentRepository,
+        private BlogPostRepository $postRepository,
         private UserRepository $userRepository,
         private BlogNotificationService $blogNotificationService,
         private CacheInvalidationService $cacheInvalidationService,
     ) {
     }
 
-    public function __invoke(CreateBlogReactionCommand $command): void
+    public function __invoke(CreateBlogPostReactionCommand $command): void
     {
-        $comment = $this->commentRepository->find($command->commentId);
+        $post = $this->postRepository->find($command->postId);
         $user = $this->userRepository->find($command->actorUserId);
 
-        if (!$comment instanceof BlogComment || !$user instanceof User) {
+        if (!$post instanceof BlogPost || !$user instanceof User) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Resource not found.');
         }
 
-        $existingReaction = $this->reactionRepository->findOneByCommentAndAuthor($comment, $user);
+        $existingReaction = $this->reactionRepository->findOneByPostAndAuthor($post, $user);
 
         if ($existingReaction instanceof BlogReaction) {
             $existingReaction->setType($command->type);
             $this->reactionRepository->save($existingReaction);
 
-            $this->cacheInvalidationService->invalidateBlogCaches($comment->getPost()->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
+            $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
 
             return;
         }
 
         $this->reactionRepository->save((new BlogReaction())
-            ->setComment($comment)
+            ->setPost($post)
             ->setAuthor($user)
             ->setType($command->type));
 
-        $this->blogNotificationService->notifyReactionCreated($comment, $user, $command->type->value);
-        $this->cacheInvalidationService->invalidateBlogCaches($comment->getPost()->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
+        $this->blogNotificationService->notifyPostReactionCreated($post, $user, $command->type->value);
+        $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
     }
 }

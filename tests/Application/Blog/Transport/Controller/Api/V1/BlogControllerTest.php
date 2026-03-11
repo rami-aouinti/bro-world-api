@@ -193,6 +193,75 @@ final class BlogControllerTest extends WebTestCase
         self::assertSame('laugh', $johnUserReactionTypes[0]);
     }
 
+
+    public function testCreatePostReactionUpsertsForSameAuthorAndPost(): void
+    {
+        $client = $this->getTestClient('john-user', 'password-user');
+
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blogs/application/shop-ops-center');
+        self::assertResponseStatusCodeSame(200);
+        /** @var array<string, mixed> $payload */
+        $payload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        /** @var UserRepository $userRepository */
+        $userRepository = static::getContainer()->get(UserRepository::class);
+        $johnUser = $userRepository->findOneBy([
+            'username' => 'john-user',
+        ]);
+        self::assertNotNull($johnUser);
+
+        $targetPostId = self::findFirstPostId($payload);
+        self::assertNotNull($targetPostId);
+
+        $client->request(
+            Request::METHOD_POST,
+            self::API_URL_PREFIX . '/v1/blog/posts/' . $targetPostId . '/reactions',
+            [],
+            [],
+            $this->getJsonHeaders(),
+            json_encode([
+                'type' => 'heart',
+            ], JSON_THROW_ON_ERROR),
+        );
+        self::assertResponseStatusCodeSame(202);
+
+        $client->request(
+            Request::METHOD_POST,
+            self::API_URL_PREFIX . '/v1/blog/posts/' . $targetPostId . '/reactions',
+            [],
+            [],
+            $this->getJsonHeaders(),
+            json_encode([
+                'type' => 'laugh',
+            ], JSON_THROW_ON_ERROR),
+        );
+        self::assertResponseStatusCodeSame(202);
+
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blogs/application/shop-ops-center');
+        self::assertResponseStatusCodeSame(200);
+        /** @var array<string, mixed> $updatedPayload */
+        $updatedPayload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        $targetPost = self::findPostById($updatedPayload, $targetPostId);
+        self::assertIsArray($targetPost);
+        self::assertArrayHasKey('reactions', $targetPost);
+        self::assertIsArray($targetPost['reactions']);
+
+        $johnUserReactionTypes = [];
+        foreach ($targetPost['reactions'] as $reaction) {
+            if (!is_array($reaction)) {
+                continue;
+            }
+
+            if (($reaction['authorId'] ?? null) === $johnUser->getId()) {
+                $johnUserReactionTypes[] = $reaction['type'] ?? null;
+            }
+        }
+
+        self::assertCount(1, $johnUserReactionTypes);
+        self::assertSame('laugh', $johnUserReactionTypes[0]);
+    }
+
     /**
      * @param array<string, mixed> $node
      */
@@ -215,6 +284,65 @@ final class BlogControllerTest extends WebTestCase
                 $id = self::findFirstCommentId($child);
                 if (is_string($id)) {
                     return $id;
+                }
+            }
+        }
+
+        return null;
+    }
+
+
+    /**
+     * @param array<string, mixed> $node
+     */
+    private static function findFirstPostId(array $node): ?string
+    {
+        if (isset($node['id']) && isset($node['title']) && isset($node['comments'])) {
+            return is_string($node['id']) ? $node['id'] : null;
+        }
+
+        foreach (['posts'] as $listKey) {
+            if (!isset($node[$listKey]) || !is_array($node[$listKey])) {
+                continue;
+            }
+
+            foreach ($node[$listKey] as $child) {
+                if (!is_array($child)) {
+                    continue;
+                }
+
+                $id = self::findFirstPostId($child);
+                if (is_string($id)) {
+                    return $id;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed> $node
+     */
+    private static function findPostById(array $node, string $postId): ?array
+    {
+        if (($node['id'] ?? null) === $postId && isset($node['title']) && isset($node['comments'])) {
+            return $node;
+        }
+
+        foreach (['posts'] as $listKey) {
+            if (!isset($node[$listKey]) || !is_array($node[$listKey])) {
+                continue;
+            }
+
+            foreach ($node[$listKey] as $child) {
+                if (!is_array($child)) {
+                    continue;
+                }
+
+                $found = self::findPostById($child, $postId);
+                if (is_array($found)) {
+                    return $found;
                 }
             }
         }

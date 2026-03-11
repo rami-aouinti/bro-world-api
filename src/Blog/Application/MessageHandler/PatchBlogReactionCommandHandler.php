@@ -35,6 +35,7 @@ final readonly class PatchBlogReactionCommandHandler
 
         $reaction->setType($command->type);
         $this->reactionRepository->save($reaction);
-        $this->cacheInvalidationService->invalidateBlogCaches($reaction->getComment()->getPost()->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
+        $post = $reaction->getPost();
+        $this->cacheInvalidationService->invalidateBlogCaches($post?->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
     }
 }

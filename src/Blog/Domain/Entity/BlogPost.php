@@ -54,10 +54,17 @@ class BlogPost implements EntityInterface
     #[ORM\OneToMany(targetEntity: BlogComment::class, mappedBy: 'post', cascade: ['remove'])]
     private Collection $comments;
 
+    /**
+     * @var Collection<int, BlogReaction>
+     */
+    #[ORM\OneToMany(targetEntity: BlogReaction::class, mappedBy: 'post', cascade: ['remove'])]
+    private Collection $reactions;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
         $this->comments = new ArrayCollection();
+        $this->reactions = new ArrayCollection();
     }
     #[Override] public function getId(): string
     {
@@ -129,4 +136,13 @@ class BlogPost implements EntityInterface
     {
         return $this->comments;
     }
+
+    /**
+     * @return Collection<int, BlogReaction>
+     */
+    public function getReactions(): Collection
+    {
+        return $this->reactions;
+    }
 }
+

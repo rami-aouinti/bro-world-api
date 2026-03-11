@@ -88,6 +88,13 @@ final readonly class BlogReadService
                 'content' => $p->getContent(),
                 'isPinned' => $p->isPinned(),
                 'filePath' => $p->getFilePath(),
+                'reactions' => array_map(fn ($r): array => [
+                    'id' => $r->getId(),
+                    'authorId' => $r->getAuthor()->getId(),
+                    'isAuthor' => $this->isAuthor($r->getAuthor(), $currentUser),
+                    'author' => $this->normalizeAuthor($r->getAuthor()),
+                    'type' => $r->getType()->value,
+                ], $p->getReactions()->toArray()),
                 'comments' => $this->normalizeComments($p->getComments()->toArray(), null, $currentUser),
             ], $blog->getPosts()->toArray()),
         ];

@@ -26,8 +26,12 @@ class BlogReaction implements EntityInterface
     private UuidInterface $id;
 
     #[ORM\ManyToOne(targetEntity: BlogComment::class)]
-    #[ORM\JoinColumn(name: 'comment_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private BlogComment $comment;
+    #[ORM\JoinColumn(name: 'comment_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    private ?BlogComment $comment = null;
+
+    #[ORM\ManyToOne(targetEntity: BlogPost::class)]
+    #[ORM\JoinColumn(name: 'post_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    private ?BlogPost $post = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'author_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
@@ -44,13 +48,29 @@ class BlogReaction implements EntityInterface
     {
         return $this->id->toString();
     }
-    public function getComment(): BlogComment
+    public function getComment(): ?BlogComment
     {
         return $this->comment;
     }
     public function setComment(BlogComment $comment): self
     {
         $this->comment = $comment;
+        $this->post = null;
+
+        return $this;
+    }
+    public function getPost(): ?BlogPost
+    {
+        if ($this->post instanceof BlogPost) {
+            return $this->post;
+        }
+
+        return $this->comment?->getPost();
+    }
+    public function setPost(BlogPost $post): self
+    {
+        $this->post = $post;
+        $this->comment = null;
 
         return $this;
     }

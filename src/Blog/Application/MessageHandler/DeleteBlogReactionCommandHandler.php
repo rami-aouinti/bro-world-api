@@ -33,7 +33,7 @@ final readonly class DeleteBlogReactionCommandHandler
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Only reaction owner can delete.');
         }
 
-        $applicationSlug = $reaction->getComment()->getPost()->getBlog()->getApplication()?->getSlug();
+        $applicationSlug = $reaction->getPost()?->getBlog()->getApplication()?->getSlug();
         $this->reactionRepository->remove($reaction);
         $this->cacheInvalidationService->invalidateBlogCaches($applicationSlug, $command->actorUserId);
     }

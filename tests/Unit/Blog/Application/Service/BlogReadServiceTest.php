@@ -66,6 +66,11 @@ final class BlogReadServiceTest extends TestCase
         $rootComment = $this->mockComment('c-root', $otherUser, null, [$reaction]);
         $childComment = $this->mockComment('c-child', $currentUser, 'c-root', []);
 
+        $postReaction = $this->createMock(BlogReaction::class);
+        $postReaction->method('getId')->willReturn('pr-1');
+        $postReaction->method('getAuthor')->willReturn($otherUser);
+        $postReaction->method('getType')->willReturn(BlogReactionType::HEART);
+
         $post = $this->createMock(BlogPost::class);
         $post->method('getId')->willReturn('p-1');
         $post->method('getAuthor')->willReturn($currentUser);
@@ -73,6 +78,7 @@ final class BlogReadServiceTest extends TestCase
         $post->method('getContent')->willReturn('Post content');
         $post->method('isPinned')->willReturn(true);
         $post->method('getFilePath')->willReturn('/uploads/post.png');
+        $post->method('getReactions')->willReturn(new ArrayCollection([$postReaction]));
         $post->method('getComments')->willReturn(new ArrayCollection([$childComment, $rootComment]));
 
         $blog = $this->createMock(Blog::class);
@@ -93,6 +99,8 @@ final class BlogReadServiceTest extends TestCase
         self::assertSame('b-1', $normalized['id']);
         self::assertCount(1, $normalized['posts']);
         self::assertTrue($normalized['posts'][0]['isAuthor']);
+        self::assertSame('heart', $normalized['posts'][0]['reactions'][0]['type']);
+        self::assertFalse($normalized['posts'][0]['reactions'][0]['isAuthor']);
         self::assertSame('c-root', $normalized['posts'][0]['comments'][0]['id']);
         self::assertSame('c-child', $normalized['posts'][0]['comments'][0]['children'][0]['id']);
         self::assertSame('laugh', $normalized['posts'][0]['comments'][0]['reactions'][0]['type']);
