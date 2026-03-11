@@ -39,9 +39,10 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
         $examTypes = ExamType::cases();
         $examStatuses = ExamStatus::cases();
         $terms = Term::cases();
+        $applicationKeys = self::APPLICATION_KEYS_BY_PLATFORM[PlatformKey::SCHOOL->value] ?? [];
 
         foreach ($this->getApplicationsByPlatform(PlatformKey::SCHOOL) as $applicationIndex => $application) {
-            $appKey = $application->getKey();
+            $appKey = $applicationKeys[$applicationIndex] ?? $application->getSlug();
 
             $school = (new School())
                 ->setName($application->getTitle() . ' Academy')
