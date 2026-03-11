@@ -63,6 +63,7 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
 
         foreach ($chatEnabledApplications as $application) {
             $chat = $this->ensureChat($manager, $application);
+            $this->ensureApplicationChatScenario($manager, $application, $chat);
 
             if ($application->getTitle() === 'Recruit Talent Hub') {
                 $calendar = $this->ensureCalendar($manager, $application);
@@ -330,6 +331,40 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
 
         $this->ensureReaction($manager, $replyMessage, $john, 'like');
         $this->ensureReaction($manager, $introMessage, $johnAdmin, 'love');
+    }
+
+    private function ensureApplicationChatScenario(ObjectManager $manager, PlatformApplication $application, Chat $chat): void
+    {
+        /** @var User $johnRoot */
+        $johnRoot = $this->getReference('User-john-root', User::class);
+        /** @var User $johnAdmin */
+        $johnAdmin = $this->getReference('User-john-admin', User::class);
+
+        $conversation = $this->ensureConversation($manager, $chat);
+
+        $this->ensureParticipant($manager, $conversation, $johnRoot);
+        if ($johnRoot->getId() !== $johnAdmin->getId()) {
+            $this->ensureParticipant($manager, $conversation, $johnAdmin);
+        }
+
+        $introMessage = $this->ensureMessage(
+            $manager,
+            $conversation,
+            $johnRoot,
+            sprintf('Chat plugin activé pour %s, je lance un fil de suivi.', $application->getTitle()),
+            []
+        );
+
+        $replyMessage = $this->ensureMessage(
+            $manager,
+            $conversation,
+            $johnAdmin,
+            sprintf('Parfait, je confirme la modération pour %s.', $application->getTitle()),
+            []
+        );
+
+        $this->ensureReaction($manager, $introMessage, $johnAdmin, 'like');
+        $this->ensureReaction($manager, $replyMessage, $johnRoot, 'love');
     }
 
     /**
