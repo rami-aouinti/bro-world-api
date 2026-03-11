@@ -30,7 +30,8 @@ readonly class ResumeCreateController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/resumes', methods: [Request::METHOD_POST])]
+    #[Route(path: '/v1/recruit/{applicationSlug}/resumes', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(summary: 'Crée un CV et permet l’upload optionnel d’un PDF.')]
     #[OA\RequestBody(
         required: false,
@@ -97,8 +98,9 @@ readonly class ResumeCreateController
     )]
     #[OA\Response(response: 400, description: 'Invalid payload or file format')]
     #[OA\Response(response: 401, description: 'Authentication required')]
-    public function __invoke(Request $request, User $loggedInUser): JsonResponse
+    public function __invoke(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         $payload = $this->resumePayloadService->extractPayload($request);
 
         $resume = new Resume()->setOwner($loggedInUser);

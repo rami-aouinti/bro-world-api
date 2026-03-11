@@ -24,8 +24,9 @@ final readonly class DeleteProductController
     ) {
     }
 
-    #[Route('/v1/shop/products/{id}', methods: [Request::METHOD_DELETE])]
-    public function __invoke(string $id): JsonResponse
+    #[Route('/v1/shop/{applicationSlug}/products/{id}', methods: [Request::METHOD_DELETE])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, string $id): JsonResponse
     {
         $operationId = \Ramsey\Uuid\Uuid::uuid4()->toString();
         $this->messageService->sendMessage(new DeleteProductCommand(

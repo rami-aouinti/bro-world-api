@@ -29,8 +29,9 @@ final readonly class DeleteTaskController
     ) {
     }
 
-    #[Route('/v1/crm/tasks/{id}', methods: [Request::METHOD_DELETE])]
-    public function __invoke(string $id): JsonResponse
+    #[Route('/v1/crm/{applicationSlug}/tasks/{id}', methods: [Request::METHOD_DELETE])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, string $id): JsonResponse
     {
         $task = $this->taskRepository->find($id);
         if (!$task instanceof Task) {

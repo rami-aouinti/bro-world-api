@@ -20,8 +20,9 @@ final readonly class CreatePaymentIntentController
     ) {
     }
 
-    #[Route('/v1/shop/orders/{orderId}/payment-intent', methods: [Request::METHOD_POST])]
-    public function __invoke(string $orderId): JsonResponse
+    #[Route('/v1/shop/{applicationSlug}/orders/{orderId}/payment-intent', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, string $orderId): JsonResponse
     {
         $transaction = $this->paymentService->createPaymentIntent($orderId);
 

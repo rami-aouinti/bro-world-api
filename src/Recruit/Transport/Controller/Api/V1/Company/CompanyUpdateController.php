@@ -36,7 +36,7 @@ class CompanyUpdateController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/company/{id}',
+        path: '/v1/recruit/{applicationSlug}/company/{id}',
         requirements: [
             'id' => Requirement::UUID_V1,
         ],
@@ -45,8 +45,10 @@ class CompanyUpdateController extends Controller
     #[IsGranted('ROLE_ROOT')]
     #[OA\Put(summary: 'Update company', responses: [new OA\Response(response: 200, description: 'success')])]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object'))]
-    public function __invoke(Request $request, string $id): Response
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, Request $request, string $id): Response
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         return $this->updateMethod($request, $this->mapAndValidateDto($request, CompanyUpdate::class), $id);
     }
 

@@ -35,14 +35,16 @@ class SalaryCreateController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/salary',
+        path: '/v1/recruit/{applicationSlug}/salary',
         methods: [Request::METHOD_POST],
     )]
     #[IsGranted('ROLE_ROOT')]
     #[OA\Post(summary: 'Create salary', responses: [new OA\Response(response: 201, description: 'created')])]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object'))]
-    public function __invoke(Request $request): Response
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, Request $request): Response
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         return $this->createMethod($request, $this->mapAndValidateDto($request, SalaryCreate::class));
     }
 

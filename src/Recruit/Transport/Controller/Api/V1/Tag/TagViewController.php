@@ -27,7 +27,7 @@ class TagViewController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/tag/{id}',
+        path: '/v1/recruit/{applicationSlug}/tag/{id}',
         requirements: [
             'id' => Requirement::UUID_V1,
         ],
@@ -35,8 +35,10 @@ class TagViewController extends Controller
     )]
     #[IsGranted('ROLE_ROOT')]
     #[OA\Get(summary: 'View tag', responses: [new OA\Response(response: 200, description: 'success')])]
-    public function __invoke(Request $request, string $id): Response
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, Request $request, string $id): Response
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         return $this->findOneMethod($request, $id);
     }
 }

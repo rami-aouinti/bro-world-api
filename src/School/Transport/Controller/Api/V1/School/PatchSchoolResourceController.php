@@ -27,11 +27,13 @@ final readonly class PatchSchoolResourceController
         private MessageBusInterface $messageBus,
     ) {
     }
-    #[Route('/v1/school/{resource}/{id}', methods: [Request::METHOD_PATCH], requirements: [
+    #[Route('/v1/school/{applicationSlug}/{resource}/{id}', methods: [Request::METHOD_PATCH], requirements: [
         'resource' => 'classes|students|teachers|exams|grades',
     ])]
-    public function __invoke(string $resource, string $id, Request $request): JsonResponse
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, string $resource, string $id, Request $request): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         $entity = $this->resourceViewService->findOr404($resource, $id);
         $this->resourcePatchService->patch($entity, $resource, $request->toArray());
         $this->messageBus->dispatch(new EntityPatched('school_' . substr($resource, 0, -1), $id));

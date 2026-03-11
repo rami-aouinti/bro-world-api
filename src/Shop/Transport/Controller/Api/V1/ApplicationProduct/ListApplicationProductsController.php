@@ -25,9 +25,11 @@ final readonly class ListApplicationProductsController
     ) {
     }
 
-    #[Route('/v1/shop/applications/{applicationSlug}/products', methods: [Request::METHOD_GET])]
+    #[Route('/v1/shop/{applicationSlug}/products', methods: [Request::METHOD_GET])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         $shop = $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
 
         return new JsonResponse($this->productApplicationListService->getList($request, $applicationSlug, $shop));

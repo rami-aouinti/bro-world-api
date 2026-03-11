@@ -32,11 +32,13 @@ final readonly class PatchSchoolApplicationResourceController
         private MessageBusInterface $messageBus,
     ) {
     }
-    #[Route('/v1/school/applications/{applicationSlug}/{resource}/{id}', methods: [Request::METHOD_PATCH], requirements: [
+    #[Route('/v1/school/{applicationSlug}/{resource}/{id}', methods: [Request::METHOD_PATCH], requirements: [
         'resource' => 'classes|students|teachers|exams|grades',
     ])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $resource, string $id, Request $request): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug);
         $entity = $this->resourceViewService->findOr404($resource, $id);
         if (!$this->resourceAccessService->belongsToSchool($entity, $school)) {

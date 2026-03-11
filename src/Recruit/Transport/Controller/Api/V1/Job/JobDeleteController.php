@@ -27,7 +27,7 @@ class JobDeleteController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/job/{id}',
+        path: '/v1/recruit/{applicationSlug}/job/{id}',
         requirements: [
             'id' => Requirement::UUID_V1,
         ],
@@ -35,8 +35,10 @@ class JobDeleteController extends Controller
     )]
     #[IsGranted('ROLE_ROOT')]
     #[OA\Delete(summary: 'Delete job', responses: [new OA\Response(response: 200, description: 'deleted')])]
-    public function __invoke(Request $request, string $id): Response
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, Request $request, string $id): Response
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         return $this->deleteMethod($request, $id);
     }
 }

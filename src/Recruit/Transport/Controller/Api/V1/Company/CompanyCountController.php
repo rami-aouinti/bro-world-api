@@ -26,13 +26,15 @@ class CompanyCountController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/company/count',
+        path: '/v1/recruit/{applicationSlug}/company/count',
         methods: [Request::METHOD_GET],
     )]
     #[IsGranted('ROLE_ROOT')]
     #[OA\Get(summary: 'Count company', responses: [new OA\Response(response: 200, description: 'success')])]
-    public function __invoke(Request $request): Response
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, Request $request): Response
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         return $this->countMethod($request);
     }
 }

@@ -29,8 +29,9 @@ final readonly class DeleteCategoryController
     ) {
     }
 
-    #[Route('/v1/shop/categories/{id}', methods: [Request::METHOD_DELETE])]
-    public function __invoke(string $id): JsonResponse
+    #[Route('/v1/shop/{applicationSlug}/categories/{id}', methods: [Request::METHOD_DELETE])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, string $id): JsonResponse
     {
         $category = $this->categoryRepository->find($id);
         if (!$category instanceof Category) {

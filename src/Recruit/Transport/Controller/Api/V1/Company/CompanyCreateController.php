@@ -35,14 +35,16 @@ class CompanyCreateController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/company',
+        path: '/v1/recruit/{applicationSlug}/company',
         methods: [Request::METHOD_POST],
     )]
     #[IsGranted('ROLE_ROOT')]
     #[OA\Post(summary: 'Create company', responses: [new OA\Response(response: 201, description: 'created')])]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object'))]
-    public function __invoke(Request $request): Response
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, Request $request): Response
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         return $this->createMethod($request, $this->mapAndValidateDto($request, CompanyCreate::class));
     }
 

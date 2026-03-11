@@ -26,13 +26,15 @@ class JobListController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/job',
+        path: '/v1/recruit/{applicationSlug}/job',
         methods: [Request::METHOD_GET],
     )]
     #[IsGranted('ROLE_ROOT')]
     #[OA\Get(summary: 'List job', responses: [new OA\Response(response: 200, description: 'success')])]
-    public function __invoke(Request $request): Response
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, Request $request): Response
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         return $this->findMethod($request);
     }
 }

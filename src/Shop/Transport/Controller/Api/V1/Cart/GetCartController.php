@@ -30,8 +30,9 @@ final readonly class GetCartController
     ) {
     }
 
-    #[Route('/v1/shop/carts/{shopId}', methods: [Request::METHOD_GET])]
-    public function __invoke(string $shopId): JsonResponse
+    #[Route('/v1/shop/{applicationSlug}/carts/{shopId}', methods: [Request::METHOD_GET])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, string $shopId): JsonResponse
     {
         $user = $this->security->getUser();
         if (!$user instanceof User) {

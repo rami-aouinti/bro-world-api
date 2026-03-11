@@ -29,10 +29,12 @@ final readonly class CreateCompanyByApplicationController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/companies', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/crm/applications/{applicationSlug}/companies', tags: ['Crm'])]
+    #[Route('/v1/crm/{applicationSlug}/companies', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Post(summary: 'POST /v1/crm/{applicationSlug}/companies', tags: ['Crm'])]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
         $payload = (array)json_decode((string)$request->getContent(), true);
 

@@ -24,7 +24,8 @@ class JobApplicationListController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/private/job-applications', methods: [Request::METHOD_GET])]
+    #[Route(path: '/v1/recruit/{applicationSlug}/private/job-applications', methods: [Request::METHOD_GET])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Get(
         summary: 'Liste privée des candidatures d\'un job.',
         parameters: [
@@ -36,8 +37,9 @@ class JobApplicationListController
             new OA\Response(response: 403, description: 'Vous n\'êtes pas propriétaire du job.'),
         ],
     )]
-    public function __invoke(Request $request, User $loggedInUser): JsonResponse
+    public function __invoke(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         return new JsonResponse($this->jobApplicationListService->getList(
             $loggedInUser,
             $request->query->getString('jobId', ''),

@@ -27,8 +27,9 @@ final readonly class ListGradesController
     ) {
     }
 
-    #[Route('/v1/school/grades', methods: [Request::METHOD_GET])]
-    public function __invoke(): JsonResponse
+    #[Route('/v1/school/{applicationSlug}/grades', methods: [Request::METHOD_GET])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug): JsonResponse
     {
         $items = $this->viewMapper->mapGradeCollection($this->gradeRepository->findBy([], [
             'createdAt' => 'DESC',

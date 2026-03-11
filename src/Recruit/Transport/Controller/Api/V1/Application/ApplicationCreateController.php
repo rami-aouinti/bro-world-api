@@ -32,7 +32,8 @@ class ApplicationCreateController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/applications', methods: [Request::METHOD_POST])]
+    #[Route(path: '/v1/recruit/{applicationSlug}/applications', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
         summary: 'Crée une candidature pour un job.',
         requestBody: new OA\RequestBody(
@@ -50,8 +51,9 @@ class ApplicationCreateController
             new OA\Response(response: 400, description: 'Payload invalide.'),
         ],
     )]
-    public function __invoke(Request $request, User $loggedInUser): JsonResponse
+    public function __invoke(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         /** @var array<string, mixed> $payload */
         $payload = $request->toArray();
 

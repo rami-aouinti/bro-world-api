@@ -33,9 +33,11 @@ final readonly class PatchCartItemController
     ) {
     }
 
-    #[Route('/v1/shop/carts/{shopId}/items/{itemId}', methods: [Request::METHOD_PATCH])]
-    public function __invoke(string $shopId, string $itemId, Request $request): JsonResponse
+    #[Route('/v1/shop/{applicationSlug}/carts/{shopId}/items/{itemId}', methods: [Request::METHOD_PATCH])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, string $shopId, string $itemId, Request $request): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         $user = $this->security->getUser();
         if (!$user instanceof User) {
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Authenticated user required.');

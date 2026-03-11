@@ -27,8 +27,9 @@ final readonly class ListClassesController
     ) {
     }
 
-    #[Route('/v1/school/classes', methods: [Request::METHOD_GET])]
-    public function __invoke(): JsonResponse
+    #[Route('/v1/school/{applicationSlug}/classes', methods: [Request::METHOD_GET])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug): JsonResponse
     {
         $items = $this->viewMapper->mapClassCollection($this->classRepository->findBy([], [
             'createdAt' => 'DESC',

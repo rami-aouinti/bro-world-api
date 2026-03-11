@@ -31,10 +31,12 @@ final readonly class CreateTaskRequestController
     ) {
     }
 
-    #[Route('/v1/crm/task-requests', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/crm/task-requests')]
-    public function __invoke(Request $request): JsonResponse
+    #[Route('/v1/crm/{applicationSlug}/task-requests', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Post(summary: 'POST /v1/crm/{applicationSlug}/task-requests')]
+    public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         $payload = (array)json_decode((string)$request->getContent(), true);
         $taskRequest = new TaskRequest();
         $taskRequest->setTitle((string)($payload['title'] ?? ''))

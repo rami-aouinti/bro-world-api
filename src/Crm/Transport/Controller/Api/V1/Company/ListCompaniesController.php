@@ -24,8 +24,9 @@ final readonly class ListCompaniesController
     ) {
     }
 
-    #[Route('/v1/crm/companies', methods: [Request::METHOD_GET])]
-    public function __invoke(): JsonResponse
+    #[Route('/v1/crm/{applicationSlug}/companies', methods: [Request::METHOD_GET])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug): JsonResponse
     {
         $items = array_map(static fn (Company $company): array => [
             'id' => $company->getId(),

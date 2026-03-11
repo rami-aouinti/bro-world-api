@@ -27,7 +27,8 @@ readonly class PrivateJobStatsController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/private/{applicationSlug}/jobs/stats', methods: [Request::METHOD_GET])]
+    #[Route(path: '/v1/recruit/{applicationSlug}/private/jobs/stats', methods: [Request::METHOD_GET])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, User $loggedInUser): JsonResponse
     {
         $recruit = $this->recruitResolverService->resolveByApplicationSlug($applicationSlug);

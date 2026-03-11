@@ -31,10 +31,12 @@ readonly class JobPatchFromApplicationController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/applications/{applicationSlug}/jobs/{jobId}', methods: [Request::METHOD_PATCH])]
-    #[Route(path: '/v1/recruit/private/{applicationSlug}/jobs/{jobId}', methods: [Request::METHOD_PATCH])]
+    #[Route(path: '/v1/recruit/{applicationSlug}/jobs/{jobId}', methods: [Request::METHOD_PATCH])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[Route(path: '/v1/recruit/{applicationSlug}/private/jobs/{jobId}', methods: [Request::METHOD_PATCH])]
     public function __invoke(string $applicationSlug, string $jobId, Request $request, User $loggedInUser): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         $recruit = $this->applicationJobAccessService->resolveOwnedRecruitByApplicationSlug(
             $applicationSlug,
             $loggedInUser,

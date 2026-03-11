@@ -31,9 +31,11 @@ final readonly class CreateProductController
     ) {
     }
 
-    #[Route('/v1/shop/products', methods: [Request::METHOD_POST])]
-    public function __invoke(Request $request): JsonResponse
+    #[Route('/v1/shop/{applicationSlug}/products', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         $payload = (array)json_decode((string)$request->getContent(), true);
         $product = $this->productHydratorService->hydrateProduct(new Product(), $payload);
 

@@ -21,9 +21,11 @@ final readonly class ConfirmPaymentController
     ) {
     }
 
-    #[Route('/v1/shop/orders/{orderId}/payment-confirm', methods: [Request::METHOD_POST])]
-    public function __invoke(string $orderId, Request $request): JsonResponse
+    #[Route('/v1/shop/{applicationSlug}/orders/{orderId}/payment-confirm', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, string $orderId, Request $request): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         $payload = (array)json_decode((string)$request->getContent(), true);
         $providerReference = trim((string)($payload['providerReference'] ?? ''));
 

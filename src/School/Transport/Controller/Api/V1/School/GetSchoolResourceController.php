@@ -22,10 +22,11 @@ final readonly class GetSchoolResourceController
         private SchoolResourceViewService $resourceViewService
     ) {
     }
-    #[Route('/v1/school/{resource}/{id}', methods: [Request::METHOD_GET], requirements: [
+    #[Route('/v1/school/{applicationSlug}/{resource}/{id}', methods: [Request::METHOD_GET], requirements: [
         'resource' => 'classes|students|teachers|exams|grades',
     ])]
-    public function __invoke(string $resource, string $id): JsonResponse
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, string $resource, string $id): JsonResponse
     {
         $entity = $this->resourceViewService->findOr404($resource, $id);
 

@@ -30,7 +30,7 @@ final readonly class CreateExamController
     }
 
     #[OA\Post(
-        path: '/v1/school/exams',
+        path: '/v1/school/{applicationSlug}/exams',
         summary: 'Créer un examen',
         tags: ['School'],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
@@ -49,9 +49,11 @@ final readonly class CreateExamController
             new OA\Response(response: 422, description: 'Validation failed'),
         ],
     )]
-    #[Route('/v1/school/exams', methods: [Request::METHOD_POST])]
-    public function __invoke(Request $request): JsonResponse
+    #[Route('/v1/school/{applicationSlug}/exams', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         $payload = $request->toArray();
 
         $input = new CreateExamInput();

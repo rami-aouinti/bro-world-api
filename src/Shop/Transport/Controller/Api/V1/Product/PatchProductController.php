@@ -32,9 +32,11 @@ final readonly class PatchProductController
     ) {
     }
 
-    #[Route('/v1/shop/products/{id}', methods: [Request::METHOD_PATCH])]
-    public function __invoke(string $id, Request $request): JsonResponse
+    #[Route('/v1/shop/{applicationSlug}/products/{id}', methods: [Request::METHOD_PATCH])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, string $id, Request $request): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         $product = $this->productRepository->find($id);
         if (!$product instanceof Product) {
             return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);

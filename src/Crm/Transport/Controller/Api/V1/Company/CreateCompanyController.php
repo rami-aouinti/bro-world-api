@@ -29,8 +29,9 @@ final readonly class CreateCompanyController
     ) {
     }
 
-    #[Route('/v1/crm/companies', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/crm/companies', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [
+    #[Route('/v1/crm/{applicationSlug}/companies', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Post(summary: 'POST /v1/crm/{applicationSlug}/companies', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [
         new OA\Property(property: 'payload', type: 'object', example: [
             'value' => 'example',
         ])], example: [
@@ -38,8 +39,9 @@ final readonly class CreateCompanyController
                 'value' => 'example',
             ],
         ])))]
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         $payload = (array)json_decode((string)$request->getContent(), true);
         $company = new Company();
         $company->setName((string)($payload['name'] ?? ''))

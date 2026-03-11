@@ -27,8 +27,9 @@ final readonly class ListStudentsController
     ) {
     }
 
-    #[Route('/v1/school/students', methods: [Request::METHOD_GET])]
-    public function __invoke(): JsonResponse
+    #[Route('/v1/school/{applicationSlug}/students', methods: [Request::METHOD_GET])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug): JsonResponse
     {
         $items = $this->viewMapper->mapStudentCollection($this->studentRepository->findBy([], [
             'createdAt' => 'DESC',

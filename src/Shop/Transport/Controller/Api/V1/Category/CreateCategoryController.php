@@ -31,9 +31,11 @@ final readonly class CreateCategoryController
     ) {
     }
 
-    #[Route('/v1/shop/categories', methods: [Request::METHOD_POST])]
-    public function __invoke(Request $request): JsonResponse
+    #[Route('/v1/shop/{applicationSlug}/categories', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
+        $request->attributes->set('applicationSlug', $applicationSlug);
         $payload = (array)json_decode((string)$request->getContent(), true);
         $category = (new Category())
             ->setName((string)($payload['name'] ?? ''))

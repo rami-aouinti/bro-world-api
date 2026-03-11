@@ -22,8 +22,9 @@ final readonly class UnassignClassTeacherController
         private ClassTeacherAssignmentService $assignmentService
     ) {
     }
-    #[Route('/v1/school/classes/{id}/teachers/{teacherId}', methods: [Request::METHOD_DELETE])]
-    public function __invoke(string $id, string $teacherId): JsonResponse
+    #[Route('/v1/school/{applicationSlug}/classes/{id}/teachers/{teacherId}', methods: [Request::METHOD_DELETE])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    public function __invoke(string $applicationSlug, string $id, string $teacherId): JsonResponse
     {
         $this->assignmentService->unassign($id, $teacherId);
 
