@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[OA\Tag(name: 'Blog')]
 final class GetBlogReactionTypesController
 {
-    #[Route('/v1/blogs/reactions/types', methods: [Request::METHOD_GET])]
+    #[Route('/v1/public/blogs/reactions/types', methods: [Request::METHOD_GET])]
     #[OA\Get(security: [])]
     public function __invoke(): JsonResponse
     {

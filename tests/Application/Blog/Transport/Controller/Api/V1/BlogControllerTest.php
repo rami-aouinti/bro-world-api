@@ -16,7 +16,7 @@ final class BlogControllerTest extends WebTestCase
 
         $client->request(
             Request::METHOD_POST,
-            self::API_URL_PREFIX . '/v1/blogs/general',
+            self::API_URL_PREFIX . '/v1/private/blogs/general',
             [],
             [],
             $this->getJsonHeaders(),
@@ -34,7 +34,7 @@ final class BlogControllerTest extends WebTestCase
 
         $client->request(
             Request::METHOD_POST,
-            self::API_URL_PREFIX . '/v1/blogs/general',
+            self::API_URL_PREFIX . '/v1/private/blogs/general',
             [],
             [],
             $this->getJsonHeaders(),
@@ -46,17 +46,27 @@ final class BlogControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
+
+    public function testPrivateGeneralReadRequiresAuthentication(): void
+    {
+        $client = $this->getTestClient();
+
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/private/blogs/general');
+
+        self::assertResponseStatusCodeSame(401);
+    }
+
     public function testApplicationReadReflectsIsAuthorWithAndWithoutAuth(): void
     {
         $anonymousClient = $this->getTestClient();
         $authenticatedClient = $this->getTestClient('john-user', 'password-user');
 
-        $anonymousClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/applications/shop-ops-center');
+        $anonymousClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/shop-ops-center/feed');
         self::assertResponseStatusCodeSame(200);
         /** @var array<string, mixed> $anonymousPayload */
         $anonymousPayload = json_decode((string)$anonymousClient->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
-        $authenticatedClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/applications/shop-ops-center');
+        $authenticatedClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/shop-ops-center/feed');
         self::assertResponseStatusCodeSame(200);
         /** @var array<string, mixed> $authenticatedPayload */
         $authenticatedPayload = json_decode((string)$authenticatedClient->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
@@ -76,7 +86,7 @@ final class BlogControllerTest extends WebTestCase
     {
         $client = $this->getTestClient('john-user', 'password-user');
 
-        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/applications/shop-ops-center');
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/shop-ops-center/feed');
         self::assertResponseStatusCodeSame(200);
         /** @var array<string, mixed> $payload */
         $payload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
@@ -86,7 +96,7 @@ final class BlogControllerTest extends WebTestCase
 
         $client->request(
             Request::METHOD_POST,
-            self::API_URL_PREFIX . '/v1/blog/comments/' . $targetCommentId . '/reactions',
+            self::API_URL_PREFIX . '/v1/private/blog/comments/' . $targetCommentId . '/reactions',
             [],
             [],
             $this->getJsonHeaders(),
@@ -103,7 +113,7 @@ final class BlogControllerTest extends WebTestCase
         $anonymousClient = $this->getTestClient();
         $authenticatedClient = $this->getTestClient('john-user', 'password-user');
 
-        $authenticatedClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/applications/shop-ops-center');
+        $authenticatedClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/shop-ops-center/feed');
         self::assertResponseStatusCodeSame(200);
         /** @var array<string, mixed> $payload */
         $payload = json_decode((string)$authenticatedClient->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
@@ -113,7 +123,7 @@ final class BlogControllerTest extends WebTestCase
 
         $anonymousClient->request(
             Request::METHOD_POST,
-            self::API_URL_PREFIX . '/v1/blog/comments/' . $targetCommentId . '/reactions',
+            self::API_URL_PREFIX . '/v1/private/blog/comments/' . $targetCommentId . '/reactions',
             [],
             [],
             $this->getJsonHeaders(),
@@ -129,7 +139,7 @@ final class BlogControllerTest extends WebTestCase
     {
         $client = $this->getTestClient('john-user', 'password-user');
 
-        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/applications/shop-ops-center');
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/shop-ops-center/feed');
         self::assertResponseStatusCodeSame(200);
         /** @var array<string, mixed> $payload */
         $payload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
@@ -146,7 +156,7 @@ final class BlogControllerTest extends WebTestCase
 
         $client->request(
             Request::METHOD_POST,
-            self::API_URL_PREFIX . '/v1/blog/comments/' . $targetCommentId . '/reactions',
+            self::API_URL_PREFIX . '/v1/private/blog/comments/' . $targetCommentId . '/reactions',
             [],
             [],
             $this->getJsonHeaders(),
@@ -158,7 +168,7 @@ final class BlogControllerTest extends WebTestCase
 
         $client->request(
             Request::METHOD_POST,
-            self::API_URL_PREFIX . '/v1/blog/comments/' . $targetCommentId . '/reactions',
+            self::API_URL_PREFIX . '/v1/private/blog/comments/' . $targetCommentId . '/reactions',
             [],
             [],
             $this->getJsonHeaders(),
@@ -168,7 +178,7 @@ final class BlogControllerTest extends WebTestCase
         );
         self::assertResponseStatusCodeSame(202);
 
-        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/applications/shop-ops-center');
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/shop-ops-center/feed');
         self::assertResponseStatusCodeSame(200);
         /** @var array<string, mixed> $updatedPayload */
         $updatedPayload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
@@ -198,7 +208,7 @@ final class BlogControllerTest extends WebTestCase
     {
         $client = $this->getTestClient('john-user', 'password-user');
 
-        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/applications/shop-ops-center');
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/shop-ops-center/feed');
         self::assertResponseStatusCodeSame(200);
         /** @var array<string, mixed> $payload */
         $payload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
@@ -215,7 +225,7 @@ final class BlogControllerTest extends WebTestCase
 
         $client->request(
             Request::METHOD_POST,
-            self::API_URL_PREFIX . '/v1/blog/posts/' . $targetPostId . '/reactions',
+            self::API_URL_PREFIX . '/v1/private/blog/posts/' . $targetPostId . '/reactions',
             [],
             [],
             $this->getJsonHeaders(),
@@ -227,7 +237,7 @@ final class BlogControllerTest extends WebTestCase
 
         $client->request(
             Request::METHOD_POST,
-            self::API_URL_PREFIX . '/v1/blog/posts/' . $targetPostId . '/reactions',
+            self::API_URL_PREFIX . '/v1/private/blog/posts/' . $targetPostId . '/reactions',
             [],
             [],
             $this->getJsonHeaders(),
@@ -237,7 +247,7 @@ final class BlogControllerTest extends WebTestCase
         );
         self::assertResponseStatusCodeSame(202);
 
-        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/applications/shop-ops-center');
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/shop-ops-center/feed');
         self::assertResponseStatusCodeSame(200);
         /** @var array<string, mixed> $updatedPayload */
         $updatedPayload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);

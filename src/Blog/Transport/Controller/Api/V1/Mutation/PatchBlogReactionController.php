@@ -27,7 +27,7 @@ final readonly class PatchBlogReactionController
     ) {
     }
 
-    #[Route('/v1/blog/reactions/{reactionId}', methods: [Request::METHOD_PATCH])]
+    #[Route('/v1/private/blog/reactions/{reactionId}', methods: [Request::METHOD_PATCH])]
     public function __invoke(string $reactionId, Request $request, User $loggedInUser): JsonResponse
     {
         $payload = $this->requestService->extractPayload($request);

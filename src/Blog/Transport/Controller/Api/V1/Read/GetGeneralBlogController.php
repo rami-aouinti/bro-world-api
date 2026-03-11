@@ -23,7 +23,7 @@ final readonly class GetGeneralBlogController
     ) {
     }
 
-    #[Route('/v1/blogs/general', methods: [Request::METHOD_GET])]
+    #[Route('/v1/private/blogs/general', methods: [Request::METHOD_GET])]
     #[OA\Get(
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1, minimum: 1)),

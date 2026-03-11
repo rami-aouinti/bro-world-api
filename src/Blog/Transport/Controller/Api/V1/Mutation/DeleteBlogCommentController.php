@@ -25,7 +25,7 @@ final readonly class DeleteBlogCommentController
     ) {
     }
 
-    #[Route('/v1/blog/comments/{commentId}', methods: [Request::METHOD_DELETE])]
+    #[Route('/v1/private/blog/comments/{commentId}', methods: [Request::METHOD_DELETE])]
     public function __invoke(string $commentId, User $loggedInUser): JsonResponse
     {
         $this->messageBus->dispatch(new DeleteBlogCommentCommand((string)uniqid('op_', true), $loggedInUser->getId(), $commentId));
