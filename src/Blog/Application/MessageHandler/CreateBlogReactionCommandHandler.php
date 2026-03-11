@@ -29,7 +29,7 @@ final readonly class CreateBlogReactionCommandHandler
     ) {
     }
 
-    public function __invoke(CreateBlogReactionCommand $command): void
+    public function __invoke(CreateBlogReactionCommand $command): string
     {
         $comment = $this->commentRepository->find($command->commentId);
         $user = $this->userRepository->find($command->actorUserId);
@@ -46,15 +46,19 @@ final readonly class CreateBlogReactionCommandHandler
 
             $this->cacheInvalidationService->invalidateBlogCaches($comment->getPost()->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
 
-            return;
+            return $existingReaction->getId();
         }
 
-        $this->reactionRepository->save((new BlogReaction())
+        $reaction = (new BlogReaction())
             ->setComment($comment)
             ->setAuthor($user)
-            ->setType($command->type));
+            ->setType($command->type);
+
+        $this->reactionRepository->save($reaction);
 
         $this->blogNotificationService->notifyReactionCreated($comment, $user, $command->type->value);
         $this->cacheInvalidationService->invalidateBlogCaches($comment->getPost()->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
+
+        return $reaction->getId();
     }
 }

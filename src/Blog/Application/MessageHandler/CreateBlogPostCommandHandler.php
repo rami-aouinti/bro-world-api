@@ -35,7 +35,7 @@ final readonly class CreateBlogPostCommandHandler
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    public function __invoke(CreateBlogPostCommand $command): void
+    public function __invoke(CreateBlogPostCommand $command): string
     {
         $blog = $this->blogRepository->find($command->blogId);
         $user = $this->userRepository->find($command->actorUserId);
@@ -52,7 +52,9 @@ final readonly class CreateBlogPostCommandHandler
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Post requires content and/or filePath.');
         }
 
-        $this->postRepository->save(new BlogPost()
+        $post = new BlogPost();
+
+        $this->postRepository->save($post
             ->setBlog($blog)
             ->setAuthor($user)
             ->setTitle($command->title)
@@ -61,5 +63,7 @@ final readonly class CreateBlogPostCommandHandler
             ->setIsPinned($command->isPinned));
 
         $this->cacheInvalidationService->invalidateBlogCaches($blog->getApplication()?->getSlug(), $command->actorUserId);
+
+        return $post->getId();
     }
 }

@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -33,10 +34,15 @@ final readonly class CreateBlogCommentController
         $payload = $this->requestService->extractPayload($request);
         $payload['filePath'] = $this->requestService->resolveUploadedFileUrl($request, (string)($payload['filePath'] ?? ''));
 
-        $this->messageBus->dispatch(new CreateBlogCommentCommand((string)uniqid('op_', true), $loggedInUser->getId(), $postId, $payload['content'] ?? null, $payload['filePath'] ?: null, $payload['parentCommentId'] ?? null));
+        $envelope = $this->messageBus->dispatch(new CreateBlogCommentCommand((string)uniqid('op_', true), $loggedInUser->getId(), $postId, $payload['content'] ?? null, $payload['filePath'] ?: null, $payload['parentCommentId'] ?? null));
+
+        /** @var HandledStamp|null $handled */
+        $handled = $envelope->last(HandledStamp::class);
+        $entityId = $handled?->getResult();
 
         return new JsonResponse([
             'status' => 'accepted',
+            'id' => is_string($entityId) ? $entityId : null,
         ], JsonResponse::HTTP_ACCEPTED);
     }
 }

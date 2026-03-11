@@ -32,7 +32,7 @@ final readonly class CreateMessageCommandHandler
     ) {
     }
 
-    public function __invoke(CreateMessageCommand $command): void
+    public function __invoke(CreateMessageCommand $command): string
     {
         /** @var array{chatId: string, message: ChatMessage} $result */
         $result = $this->messageRepository->getEntityManager()->getConnection()->transactional(function () use ($command): array {
@@ -72,6 +72,8 @@ final readonly class CreateMessageCommandHandler
             'attachments' => $result['message']->getAttachments(),
             'createdAt' => $result['message']->getCreatedAt()?->format(DATE_ATOM),
         ]);
+
+        return $result['message']->getId();
     }
 
     private function findParticipantConversation(string $conversationId, User $actor): Conversation

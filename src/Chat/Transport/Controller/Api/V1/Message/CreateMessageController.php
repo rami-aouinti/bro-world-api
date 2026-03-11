@@ -7,12 +7,13 @@ namespace App\Chat\Transport\Controller\Api\V1\Message;
 use App\Chat\Application\Message\CreateMessageCommand;
 use App\Chat\Application\Service\MessagePayloadService;
 use App\General\Application\Service\OperationIdGeneratorService;
-use App\General\Domain\Service\Interfaces\MessageServiceInterface;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -40,7 +41,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
         new OA\Parameter(name: 'conversationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000')),
     ],
     responses: [
-        new OA\Response(response: 202, description: 'Commande acceptée'),
+        new OA\Response(response: 202, description: 'Commande acceptée', content: new OA\JsonContent(example: [
+            'operationId' => 'op_123',
+            'id' => '550e8400-e29b-41d4-a716-446655440000',
+        ])),
         new OA\Response(response: 400, description: 'Payload invalide'),
     ]
 )]
@@ -48,7 +52,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class CreateMessageController
 {
     public function __construct(
-        private readonly MessageServiceInterface $messageService,
+        private readonly MessageBusInterface $messageBus,
         private readonly MessagePayloadService $messagePayloadService,
         private readonly OperationIdGeneratorService $operationIdGeneratorService,
     ) {
@@ -60,15 +64,20 @@ class CreateMessageController
         $content = $this->messagePayloadService->extractRequiredContent($request->toArray());
         $operationId = $this->operationIdGeneratorService->generate();
 
-        $this->messageService->sendMessage(new CreateMessageCommand(
+        $envelope = $this->messageBus->dispatch(new CreateMessageCommand(
             operationId: $operationId,
             actorUserId: $loggedInUser->getId(),
             conversationId: $conversationId,
             content: $content,
         ));
 
+        /** @var HandledStamp|null $handled */
+        $handled = $envelope->last(HandledStamp::class);
+        $entityId = $handled?->getResult();
+
         return new JsonResponse([
             'operationId' => $operationId,
+            'id' => is_string($entityId) ? $entityId : null,
         ], JsonResponse::HTTP_ACCEPTED);
     }
 }

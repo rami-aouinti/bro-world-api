@@ -31,7 +31,7 @@ final readonly class CreateBlogCommentCommandHandler
     ) {
     }
 
-    public function __invoke(CreateBlogCommentCommand $command): void
+    public function __invoke(CreateBlogCommentCommand $command): string
     {
         $post = $this->postRepository->find($command->postId);
         $user = $this->userRepository->find($command->actorUserId);
@@ -73,5 +73,7 @@ final readonly class CreateBlogCommentCommandHandler
         $this->commentRepository->save($comment);
         $this->blogNotificationService->notifyCommentCreated($comment);
         $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
+
+        return $comment->getId();
     }
 }
