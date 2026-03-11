@@ -4,12 +4,20 @@ declare(strict_types=1);
 
 namespace App\Tests\Application\User\Transport\Controller\Api\V1\Profile;
 
+use App\Blog\Infrastructure\Repository\BlogPostRepository;
+use App\Blog\Infrastructure\Repository\BlogRepository;
+use App\Blog\Infrastructure\Repository\BlogTagRepository;
 use App\Calendar\Infrastructure\Repository\CalendarRepository;
+use App\Calendar\Infrastructure\Repository\EventRepository;
+use App\Chat\Infrastructure\Repository\ChatRepository;
+use App\Chat\Infrastructure\Repository\ConversationRepository;
 use App\Crm\Domain\Entity\Crm;
 use App\General\Domain\Utils\JSON;
 use App\Platform\Application\Service\ApplicationPluginProvisioningService;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PluginKey;
+use App\Quiz\Infrastructure\Repository\QuizQuestionRepository;
+use App\Quiz\Infrastructure\Repository\QuizRepository;
 use App\Recruit\Domain\Entity\Recruit;
 use App\School\Domain\Entity\School;
 use App\Shop\Domain\Entity\Shop;
@@ -26,13 +34,13 @@ class ApplicationCreateControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that creating an application with calendar and chat plugins provisions default entities.')]
-    public function testThatPostApplicationWithCalendarAndChatPluginsProvisionDefaults(): void
+    #[TestDox('Test that creating an application with calendar/chat/blog/quiz plugins provisions default entities and idempotent seeds.')]
+    public function testThatPostApplicationWithPluginsProvisionDefaultsAndSeedData(): void
     {
         $client = $this->getTestClient('john-user', 'password-user');
         $payload = [
             'platformId' => '40000000-0000-1000-8000-000000000001',
-            'title' => 'App with calendar and chat',
+            'title' => 'App with all plugins',
             'description' => 'Provisioning integration test',
             'plugins' => [
                 [
@@ -40,6 +48,12 @@ class ApplicationCreateControllerTest extends WebTestCase
                 ],
                 [
                     'pluginId' => '50000000-0000-1000-8000-000000000002',
+                ],
+                [
+                    'pluginId' => '50000000-0000-1000-8000-000000000005',
+                ],
+                [
+                    'pluginId' => '50000000-0000-1000-8000-000000000006',
                 ],
             ],
         ];
@@ -55,30 +69,52 @@ class ApplicationCreateControllerTest extends WebTestCase
 
         $container = static::getContainer();
         $entityManager = $container->get(EntityManagerInterface::class);
-        $calendarRepository = $container->get(CalendarRepository::class);
-        $chatRepository = $container->get(\App\Chat\Infrastructure\Repository\ChatRepository::class);
 
         $application = $entityManager->getRepository(Application::class)->find($responseData['id']);
         self::assertInstanceOf(Application::class, $application);
 
+        $calendarRepository = $container->get(CalendarRepository::class);
+        $chatRepository = $container->get(ChatRepository::class);
+        $conversationRepository = $container->get(ConversationRepository::class);
+        $eventRepository = $container->get(EventRepository::class);
+        $blogRepository = $container->get(BlogRepository::class);
+        $blogPostRepository = $container->get(BlogPostRepository::class);
+        $blogTagRepository = $container->get(BlogTagRepository::class);
+        $quizRepository = $container->get(QuizRepository::class);
+        $quizQuestionRepository = $container->get(QuizQuestionRepository::class);
+
         $calendar = $calendarRepository->findOneByApplication($application);
         $chat = $chatRepository->findOneByApplication($application);
+        $blog = $blogRepository->findOneByApplication($application);
+        $quiz = $quizRepository->findOneByApplication($application);
 
         self::assertNotNull($calendar);
         self::assertSame('Default calendar', $calendar->getTitle());
         self::assertNotNull($chat);
         self::assertSame($application->getSlug(), $chat->getApplicationSlug());
+        self::assertNotNull($blog);
+        self::assertNotNull($quiz);
+
+        self::assertCount(1, $conversationRepository->findBy(['chat' => $chat]));
+        self::assertCount(1, $eventRepository->findBy(['calendar' => $calendar, 'title' => 'Welcome event']));
+        self::assertCount(1, $blogTagRepository->findBy(['blog' => $blog, 'label' => 'Getting Started']));
+        self::assertCount(1, $blogPostRepository->findBy(['blog' => $blog, 'content' => 'Welcome to your application blog.']));
+        self::assertCount(1, $quizQuestionRepository->findBy(['quiz' => $quiz, 'title' => 'What is the first step to launch this app?']));
 
         $provisioningService = $container->get(ApplicationPluginProvisioningService::class);
-        $provisioningService->provision($application, [PluginKey::CALENDAR, PluginKey::CHAT]);
+        $provisioningService->provision($application, [PluginKey::CALENDAR, PluginKey::CHAT, PluginKey::BLOG, PluginKey::QUIZ]);
         $entityManager->flush();
 
-        self::assertCount(1, $calendarRepository->findBy([
-            'application' => $application,
-        ]));
-        self::assertCount(1, $chatRepository->findBy([
-            'application' => $application,
-        ]));
+        self::assertCount(1, $calendarRepository->findBy(['application' => $application]));
+        self::assertCount(1, $chatRepository->findBy(['application' => $application]));
+        self::assertCount(1, $blogRepository->findBy(['application' => $application]));
+        self::assertCount(1, $quizRepository->findBy(['application' => $application]));
+
+        self::assertCount(1, $conversationRepository->findBy(['chat' => $chat]));
+        self::assertCount(1, $eventRepository->findBy(['calendar' => $calendar, 'title' => 'Welcome event']));
+        self::assertCount(1, $blogTagRepository->findBy(['blog' => $blog, 'label' => 'Getting Started']));
+        self::assertCount(1, $blogPostRepository->findBy(['blog' => $blog, 'content' => 'Welcome to your application blog.']));
+        self::assertCount(1, $quizQuestionRepository->findBy(['quiz' => $quiz, 'title' => 'What is the first step to launch this app?']));
     }
 
     /**

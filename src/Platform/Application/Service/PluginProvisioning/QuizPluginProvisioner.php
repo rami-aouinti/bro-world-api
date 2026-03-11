@@ -1,0 +1,51 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Platform\Application\Service\PluginProvisioning;
+
+use App\Platform\Domain\Entity\Application;
+use App\Quiz\Domain\Entity\Quiz;
+use App\Quiz\Domain\Entity\QuizQuestion;
+use App\Quiz\Infrastructure\Repository\QuizQuestionRepository;
+use App\Quiz\Infrastructure\Repository\QuizRepository;
+use Doctrine\ORM\EntityManagerInterface;
+
+final readonly class QuizPluginProvisioner
+{
+    public function __construct(
+        private QuizRepository $quizRepository,
+        private QuizQuestionRepository $quizQuestionRepository,
+        private EntityManagerInterface $entityManager,
+    ) {
+    }
+
+    public function provision(Application $application): void
+    {
+        $quiz = $this->quizRepository->findOneByApplication($application);
+        if (!$quiz instanceof Quiz) {
+            $quiz = (new Quiz())
+                ->setApplication($application)
+                ->setOwner($application->getUser());
+
+            $this->entityManager->persist($quiz);
+        }
+
+        $question = $this->quizQuestionRepository->findOneBy([
+            'quiz' => $quiz,
+            'title' => 'What is the first step to launch this app?',
+        ]);
+
+        if ($question instanceof QuizQuestion) {
+            return;
+        }
+
+        $question = (new QuizQuestion())
+            ->setQuiz($quiz)
+            ->setTitle('What is the first step to launch this app?')
+            ->setCategory('onboarding')
+            ->setLevel('easy');
+
+        $this->entityManager->persist($question);
+    }
+}
