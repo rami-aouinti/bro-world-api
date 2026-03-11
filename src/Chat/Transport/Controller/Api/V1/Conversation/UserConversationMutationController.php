@@ -16,6 +16,8 @@ use App\Chat\Infrastructure\Repository\ConversationRepository;
 use App\General\Domain\Service\Interfaces\MessageServiceInterface;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -104,19 +106,14 @@ class UserConversationMutationController
         ], JsonResponse::HTTP_ACCEPTED);
     }
 
-    #[Route(path: '/v1/chat/private/conversation/{userId}/user', methods: [Request::METHOD_POST])]
-    public function findOrCreateWithUser(string $userId, User $loggedInUser): JsonResponse
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
+    #[Route(path: '/v1/chat/private/conversation/{user}/user', methods: [Request::METHOD_POST])]
+    public function findOrCreateWithUser(User $user, User $loggedInUser): JsonResponse
     {
-        if ($userId === '' || $userId === $loggedInUser->getId()) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Invalid target userId.');
-        }
-
-        $targetUser = $this->userRepository->find($userId);
-        if (!$targetUser instanceof User) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'User not found.');
-        }
-
-        $conversation = $this->conversationRepository->findDirectConversationBetweenUsers($loggedInUser, $targetUser);
+        $conversation = $this->conversationRepository->findDirectConversationBetweenUsers($loggedInUser, $user);
         if ($conversation instanceof Conversation) {
             return new JsonResponse($this->normalizeConversation($conversation, $loggedInUser), JsonResponse::HTTP_OK);
         }
@@ -128,10 +125,10 @@ class UserConversationMutationController
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'No chat available to create a conversation.');
         }
 
-        $conversation = (new Conversation())->setChat($chat);
+        $conversation = new Conversation()->setChat($chat);
         $this->conversationRepository->save($conversation, false);
-        $this->participantRepository->save((new ConversationParticipant())->setConversation($conversation)->setUser($loggedInUser), false);
-        $this->participantRepository->save((new ConversationParticipant())->setConversation($conversation)->setUser($targetUser), false);
+        $this->participantRepository->save(new ConversationParticipant()->setConversation($conversation)->setUser($loggedInUser), false);
+        $this->participantRepository->save(new ConversationParticipant()->setConversation($conversation)->setUser($user), false);
         $this->conversationRepository->getEntityManager()->flush();
 
         return new JsonResponse($this->normalizeConversation($conversation, $loggedInUser), JsonResponse::HTTP_CREATED);
