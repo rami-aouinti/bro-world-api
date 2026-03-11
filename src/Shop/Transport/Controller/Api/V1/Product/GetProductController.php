@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Shop\Transport\Controller\Api\V1\Product;
 
 use App\Shop\Application\Service\ProductListService;
+use App\Shop\Application\Service\SimilarProductService;
 use App\Shop\Domain\Entity\Product;
 use App\Shop\Infrastructure\Repository\ProductRepository;
 use OpenApi\Attributes as OA;
@@ -20,8 +21,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class GetProductController
 {
-    public function __construct(private ProductRepository $productRepository)
-    {
+    public function __construct(
+        private ProductRepository $productRepository,
+        private SimilarProductService $similarProductService,
+    ) {
     }
 
     #[Route('/v1/shop/products/{id}', methods: [Request::METHOD_GET])]
@@ -32,6 +35,14 @@ final readonly class GetProductController
             return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
         }
 
-        return new JsonResponse(ProductListService::serializeProduct($product));
+        $similarProducts = array_map(
+            static fn (Product $similarProduct): array => ProductListService::serializeProduct($similarProduct),
+            $this->similarProductService->getSimilarProducts($product),
+        );
+
+        return new JsonResponse([
+            'product' => ProductListService::serializeProduct($product),
+            'similarProducts' => $similarProducts,
+        ]);
     }
 }
