@@ -6,18 +6,10 @@ namespace App\Chat\Transport\Controller\Api\V1\Conversation;
 
 use App\Chat\Application\Message\CreateConversationCommand;
 use App\Chat\Application\Message\DeleteConversationCommand;
+use App\Chat\Application\Message\FindOrCreateConversationWithUserCommand;
 use App\Chat\Application\Message\PatchConversationCommand;
-use App\Chat\Domain\Entity\Chat;
-use App\Chat\Domain\Entity\Conversation;
-use App\Chat\Domain\Entity\ConversationParticipant;
-use App\Chat\Infrastructure\Repository\ChatRepository;
-use App\Chat\Infrastructure\Repository\ConversationParticipantRepository;
-use App\Chat\Infrastructure\Repository\ConversationRepository;
 use App\General\Domain\Service\Interfaces\MessageServiceInterface;
 use App\User\Domain\Entity\User;
-use App\User\Infrastructure\Repository\UserRepository;
-use Doctrine\ORM\Exception\ORMException;
-use Doctrine\ORM\OptimisticLockException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -37,10 +29,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class UserConversationMutationController
 {
     public function __construct(
-        private readonly ChatRepository $chatRepository,
-        private readonly UserRepository $userRepository,
-        private readonly ConversationRepository $conversationRepository,
-        private readonly ConversationParticipantRepository $participantRepository,
         private readonly MessageServiceInterface $messageService,
     ) {
     }
@@ -106,78 +94,19 @@ class UserConversationMutationController
         ], JsonResponse::HTTP_ACCEPTED);
     }
 
-    /**
-     * @throws OptimisticLockException
-     * @throws ORMException
-     */
     #[Route(path: '/v1/chat/private/conversation/{user}/user', methods: [Request::METHOD_POST])]
     public function findOrCreateWithUser(User $user, User $loggedInUser): JsonResponse
     {
-        $conversation = $this->conversationRepository->findDirectConversationBetweenUsers($loggedInUser, $user);
-        if ($conversation instanceof Conversation) {
-            return new JsonResponse($this->normalizeConversation($conversation, $loggedInUser), JsonResponse::HTTP_OK);
-        }
+        $operationId = \Ramsey\Uuid\Uuid::uuid4()->toString();
+        $this->messageService->sendMessage(new FindOrCreateConversationWithUserCommand(
+            operationId: $operationId,
+            actorUserId: $loggedInUser->getId(),
+            targetUserId: $user->getId(),
+        ));
 
-        $chat = $this->chatRepository->findBy([], [
-            'createdAt' => 'ASC',
-        ], 1)[0] ?? null;
-        if (!$chat instanceof Chat) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'No chat available to create a conversation.');
-        }
-
-        $conversation = new Conversation()->setChat($chat);
-        $this->conversationRepository->save($conversation, false);
-        $this->participantRepository->save(new ConversationParticipant()->setConversation($conversation)->setUser($loggedInUser), false);
-        $this->participantRepository->save(new ConversationParticipant()->setConversation($conversation)->setUser($user), false);
-        $this->conversationRepository->getEntityManager()->flush();
-
-        return new JsonResponse($this->normalizeConversation($conversation, $loggedInUser), JsonResponse::HTTP_CREATED);
-    }
-
-    private function normalizeConversation(Conversation $conversation, User $loggedInUser): array
-    {
-        $loggedInUserId = $loggedInUser->getId();
-
-        $messages = array_map(static function (\App\Chat\Domain\Entity\ChatMessage $message) use ($loggedInUserId): array {
-            $sender = $message->getSender();
-            $senderId = $sender->getId();
-
-            return [
-                'id' => $message->getId(),
-                'content' => $message->getContent(),
-                'read' => $message->isRead(),
-                'readAt' => $message->getReadAt()?->format(DATE_ATOM),
-                'attachments' => $message->getAttachments(),
-                'createdAt' => $message->getCreatedAt()?->format(DATE_ATOM),
-                'sender' => [
-                    'id' => $senderId,
-                    'firstName' => $sender->getFirstName(),
-                    'lastName' => $sender->getLastName(),
-                    'photo' => $sender->getPhoto(),
-                    'owner' => $senderId === $loggedInUserId,
-                ],
-            ];
-        }, $conversation->getMessages()->toArray());
-
-        return [
-            'id' => $conversation->getId(),
-            'chatId' => $conversation->getChat()->getId(),
-            'participants' => array_map(static function (ConversationParticipant $participant) use ($loggedInUserId): array {
-                $participantUser = $participant->getUser();
-
-                return [
-                    'id' => $participant->getId(),
-                    'user' => [
-                        'id' => $participantUser->getId(),
-                        'firstName' => $participantUser->getFirstName(),
-                        'lastName' => $participantUser->getLastName(),
-                        'photo' => $participantUser->getPhoto(),
-                        'owner' => $participantUser->getId() === $loggedInUserId,
-                    ],
-                ];
-            }, $conversation->getParticipants()->toArray()),
-            'messages' => $messages,
-            'createdAt' => $conversation->getCreatedAt()?->format(DATE_ATOM),
-        ];
+        return new JsonResponse([
+            'operationId' => $operationId,
+            'targetUserId' => $user->getId(),
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 }
