@@ -1,0 +1,56 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Shop\Transport\Controller\Api\V1\Category;
+
+use App\General\Application\Message\EntityCreated;
+use App\Shop\Domain\Entity\Category;
+use App\Shop\Infrastructure\Repository\ShopRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+#[AsController]
+#[OA\Tag(name: 'Shop')]
+#[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
+final readonly class CreateCategoryController
+{
+    public function __construct(
+        private ShopRepository $shopRepository,
+        private EntityManagerInterface $entityManager,
+        private MessageBusInterface $messageBus,
+    ) {
+    }
+
+    #[Route('/v1/shop/categories', methods: [Request::METHOD_POST])]
+    public function __invoke(Request $request): JsonResponse
+    {
+        $payload = (array) json_decode((string) $request->getContent(), true);
+        $category = (new Category())
+            ->setName((string) ($payload['name'] ?? ''))
+            ->setSlug($this->buildSlug((string) ($payload['slug'] ?? $payload['name'] ?? '')))
+            ->setDescription(($payload['description'] ?? null) !== null ? (string) $payload['description'] : null);
+
+        if (is_string($payload['shopId'] ?? null)) {
+            $category->setShop($this->shopRepository->find($payload['shopId']));
+        }
+
+        $this->entityManager->persist($category);
+        $this->entityManager->flush();
+        $this->messageBus->dispatch(new EntityCreated('shop_category', $category->getId()));
+
+        return new JsonResponse(['id' => $category->getId()], JsonResponse::HTTP_CREATED);
+    }
+
+    private function buildSlug(string $value): string
+    {
+        return trim((string) preg_replace('/[^a-z0-9]+/', '-', strtolower($value)), '-');
+    }
+}
