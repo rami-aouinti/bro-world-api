@@ -451,6 +451,7 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
                 [
                     'name' => 'Hiring Manager',
                     'email' => 'hiring.manager@example.com',
+                    'status' => 'accepted',
                 ],
             ])
             ->setReminders([

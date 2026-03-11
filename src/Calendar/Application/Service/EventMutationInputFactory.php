@@ -16,6 +16,11 @@ use Ramsey\Uuid\Uuid;
 
 final class EventMutationInputFactory
 {
+    public function __construct(
+        private readonly EventMutationPayloadValidator $payloadValidator,
+    ) {
+    }
+
     /**
      * @param array<string, mixed> $payload
      */
@@ -98,12 +103,12 @@ final class EventMutationInputFactory
             textColor: isset($payload['textColor']) && is_string($payload['textColor']) ? $payload['textColor'] : null,
             organizerName: isset($payload['organizerName']) && is_string($payload['organizerName']) ? $payload['organizerName'] : null,
             organizerEmail: isset($payload['organizerEmail']) && is_string($payload['organizerEmail']) ? $payload['organizerEmail'] : null,
-            attendees: isset($payload['attendees']) && is_array($payload['attendees']) ? $payload['attendees'] : null,
+            attendees: $this->payloadValidator->validateAttendees($payload['attendees'] ?? null),
             rrule: isset($payload['rrule']) && is_string($payload['rrule']) ? $payload['rrule'] : null,
             recurrenceExceptions: isset($payload['recurrenceExceptions']) && is_array($payload['recurrenceExceptions']) ? $payload['recurrenceExceptions'] : null,
             recurrenceEndAt: isset($payload['recurrenceEndAt']) && is_string($payload['recurrenceEndAt']) ? $this->parseDate($payload['recurrenceEndAt'], 'recurrenceEndAt') : null,
             recurrenceCount: isset($payload['recurrenceCount']) && is_int($payload['recurrenceCount']) ? $payload['recurrenceCount'] : null,
-            reminders: isset($payload['reminders']) && is_array($payload['reminders']) ? $payload['reminders'] : null,
+            reminders: $this->payloadValidator->validateReminders($payload['reminders'] ?? null),
             metadata: isset($payload['metadata']) && is_array($payload['metadata']) ? $payload['metadata'] : null,
             applicationSlug: $applicationSlug,
         );
@@ -143,12 +148,12 @@ final class EventMutationInputFactory
             textColor: isset($payload['textColor']) && is_string($payload['textColor']) ? $payload['textColor'] : null,
             organizerName: isset($payload['organizerName']) && is_string($payload['organizerName']) ? $payload['organizerName'] : null,
             organizerEmail: isset($payload['organizerEmail']) && is_string($payload['organizerEmail']) ? $payload['organizerEmail'] : null,
-            attendees: isset($payload['attendees']) && is_array($payload['attendees']) ? $payload['attendees'] : null,
+            attendees: $this->payloadValidator->validateAttendees($payload['attendees'] ?? null),
             rrule: isset($payload['rrule']) && is_string($payload['rrule']) ? $payload['rrule'] : null,
             recurrenceExceptions: isset($payload['recurrenceExceptions']) && is_array($payload['recurrenceExceptions']) ? $payload['recurrenceExceptions'] : null,
             recurrenceEndAt: isset($payload['recurrenceEndAt']) && is_string($payload['recurrenceEndAt']) ? $this->parseDate($payload['recurrenceEndAt'], 'recurrenceEndAt') : null,
             recurrenceCount: isset($payload['recurrenceCount']) && is_int($payload['recurrenceCount']) ? $payload['recurrenceCount'] : null,
-            reminders: isset($payload['reminders']) && is_array($payload['reminders']) ? $payload['reminders'] : null,
+            reminders: $this->payloadValidator->validateReminders($payload['reminders'] ?? null),
             metadata: isset($payload['metadata']) && is_array($payload['metadata']) ? $payload['metadata'] : null,
             applicationSlug: $applicationSlug,
         );
