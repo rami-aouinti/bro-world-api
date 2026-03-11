@@ -29,9 +29,9 @@ final readonly class CreateCompanyController
     ) {
     }
 
-    #[Route('/v1/crm/{applicationSlug}/companies', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/applications/{applicationSlug}/companies', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Post(summary: 'POST /v1/crm/{applicationSlug}/companies', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [
+    #[OA\Post(summary: 'POST /v1/crm/applications/{applicationSlug}/companies', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payload'], properties: [
         new OA\Property(property: 'payload', type: 'object', example: [
             'value' => 'example',
         ])], example: [

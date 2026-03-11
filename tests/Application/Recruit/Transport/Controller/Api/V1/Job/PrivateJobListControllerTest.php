@@ -31,24 +31,24 @@ use function trim;
 
 class PrivateJobListControllerTest extends WebTestCase
 {
-    #[TestDox('Test that `GET /v1/recruit/private/{applicationSlug}/jobs` requires authentication.')]
+    #[TestDox('Test that `GET /v1/recruit/applications/{applicationSlug}/private/jobs` requires authentication.')]
     public function testThatPrivateJobListRequiresAuthentication(): void
     {
         [$applicationSlug] = $this->getFixtureContext();
 
         $client = $this->getTestClient();
-        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/private/' . $applicationSlug . '/jobs');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/private/jobs');
 
         self::assertSame(Response::HTTP_UNAUTHORIZED, $client->getResponse()->getStatusCode());
     }
 
-    #[TestDox('Test that `GET /v1/recruit/private/{applicationSlug}/jobs` returns computed matchScore from user resume skills.')]
+    #[TestDox('Test that `GET /v1/recruit/applications/{applicationSlug}/private/jobs` returns computed matchScore from user resume skills.')]
     public function testThatPrivateJobListReturnsComputedMatchScoreFromResumeSkills(): void
     {
         [$applicationSlug, $jobId, $expectedMatchScore] = $this->getFixtureContext();
 
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/private/' . $applicationSlug . '/jobs?limit=100');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/private/jobs?limit=100');
 
         $response = $client->getResponse();
         $content = $response->getContent();

@@ -26,7 +26,7 @@ class TagIdsController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/{applicationSlug}/tag/ids',
+        path: '/v1/recruit/applications/{applicationSlug}/tag/ids',
         methods: [Request::METHOD_GET],
     )]
     #[IsGranted('ROLE_ROOT')]

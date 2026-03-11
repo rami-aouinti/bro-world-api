@@ -27,7 +27,7 @@ class CompanyDeleteController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/{applicationSlug}/company/{id}',
+        path: '/v1/recruit/applications/{applicationSlug}/company/{id}',
         requirements: [
             'id' => Requirement::UUID_V1,
         ],

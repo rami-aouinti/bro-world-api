@@ -32,12 +32,12 @@ final class ApplicationEventListControllerTest extends WebTestCase
         self::assertSame(0, $responseData['pagination']['totalItems']);
     }
 
-    #[TestDox('GET /api/v1/calendar/private/applications/{applicationSlug}/events keeps owner/user access logic.')]
+    #[TestDox('GET /api/v1/calendar/applications/{applicationSlug}/private/events keeps owner/user access logic.')]
     public function testPrivateApplicationEventListStillReturnsOwnerEvents(): void
     {
         $client = $this->getTestClient('john-root', 'password-root');
 
-        $client->request('GET', self::API_URL_PREFIX . '/v1/calendar/private/applications/crm-support-desk/events');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/calendar/applications/crm-support-desk/private/events');
         $response = $client->getResponse();
         $content = $response->getContent();
 

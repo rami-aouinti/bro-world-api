@@ -33,7 +33,7 @@ final readonly class AddCartItemController
     ) {
     }
 
-    #[Route('/v1/shop/{applicationSlug}/carts/{shopId}/items', methods: [Request::METHOD_POST])]
+    #[Route('/v1/shop/applications/{applicationSlug}/carts/{shopId}/items', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $shopId, Request $request): JsonResponse
     {

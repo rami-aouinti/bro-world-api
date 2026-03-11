@@ -22,7 +22,7 @@ final readonly class GetSchoolResourceController
         private SchoolResourceViewService $resourceViewService
     ) {
     }
-    #[Route('/v1/school/{applicationSlug}/{resource}/{id}', methods: [Request::METHOD_GET], requirements: [
+    #[Route('/v1/school/applications/{applicationSlug}/{resource}/{id}', methods: [Request::METHOD_GET], requirements: [
         'resource' => 'classes|students|teachers|exams|grades',
     ])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]

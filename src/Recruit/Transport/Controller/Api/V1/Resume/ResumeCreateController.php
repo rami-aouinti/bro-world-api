@@ -30,7 +30,7 @@ readonly class ResumeCreateController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/{applicationSlug}/resumes', methods: [Request::METHOD_POST])]
+    #[Route(path: '/v1/recruit/applications/{applicationSlug}/resumes', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(summary: 'Crée un CV et permet l’upload optionnel d’un PDF.')]
     #[OA\RequestBody(

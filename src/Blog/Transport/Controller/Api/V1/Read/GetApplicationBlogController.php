@@ -23,7 +23,7 @@ final readonly class GetApplicationBlogController
     ) {
     }
 
-    #[Route('/v1/blogs/application/{applicationSlug}', methods: [Request::METHOD_GET])]
+    #[Route('/v1/blog/applications/{applicationSlug}', methods: [Request::METHOD_GET])]
     public function __invoke(string $applicationSlug): JsonResponse
     {
         $user = $this->security->getUser();

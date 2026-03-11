@@ -26,7 +26,7 @@ class TagCountController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/{applicationSlug}/tag/count',
+        path: '/v1/recruit/applications/{applicationSlug}/tag/count',
         methods: [Request::METHOD_GET],
     )]
     #[IsGranted('ROLE_ROOT')]

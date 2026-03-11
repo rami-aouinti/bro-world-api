@@ -18,13 +18,13 @@ class MyResumePatchDeleteControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that PATCH /v1/recruit/private/me/resumes/{resumeId} updates connected user resume.')]
+    #[TestDox('Test that PATCH /v1/recruit/applications/recruit-talent-core/private/me/resumes/{resumeId} updates connected user resume.')]
     public function testThatPatchMyResumeUpdatesResume(): void
     {
         $resumeId = $this->getResumeIdForUsername('john-root');
 
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/private/me/resumes/' . $resumeId, content: JSON::encode([
+        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/private/me/resumes/' . $resumeId, content: JSON::encode([
             'documentUrl' => 'https://localhost/uploads/resumes/updated.pdf',
             'experiences' => [
                 [
@@ -55,13 +55,13 @@ class MyResumePatchDeleteControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that PATCH /v1/recruit/private/me/resumes/{resumeId} forbids foreign user.')]
+    #[TestDox('Test that PATCH /v1/recruit/applications/recruit-talent-core/private/me/resumes/{resumeId} forbids foreign user.')]
     public function testThatPatchMyResumeRejectsForeignUser(): void
     {
         $resumeId = $this->getResumeIdForUsername('john-root');
 
         $client = $this->getTestClient('john-user', 'password-user');
-        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/private/me/resumes/' . $resumeId, content: JSON::encode([
+        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/private/me/resumes/' . $resumeId, content: JSON::encode([
             'documentUrl' => 'https://localhost/uploads/resumes/should-fail.pdf',
         ]));
 
@@ -71,13 +71,13 @@ class MyResumePatchDeleteControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that DELETE /v1/recruit/private/me/resumes/{resumeId} deletes connected user resume.')]
+    #[TestDox('Test that DELETE /v1/recruit/applications/recruit-talent-core/private/me/resumes/{resumeId} deletes connected user resume.')]
     public function testThatDeleteMyResumeDeletesResume(): void
     {
         $resumeId = $this->getResumeIdForUsername('john-api');
 
         $client = $this->getTestClient('john-api', 'password-api');
-        $client->request('DELETE', self::API_URL_PREFIX . '/v1/recruit/private/me/resumes/' . $resumeId);
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/private/me/resumes/' . $resumeId);
 
         self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
 

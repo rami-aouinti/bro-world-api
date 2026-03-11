@@ -20,8 +20,8 @@ readonly class PublicJobListController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/{applicationSlug}/public/jobs', methods: [Request::METHOD_GET])]
-    #[Route(path: '/v1/recruit/{applicationSlug}/public/jobs', methods: [Request::METHOD_GET])]
+    #[Route(path: '/v1/recruit/applications/{applicationSlug}/public/jobs', methods: [Request::METHOD_GET])]
+    #[Route(path: '/v1/recruit/applications/{applicationSlug}/public/jobs', methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'Liste publique des offres jobs, paginée et filtrable.',
         security: [],

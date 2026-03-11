@@ -15,13 +15,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class PublicJobDetailControllerTest extends WebTestCase
 {
-    #[TestDox('Test that GET /v1/recruit/public/{applicationSlug}/jobs/{jobSlug} returns job detail and similar jobs list.')]
+    #[TestDox('Test that GET /v1/recruit/applications/{applicationSlug}/public/jobs/{jobSlug} returns job detail and similar jobs list.')]
     public function testThatPublicJobDetailReturnsJobAndSimilarJobsList(): void
     {
         [$applicationSlug, $jobSlug] = $this->getApplicationSlugAndJobSlug();
 
         $client = $this->getTestClient();
-        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/public/' . $applicationSlug . '/jobs/' . $jobSlug);
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/private/jobs/' . $jobSlug);
 
         $response = $client->getResponse();
         $content = $response->getContent();

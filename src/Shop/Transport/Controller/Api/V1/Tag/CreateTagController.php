@@ -28,7 +28,7 @@ final readonly class CreateTagController
     ) {
     }
 
-    #[Route('/v1/shop/{applicationSlug}/tags', methods: [Request::METHOD_POST])]
+    #[Route('/v1/shop/applications/{applicationSlug}/tags', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {

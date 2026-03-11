@@ -32,7 +32,7 @@ class ApplicantCreateController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/{applicationSlug}/applicants', methods: [Request::METHOD_POST])]
+    #[Route(path: '/v1/recruit/applications/{applicationSlug}/applicants', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
         summary: 'Crée un candidat lié au CV du user connecté.',

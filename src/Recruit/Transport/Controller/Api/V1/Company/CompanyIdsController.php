@@ -26,7 +26,7 @@ class CompanyIdsController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/{applicationSlug}/company/ids',
+        path: '/v1/recruit/applications/{applicationSlug}/company/ids',
         methods: [Request::METHOD_GET],
     )]
     #[IsGranted('ROLE_ROOT')]

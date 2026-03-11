@@ -17,7 +17,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Calendar Event')]
-#[OA\Delete(path: '/v1/calendar/private/applications/{applicationSlug}/events/{eventId}', operationId: 'calendar_application_event_delete', summary: 'Supprimer un événement application', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world')), new OA\Parameter(name: 'eventId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], responses: [new OA\Response(response: 202, description: 'Suppression acceptée')])]
+#[OA\Delete(path: '/v1/calendar/applications/{applicationSlug}/private/events/{eventId}', operationId: 'calendar_application_event_delete', summary: 'Supprimer un événement application', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world')), new OA\Parameter(name: 'eventId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], responses: [new OA\Response(response: 202, description: 'Suppression acceptée')])]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 class DeleteApplicationEventController
 {
@@ -27,7 +27,7 @@ class DeleteApplicationEventController
     ) {
     }
 
-    #[Route(path: '/v1/calendar/private/applications/{applicationSlug}/events/{eventId}', methods: [Request::METHOD_DELETE])]
+    #[Route(path: '/v1/calendar/applications/{applicationSlug}/private/events/{eventId}', methods: [Request::METHOD_DELETE])]
     public function __invoke(string $applicationSlug, string $eventId, User $loggedInUser): JsonResponse
     {
         $command = $this->eventMutationInputFactory->createApplicationDeleteCommand($applicationSlug, $eventId, $loggedInUser->getId());

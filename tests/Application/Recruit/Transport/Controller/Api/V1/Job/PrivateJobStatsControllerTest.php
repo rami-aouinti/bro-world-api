@@ -13,13 +13,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class PrivateJobStatsControllerTest extends WebTestCase
 {
-    #[TestDox('Test that GET /v1/recruit/private/{applicationSlug}/jobs/stats returns aggregate statistics for owner.')]
+    #[TestDox('Test that GET /v1/recruit/applications/{applicationSlug}/private/jobs/stats returns aggregate statistics for owner.')]
     public function testThatPrivateJobStatsReturnsAggregates(): void
     {
         $applicationSlug = $this->getApplicationSlug();
 
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/private/' . $applicationSlug . '/jobs/stats');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/private/jobs/stats');
 
         $response = $client->getResponse();
         $content = $response->getContent();

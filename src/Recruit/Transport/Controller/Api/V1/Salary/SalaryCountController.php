@@ -26,7 +26,7 @@ class SalaryCountController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/{applicationSlug}/salary/count',
+        path: '/v1/recruit/applications/{applicationSlug}/salary/count',
         methods: [Request::METHOD_GET],
     )]
     #[IsGranted('ROLE_ROOT')]

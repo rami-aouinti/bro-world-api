@@ -29,7 +29,7 @@ class ApplicationStatusUpdateControllerTest extends WebTestCase
         [$recruitApplication, $platformApplication] = $this->prepareApplicationForDiscussionTransition();
 
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/private/applications/' . $recruitApplication->getId() . '/status', content: JSON::encode([
+        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/private/applications/' . $recruitApplication->getId() . '/status', content: JSON::encode([
             'status' => ApplicationStatus::DISCUSSION->value,
         ]));
 
@@ -69,7 +69,7 @@ class ApplicationStatusUpdateControllerTest extends WebTestCase
         [$recruitApplication, $platformApplication] = $this->prepareApplicationForDiscussionTransition();
 
         $client = $this->getTestClient('john-root', 'password-root');
-        $url = self::API_URL_PREFIX . '/v1/recruit/private/applications/' . $recruitApplication->getId() . '/status';
+        $url = self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/private/applications/' . $recruitApplication->getId() . '/status';
 
         $client->request('PATCH', $url, content: JSON::encode([
             'status' => ApplicationStatus::DISCUSSION->value,

@@ -95,7 +95,7 @@ final class UserEventMutationControllerTest extends WebTestCase
             'john-root',
             'password-root',
             'POST',
-            '/v1/calendar/private/applications/crm-support-desk/events',
+            '/v1/calendar/applications/crm-support-desk/private/events',
             [
                 'title' => 'application-create',
                 'startAt' => '2030-01-01T10:00:00+00:00',
@@ -107,7 +107,7 @@ final class UserEventMutationControllerTest extends WebTestCase
             'john-root',
             'password-root',
             'PATCH',
-            '/v1/calendar/private/applications/crm-support-desk/events/' . self::EVENT_ID,
+            '/v1/calendar/applications/crm-support-desk/private/events/' . self::EVENT_ID,
             [
                 'title' => 'application-patch',
             ],
@@ -117,7 +117,7 @@ final class UserEventMutationControllerTest extends WebTestCase
             'john-root',
             'password-root',
             'DELETE',
-            '/v1/calendar/private/applications/crm-support-desk/events/' . self::EVENT_ID,
+            '/v1/calendar/applications/crm-support-desk/private/events/' . self::EVENT_ID,
             null,
         ];
 
@@ -125,7 +125,7 @@ final class UserEventMutationControllerTest extends WebTestCase
             'john-root',
             'password-root',
             'POST',
-            '/v1/calendar/private/applications/crm-support-desk/events/' . self::EVENT_ID . '/cancel',
+            '/v1/calendar/applications/crm-support-desk/private/events/' . self::EVENT_ID . '/cancel',
             null,
         ];
     }
@@ -155,14 +155,14 @@ final class UserEventMutationControllerTest extends WebTestCase
             '/v1/calendar/private/events/{eventId}/cancel' => [
                 'post' => 'calendar_private_event_cancel',
             ],
-            '/v1/calendar/private/applications/{applicationSlug}/events' => [
+            '/v1/calendar/applications/{applicationSlug}/private/events' => [
                 'post' => 'calendar_application_event_create',
             ],
-            '/v1/calendar/private/applications/{applicationSlug}/events/{eventId}' => [
+            '/v1/calendar/applications/{applicationSlug}/private/events/{eventId}' => [
                 'patch' => 'calendar_application_event_patch',
                 'delete' => 'calendar_application_event_delete',
             ],
-            '/v1/calendar/private/applications/{applicationSlug}/events/{eventId}/cancel' => [
+            '/v1/calendar/applications/{applicationSlug}/private/events/{eventId}/cancel' => [
                 'post' => 'calendar_application_event_cancel',
             ],
         ];
