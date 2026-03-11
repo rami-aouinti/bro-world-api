@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Platform\Transport\EventListener;
 
 use App\General\Domain\Service\Interfaces\MailerServiceInterface;
+use App\Crm\Domain\Entity\Crm;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Entity\ApplicationPlugin;
 use App\Platform\Domain\Entity\Platform;
 use App\Platform\Domain\Entity\Plugin;
 use App\Platform\Domain\Enum\PlatformKey;
 use App\Recruit\Domain\Entity\Recruit;
+use App\School\Domain\Entity\School;
+use App\Shop\Domain\Entity\Shop;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -108,9 +111,72 @@ class PlatformEntityEventListener
 
             if ($entity instanceof Application) {
                 $entity->ensureGeneratedSlug();
+                $this->createCrmWhenNeeded($entity);
+                $this->createShopWhenNeeded($entity);
+                $this->createSchoolWhenNeeded($entity);
                 $this->createRecruitWhenNeeded($entity);
             }
         }
+    }
+
+    private function createCrmWhenNeeded(Application $application): void
+    {
+        if ($application->getPlatform()?->getPlatformKey() !== PlatformKey::CRM) {
+            return;
+        }
+
+        $existingCrm = $this->entityManager->getRepository(Crm::class)->findOneBy([
+            'application' => $application,
+        ]);
+
+        if ($existingCrm instanceof Crm) {
+            return;
+        }
+
+        $crm = (new Crm())
+            ->setApplication($application);
+
+        $this->entityManager->persist($crm);
+    }
+
+    private function createShopWhenNeeded(Application $application): void
+    {
+        if ($application->getPlatform()?->getPlatformKey() !== PlatformKey::SHOP) {
+            return;
+        }
+
+        $existingShop = $this->entityManager->getRepository(Shop::class)->findOneBy([
+            'application' => $application,
+        ]);
+
+        if ($existingShop instanceof Shop) {
+            return;
+        }
+
+        $shop = (new Shop())
+            ->setApplication($application);
+
+        $this->entityManager->persist($shop);
+    }
+
+    private function createSchoolWhenNeeded(Application $application): void
+    {
+        if ($application->getPlatform()?->getPlatformKey() !== PlatformKey::SCHOOL) {
+            return;
+        }
+
+        $existingSchool = $this->entityManager->getRepository(School::class)->findOneBy([
+            'application' => $application,
+        ]);
+
+        if ($existingSchool instanceof School) {
+            return;
+        }
+
+        $school = (new School())
+            ->setApplication($application);
+
+        $this->entityManager->persist($school);
     }
 
     private function createRecruitWhenNeeded(Application $application): void

@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace App\Tests\Application\User\Transport\Controller\Api\V1\Profile;
 
 use App\Calendar\Infrastructure\Repository\CalendarRepository;
+use App\Crm\Domain\Entity\Crm;
 use App\General\Domain\Utils\JSON;
 use App\Platform\Application\Service\ApplicationPluginProvisioningService;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PluginKey;
+use App\Recruit\Domain\Entity\Recruit;
+use App\School\Domain\Entity\School;
+use App\Shop\Domain\Entity\Shop;
 use App\Tests\TestCase\WebTestCase;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\TestDox;
@@ -75,5 +79,66 @@ class ApplicationCreateControllerTest extends WebTestCase
         self::assertCount(1, $chatRepository->findBy([
             'application' => $application,
         ]));
+    }
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('Test that creating applications provisions one entity per platform (crm, shop, school, recruit) and stays idempotent on update.')]
+    public function testThatPostApplicationProvisionsPlatformEntityAndIsIdempotentOnUpdate(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+
+        $crmApplication = $this->createApplication('40000000-0000-1000-8000-000000000001', 'CRM app auto provision');
+        $shopApplication = $this->createApplication('40000000-0000-1000-8000-000000000003', 'Shop app auto provision');
+        $schoolApplication = $this->createApplication('40000000-0000-1000-8000-000000000005', 'School app auto provision');
+        $recruitApplication = $this->createApplication('40000000-0000-1000-8000-000000000004', 'Recruit app auto provision');
+
+        self::assertCount(1, $entityManager->getRepository(Crm::class)->findBy(['application' => $crmApplication]));
+        self::assertCount(1, $entityManager->getRepository(Shop::class)->findBy(['application' => $shopApplication]));
+        self::assertCount(1, $entityManager->getRepository(School::class)->findBy(['application' => $schoolApplication]));
+        self::assertCount(1, $entityManager->getRepository(Recruit::class)->findBy(['application' => $recruitApplication]));
+
+        $crmApplication->setDescription('CRM app updated');
+        $shopApplication->setDescription('Shop app updated');
+        $schoolApplication->setDescription('School app updated');
+        $recruitApplication->setDescription('Recruit app updated');
+        $entityManager->flush();
+
+        self::assertCount(1, $entityManager->getRepository(Crm::class)->findBy(['application' => $crmApplication]));
+        self::assertCount(1, $entityManager->getRepository(Shop::class)->findBy(['application' => $shopApplication]));
+        self::assertCount(1, $entityManager->getRepository(School::class)->findBy(['application' => $schoolApplication]));
+        self::assertCount(1, $entityManager->getRepository(Recruit::class)->findBy(['application' => $recruitApplication]));
+    }
+
+    /**
+     * @throws Throwable
+     */
+    private function createApplication(string $platformId, string $title): Application
+    {
+        $client = $this->getTestClient('john-user', 'password-user');
+
+        $client->request('POST', $this->baseUrl, content: JSON::encode([
+            'platformId' => $platformId,
+            'title' => $title,
+            'description' => 'Platform provisioning integration test',
+        ]));
+
+        $response = $client->getResponse();
+        $content = $response->getContent();
+
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode(), "Response:\n" . $response);
+
+        $responseData = JSON::decode($content, true);
+        self::assertIsArray($responseData);
+        self::assertArrayHasKey('id', $responseData);
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $application = $entityManager->getRepository(Application::class)->find($responseData['id']);
+
+        self::assertInstanceOf(Application::class, $application);
+
+        return $application;
     }
 }
