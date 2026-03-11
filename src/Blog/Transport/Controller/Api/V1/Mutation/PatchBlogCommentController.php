@@ -27,7 +27,7 @@ final readonly class PatchBlogCommentController
     ) {
     }
 
-    #[Route('/v1/blog/comments/{commentId}', methods: [Request::METHOD_PATCH])]
+    #[Route('/v1/private/blog/comments/{commentId}', methods: [Request::METHOD_PATCH])]
     public function __invoke(string $commentId, Request $request, User $loggedInUser): JsonResponse
     {
         $payload = $this->requestService->extractPayload($request);

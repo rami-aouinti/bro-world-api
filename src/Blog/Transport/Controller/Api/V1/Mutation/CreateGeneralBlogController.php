@@ -30,7 +30,7 @@ final readonly class CreateGeneralBlogController
     ) {
     }
 
-    #[Route('/v1/blogs/general', methods: [Request::METHOD_POST])]
+    #[Route('/v1/private/blogs/general', methods: [Request::METHOD_POST])]
     public function __invoke(Request $request): JsonResponse
     {
         $user = $this->security->getUser();

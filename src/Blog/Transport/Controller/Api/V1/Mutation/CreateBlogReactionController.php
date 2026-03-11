@@ -31,7 +31,7 @@ final readonly class CreateBlogReactionController
     /**
      * @throws ExceptionInterface
      */
-    #[Route('/v1/blog/comments/{commentId}/reactions', methods: [Request::METHOD_POST])]
+    #[Route('/v1/private/blog/comments/{commentId}/reactions', methods: [Request::METHOD_POST])]
     public function __invoke(string $commentId, Request $request, User $loggedInUser): JsonResponse
     {
         $payload = $this->requestService->extractPayload($request);

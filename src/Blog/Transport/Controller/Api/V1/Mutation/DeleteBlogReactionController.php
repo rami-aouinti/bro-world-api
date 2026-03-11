@@ -25,7 +25,7 @@ final readonly class DeleteBlogReactionController
     ) {
     }
 
-    #[Route('/v1/blog/reactions/{reactionId}', methods: [Request::METHOD_DELETE])]
+    #[Route('/v1/private/blog/reactions/{reactionId}', methods: [Request::METHOD_DELETE])]
     public function __invoke(string $reactionId, User $loggedInUser): JsonResponse
     {
         $this->messageBus->dispatch(new DeleteBlogReactionCommand((string)uniqid('op_', true), $loggedInUser->getId(), $reactionId));

@@ -27,7 +27,7 @@ final readonly class CreateBlogPostController
     ) {
     }
 
-    #[Route('/v1/blogs/{blogId}/posts', methods: [Request::METHOD_POST])]
+    #[Route('/v1/private/blogs/{blogId}/posts', methods: [Request::METHOD_POST])]
     public function __invoke(string $blogId, Request $request, User $loggedInUser): JsonResponse
     {
         $payload = $this->requestService->extractPayload($request);

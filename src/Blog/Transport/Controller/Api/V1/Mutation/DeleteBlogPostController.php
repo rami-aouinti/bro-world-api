@@ -25,7 +25,7 @@ final readonly class DeleteBlogPostController
     ) {
     }
 
-    #[Route('/v1/blog/posts/{postId}', methods: [Request::METHOD_DELETE])]
+    #[Route('/v1/private/blog/posts/{postId}', methods: [Request::METHOD_DELETE])]
     public function __invoke(string $postId, User $loggedInUser): JsonResponse
     {
         $this->messageBus->dispatch(new DeleteBlogPostCommand((string)uniqid('op_', true), $loggedInUser->getId(), $postId));

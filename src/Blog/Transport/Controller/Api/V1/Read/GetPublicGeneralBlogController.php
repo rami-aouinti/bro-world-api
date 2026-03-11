@@ -20,7 +20,7 @@ final readonly class GetPublicGeneralBlogController
     ) {
     }
 
-    #[Route('/v1/blogs/general/public', methods: [Request::METHOD_GET])]
+    #[Route('/v1/public/blogs/general', methods: [Request::METHOD_GET])]
     #[OA\Get(
         security: [],
         parameters: [
