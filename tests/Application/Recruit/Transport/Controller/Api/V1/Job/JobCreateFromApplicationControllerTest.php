@@ -24,7 +24,7 @@ class JobCreateFromApplicationControllerTest extends WebTestCase
         $applicationSlug = $this->getApplicationSlugForUsername('john-root');
 
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('POST', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs', content: JSON::encode([
+        $client->request('POST', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/private/jobs', content: JSON::encode([
             'title' => 'Backend Engineer API',
             'location' => 'Paris',
             'contractType' => 'CDI',
@@ -54,7 +54,7 @@ class JobCreateFromApplicationControllerTest extends WebTestCase
         $applicationSlug = $this->getApplicationSlugForUsername('john-root');
 
         $client = $this->getTestClient('john-user', 'password-user');
-        $client->request('POST', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs', content: JSON::encode([
+        $client->request('POST', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/private/jobs', content: JSON::encode([
             'title' => 'Should fail',
         ]));
 

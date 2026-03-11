@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class SubmitQuizByApplicationControllerTest extends WebTestCase
 {
-    private string $baseUrl = self::API_URL_PREFIX . '/v1/quiz/application';
+    private string $baseUrl = self::API_URL_PREFIX . '/v1/quiz/applications';
 
     #[TestDox('A user can submit a quiz and receive a computed score.')]
     public function testSubmitQuizReturnsScore(): void

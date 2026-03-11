@@ -24,7 +24,7 @@ final readonly class ListCategoriesController
     ) {
     }
 
-    #[Route('/v1/shop/{applicationSlug}/categories', methods: [Request::METHOD_GET])]
+    #[Route('/v1/shop/applications/{applicationSlug}/categories', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug): JsonResponse
     {

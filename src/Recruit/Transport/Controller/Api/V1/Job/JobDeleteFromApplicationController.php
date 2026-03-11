@@ -29,7 +29,7 @@ readonly class JobDeleteFromApplicationController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/{applicationSlug}/jobs/{jobId}', methods: [Request::METHOD_DELETE])]
+    #[Route(path: '/v1/recruit/applications/{applicationSlug}/jobs/{jobId}', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(
         summary: 'Supprime un job via applicationSlug et contrôle propriétaire.',
         parameters: [

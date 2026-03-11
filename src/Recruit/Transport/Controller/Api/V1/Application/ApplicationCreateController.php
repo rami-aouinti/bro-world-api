@@ -32,7 +32,7 @@ class ApplicationCreateController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/{applicationSlug}/applications', methods: [Request::METHOD_POST])]
+    #[Route(path: '/v1/recruit/applications/{applicationSlug}/applications', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
         summary: 'Crée une candidature pour un job.',

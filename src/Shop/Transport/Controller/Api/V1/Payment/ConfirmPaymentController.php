@@ -21,7 +21,7 @@ final readonly class ConfirmPaymentController
     ) {
     }
 
-    #[Route('/v1/shop/{applicationSlug}/orders/{orderId}/payment-confirm', methods: [Request::METHOD_POST])]
+    #[Route('/v1/shop/applications/{applicationSlug}/orders/{orderId}/payment-confirm', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $orderId, Request $request): JsonResponse
     {

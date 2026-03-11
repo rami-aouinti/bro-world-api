@@ -26,7 +26,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         [$applicationSlug, $jobId] = $this->getApplicationSlugAndJobIdForUsername('john-root');
 
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs/' . $jobId, content: JSON::encode([
+        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/private/jobs/' . $jobId, content: JSON::encode([
             'title' => 'Updated job title',
             'location' => 'Lyon',
             'workMode' => 'REMOTE',
@@ -64,7 +64,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         [$applicationSlug] = $this->getApplicationSlugAndJobIdForUsername('john-root');
 
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs/11111111-1111-1111-1111-111111111111', content: JSON::encode([
+        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/private/jobs/11111111-1111-1111-1111-111111111111', content: JSON::encode([
             'title' => 'Should fail',
         ]));
 
@@ -80,7 +80,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         [$applicationSlug, $jobId] = $this->getApplicationSlugAndJobIdForUsername('john-root');
 
         $client = $this->getTestClient('john-user', 'password-user');
-        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs/' . $jobId, content: JSON::encode([
+        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/private/jobs/' . $jobId, content: JSON::encode([
             'title' => 'Should fail',
         ]));
 
@@ -96,7 +96,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         [$applicationSlug, $jobId] = $this->createDedicatedJobForUser('john-root');
 
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('DELETE', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs/' . $jobId);
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/private/jobs/' . $jobId);
 
         self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
 
@@ -128,7 +128,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         [$applicationSlug, $jobId] = $this->createDedicatedJobForUser('john-root');
 
         $client = $this->getTestClient('john-user', 'password-user');
-        $client->request('DELETE', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs/' . $jobId);
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/private/jobs/' . $jobId);
 
         self::assertSame(Response::HTTP_FORBIDDEN, $client->getResponse()->getStatusCode());
     }
@@ -142,7 +142,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
         [$applicationSlug] = $this->getApplicationSlugAndJobIdForUsername('john-root');
 
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('DELETE', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/jobs/11111111-1111-1111-1111-111111111111');
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/private/jobs/11111111-1111-1111-1111-111111111111');
 
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
     }

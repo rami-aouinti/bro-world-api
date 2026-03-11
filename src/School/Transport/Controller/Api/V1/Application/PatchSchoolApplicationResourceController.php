@@ -32,7 +32,7 @@ final readonly class PatchSchoolApplicationResourceController
         private MessageBusInterface $messageBus,
     ) {
     }
-    #[Route('/v1/school/{applicationSlug}/{resource}/{id}', methods: [Request::METHOD_PATCH], requirements: [
+    #[Route('/v1/school/applications/{applicationSlug}/{resource}/{id}', methods: [Request::METHOD_PATCH], requirements: [
         'resource' => 'classes|students|teachers|exams|grades',
     ])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]

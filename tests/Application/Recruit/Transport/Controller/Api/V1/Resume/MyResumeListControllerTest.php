@@ -12,12 +12,12 @@ use Throwable;
 
 class MyResumeListControllerTest extends WebTestCase
 {
-    private string $baseUrl = self::API_URL_PREFIX . '/v1/recruit/private/me/resumes';
+    private string $baseUrl = self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/private/me/resumes';
 
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that `GET /v1/recruit/private/me/resumes` requires authentication.')]
+    #[TestDox('Test that `GET /v1/recruit/applications/recruit-talent-core/private/me/resumes` requires authentication.')]
     public function testThatMyResumeListRequiresAuthentication(): void
     {
         $client = $this->getTestClient();
@@ -30,7 +30,7 @@ class MyResumeListControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that `GET /v1/recruit/private/me/resumes` returns only connected user resumes.')]
+    #[TestDox('Test that `GET /v1/recruit/applications/recruit-talent-core/private/me/resumes` returns only connected user resumes.')]
     public function testThatMyResumeListReturnsOnlyConnectedUserResumes(): void
     {
         $client = $this->getTestClient('john-root', 'password-root');

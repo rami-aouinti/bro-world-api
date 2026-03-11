@@ -32,7 +32,7 @@ final readonly class PatchProductController
     ) {
     }
 
-    #[Route('/v1/shop/{applicationSlug}/products/{id}', methods: [Request::METHOD_PATCH])]
+    #[Route('/v1/shop/applications/{applicationSlug}/products/{id}', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $id, Request $request): JsonResponse
     {

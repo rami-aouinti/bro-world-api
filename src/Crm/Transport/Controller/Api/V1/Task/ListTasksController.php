@@ -23,7 +23,7 @@ final readonly class ListTasksController
     ) {
     }
 
-    #[Route('/v1/crm/{applicationSlug}/tasks', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/applications/{applicationSlug}/tasks', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {

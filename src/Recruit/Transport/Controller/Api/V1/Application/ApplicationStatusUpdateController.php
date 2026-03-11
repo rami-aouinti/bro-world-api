@@ -28,7 +28,7 @@ class ApplicationStatusUpdateController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/{applicationSlug}/private/applications/{applicationId}/status', methods: [Request::METHOD_PATCH, Request::METHOD_PUT])]
+    #[Route(path: '/v1/recruit/applications/{applicationSlug}/private/applications/{applicationId}/status', methods: [Request::METHOD_PATCH, Request::METHOD_PUT])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Patch(
         summary: 'Modifie le statut d\'une candidature.',

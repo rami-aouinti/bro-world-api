@@ -27,7 +27,7 @@ class TagViewController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/{applicationSlug}/tag/{id}',
+        path: '/v1/recruit/applications/{applicationSlug}/tag/{id}',
         requirements: [
             'id' => Requirement::UUID_V1,
         ],

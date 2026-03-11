@@ -30,7 +30,7 @@ final readonly class CheckoutController
     ) {
     }
 
-    #[Route('/v1/shop/{applicationSlug}/checkout/{shopId}', methods: [Request::METHOD_POST])]
+    #[Route('/v1/shop/applications/{applicationSlug}/checkout/{shopId}', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $shopId, Request $request): JsonResponse
     {

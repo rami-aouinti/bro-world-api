@@ -18,8 +18,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[OA\Tag(name: 'Quiz')]
 final class SubmitQuizByApplicationController
 {
-    #[Route('/v1/quiz/application/{applicationSlug}/submit', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/quiz/application/{applicationSlug}/submit', tags: ['Quiz'])]
+    #[Route('/v1/quiz/applications/{applicationSlug}/submit', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/quiz/applications/{applicationSlug}/submit', tags: ['Quiz'])]
     public function __invoke(string $applicationSlug, Request $request, QuizSubmissionService $quizSubmissionService): JsonResponse
     {
         $payload = (array)json_decode((string)$request->getContent(), true);

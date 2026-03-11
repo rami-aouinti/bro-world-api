@@ -22,7 +22,7 @@ final class GetQuizByApplicationController
     /**
      * @throws InvalidArgumentException
      */
-    #[Route('/v1/quiz/application/{applicationSlug}', methods: [Request::METHOD_GET])]
+    #[Route('/v1/quiz/applications/{applicationSlug}', methods: [Request::METHOD_GET])]
     public function __invoke(string $applicationSlug, Request $request, QuizReadService $quizReadService): JsonResponse
     {
         return new JsonResponse($quizReadService->getByApplicationSlug(
