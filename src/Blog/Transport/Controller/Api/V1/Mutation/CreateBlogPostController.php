@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -33,7 +34,7 @@ final readonly class CreateBlogPostController
         $payload = $this->requestService->extractPayload($request);
         $payload['filePath'] = $this->requestService->resolveUploadedFileUrl($request, (string)($payload['filePath'] ?? ''));
 
-        $this->messageBus->dispatch(
+        $envelope = $this->messageBus->dispatch(
             new CreateBlogPostCommand(
                 (string)uniqid('op_', true),
                 $loggedInUser->getId(),
@@ -44,8 +45,13 @@ final readonly class CreateBlogPostController
             )
         );
 
+        /** @var HandledStamp|null $handled */
+        $handled = $envelope->last(HandledStamp::class);
+        $entityId = $handled?->getResult();
+
         return new JsonResponse([
             'status' => 'accepted',
+            'id' => is_string($entityId) ? $entityId : null,
         ], JsonResponse::HTTP_ACCEPTED);
     }
 }
