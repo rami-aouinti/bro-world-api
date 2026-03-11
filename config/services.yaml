@@ -128,6 +128,9 @@ services:
         arguments:
             $serializer: '@app.serializer.external_message'
 
+    App\Shop\Domain\Service\Interfaces\PaymentProviderInterface:
+        class: App\Shop\Infrastructure\Payment\MockPaymentProvider
+
 when@dev:
     services:
         _defaults:
