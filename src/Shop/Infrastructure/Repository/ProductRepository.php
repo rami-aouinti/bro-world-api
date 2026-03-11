@@ -6,6 +6,7 @@ namespace App\Shop\Infrastructure\Repository;
 
 use App\General\Infrastructure\Repository\BaseRepository;
 use App\Shop\Domain\Entity\Product as Entity;
+use App\Shop\Domain\Enum\ProductStatus;
 use Doctrine\DBAL\LockMode;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -24,5 +25,42 @@ class ProductRepository extends BaseRepository
     public function __construct(
         protected ManagerRegistry $managerRegistry
     ) {
+    }
+
+    /**
+     * @return array<int, Entity>
+     */
+    public function findSimilarCandidates(Entity $product, int $limit = 8): array
+    {
+        $category = $product->getCategory();
+        $tagIds = array_map(static fn ($tag): string => $tag->getId(), $product->getTags()->toArray());
+
+        $qb = $this->createQueryBuilder('product')
+            ->addSelect('CASE WHEN product.category = :currentCategory THEN 1 ELSE 0 END AS HIDDEN categoryPriority')
+            ->addSelect('COUNT(DISTINCT sharedTag.id) AS HIDDEN sharedTagScore')
+            ->leftJoin('product.tags', 'sharedTag', 'WITH', 'sharedTag.id IN (:tagIds)')
+            ->where('product.id != :currentProductId')
+            ->andWhere('product.status = :activeStatus')
+            ->groupBy('product.id')
+            ->orderBy('categoryPriority', 'DESC')
+            ->addOrderBy('sharedTagScore', 'DESC')
+            ->addOrderBy('product.isFeatured', 'DESC')
+            ->addOrderBy('product.updatedAt', 'DESC')
+            ->setMaxResults($limit)
+            ->setParameter('currentCategory', $category)
+            ->setParameter('tagIds', $tagIds === [] ? ['__no_tag__'] : $tagIds)
+            ->setParameter('currentProductId', $product->getId())
+            ->setParameter('activeStatus', ProductStatus::ACTIVE);
+
+        if ($category !== null) {
+            $qb->andWhere('product.category = :currentCategory OR sharedTag.id IS NOT NULL OR product.isFeatured = true');
+        } else {
+            $qb->andWhere('sharedTag.id IS NOT NULL OR product.isFeatured = true');
+        }
+
+        /** @var array<int, Entity> $results */
+        $results = $qb->getQuery()->getResult();
+
+        return $results;
     }
 }
