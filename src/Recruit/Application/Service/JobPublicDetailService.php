@@ -106,6 +106,7 @@ class JobPublicDetailService
             ->leftJoin('job.badges', 'badge')->addSelect('badge')
             ->leftJoin('job.tags', 'tag')->addSelect('tag')
             ->andWhere('job.recruit = :recruit')
+            ->andWhere('job.isPublished = :isPublished')
             ->andWhere('job.id IN (:ids)')
             ->setParameter('recruit', $recruit)
             ->setParameter('ids', $similarJobIds)
@@ -141,6 +142,9 @@ class JobPublicDetailService
             'contractType' => $job->getContractTypeValue(),
             'workMode' => $job->getWorkModeValue(),
             'schedule' => $job->getScheduleValue(),
+            'experienceLevel' => $job->getExperienceLevelValue(),
+            'yearsExperienceMin' => $job->getYearsExperienceMin(),
+            'yearsExperienceMax' => $job->getYearsExperienceMax(),
             'salary' => [
                 'min' => $job->getSalary()?->getMin() ?? 0,
                 'max' => $job->getSalary()?->getMax() ?? 0,

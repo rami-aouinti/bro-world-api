@@ -71,6 +71,7 @@ class JobPublicListService
             'contractType' => trim((string)$request->query->get('contractType', '')),
             'workMode' => trim((string)$request->query->get('workMode', '')),
             'schedule' => trim((string)$request->query->get('schedule', '')),
+            'experienceLevel' => trim((string)$request->query->get('experienceLevel', '')),
             'postedAtLabel' => trim((string)$request->query->get('postedAtLabel', '')),
             'location' => trim((string)$request->query->get('location', '')),
             'q' => trim((string)$request->query->get('q', '')),
@@ -95,7 +96,9 @@ class JobPublicListService
                 ->leftJoin('job.badges', 'badge')->addSelect('badge')
                 ->leftJoin('job.tags', 'tag')->addSelect('tag')
                 ->andWhere('job.recruit = :recruit')
+                ->andWhere('job.isPublished = :isPublished')
                 ->setParameter('recruit', $recruit->getId(), UuidBinaryOrderedTimeType::NAME)
+                ->setParameter('isPublished', true)
                 ->orderBy('job.createdAt', 'DESC')
                 ->addOrderBy('job.id', 'DESC');
 
@@ -118,6 +121,7 @@ class JobPublicListService
                 $qb->andWhere('job.schedule = :schedule')
                     ->setParameter('schedule', $filters['schedule']);
             }
+
 
             if ($filters['location'] !== '') {
                 $qb->andWhere('LOWER(job.location) LIKE :location')
@@ -186,6 +190,9 @@ class JobPublicListService
                     'contractType' => $job->getContractTypeValue(),
                     'workMode' => $job->getWorkModeValue(),
                     'schedule' => $job->getScheduleValue(),
+                    'experienceLevel' => $job->getExperienceLevelValue(),
+                    'yearsExperienceMin' => $job->getYearsExperienceMin(),
+                    'yearsExperienceMax' => $job->getYearsExperienceMax(),
                     'salary' => [
                         'min' => $job->getSalary()?->getMin() ?? 0,
                         'max' => $job->getSalary()?->getMax() ?? 0,
@@ -315,6 +322,7 @@ class JobPublicListService
                     ],
                 ];
             }
+
 
             if ($filters['location'] !== '') {
                 $must[] = [

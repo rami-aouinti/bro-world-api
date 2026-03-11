@@ -38,6 +38,7 @@ class PrivateJobListController
             new OA\Parameter(name: 'contractType', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['CDI', 'CDD', 'Freelance', 'Internship'])),
             new OA\Parameter(name: 'workMode', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['Onsite', 'Remote', 'Hybrid'])),
             new OA\Parameter(name: 'schedule', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['Vollzeit', 'Teilzeit', 'Contract'])),
+            new OA\Parameter(name: 'experienceLevel', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['Junior', 'Mid', 'Senior', 'Lead'])),
             new OA\Parameter(name: 'postedAtLabel', in: 'query', required: false, schema: new OA\Schema(type: 'string', example: '7d')),
             new OA\Parameter(name: 'location', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'q', in: 'query', required: false, schema: new OA\Schema(type: 'string')),

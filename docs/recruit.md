@@ -126,6 +126,10 @@ Attributs métier du body:
 - `contractType` (`CDI`, `CDD`, `Freelance`, `Internship`)
 - `workMode` (`Onsite`, `Remote`, `Hybrid`)
 - `schedule` (`Vollzeit`, `Teilzeit`, `Contract`)
+- `experienceLevel` (`Junior`, `Mid`, `Senior`, `Lead`)
+- `yearsExperienceMin` (int)
+- `yearsExperienceMax` (int)
+- `isPublished` (bool)
 - `summary` (string)
 - `matchScore` (int)
 - `missionTitle` (string)
@@ -153,6 +157,10 @@ Query params disponibles:
 - `contractType` (`CDI`, `CDD`, `Freelance`, `Internship`)
 - `workMode` (`Onsite`, `Remote`, `Hybrid`)
 - `schedule` (`Vollzeit`, `Teilzeit`, `Contract`)
+- `experienceLevel` (`Junior`, `Mid`, `Senior`, `Lead`)
+- `yearsExperienceMin` (int)
+- `yearsExperienceMax` (int)
+- `isPublished` (bool)
 - `postedAtLabel` (string; ex: `today`, `3d`, `7d`, `30d`)
 - `location` (string)
 - `q` (string, recherche full-text)
@@ -220,6 +228,10 @@ Body optionnel:
 - `contractType` (`CDI`, `CDD`, `Freelance`, `Internship`)
 - `workMode` (`Onsite`, `Remote`, `Hybrid`)
 - `schedule` (`Vollzeit`, `Teilzeit`, `Contract`)
+- `experienceLevel` (`Junior`, `Mid`, `Senior`, `Lead`)
+- `yearsExperienceMin` (int)
+- `yearsExperienceMax` (int)
+- `isPublished` (bool)
 - `responsibilities` (array)
 - `profile` (array)
 - `benefits` (array)
@@ -374,3 +386,14 @@ curl -X PATCH "http://localhost/api/v1/recruit/private/applications/<application
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -d '{"status":"REVIEWING"}'
 ```
+
+### 2.5 Statistiques privées des offres
+`GET /v1/recruit/private/{applicationSlug}/jobs/stats`
+
+Retourne:
+- `total`
+- `published`
+- `draft`
+- `byContractType`
+- `byWorkMode`
+- `byExperienceLevel`

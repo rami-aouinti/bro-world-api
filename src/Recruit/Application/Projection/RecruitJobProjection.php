@@ -39,6 +39,9 @@ final class RecruitJobProjection
                 'schedule' => [
                     'type' => 'keyword',
                 ],
+                'experienceLevel' => [
+                    'type' => 'keyword',
+                ],
                 'tags' => [
                     'type' => 'keyword',
                 ],

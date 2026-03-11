@@ -10,6 +10,7 @@ use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\Recruit\Domain\Entity\Job as Entity;
 use App\Recruit\Domain\Entity\Recruit as RecruitEntity;
 use App\Recruit\Domain\Enum\ContractType;
+use App\Recruit\Domain\Enum\ExperienceLevel;
 use App\Recruit\Domain\Enum\Schedule;
 use App\Recruit\Domain\Enum\WorkMode;
 use Override;
@@ -24,6 +25,10 @@ class Job extends RestDto
     protected string $contractType = ContractType::CDI->value;
     protected string $workMode = WorkMode::HYBRID->value;
     protected string $schedule = Schedule::FULL_TIME->value;
+    protected string $experienceLevel = ExperienceLevel::MID->value;
+    protected int $yearsExperienceMin = 0;
+    protected int $yearsExperienceMax = 0;
+    protected bool $isPublished = true;
     protected string $summary = '';
     protected int $matchScore = 0;
     protected string $missionTitle = '';
@@ -95,6 +100,50 @@ class Job extends RestDto
     {
         $this->setVisited('schedule');
         $this->schedule = $schedule;
+
+        return $this;
+    }
+    public function getExperienceLevel(): string
+    {
+        return $this->experienceLevel;
+    }
+    public function setExperienceLevel(string $experienceLevel): self
+    {
+        $this->setVisited('experienceLevel');
+        $this->experienceLevel = $experienceLevel;
+
+        return $this;
+    }
+    public function getYearsExperienceMin(): int
+    {
+        return $this->yearsExperienceMin;
+    }
+    public function setYearsExperienceMin(int $yearsExperienceMin): self
+    {
+        $this->setVisited('yearsExperienceMin');
+        $this->yearsExperienceMin = $yearsExperienceMin;
+
+        return $this;
+    }
+    public function getYearsExperienceMax(): int
+    {
+        return $this->yearsExperienceMax;
+    }
+    public function setYearsExperienceMax(int $yearsExperienceMax): self
+    {
+        $this->setVisited('yearsExperienceMax');
+        $this->yearsExperienceMax = $yearsExperienceMax;
+
+        return $this;
+    }
+    public function isPublished(): bool
+    {
+        return $this->isPublished;
+    }
+    public function setIsPublished(bool $isPublished): self
+    {
+        $this->setVisited('isPublished');
+        $this->isPublished = $isPublished;
 
         return $this;
     }
@@ -187,6 +236,10 @@ class Job extends RestDto
             $this->contractType = $entity->getContractTypeValue();
             $this->workMode = $entity->getWorkModeValue();
             $this->schedule = $entity->getScheduleValue();
+            $this->experienceLevel = $entity->getExperienceLevelValue();
+            $this->yearsExperienceMin = $entity->getYearsExperienceMin();
+            $this->yearsExperienceMax = $entity->getYearsExperienceMax();
+            $this->isPublished = $entity->isPublished();
             $this->summary = $entity->getSummary();
             $this->matchScore = $entity->getMatchScore();
             $this->missionTitle = $entity->getMissionTitle();

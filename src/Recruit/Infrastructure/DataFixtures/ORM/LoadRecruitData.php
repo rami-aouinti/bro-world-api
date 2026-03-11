@@ -13,6 +13,7 @@ use App\Recruit\Domain\Entity\Recruit;
 use App\Recruit\Domain\Entity\Salary;
 use App\Recruit\Domain\Entity\Tag;
 use App\Recruit\Domain\Enum\ContractType;
+use App\Recruit\Domain\Enum\ExperienceLevel;
 use App\Recruit\Domain\Enum\Schedule;
 use App\Recruit\Domain\Enum\WorkMode;
 use DateTimeImmutable;
@@ -199,6 +200,15 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
                         1 => Schedule::PART_TIME,
                         default => Schedule::CONTRACT,
                     })
+                    ->setExperienceLevel(match ($loopIndex % 4) {
+                        0 => ExperienceLevel::JUNIOR,
+                        1 => ExperienceLevel::MID,
+                        2 => ExperienceLevel::SENIOR,
+                        default => ExperienceLevel::LEAD,
+                    })
+                    ->setYearsExperienceMin(($loopIndex - 1) % 6)
+                    ->setYearsExperienceMax((($loopIndex - 1) % 6) + 3)
+                    ->setIsPublished($loopIndex % 5 !== 0)
                     ->setSummary('Wir suchen einen leidenschaftlichen Fullstack-Entwickler mit Expertise in PHP, Laravel, React und Typescript.')
                     ->setMatchScore(65 + ($loopIndex % 35))
                     ->setMissionTitle('Deine Mission:')
