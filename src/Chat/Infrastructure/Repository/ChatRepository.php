@@ -40,6 +40,16 @@ class ChatRepository extends BaseRepository implements ChatRepositoryInterface
         return $chat instanceof Entity ? $chat : null;
     }
 
+    public function findOneByIdAndApplicationSlug(string $chatId, string $applicationSlug): ?Entity
+    {
+        $chat = $this->findOneBy([
+            'id' => $chatId,
+            'applicationSlug' => $applicationSlug,
+        ]);
+
+        return $chat instanceof Entity ? $chat : null;
+    }
+
     public function findChatForDirectConversation(User $actor, User $targetUser): ?Entity
     {
         $sharedConversationChat = $this->createQueryBuilder('chat')

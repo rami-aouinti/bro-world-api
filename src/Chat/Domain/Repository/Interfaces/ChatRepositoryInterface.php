@@ -12,5 +12,7 @@ interface ChatRepositoryInterface
 {
     public function findOneByApplication(Application $application): ?Chat;
 
+    public function findOneByIdAndApplicationSlug(string $chatId, string $applicationSlug): ?Chat;
+
     public function findChatForDirectConversation(User $actor, User $targetUser): ?Chat;
 }

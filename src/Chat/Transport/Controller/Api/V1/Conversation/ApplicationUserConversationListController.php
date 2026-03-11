@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chat\Transport\Controller\Api\V1\Conversation;
 
+use App\Chat\Application\Service\ChatApplicationScopeValidator;
 use App\Chat\Application\Service\ConversationListService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
@@ -17,11 +18,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[AsController]
 #[OA\Tag(name: 'Chat Conversation')]
 #[OA\Get(
-    path: '/v1/chat/private/chats/{chatId}/conversations',
+    path: '/v1/chat/{applicationSlug}/private/chats/{chatId}/conversations',
     operationId: 'chat_conversation_private_chat_list',
     summary: "Lister les conversations privées d'un chat pour l'utilisateur connecté",
     tags: ['Chat Conversation'],
     parameters: [
+        new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world')),
         new OA\Parameter(name: 'chatId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000')),
         new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, default: 1)),
         new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 20)),
@@ -35,13 +37,16 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class ApplicationUserConversationListController
 {
     public function __construct(
-        private readonly ConversationListService $conversationListService
+        private readonly ConversationListService $conversationListService,
+        private readonly ChatApplicationScopeValidator $chatApplicationScopeValidator
     ) {
     }
 
-    #[Route(path: '/v1/chat/private/chats/{chatId}/conversations', methods: [Request::METHOD_GET])]
-    public function __invoke(string $chatId, Request $request, User $loggedInUser): JsonResponse
+    #[Route(path: '/v1/chat/{applicationSlug}/private/chats/{chatId}/conversations', methods: [Request::METHOD_GET])]
+    public function __invoke(string $applicationSlug, string $chatId, Request $request, User $loggedInUser): JsonResponse
     {
+        $this->chatApplicationScopeValidator->validate($chatId, $applicationSlug);
+
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
         $filters = [
