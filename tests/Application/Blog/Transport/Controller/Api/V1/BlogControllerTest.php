@@ -71,6 +71,56 @@ final class BlogControllerTest extends WebTestCase
     }
 
 
+
+    public function testCreateReactionRejectsUnsupportedType(): void
+    {
+        $client = $this->getTestClient('john-user', 'password-user');
+
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blogs/application/shop-ops-center');
+        self::assertResponseStatusCodeSame(200);
+        /** @var array<string, mixed> $payload */
+        $payload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        $targetCommentId = self::findFirstCommentId($payload);
+        self::assertNotNull($targetCommentId);
+
+        $client->request(
+            Request::METHOD_POST,
+            self::API_URL_PREFIX . '/v1/blog/comments/' . $targetCommentId . '/reactions',
+            [],
+            [],
+            $this->getJsonHeaders(),
+            json_encode(['type' => 'unsupported'], JSON_THROW_ON_ERROR),
+        );
+
+        self::assertResponseStatusCodeSame(400);
+    }
+
+    public function testCreateReactionRequiresAuthentication(): void
+    {
+        $anonymousClient = $this->getTestClient();
+        $authenticatedClient = $this->getTestClient('john-user', 'password-user');
+
+        $authenticatedClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blogs/application/shop-ops-center');
+        self::assertResponseStatusCodeSame(200);
+        /** @var array<string, mixed> $payload */
+        $payload = json_decode((string)$authenticatedClient->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        $targetCommentId = self::findFirstCommentId($payload);
+        self::assertNotNull($targetCommentId);
+
+        $anonymousClient->request(
+            Request::METHOD_POST,
+            self::API_URL_PREFIX . '/v1/blog/comments/' . $targetCommentId . '/reactions',
+            [],
+            [],
+            $this->getJsonHeaders(),
+            json_encode(['type' => 'heart'], JSON_THROW_ON_ERROR),
+        );
+
+        self::assertResponseStatusCodeSame(401);
+    }
+
     public function testCreateReactionUpsertsForSameAuthorAndComment(): void
     {
         $client = $this->getTestClient('john-user', 'password-user');

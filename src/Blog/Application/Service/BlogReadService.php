@@ -8,7 +8,6 @@ use App\Blog\Domain\Entity\Blog;
 use App\Blog\Domain\Entity\BlogComment;
 use App\Blog\Infrastructure\Repository\BlogRepository;
 use App\General\Application\Service\CacheKeyConventionService;
-use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\User\Domain\Entity\User;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -20,7 +19,6 @@ final readonly class BlogReadService
     public function __construct(
         private BlogRepository $blogRepository,
         private CacheInterface $cache,
-        private ElasticsearchServiceInterface $elasticsearchService,
         private CacheKeyConventionService $cacheKeyConventionService,
     ) {
     }
