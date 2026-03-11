@@ -21,7 +21,13 @@ final readonly class GetPublicGeneralBlogController
     }
 
     #[Route('/v1/blogs/general/public', methods: [Request::METHOD_GET])]
-    #[OA\Get(security: [])]
+    #[OA\Get(
+        security: [],
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1, minimum: 1)),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20, minimum: 1, maximum: 100)),
+        ]
+    )]
     public function __invoke(Request $request): JsonResponse
     {
         $page = max(1, $request->query->getInt('page', 1));
