@@ -58,6 +58,60 @@ final readonly class PatchEventCommandHandler
             if ($command->endAt !== null) {
                 $event->setEndAt($command->endAt);
             }
+            if ($command->visibility !== null) {
+                $event->setVisibility($command->visibility);
+            }
+            if ($command->location !== null) {
+                $event->setLocation($command->location);
+            }
+            if ($command->isAllDay !== null) {
+                $event->setIsAllDay($command->isAllDay);
+            }
+            if ($command->timezone !== null) {
+                $event->setTimezone($command->timezone);
+            }
+            if ($command->url !== null) {
+                $event->setUrl($command->url);
+            }
+            if ($command->color !== null) {
+                $event->setColor($command->color);
+            }
+            if ($command->backgroundColor !== null) {
+                $event->setBackgroundColor($command->backgroundColor);
+            }
+            if ($command->borderColor !== null) {
+                $event->setBorderColor($command->borderColor);
+            }
+            if ($command->textColor !== null) {
+                $event->setTextColor($command->textColor);
+            }
+            if ($command->organizerName !== null) {
+                $event->setOrganizerName($command->organizerName);
+            }
+            if ($command->organizerEmail !== null) {
+                $event->setOrganizerEmail($command->organizerEmail);
+            }
+            if ($command->attendees !== null) {
+                $event->setAttendees($command->attendees);
+            }
+            if ($command->rrule !== null) {
+                $event->setRrule($command->rrule);
+            }
+            if ($command->recurrenceExceptions !== null) {
+                $event->setRecurrenceExceptions($command->recurrenceExceptions);
+            }
+            if ($command->recurrenceEndAt !== null) {
+                $event->setRecurrenceEndAt($command->recurrenceEndAt);
+            }
+            if ($command->recurrenceCount !== null) {
+                $event->setRecurrenceCount($command->recurrenceCount);
+            }
+            if ($command->reminders !== null) {
+                $event->setReminders($command->reminders);
+            }
+            if ($command->metadata !== null) {
+                $event->setMetadata($command->metadata);
+            }
 
             $this->eventRepository->save($event);
         });

@@ -7,8 +7,10 @@ namespace App\Tests\Unit\Calendar\Application\MessageHandler;
 use App\Calendar\Application\Message\CreateEventCommand;
 use App\Calendar\Application\MessageHandler\CreateEventCommandHandler;
 use App\Calendar\Domain\Enum\EventStatus;
+use App\Calendar\Domain\Enum\EventVisibility;
 use App\Calendar\Infrastructure\Repository\CalendarRepository;
 use App\Calendar\Infrastructure\Repository\EventRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use App\Platform\Infrastructure\Repository\ApplicationRepository;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
@@ -43,6 +45,7 @@ final class CreateEventCommandHandlerTest extends TestCase
             userRepository: $userRepository,
             applicationRepository: $this->createMock(ApplicationRepository::class),
             calendarRepository: $this->createMock(CalendarRepository::class),
+            cacheInvalidationService: $this->createMock(CacheInvalidationService::class),
         );
 
         $handler(new CreateEventCommand(
@@ -53,7 +56,24 @@ final class CreateEventCommandHandlerTest extends TestCase
             startAt: new DateTimeImmutable('2030-01-01T10:00:00+00:00'),
             endAt: new DateTimeImmutable('2030-01-01T11:00:00+00:00'),
             status: EventStatus::CONFIRMED,
+            visibility: EventVisibility::PRIVATE,
             location: null,
+            isAllDay: false,
+            timezone: null,
+            url: null,
+            color: null,
+            backgroundColor: null,
+            borderColor: null,
+            textColor: null,
+            organizerName: null,
+            organizerEmail: null,
+            attendees: null,
+            rrule: null,
+            recurrenceExceptions: null,
+            recurrenceEndAt: null,
+            recurrenceCount: null,
+            reminders: null,
+            metadata: null,
         ));
     }
 }

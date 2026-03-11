@@ -44,8 +44,25 @@ final readonly class CreateEventCommandHandler
                 ->setStartAt($command->startAt)
                 ->setEndAt($command->endAt)
                 ->setStatus($command->status)
+                ->setVisibility($command->visibility)
                 ->setUser($user)
-                ->setLocation($command->location);
+                ->setLocation($command->location)
+                ->setIsAllDay($command->isAllDay)
+                ->setTimezone($command->timezone)
+                ->setUrl($command->url)
+                ->setColor($command->color)
+                ->setBackgroundColor($command->backgroundColor)
+                ->setBorderColor($command->borderColor)
+                ->setTextColor($command->textColor)
+                ->setOrganizerName($command->organizerName)
+                ->setOrganizerEmail($command->organizerEmail)
+                ->setAttendees($command->attendees)
+                ->setRrule($command->rrule)
+                ->setRecurrenceExceptions($command->recurrenceExceptions)
+                ->setRecurrenceEndAt($command->recurrenceEndAt)
+                ->setRecurrenceCount($command->recurrenceCount)
+                ->setReminders($command->reminders)
+                ->setMetadata($command->metadata);
 
             if ($command->applicationSlug !== null) {
                 $application = $this->applicationRepository->findOneBy([

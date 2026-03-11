@@ -9,6 +9,7 @@ use App\Calendar\Application\Message\CreateEventCommand;
 use App\Calendar\Application\Message\DeleteEventCommand;
 use App\Calendar\Application\Message\PatchEventCommand;
 use App\Calendar\Domain\Enum\EventStatus;
+use App\Calendar\Domain\Enum\EventVisibility;
 use App\General\Transport\Http\ValidationErrorFactory;
 use DateTimeImmutable;
 use Ramsey\Uuid\Uuid;
@@ -86,7 +87,24 @@ final class EventMutationInputFactory
             startAt: $startAt,
             endAt: $endAt,
             status: $this->parseStatus((string) ($payload['status'] ?? EventStatus::CONFIRMED->value)),
+            visibility: $this->parseVisibility((string) ($payload['visibility'] ?? EventVisibility::PRIVATE->value)),
             location: isset($payload['location']) && is_string($payload['location']) ? $payload['location'] : null,
+            isAllDay: isset($payload['isAllDay']) && is_bool($payload['isAllDay']) ? $payload['isAllDay'] : false,
+            timezone: isset($payload['timezone']) && is_string($payload['timezone']) ? $payload['timezone'] : null,
+            url: isset($payload['url']) && is_string($payload['url']) ? $payload['url'] : null,
+            color: isset($payload['color']) && is_string($payload['color']) ? $payload['color'] : null,
+            backgroundColor: isset($payload['backgroundColor']) && is_string($payload['backgroundColor']) ? $payload['backgroundColor'] : null,
+            borderColor: isset($payload['borderColor']) && is_string($payload['borderColor']) ? $payload['borderColor'] : null,
+            textColor: isset($payload['textColor']) && is_string($payload['textColor']) ? $payload['textColor'] : null,
+            organizerName: isset($payload['organizerName']) && is_string($payload['organizerName']) ? $payload['organizerName'] : null,
+            organizerEmail: isset($payload['organizerEmail']) && is_string($payload['organizerEmail']) ? $payload['organizerEmail'] : null,
+            attendees: isset($payload['attendees']) && is_array($payload['attendees']) ? $payload['attendees'] : null,
+            rrule: isset($payload['rrule']) && is_string($payload['rrule']) ? $payload['rrule'] : null,
+            recurrenceExceptions: isset($payload['recurrenceExceptions']) && is_array($payload['recurrenceExceptions']) ? $payload['recurrenceExceptions'] : null,
+            recurrenceEndAt: isset($payload['recurrenceEndAt']) && is_string($payload['recurrenceEndAt']) ? $this->parseDate($payload['recurrenceEndAt'], 'recurrenceEndAt') : null,
+            recurrenceCount: isset($payload['recurrenceCount']) && is_int($payload['recurrenceCount']) ? $payload['recurrenceCount'] : null,
+            reminders: isset($payload['reminders']) && is_array($payload['reminders']) ? $payload['reminders'] : null,
+            metadata: isset($payload['metadata']) && is_array($payload['metadata']) ? $payload['metadata'] : null,
             applicationSlug: $applicationSlug,
         );
     }
@@ -114,6 +132,24 @@ final class EventMutationInputFactory
             description: isset($payload['description']) && is_string($payload['description']) ? $payload['description'] : null,
             startAt: $startAt,
             endAt: $endAt,
+            visibility: isset($payload['visibility']) && is_string($payload['visibility']) ? $this->parseVisibility($payload['visibility']) : null,
+            location: isset($payload['location']) && is_string($payload['location']) ? $payload['location'] : null,
+            isAllDay: isset($payload['isAllDay']) && is_bool($payload['isAllDay']) ? $payload['isAllDay'] : null,
+            timezone: isset($payload['timezone']) && is_string($payload['timezone']) ? $payload['timezone'] : null,
+            url: isset($payload['url']) && is_string($payload['url']) ? $payload['url'] : null,
+            color: isset($payload['color']) && is_string($payload['color']) ? $payload['color'] : null,
+            backgroundColor: isset($payload['backgroundColor']) && is_string($payload['backgroundColor']) ? $payload['backgroundColor'] : null,
+            borderColor: isset($payload['borderColor']) && is_string($payload['borderColor']) ? $payload['borderColor'] : null,
+            textColor: isset($payload['textColor']) && is_string($payload['textColor']) ? $payload['textColor'] : null,
+            organizerName: isset($payload['organizerName']) && is_string($payload['organizerName']) ? $payload['organizerName'] : null,
+            organizerEmail: isset($payload['organizerEmail']) && is_string($payload['organizerEmail']) ? $payload['organizerEmail'] : null,
+            attendees: isset($payload['attendees']) && is_array($payload['attendees']) ? $payload['attendees'] : null,
+            rrule: isset($payload['rrule']) && is_string($payload['rrule']) ? $payload['rrule'] : null,
+            recurrenceExceptions: isset($payload['recurrenceExceptions']) && is_array($payload['recurrenceExceptions']) ? $payload['recurrenceExceptions'] : null,
+            recurrenceEndAt: isset($payload['recurrenceEndAt']) && is_string($payload['recurrenceEndAt']) ? $this->parseDate($payload['recurrenceEndAt'], 'recurrenceEndAt') : null,
+            recurrenceCount: isset($payload['recurrenceCount']) && is_int($payload['recurrenceCount']) ? $payload['recurrenceCount'] : null,
+            reminders: isset($payload['reminders']) && is_array($payload['reminders']) ? $payload['reminders'] : null,
+            metadata: isset($payload['metadata']) && is_array($payload['metadata']) ? $payload['metadata'] : null,
             applicationSlug: $applicationSlug,
         );
     }
@@ -182,6 +218,11 @@ final class EventMutationInputFactory
     private function parseStatus(string $status): EventStatus
     {
         return EventStatus::tryFrom($status) ?? throw ValidationErrorFactory::unprocessable('Invalid event status.');
+    }
+
+    private function parseVisibility(string $visibility): EventVisibility
+    {
+        return EventVisibility::tryFrom($visibility) ?? throw ValidationErrorFactory::unprocessable('Invalid event visibility.');
     }
 
     private function assertApplicationSlug(?string $applicationSlug): void
