@@ -30,7 +30,7 @@ final readonly class MarkConversationMessagesAsReadCommandHandler
     {
         $conversation = $this->findParticipantConversation($command->conversationId, $command->actorUserId);
 
-        $updated = $this->messageRepository->markConversationMessagesAsRead($conversation->getId());
+        $updated = $this->messageRepository->markConversationMessagesAsRead($conversation->getId(), $command->actorUserId);
         if ($updated > 0) {
             $this->cacheInvalidationService->invalidateConversationCaches($conversation->getChat()->getId(), $command->actorUserId);
         }

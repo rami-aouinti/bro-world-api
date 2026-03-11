@@ -24,20 +24,21 @@ class ChatMessageRepository extends BaseRepository
     ) {
     }
 
-    public function markConversationMessagesAsRead(string $conversationId): int
+    public function markConversationMessagesAsRead(string $conversationId, string $actorUserId): int
     {
         return $this->getEntityManager()->createQueryBuilder()
             ->update(Entity::class, 'm')
             ->set('m.read', ':read')
             ->set('m.readAt', ':readAt')
             ->where('m.conversation = :conversationId')
+            ->andWhere('m.sender != :actorUserId')
             ->andWhere('m.read = :unread')
             ->setParameter('read', true)
             ->setParameter('unread', false)
             ->setParameter('readAt', new \DateTimeImmutable())
             ->setParameter('conversationId', $conversationId)
+            ->setParameter('actorUserId', $actorUserId)
             ->getQuery()
             ->execute();
     }
 }
-

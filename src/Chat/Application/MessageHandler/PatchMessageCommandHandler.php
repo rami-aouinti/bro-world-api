@@ -34,6 +34,7 @@ final readonly class PatchMessageCommandHandler
 
             if ($command->read !== null) {
                 $message->setRead($command->read);
+                $message->setReadAt($command->read ? new \DateTimeImmutable() : null);
                 $updated = true;
             }
 
