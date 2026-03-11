@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Blog\Application\Message;
 
+use App\Blog\Domain\Enum\BlogReactionType;
+
 use App\General\Domain\Message\Interfaces\MessageHighInterface;
 
 final readonly class PatchBlogReactionCommand implements MessageHighInterface
@@ -12,7 +14,7 @@ final readonly class PatchBlogReactionCommand implements MessageHighInterface
         public string $operationId,
         public string $actorUserId,
         public string $reactionId,
-        public string $type
+        public BlogReactionType $type
     ) {
     }
 }

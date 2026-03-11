@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Blog\Domain\Entity;
 
+use App\Blog\Domain\Enum\BlogReactionType;
+
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
@@ -32,8 +34,8 @@ class BlogReaction implements EntityInterface
     #[ORM\JoinColumn(name: 'author_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private User $author;
 
-    #[ORM\Column(name: 'type', type: 'string', length: 40)]
-    private string $type = 'like';
+    #[ORM\Column(name: 'type', type: 'string', length: 40, enumType: BlogReactionType::class)]
+    private BlogReactionType $type = BlogReactionType::LIKE;
 
     public function __construct()
     {
@@ -63,11 +65,11 @@ class BlogReaction implements EntityInterface
 
         return $this;
     }
-    public function getType(): string
+    public function getType(): BlogReactionType
     {
         return $this->type;
     }
-    public function setType(string $type): self
+    public function setType(BlogReactionType $type): self
     {
         $this->type = $type;
 

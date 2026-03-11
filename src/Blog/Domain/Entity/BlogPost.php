@@ -34,8 +34,14 @@ class BlogPost implements EntityInterface
     #[ORM\JoinColumn(name: 'author_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private User $author;
 
+    #[ORM\Column(name: 'title', type: 'string', length: 255)]
+    private string $title = '';
+
     #[ORM\Column(name: 'content', type: 'text', nullable: true)]
     private ?string $content = null;
+
+    #[ORM\Column(name: 'is_pinned', type: 'boolean', options: ['default' => false])]
+    private bool $isPinned = false;
 
     #[ORM\Column(name: 'file_path', type: 'string', length: 255, nullable: true)]
     private ?string $filePath = null;
@@ -75,6 +81,16 @@ class BlogPost implements EntityInterface
 
         return $this;
     }
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+    public function setTitle(string $title): self
+    {
+        $this->title = $title;
+
+        return $this;
+    }
     public function getContent(): ?string
     {
         return $this->content;
@@ -82,6 +98,16 @@ class BlogPost implements EntityInterface
     public function setContent(?string $content): self
     {
         $this->content = $content;
+
+        return $this;
+    }
+    public function isPinned(): bool
+    {
+        return $this->isPinned;
+    }
+    public function setIsPinned(bool $isPinned): self
+    {
+        $this->isPinned = $isPinned;
 
         return $this;
     }

@@ -12,8 +12,10 @@ final readonly class CreateBlogPostCommand implements MessageHighInterface
         public string $operationId,
         public string $actorUserId,
         public string $blogId,
+        public string $title,
         public ?string $content,
-        public ?string $filePath
+        public ?string $filePath,
+        public bool $isPinned
     ) {
     }
 }

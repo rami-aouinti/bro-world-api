@@ -36,7 +36,7 @@ final readonly class CreateGeneralBlogCommandHandler
             return;
         }
 
-        $this->blogRepository->save((new Blog())->setTitle($command->title)->setOwner($user)->setType(BlogType::GENERAL));
+        $this->blogRepository->save((new Blog())->setTitle($command->title)->setSlug('general')->setDescription($command->description)->setOwner($user)->setType(BlogType::GENERAL));
         $this->cacheInvalidationService->invalidateBlogCaches(null, $command->actorUserId);
     }
 }
