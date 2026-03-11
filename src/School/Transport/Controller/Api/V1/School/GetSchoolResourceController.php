@@ -1,0 +1,24 @@
+<?php
+declare(strict_types=1);
+namespace App\School\Transport\Controller\Api\V1\School;
+use App\School\Application\Service\SchoolResourceViewService;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+#[AsController]
+#[OA\Tag(name: 'School')]
+#[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
+final readonly class GetSchoolResourceController
+{
+    public function __construct(private SchoolResourceViewService $resourceViewService) {}
+    #[Route('/v1/school/{resource}/{id}', methods: [Request::METHOD_GET], requirements: ['resource' => 'classes|students|teachers|exams|grades'])]
+    public function __invoke(string $resource, string $id): JsonResponse
+    {
+        $entity = $this->resourceViewService->findOr404($resource, $id);
+        return new JsonResponse($this->resourceViewService->map($entity));
+    }
+}
