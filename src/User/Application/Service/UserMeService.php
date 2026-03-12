@@ -105,7 +105,7 @@ readonly class UserMeService
             ->leftJoin('application.platform', 'platform')
             ->addSelect('platform')
             ->andWhere('application.user = :user')
-            ->setParameter('user', $user)
+            ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
             ->orderBy('application.createdAt', 'DESC');
 
         if ($limit > 0) {

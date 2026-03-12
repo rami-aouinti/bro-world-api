@@ -7,6 +7,7 @@ namespace App\User\Transport\Controller\Api\V1\User;
 use App\User\Application\Service\UserMeService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -31,6 +32,9 @@ class UserMeController
         return new JsonResponse($this->userMeService->getMe($loggedInUser));
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     #[Route(path: '/v1/users/me/sessions', methods: [Request::METHOD_GET])]
     #[OA\Response(response: 200, description: 'Recent sessions for current user')]
     public function sessions(User $loggedInUser): JsonResponse
