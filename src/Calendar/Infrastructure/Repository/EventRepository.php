@@ -12,6 +12,7 @@ use App\User\Domain\Entity\User;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use DateTimeImmutable;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 
 /**
@@ -116,6 +117,40 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
             ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+
+    public function findUpcomingPrivateByUser(User $user, int $limit = 3): array
+    {
+        return $this->createBaseQueryBuilder()
+            ->andWhere('event.user = :user OR calendar.user = :user')
+            ->andWhere('event.visibility = :visibilityPrivate')
+            ->andWhere('event.isCancelled = false')
+            ->andWhere('event.startAt >= :now')
+            ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
+            ->setParameter('visibilityPrivate', EventVisibility::PRIVATE->value)
+            ->setParameter('now', new DateTimeImmutable())
+            ->orderBy('event.startAt', 'ASC')
+            ->setMaxResults(max(1, min(20, $limit)))
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findUpcomingByApplicationSlugAndUser(string $applicationSlug, User $user, int $limit = 3): array
+    {
+        return $this->createBaseQueryBuilder()
+            ->innerJoin('calendar.application', 'application')
+            ->andWhere('application.slug = :applicationSlug')
+            ->andWhere('event.user = :user OR calendar.user = :user')
+            ->andWhere('event.isCancelled = false')
+            ->andWhere('event.startAt >= :now')
+            ->setParameter('applicationSlug', $applicationSlug)
+            ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
+            ->setParameter('now', new DateTimeImmutable())
+            ->orderBy('event.startAt', 'ASC')
+            ->setMaxResults(max(1, min(20, $limit)))
+            ->getQuery()
+            ->getResult();
     }
 
     private function createBaseQueryBuilder(): QueryBuilder

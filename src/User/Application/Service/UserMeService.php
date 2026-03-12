@@ -9,6 +9,7 @@ use App\General\Application\Message\EntityPatched;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\Log\Domain\Entity\LogLogin;
 use App\Log\Infrastructure\Repository\LogLoginRepository;
+use App\Platform\Domain\Entity\Application;
 use App\User\Application\Security\SecurityUser;
 use App\User\Domain\Entity\Social;
 use App\User\Domain\Entity\User;
@@ -80,7 +81,52 @@ readonly class UserMeService
             }, $qb->getQuery()->getResult());
         });
 
+        if ($sessions === []) {
+            return [[
+                'icon' => 'mdi-account-circle',
+                'title' => 'Current session',
+                'description' => '',
+                'badge' => 'Active',
+                'city' => 'Unknown',
+                'ip' => 'Unknown',
+            ]];
+        }
+
         return $sessions;
+    }
+
+    /**
+     * @return array<int,array<string,mixed>>
+     */
+    public function getApplications(User $user, int $limit = 0): array
+    {
+        $qb = $this->entityManager->getRepository(Application::class)
+            ->createQueryBuilder('application')
+            ->leftJoin('application.platform', 'platform')
+            ->addSelect('platform')
+            ->andWhere('application.user = :user')
+            ->setParameter('user', $user)
+            ->orderBy('application.createdAt', 'DESC');
+
+        if ($limit > 0) {
+            $qb->setMaxResults($limit);
+        }
+
+        /** @var array<int, Application> $applications */
+        $applications = $qb->getQuery()->getResult();
+
+        return array_map(static fn (Application $application): array => [
+            'id' => $application->getId(),
+            'platformId' => $application->getPlatform()?->getId(),
+            'platformName' => $application->getPlatform()?->getName(),
+            'title' => $application->getTitle(),
+            'slug' => $application->getSlug(),
+            'description' => $application->getDescription(),
+            'status' => $application->getStatus()->value,
+            'private' => $application->isPrivate(),
+            'createdAt' => $application->getCreatedAt()?->format(DATE_ATOM),
+            'updatedAt' => $application->getUpdatedAt()?->format(DATE_ATOM),
+        ], $applications);
     }
 
     /**

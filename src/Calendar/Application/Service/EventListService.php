@@ -64,6 +64,20 @@ final readonly class EventListService
         return $this->getList('application_private', $filters, $page, $limit, $user, $applicationSlug);
     }
 
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getUpcoming(User $user, ?string $applicationSlug = null, int $limit = 3): array
+    {
+        $safeLimit = max(1, min(20, $limit));
+        $events = $applicationSlug !== null && $applicationSlug !== ''
+            ? $this->eventRepository->findUpcomingByApplicationSlugAndUser($applicationSlug, $user, $safeLimit)
+            : $this->eventRepository->findUpcomingPrivateByUser($user, $safeLimit);
+
+        return $this->normalizeEvents($events);
+    }
+
     /**
      * @param array<string, string> $filters
      *

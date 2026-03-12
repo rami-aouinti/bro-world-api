@@ -78,6 +78,8 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             $this->ensureJohnRootPrivateEvents($manager, $application, $calendar, $johnRoot);
         }
 
+        $this->ensureJohnRootStandalonePrivateEvents($manager, $johnRoot);
+
         $this->createJohnRootPrivateDirectMessageScenarios($manager);
         $this->createDedicatedDirectConversationFixture($manager);
 
@@ -488,6 +490,20 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         }
     }
 
+
+    private function ensureJohnRootStandalonePrivateEvents(ObjectManager $manager, User $johnRoot): void
+    {
+        for ($dayOffset = 1; $dayOffset <= 3; $dayOffset++) {
+            $this->ensureStandaloneEvent(
+                $manager,
+                $johnRoot,
+                sprintf('John Root standalone private event #%d', $dayOffset),
+                $dayOffset,
+                sprintf('Standalone private event #%d for john-root without application calendar.', $dayOffset),
+            );
+        }
+    }
+
     private function ensureJohnRootScenarioEvent(ObjectManager $manager, Calendar $calendar, User $johnRoot): Event
     {
         return $this->ensureEvent(
@@ -498,6 +514,45 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             3,
             'Event dédié au scénario fixtures john-root pour tests fonctionnels.'
         );
+    }
+
+
+    private function ensureStandaloneEvent(
+        ObjectManager $manager,
+        User $owner,
+        string $title,
+        int $daysInFuture,
+        string $description
+    ): Event {
+        $existing = $manager->getRepository(Event::class)->findOneBy([
+            'calendar' => null,
+            'user' => $owner,
+            'title' => $title,
+        ]);
+
+        if ($existing instanceof Event) {
+            return $existing;
+        }
+
+        $startAt = (new DateTimeImmutable())->modify(sprintf('+%d day', $daysInFuture));
+
+        $event = (new Event())
+            ->setTitle($title)
+            ->setDescription($description)
+            ->setLocation('Remote')
+            ->setStartAt($startAt)
+            ->setEndAt($startAt->modify('+45 minutes'))
+            ->setTimezone('Europe/Paris')
+            ->setOrganizerName('John Root')
+            ->setOrganizerEmail('john.root@example.com')
+            ->setStatus(EventStatus::CONFIRMED)
+            ->setVisibility(EventVisibility::PRIVATE)
+            ->setUser($owner)
+            ->setCalendar(null);
+
+        $manager->persist($event);
+
+        return $event;
     }
 
     private function ensureEvent(

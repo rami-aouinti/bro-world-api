@@ -50,4 +50,29 @@ final class ApplicationEventListControllerTest extends WebTestCase
         self::assertArrayHasKey('items', $responseData);
         self::assertNotEmpty($responseData['items']);
     }
+
+    #[TestDox('GET /api/v1/calendar/events/upcoming returns up to three nearest events for logged user.')]
+    public function testUpcomingEventsEndpointReturnsNearestItems(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('GET', self::API_URL_PREFIX . '/v1/calendar/events/upcoming');
+        $response = $client->getResponse();
+        $content = $response->getContent();
+
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:
+" . $response);
+
+        $responseData = JSON::decode($content, true);
+
+        self::assertIsArray($responseData);
+        self::assertLessThanOrEqual(3, count($responseData));
+
+        if ($responseData !== []) {
+            self::assertArrayHasKey('title', $responseData[0]);
+            self::assertArrayHasKey('startAt', $responseData[0]);
+        }
+    }
+
 }

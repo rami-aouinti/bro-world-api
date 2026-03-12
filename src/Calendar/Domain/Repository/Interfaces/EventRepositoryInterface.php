@@ -29,4 +29,14 @@ interface EventRepositoryInterface
     public function findByApplicationSlugAndUser(string $applicationSlug, User $user, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array;
 
     public function countByApplicationSlugAndUser(string $applicationSlug, User $user, array $filters = [], ?array $esIds = null): int;
+
+    /**
+     * @return array<int, Event>
+     */
+    public function findUpcomingPrivateByUser(User $user, int $limit = 3): array;
+
+    /**
+     * @return array<int, Event>
+     */
+    public function findUpcomingByApplicationSlugAndUser(string $applicationSlug, User $user, int $limit = 3): array;
 }

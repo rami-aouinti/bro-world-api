@@ -38,6 +38,21 @@ class UserMeController
         return new JsonResponse($this->userMeService->getSessions($loggedInUser));
     }
 
+
+    #[Route(path: '/v1/users/me/applications', methods: [Request::METHOD_GET])]
+    #[OA\Response(response: 200, description: 'Applications created by current user')]
+    public function applications(User $loggedInUser): JsonResponse
+    {
+        return new JsonResponse($this->userMeService->getApplications($loggedInUser));
+    }
+
+    #[Route(path: '/v1/users/me/applications/latest', methods: [Request::METHOD_GET])]
+    #[OA\Response(response: 200, description: 'Latest applications created by current user')]
+    public function latestApplications(User $loggedInUser): JsonResponse
+    {
+        return new JsonResponse($this->userMeService->getApplications($loggedInUser, 3));
+    }
+
     #[Route(path: '/v1/users/me/profile', methods: [Request::METHOD_GET])]
     #[OA\Response(response: 200, description: 'Current user profile')]
     public function profile(User $loggedInUser): JsonResponse
