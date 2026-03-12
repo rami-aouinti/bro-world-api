@@ -8,6 +8,7 @@ use App\Crm\Application\Projection\CrmTaskProjection;
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Infrastructure\Repository\TaskRepository;
 use App\General\Application\Service\CacheKeyConventionService;
+use App\User\Domain\Entity\User;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -22,6 +23,7 @@ readonly class TaskListService
         private CacheInterface $cache,
         private ElasticsearchServiceInterface $elasticsearchService,
         private CacheKeyConventionService $cacheKeyConventionService,
+        private CrmApplicationScopeResolver $applicationScopeResolver,
     ) {
     }
 
@@ -38,10 +40,12 @@ readonly class TaskListService
             'status' => trim((string)$request->query->get('status', '')),
             'priority' => trim((string)$request->query->get('priority', '')),
         ];
-        $cacheKey = $this->cacheKeyConventionService->buildCrmTaskListKey($page, $limit, $filters);
+        $applicationSlug = (string)$request->attributes->get('applicationSlug', '');
+        $crm = $this->applicationScopeResolver->resolveOrFail($applicationSlug);
+        $cacheKey = $this->cacheKeyConventionService->buildCrmTaskListKey($page, $limit, array_merge($filters, ['applicationSlug' => $applicationSlug]));
 
         /** @var array<string,mixed> $result */
-        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($filters, $page, $limit): array {
+        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($filters, $page, $limit, $crm): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->crmTaskListTag());
@@ -57,10 +61,16 @@ readonly class TaskListService
                         'totalItems' => 0,
                         'totalPages' => 0,
                     ],
+                    'meta' => [
+                        'module' => 'crm',
+                    ],
                 ];
             }
 
             $qb = $this->taskRepository->createQueryBuilder('task')->leftJoin('task.project', 'project')->leftJoin('task.sprint', 'sprint')
+                ->leftJoin('project.company', 'company')
+                ->leftJoin('task.assignees', 'assignee')->addSelect('assignee')
+                ->andWhere('company.crm = :crm')->setParameter('crm', $crm)
                 ->setFirstResult(($page - 1) * $limit)->setMaxResults($limit)->orderBy('task.createdAt', 'DESC');
 
             if ($filters['title'] !== '') {
@@ -88,9 +98,17 @@ readonly class TaskListService
                 'dueAt' => $task->getDueAt()?->format(DATE_ATOM),
                 'estimatedHours' => $task->getEstimatedHours(),
                 'updatedAt' => $task->getUpdatedAt()?->format(DATE_ATOM),
+                'assignees' => array_map(static fn (User $assignee): array => [
+                    'id' => $assignee->getId(),
+                    'username' => $assignee->getUsername(),
+                    'email' => $assignee->getEmail(),
+                ], $task->getAssignees()->toArray()),
             ], $qb->getQuery()->getResult());
 
-            $countQb = $this->taskRepository->createQueryBuilder('task')->select('COUNT(task.id)');
+            $countQb = $this->taskRepository->createQueryBuilder('task')->select('COUNT(task.id)')
+                ->leftJoin('task.project', 'project')
+                ->leftJoin('project.company', 'company')
+                ->andWhere('company.crm = :crm')->setParameter('crm', $crm);
             if ($filters['title'] !== '') {
                 $countQb->andWhere('LOWER(task.title) LIKE LOWER(:title)')->setParameter('title', '%' . $filters['title'] . '%');
             }

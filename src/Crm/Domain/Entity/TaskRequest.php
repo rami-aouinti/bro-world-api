@@ -8,7 +8,10 @@ use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use App\User\Domain\Entity\User;
 use DateTimeImmutable;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
@@ -48,10 +51,18 @@ class TaskRequest implements EntityInterface
     #[ORM\Column(name: 'resolved_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $resolvedAt = null;
 
+    /** @var Collection<int, User>|ArrayCollection<int, User> */
+    #[ORM\ManyToMany(targetEntity: User::class)]
+    #[ORM\JoinTable(name: 'crm_task_request_assignee')]
+    #[ORM\JoinColumn(name: 'task_request_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'user_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    private Collection|ArrayCollection $assignees;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
         $this->requestedAt = new DateTimeImmutable();
+        $this->assignees = new ArrayCollection();
     }
 
     #[Override]
@@ -128,6 +139,24 @@ class TaskRequest implements EntityInterface
     public function setResolvedAt(?DateTimeImmutable $resolvedAt): self
     {
         $this->resolvedAt = $resolvedAt;
+
+        return $this;
+    }
+
+
+    /**
+     * @return Collection<int, User>|ArrayCollection<int, User>
+     */
+    public function getAssignees(): Collection|ArrayCollection
+    {
+        return $this->assignees;
+    }
+
+    public function addAssignee(User $user): self
+    {
+        if (!$this->assignees->contains($user)) {
+            $this->assignees->add($user);
+        }
 
         return $this;
     }

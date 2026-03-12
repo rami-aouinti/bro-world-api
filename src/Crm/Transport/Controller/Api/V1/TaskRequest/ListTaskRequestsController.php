@@ -35,6 +35,11 @@ final readonly class ListTaskRequestsController
             'requestedAt' => $taskRequest->getRequestedAt()->format(DATE_ATOM),
             'resolvedAt' => $taskRequest->getResolvedAt()?->format(DATE_ATOM),
             'taskId' => $taskRequest->getTask()?->getId(),
+            'assignees' => array_map(static fn (\App\User\Domain\Entity\User $assignee): array => [
+                'id' => $assignee->getId(),
+                'username' => $assignee->getUsername(),
+                'email' => $assignee->getEmail(),
+            ], $taskRequest->getAssignees()->toArray()),
         ], $this->taskRequestRepository->findBy([], [
             'createdAt' => 'DESC',
         ], 200));
