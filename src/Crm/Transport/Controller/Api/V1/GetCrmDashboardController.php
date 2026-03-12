@@ -35,19 +35,13 @@ final readonly class GetCrmDashboardController
     public function __invoke(string $applicationSlug): JsonResponse
     {
         return new JsonResponse([
-            'companies' => $this->companyRepository->count([]),
-            'projects' => $this->projectRepository->count([]),
-            'tasks' => $this->taskRepository->count([]),
+            'companies' => count($this->companyRepository->findAll()),
+            'projects' => count($this->projectRepository->findAll()),
+            'tasks' => count($this->taskRepository->findAll()),
             'taskRequests' => [
-                TaskRequestStatus::PENDING->value => $this->taskRequestRepository->count([
-                    'status' => TaskRequestStatus::PENDING,
-                ]),
-                TaskRequestStatus::APPROVED->value => $this->taskRequestRepository->count([
-                    'status' => TaskRequestStatus::APPROVED,
-                ]),
-                TaskRequestStatus::REJECTED->value => $this->taskRequestRepository->count([
-                    'status' => TaskRequestStatus::REJECTED,
-                ]),
+                TaskRequestStatus::PENDING->value => count($this->taskRequestRepository->findBy(['status' => TaskRequestStatus::PENDING])),
+                TaskRequestStatus::APPROVED->value => count($this->taskRequestRepository->findBy(['status' => TaskRequestStatus::APPROVED])),
+                TaskRequestStatus::REJECTED->value => count($this->taskRequestRepository->findBy(['status' => TaskRequestStatus::REJECTED])),
             ],
         ]);
     }
