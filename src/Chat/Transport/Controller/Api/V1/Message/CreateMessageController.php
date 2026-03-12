@@ -71,10 +71,6 @@ class CreateMessageController
             content: $content,
         ));
 
-        /** @var HandledStamp|null $handled */
-        $handled = $envelope->last(HandledStamp::class);
-        $entityId = $handled?->getResult();
-
         return new JsonResponse([
             'operationId' => $operationId,
             'id' => is_string($entityId) ? $entityId : null,
