@@ -43,6 +43,10 @@ final readonly class CreateBlogPostController
             (bool)($payload['isPinned'] ?? false)
         ));
 
+        /** @var HandledStamp|null $handled */
+        $handled = $envelope->last(HandledStamp::class);
+        $entityId = $handled?->getResult();
+
         return new JsonResponse([
             'status' => 'accepted',
             'id' => is_string($entityId) ? $entityId : null,
