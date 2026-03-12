@@ -48,8 +48,20 @@ final readonly class CreateBlogPostCommandHandler
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Post creation is restricted to blog owner.');
         }
 
-        if ($command->content === null && $command->filePath === null) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Post requires content and/or filePath.');
+        if ($this->postRepository->findOneBy(['slug' => $command->slug]) instanceof BlogPost) {
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Slug already exists.');
+        }
+
+        $parentPost = null;
+        if ($command->parentPostId !== null) {
+            $parentPost = $this->postRepository->find($command->parentPostId);
+            if (!$parentPost instanceof BlogPost || $parentPost->getBlog()->getId() !== $blog->getId()) {
+                throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Parent post does not belong to this blog.');
+            }
+        }
+
+        if ($command->content === null && $command->filePath === null && $command->sharedUrl === null && $command->mediaUrls === []) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Post requires content, url and/or media.');
         }
 
         $post = new BlogPost();
@@ -58,8 +70,12 @@ final readonly class CreateBlogPostCommandHandler
             ->setBlog($blog)
             ->setAuthor($user)
             ->setTitle($command->title)
+            ->setSlug($command->slug)
             ->setContent($command->content)
             ->setFilePath($command->filePath)
+            ->setMediaUrls($command->mediaUrls)
+            ->setSharedUrl($command->sharedUrl)
+            ->setParentPost($parentPost)
             ->setIsPinned($command->isPinned));
 
         $this->cacheInvalidationService->invalidateBlogCaches($blog->getApplication()?->getSlug(), $command->actorUserId);

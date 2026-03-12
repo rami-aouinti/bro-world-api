@@ -37,6 +37,9 @@ class BlogPost implements EntityInterface
     #[ORM\Column(name: 'title', type: 'string', length: 255)]
     private string $title = '';
 
+    #[ORM\Column(name: 'slug', type: 'string', length: 255, unique: true)]
+    private string $slug = '';
+
     #[ORM\Column(name: 'content', type: 'text', nullable: true)]
     private ?string $content = null;
 
@@ -47,6 +50,25 @@ class BlogPost implements EntityInterface
 
     #[ORM\Column(name: 'file_path', type: 'string', length: 255, nullable: true)]
     private ?string $filePath = null;
+
+    /**
+     * @var list<string>
+     */
+    #[ORM\Column(name: 'media_urls', type: 'json', nullable: true)]
+    private array $mediaUrls = [];
+
+    #[ORM\Column(name: 'shared_url', type: 'string', length: 1024, nullable: true)]
+    private ?string $sharedUrl = null;
+
+    #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'childrenPosts')]
+    #[ORM\JoinColumn(name: 'parent_post_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?self $parentPost = null;
+
+    /**
+     * @var Collection<int, self>
+     */
+    #[ORM\OneToMany(targetEntity: self::class, mappedBy: 'parentPost')]
+    private Collection $childrenPosts;
 
     /**
      * @var Collection<int, BlogComment>
@@ -65,6 +87,7 @@ class BlogPost implements EntityInterface
         $this->id = $this->createUuid();
         $this->comments = new ArrayCollection();
         $this->reactions = new ArrayCollection();
+        $this->childrenPosts = new ArrayCollection();
     }
     #[Override] public function getId(): string
     {
@@ -100,6 +123,16 @@ class BlogPost implements EntityInterface
 
         return $this;
     }
+    public function getSlug(): string
+    {
+        return $this->slug;
+    }
+    public function setSlug(string $slug): self
+    {
+        $this->slug = $slug;
+
+        return $this;
+    }
     public function getContent(): ?string
     {
         return $this->content;
@@ -131,6 +164,50 @@ class BlogPost implements EntityInterface
         return $this;
     }
     /**
+     * @return list<string>
+     */
+    public function getMediaUrls(): array
+    {
+        return $this->mediaUrls;
+    }
+    /**
+     * @param list<string> $mediaUrls
+     */
+    public function setMediaUrls(array $mediaUrls): self
+    {
+        $this->mediaUrls = array_values($mediaUrls);
+
+        return $this;
+    }
+    public function getSharedUrl(): ?string
+    {
+        return $this->sharedUrl;
+    }
+    public function setSharedUrl(?string $sharedUrl): self
+    {
+        $this->sharedUrl = $sharedUrl;
+
+        return $this;
+    }
+    public function getParentPost(): ?self
+    {
+        return $this->parentPost;
+    }
+    public function setParentPost(?self $parentPost): self
+    {
+        $this->parentPost = $parentPost;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, self>
+     */
+    public function getChildrenPosts(): Collection
+    {
+        return $this->childrenPosts;
+    }
+    /**
      * @return Collection<int, BlogComment>
      */ public function getComments(): Collection
     {
@@ -145,4 +222,3 @@ class BlogPost implements EntityInterface
         return $this->reactions;
     }
 }
-

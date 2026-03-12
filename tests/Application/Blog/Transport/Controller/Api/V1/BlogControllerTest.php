@@ -272,6 +272,67 @@ final class BlogControllerTest extends WebTestCase
         self::assertSame('laugh', $johnUserReactionTypes[0]);
     }
 
+
+    public function testGeneralFeedReturnsParentPostsWithChildren(): void
+    {
+        $client = $this->getTestClient();
+
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/public/blogs/general');
+        self::assertResponseStatusCodeSame(200);
+
+        /** @var array<string, mixed> $payload */
+        $payload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertArrayHasKey('posts', $payload);
+        self::assertIsArray($payload['posts']);
+        self::assertNotEmpty($payload['posts']);
+        self::assertArrayHasKey('children', $payload['posts'][0]);
+        self::assertIsArray($payload['posts'][0]['children']);
+    }
+
+    public function testGetBlogPostBySlugReturnsPost(): void
+    {
+        $client = $this->getTestClient();
+
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/public/blogs/general');
+        self::assertResponseStatusCodeSame(200);
+        /** @var array<string, mixed> $feed */
+        $feed = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        $post = $feed['posts'][0] ?? null;
+        self::assertIsArray($post);
+        self::assertArrayHasKey('slug', $post);
+
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/posts/' . $post['slug']);
+        self::assertResponseStatusCodeSame(200);
+
+        /** @var array<string, mixed> $singlePost */
+        $singlePost = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame($post['slug'], $singlePost['slug'] ?? null);
+    }
+
+    public function testGetMyPostsRequiresAuthenticationAndReturnsOnlyMine(): void
+    {
+        $anonymousClient = $this->getTestClient();
+        $anonymousClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/private/blog/posts/mine');
+        self::assertResponseStatusCodeSame(401);
+
+        $client = $this->getTestClient('john-user', 'password-user');
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/private/blog/posts/mine');
+        self::assertResponseStatusCodeSame(200);
+
+        /** @var array<string, mixed> $payload */
+        $payload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertArrayHasKey('posts', $payload);
+        self::assertIsArray($payload['posts']);
+        self::assertNotEmpty($payload['posts']);
+
+        foreach ($payload['posts'] as $post) {
+            self::assertIsArray($post);
+            self::assertTrue((bool)($post['isAuthor'] ?? false));
+        }
+    }
+
     /**
      * @param array<string, mixed> $node
      */

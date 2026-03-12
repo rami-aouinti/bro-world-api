@@ -8,6 +8,9 @@ use App\General\Domain\Message\Interfaces\MessageHighInterface;
 
 final readonly class PatchBlogPostCommand implements MessageHighInterface
 {
+    /**
+     * @param list<string>|null $mediaUrls
+     */
     public function __construct(
         public string $operationId,
         public string $actorUserId,
@@ -15,6 +18,8 @@ final readonly class PatchBlogPostCommand implements MessageHighInterface
         public ?string $title,
         public ?string $content,
         public ?string $filePath,
+        public ?array $mediaUrls,
+        public ?string $sharedUrl,
         public ?bool $isPinned
     ) {
     }

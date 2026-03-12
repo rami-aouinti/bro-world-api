@@ -37,9 +37,18 @@ final readonly class PatchBlogPostCommandHandler
             $post->setTitle($command->title);
         }
 
-        $post
-            ->setContent($command->content)
-            ->setFilePath($command->filePath);
+        if ($command->content !== null || $command->sharedUrl !== null) {
+            $post->setContent($command->content);
+            $post->setSharedUrl($command->sharedUrl);
+        }
+
+        if ($command->filePath !== null) {
+            $post->setFilePath($command->filePath);
+        }
+
+        if ($command->mediaUrls !== null) {
+            $post->setMediaUrls($command->mediaUrls);
+        }
 
         if ($command->isPinned !== null) {
             $post->setIsPinned($command->isPinned);
