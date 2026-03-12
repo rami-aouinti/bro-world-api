@@ -10,6 +10,7 @@ use App\Quiz\Domain\Entity\QuizQuestion;
 use App\Quiz\Domain\Enum\QuizCategory;
 use App\Quiz\Domain\Enum\QuizLevel;
 use Doctrine\Persistence\ManagerRegistry;
+use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 
 class QuizQuestionRepository extends BaseRepository
 {
@@ -28,7 +29,7 @@ class QuizQuestionRepository extends BaseRepository
     {
         $queryBuilder = $this->createQueryBuilder('question')
             ->leftJoin('question.answers', 'answer')->addSelect('answer')
-            ->andWhere('question.quiz = :quiz')->setParameter('quiz', $quiz)
+            ->andWhere('question.quiz = :quiz')->setParameter('quiz', $quiz->getId(), UuidBinaryOrderedTimeType::NAME)
             ->orderBy('question.position', 'ASC')
             ->addOrderBy('answer.position', 'ASC');
 
@@ -47,7 +48,7 @@ class QuizQuestionRepository extends BaseRepository
     {
         $maxPosition = $this->createQueryBuilder('question')
             ->select('MAX(question.position)')
-            ->andWhere('question.quiz = :quiz')->setParameter('quiz', $quiz)
+            ->andWhere('question.quiz = :quiz')->setParameter('quiz', $quiz->getId(), UuidBinaryOrderedTimeType::NAME)
             ->getQuery()
             ->getSingleScalarResult();
 

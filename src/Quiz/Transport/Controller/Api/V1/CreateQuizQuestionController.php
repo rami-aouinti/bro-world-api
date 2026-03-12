@@ -6,11 +6,13 @@ namespace App\Quiz\Transport\Controller\Api\V1;
 
 use App\Quiz\Application\Message\CreateQuizQuestionCommand;
 use App\User\Domain\Entity\User;
+use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
@@ -21,19 +23,18 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[OA\Tag(name: 'Quiz')]
 final class CreateQuizQuestionController
 {
+    /**
+     * @throws ExceptionInterface
+     * @throws JsonException
+     */
     #[Route('/v1/quiz/applications/{applicationSlug}/questions', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'POST /v1/quiz/applications/{applicationSlug}/questions', tags: ['Quiz'])]
-    public function __invoke(string $applicationSlug, Request $request, MessageBusInterface $messageBus): JsonResponse
+    public function __invoke(string $applicationSlug, Request $request, MessageBusInterface $messageBus, User $loggedInUser): JsonResponse
     {
-        $user = $request->getUser();
-        if (!$user instanceof User) {
-            throw new HttpException(JsonResponse::HTTP_UNAUTHORIZED, 'User required.');
-        }
-
-        $payload = (array)json_decode((string)$request->getContent(), true);
+        $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $messageBus->dispatch(new CreateQuizQuestionCommand(
             (string)uniqid('op_', true),
-            $user->getId(),
+            $loggedInUser->getId(),
             $applicationSlug,
             (string)($payload['title'] ?? ''),
             (string)($payload['level'] ?? 'easy'),
