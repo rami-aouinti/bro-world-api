@@ -11,7 +11,7 @@ use Doctrine\Persistence\ManagerRegistry;
 class BlogPostRepository extends BaseRepository
 {
     protected static string $entityName = BlogPost::class;
-    protected static array $searchColumns = ['id', 'content'];
+    protected static array $searchColumns = ['id', 'content', 'slug', 'sharedUrl'];
 
     public function __construct(
         protected ManagerRegistry $managerRegistry

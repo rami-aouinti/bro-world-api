@@ -12,7 +12,12 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
+use function array_filter;
+use function array_map;
+use function is_array;
+use function is_string;
 use function sprintf;
+use function trim;
 
 final readonly class BlogMutationRequestService
 {
@@ -54,22 +59,75 @@ final readonly class BlogMutationRequestService
             return $fallbackUrl;
         }
 
+        return $this->uploadFiles($request, [$file])[0] ?? $fallbackUrl;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function resolveUploadedFileUrls(Request $request): array
+    {
+        $files = $request->files->all('files');
+
+        if (!is_array($files) || $files === []) {
+            return [];
+        }
+
+        $uploadedFiles = array_values(array_filter($files, static fn ($file): bool => $file instanceof UploadedFile));
+
+        if ($uploadedFiles === []) {
+            return [];
+        }
+
+        /** @var list<UploadedFile> $uploadedFiles */
+        return $this->uploadFiles($request, $uploadedFiles);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     *
+     * @return array{content: ?string, sharedUrl: ?string}
+     */
+    public function normalizePostContent(array $payload): array
+    {
+        $rawContent = $payload['content'] ?? null;
+        $rawSharedUrl = $payload['sharedUrl'] ?? $payload['url'] ?? null;
+
+        $content = is_string($rawContent) ? trim($rawContent) : null;
+        $sharedUrl = is_string($rawSharedUrl) ? trim($rawSharedUrl) : null;
+
+        return [
+            'content' => $content !== '' ? $content : null,
+            'sharedUrl' => $sharedUrl !== '' ? $sharedUrl : null,
+        ];
+    }
+
+    /**
+     * @param list<UploadedFile> $files
+     *
+     * @return list<string>
+     */
+    private function uploadFiles(Request $request, array $files): array
+    {
         $uploaded = $this->mediaUploaderService->upload(
             $request,
-            [$file],
+            $files,
             '/uploads/blog',
             new MediaUploadValidationPolicy(
-                maxSizeInBytes: 10 * 1024 * 1024,
+                maxSizeInBytes: 25 * 1024 * 1024,
                 allowedMimeTypes: [
                     'image/jpeg',
                     'image/png',
                     'image/webp',
+                    'video/mp4',
+                    'video/webm',
+                    'video/quicktime',
                     'application/pdf',
                 ],
-                allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'pdf'],
+                allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'mp4', 'webm', 'mov', 'pdf'],
             ),
         );
 
-        return (string)($uploaded[0]['url'] ?? $fallbackUrl);
+        return array_values(array_map(static fn (array $item): string => (string)($item['url'] ?? ''), $uploaded));
     }
 }

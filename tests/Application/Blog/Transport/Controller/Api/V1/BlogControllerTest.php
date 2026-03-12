@@ -272,6 +272,122 @@ final class BlogControllerTest extends WebTestCase
         self::assertSame('laugh', $johnUserReactionTypes[0]);
     }
 
+
+
+    public function testCreatePostCanHaveContentAndUrlAtSameTime(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/private/blogs/general');
+        self::assertResponseStatusCodeSame(200);
+        /** @var array<string, mixed> $general */
+        $general = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertArrayHasKey('id', $general);
+
+        $client->request(
+            Request::METHOD_POST,
+            self::API_URL_PREFIX . '/v1/private/blogs/' . $general['id'] . '/posts',
+            [],
+            [],
+            $this->getJsonHeaders(),
+            json_encode([
+                'title' => 'Post with content and url',
+                'content' => 'Texte du post',
+                'sharedUrl' => 'https://example.com/share/me',
+            ], JSON_THROW_ON_ERROR),
+        );
+        self::assertResponseStatusCodeSame(202);
+        /** @var array<string, mixed> $createPayload */
+        $createPayload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertArrayHasKey('slug', $createPayload);
+
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/private/blog/posts/mine');
+        self::assertResponseStatusCodeSame(200);
+        /** @var array<string, mixed> $mine */
+        $mine = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertArrayHasKey('posts', $mine);
+        self::assertIsArray($mine['posts']);
+
+        $found = null;
+        foreach ($mine['posts'] as $post) {
+            if (!is_array($post)) {
+                continue;
+            }
+
+            if (($post['slug'] ?? null) === $createPayload['slug']) {
+                $found = $post;
+                break;
+            }
+        }
+
+        self::assertIsArray($found);
+        self::assertSame('Texte du post', $found['content'] ?? null);
+        self::assertSame('https://example.com/share/me', $found['sharedUrl'] ?? null);
+    }
+
+    public function testGeneralFeedReturnsParentPostsWithChildren(): void
+    {
+        $client = $this->getTestClient();
+
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/public/blogs/general');
+        self::assertResponseStatusCodeSame(200);
+
+        /** @var array<string, mixed> $payload */
+        $payload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertArrayHasKey('posts', $payload);
+        self::assertIsArray($payload['posts']);
+        self::assertNotEmpty($payload['posts']);
+        self::assertArrayHasKey('children', $payload['posts'][0]);
+        self::assertIsArray($payload['posts'][0]['children']);
+        self::assertArrayHasKey('authors', $payload['posts'][0]['children']);
+        self::assertArrayHasKey('count', $payload['posts'][0]['children']);
+    }
+
+    public function testGetBlogPostBySlugReturnsPost(): void
+    {
+        $client = $this->getTestClient();
+
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/public/blogs/general');
+        self::assertResponseStatusCodeSame(200);
+        /** @var array<string, mixed> $feed */
+        $feed = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        $post = $feed['posts'][0] ?? null;
+        self::assertIsArray($post);
+        self::assertArrayHasKey('slug', $post);
+
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/posts/' . $post['slug']);
+        self::assertResponseStatusCodeSame(200);
+
+        /** @var array<string, mixed> $singlePost */
+        $singlePost = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame($post['slug'], $singlePost['slug'] ?? null);
+    }
+
+    public function testGetMyPostsRequiresAuthenticationAndReturnsOnlyMine(): void
+    {
+        $anonymousClient = $this->getTestClient();
+        $anonymousClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/private/blog/posts/mine');
+        self::assertResponseStatusCodeSame(401);
+
+        $client = $this->getTestClient('john-user', 'password-user');
+        $client->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/private/blog/posts/mine');
+        self::assertResponseStatusCodeSame(200);
+
+        /** @var array<string, mixed> $payload */
+        $payload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertArrayHasKey('posts', $payload);
+        self::assertIsArray($payload['posts']);
+        self::assertNotEmpty($payload['posts']);
+
+        foreach ($payload['posts'] as $post) {
+            self::assertIsArray($post);
+            self::assertTrue((bool)($post['isAuthor'] ?? false));
+        }
+    }
+
     /**
      * @param array<string, mixed> $node
      */
@@ -415,7 +531,7 @@ final class BlogControllerTest extends WebTestCase
             self::assertSame($userId !== null && $node['authorId'] === $userId, $node['isAuthor']);
         }
 
-        foreach (['posts', 'comments', 'reactions', 'children'] as $listKey) {
+        foreach (['posts', 'comments', 'reactions'] as $listKey) {
             if (!isset($node[$listKey]) || !is_array($node[$listKey])) {
                 continue;
             }
@@ -427,6 +543,17 @@ final class BlogControllerTest extends WebTestCase
 
                 self::assertAuthorFlags($child, $userId);
             }
+        }
+
+        if (isset($node['children']) && is_array($node['children']) && isset($node['children']['authors']) && is_array($node['children']['authors'])) {
+            foreach ($node['children']['authors'] as $author) {
+                self::assertIsArray($author);
+                self::assertArrayHasKey('id', $author);
+            }
+        }
+
+        if (isset($node['parent']) && is_array($node['parent'])) {
+            self::assertAuthorFlags($node['parent'], $userId);
         }
     }
 }
