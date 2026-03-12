@@ -9,6 +9,7 @@ use App\Crm\Domain\Enum\TaskStatus;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -64,10 +65,18 @@ class Task implements EntityInterface
     #[ORM\OneToMany(targetEntity: TaskRequest::class, mappedBy: 'task')]
     private Collection|ArrayCollection $taskRequests;
 
+    /** @var Collection<int, User>|ArrayCollection<int, User> */
+    #[ORM\ManyToMany(targetEntity: User::class)]
+    #[ORM\JoinTable(name: 'crm_task_assignee')]
+    #[ORM\JoinColumn(name: 'task_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'user_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    private Collection|ArrayCollection $assignees;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
         $this->taskRequests = new ArrayCollection();
+        $this->assignees = new ArrayCollection();
     }
 
     #[Override]
@@ -178,5 +187,22 @@ class Task implements EntityInterface
     public function getTaskRequests(): Collection|ArrayCollection
     {
         return $this->taskRequests;
+    }
+
+    /**
+     * @return Collection<int, User>|ArrayCollection<int, User>
+     */
+    public function getAssignees(): Collection|ArrayCollection
+    {
+        return $this->assignees;
+    }
+
+    public function addAssignee(User $user): self
+    {
+        if (!$this->assignees->contains($user)) {
+            $this->assignees->add($user);
+        }
+
+        return $this;
     }
 }

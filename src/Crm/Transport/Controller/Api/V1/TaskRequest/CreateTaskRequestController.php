@@ -8,6 +8,7 @@ use App\Crm\Domain\Entity\TaskRequest;
 use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\Crm\Infrastructure\Repository\TaskRepository;
 use App\General\Application\Message\EntityCreated;
+use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
@@ -34,6 +35,14 @@ final readonly class CreateTaskRequestController
     #[Route('/v1/crm/applications/{applicationSlug}/task-requests', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(summary: 'POST /v1/crm/applications/{applicationSlug}/task-requests')]
+
+    #[OA\RequestBody(required: false, content: new OA\JsonContent(
+        properties: [
+            new OA\Property(property: 'title', type: 'string'),
+            new OA\Property(property: 'description', type: 'string', nullable: true),
+            new OA\Property(property: 'assigneeIds', type: 'array', items: new OA\Items(type: 'string', format: 'uuid'), nullable: true),
+        ]
+    ))]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
@@ -45,6 +54,18 @@ final readonly class CreateTaskRequestController
             ->setResolvedAt(isset($payload['resolvedAt']) ? new DateTimeImmutable((string)$payload['resolvedAt']) : null);
         if (is_string($payload['taskId'] ?? null)) {
             $taskRequest->setTask($this->taskRepository->find($payload['taskId']));
+        }
+        if (is_array($payload['assigneeIds'] ?? null)) {
+            foreach ($payload['assigneeIds'] as $assigneeId) {
+                if (!is_string($assigneeId) || $assigneeId === '') {
+                    continue;
+                }
+
+                $assignee = $this->entityManager->getRepository(User::class)->find($assigneeId);
+                if ($assignee instanceof User) {
+                    $taskRequest->addAssignee($assignee);
+                }
+            }
         }
 
         $this->entityManager->persist($taskRequest);

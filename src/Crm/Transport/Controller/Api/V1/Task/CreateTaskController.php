@@ -10,6 +10,7 @@ use App\Crm\Domain\Enum\TaskStatus;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
 use App\Crm\Infrastructure\Repository\SprintRepository;
 use App\General\Application\Message\EntityCreated;
+use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
@@ -37,6 +38,14 @@ final readonly class CreateTaskController
     #[Route('/v1/crm/applications/{applicationSlug}/tasks', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(summary: 'POST /v1/crm/applications/{applicationSlug}/tasks')]
+
+    #[OA\RequestBody(required: false, content: new OA\JsonContent(
+        properties: [
+            new OA\Property(property: 'title', type: 'string'),
+            new OA\Property(property: 'description', type: 'string', nullable: true),
+            new OA\Property(property: 'assigneeIds', type: 'array', items: new OA\Items(type: 'string', format: 'uuid'), nullable: true),
+        ]
+    ))]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
@@ -53,6 +62,18 @@ final readonly class CreateTaskController
         }
         if (is_string($payload['sprintId'] ?? null)) {
             $task->setSprint($this->sprintRepository->find($payload['sprintId']));
+        }
+        if (is_array($payload['assigneeIds'] ?? null)) {
+            foreach ($payload['assigneeIds'] as $assigneeId) {
+                if (!is_string($assigneeId) || $assigneeId === '') {
+                    continue;
+                }
+
+                $assignee = $this->entityManager->getRepository(User::class)->find($assigneeId);
+                if ($assignee instanceof User) {
+                    $task->addAssignee($assignee);
+                }
+            }
         }
 
         $this->entityManager->persist($task);
