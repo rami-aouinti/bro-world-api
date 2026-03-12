@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Blog\Transport\Controller\Api\V1\Mutation;
 
 use App\Blog\Application\Message\CreateBlogPostCommand;
+use App\Blog\Application\MessageHandler\CreateBlogPostCommandHandler;
 use App\Blog\Application\Service\BlogMutationRequestService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Messenger\Stamp\HandledStamp;
+
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -23,7 +23,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class CreateBlogPostController
 {
     public function __construct(
-        private MessageBusInterface $messageBus,
+        private CreateBlogPostCommandHandler $handler,
         private BlogMutationRequestService $requestService,
     ) {
     }
@@ -34,16 +34,14 @@ final readonly class CreateBlogPostController
         $payload = $this->requestService->extractPayload($request);
         $payload['filePath'] = $this->requestService->resolveUploadedFileUrl($request, (string)($payload['filePath'] ?? ''));
 
-        $envelope = $this->messageBus->dispatch(
-            new CreateBlogPostCommand(
-                (string)uniqid('op_', true),
-                $loggedInUser->getId(),
-                $blogId, (string)($payload['title'] ?? 'Untitled post'),
-                    $payload['content'] ?? null,
-                $payload['filePath'] ?: null,
-                (bool)($payload['isPinned'] ?? false)
-            )
-        );
+        $entityId = $this->handler->__invoke(new CreateBlogPostCommand(
+            (string)uniqid('op_', true),
+            $loggedInUser->getId(),
+            $blogId, (string)($payload['title'] ?? 'Untitled post'),
+                $payload['content'] ?? null,
+            $payload['filePath'] ?: null,
+            (bool)($payload['isPinned'] ?? false)
+        ));
 
         /** @var HandledStamp|null $handled */
         $handled = $envelope->last(HandledStamp::class);

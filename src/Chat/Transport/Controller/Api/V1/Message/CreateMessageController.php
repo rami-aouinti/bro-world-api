@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Chat\Transport\Controller\Api\V1\Message;
 
 use App\Chat\Application\Message\CreateMessageCommand;
+use App\Chat\Application\MessageHandler\CreateMessageCommandHandler;
 use App\Chat\Application\Service\MessagePayloadService;
 use App\General\Application\Service\OperationIdGeneratorService;
 use App\User\Domain\Entity\User;
@@ -12,8 +13,7 @@ use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Messenger\Stamp\HandledStamp;
+
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -52,7 +52,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class CreateMessageController
 {
     public function __construct(
-        private readonly MessageBusInterface $messageBus,
+        private readonly CreateMessageCommandHandler $handler,
         private readonly MessagePayloadService $messagePayloadService,
         private readonly OperationIdGeneratorService $operationIdGeneratorService,
     ) {
@@ -64,7 +64,7 @@ class CreateMessageController
         $content = $this->messagePayloadService->extractRequiredContent($request->toArray());
         $operationId = $this->operationIdGeneratorService->generate();
 
-        $envelope = $this->messageBus->dispatch(new CreateMessageCommand(
+        $entityId = $this->handler->__invoke(new CreateMessageCommand(
             operationId: $operationId,
             actorUserId: $loggedInUser->getId(),
             conversationId: $conversationId,
