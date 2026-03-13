@@ -71,4 +71,28 @@ final class ScopedPaginationContractTest extends WebTestCase
         self::assertArrayHasKey('meta', $payload);
         self::assertSame('recruit-talent-core', $payload['meta']['applicationSlug']);
     }
+
+    #[TestDox('Recruit public list accepts postedAtLabel=today filter.')]
+    public function testRecruitPublicPaginationContractWithPostedAtLabelToday(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/public/jobs?page=1&limit=5&postedAtLabel=today');
+
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeResponse($client->getResponse());
+        self::assertArrayHasKey('meta', $payload);
+        self::assertSame('today', $payload['meta']['filters']['postedAtLabel']);
+    }
+
+    #[TestDox('Recruit public list accepts postedAtLabel=7d filter.')]
+    public function testRecruitPublicPaginationContractWithPostedAtLabelSevenDays(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/public/jobs?page=1&limit=5&postedAtLabel=7d');
+
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeResponse($client->getResponse());
+        self::assertArrayHasKey('meta', $payload);
+        self::assertSame('7d', $payload['meta']['filters']['postedAtLabel']);
+    }
 }

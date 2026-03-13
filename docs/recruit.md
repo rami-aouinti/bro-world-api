@@ -161,7 +161,9 @@ Query params disponibles:
 - `yearsExperienceMin` (int)
 - `yearsExperienceMax` (int)
 - `isPublished` (bool)
-- `postedAtLabel` (string; ex: `today`, `3d`, `7d`, `30d`)
+- `postedAtLabel` (string)
+  - Formats supportés: `today`, `3d`, `7d`, `30d`
+  - Rétrocompatibilité acceptée: `vor kurzem`, `vor <N> Tage`, `vor <N> Wochen`, `vor <N> Monate`, `vor <N> Jahre`
 - `location` (string)
 - `q` (string, recherche full-text)
 
