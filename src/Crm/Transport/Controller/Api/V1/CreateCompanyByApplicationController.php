@@ -37,6 +37,25 @@ final readonly class CreateCompanyByApplicationController
      */
     #[Route('/v1/crm/applications/{applicationSlug}/companies', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Post(
+        summary: 'Create a company scoped to the CRM application',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', example: 'Acme'),
+                    new OA\Property(property: 'industry', type: 'string', nullable: true, example: 'SaaS'),
+                    new OA\Property(property: 'website', type: 'string', nullable: true, example: 'https://acme.example'),
+                    new OA\Property(property: 'contactEmail', type: 'string', nullable: true, example: 'contact@acme.example'),
+                    new OA\Property(property: 'phone', type: 'string', nullable: true, example: '+33102030405'),
+                ],
+            ),
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Company created in the scoped CRM application.'),
+        ],
+    )]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
