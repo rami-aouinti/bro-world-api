@@ -42,6 +42,12 @@ final class UserMessageControllerTest extends WebTestCase
             'content' => 'Nouveau message de test fonctionnel',
         ]));
         self::assertSame(Response::HTTP_ACCEPTED, $client->getResponse()->getStatusCode());
+        $createContent = $client->getResponse()->getContent();
+        self::assertNotFalse($createContent);
+        $createPayload = JSON::decode($createContent, true);
+        self::assertIsArray($createPayload);
+        self::assertArrayHasKey('operationId', $createPayload);
+        self::assertArrayNotHasKey('id', $createPayload);
 
         $client->request('POST', $this->baseUrl . '/conversations/' . $conversationId . '/messages', [], [], [], JSON::encode([
             'content' => '',
@@ -53,6 +59,12 @@ final class UserMessageControllerTest extends WebTestCase
             'content' => 'Message édité via test',
         ]));
         self::assertSame(Response::HTTP_ACCEPTED, $client->getResponse()->getStatusCode());
+        $patchContent = $client->getResponse()->getContent();
+        self::assertNotFalse($patchContent);
+        $patchPayload = JSON::decode($patchContent, true);
+        self::assertIsArray($patchPayload);
+        self::assertArrayHasKey('operationId', $patchPayload);
+        self::assertArrayHasKey('id', $patchPayload);
 
         $client->request('PATCH', $this->baseUrl . '/messages/' . $messageId, [], [], [], JSON::encode([
             'read' => 'yes',
@@ -69,5 +81,11 @@ final class UserMessageControllerTest extends WebTestCase
 
         $client->request('DELETE', $this->baseUrl . '/messages/' . $messageId);
         self::assertSame(Response::HTTP_ACCEPTED, $client->getResponse()->getStatusCode());
+        $deleteContent = $client->getResponse()->getContent();
+        self::assertNotFalse($deleteContent);
+        $deletePayload = JSON::decode($deleteContent, true);
+        self::assertIsArray($deletePayload);
+        self::assertArrayHasKey('operationId', $deletePayload);
+        self::assertArrayHasKey('id', $deletePayload);
     }
 }
