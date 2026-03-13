@@ -167,4 +167,13 @@ class CacheInvalidationService
             $this->cache->invalidateTags($tags);
         }
     }
+
+    public function invalidateUserStoryCaches(): void
+    {
+        if (!$this->cache instanceof TagAwareCacheInterface) {
+            return;
+        }
+
+        $this->cache->invalidateTags([$this->cacheKeyConventionService->tagPrivateStoryList()]);
+    }
 }

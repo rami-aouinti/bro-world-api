@@ -77,6 +77,11 @@ class CacheKeyConventionService
         return 'private_' . $this->sanitizeSegment($username) . '_blog_' . $this->sanitizeSegment($scope);
     }
 
+    public function buildPrivateStoryListKey(string $userId, int $limit): string
+    {
+        return 'private_' . $this->sanitizeSegment($userId) . '_story_list_' . $limit;
+    }
+
     /**
      * @param array<string, mixed> $filters
      */
@@ -252,6 +257,11 @@ class CacheKeyConventionService
     public function tagPrivateBlog(string $userId): string
     {
         return 'cache_private_' . $this->sanitizeSegment($userId) . '_blog';
+    }
+
+    public function tagPrivateStoryList(): string
+    {
+        return 'cache_private_story_list';
     }
 
     public function shopProductListTag(): string
