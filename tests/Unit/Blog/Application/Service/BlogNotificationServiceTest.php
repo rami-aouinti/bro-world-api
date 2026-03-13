@@ -77,6 +77,62 @@ final class BlogNotificationServiceTest extends TestCase
         (new BlogNotificationService($publisher))->notifyReactionCreated($reply, $reactor, 'like');
     }
 
+    public function testNotifyCommentCreatedSkipsPublishWhenActorIsRecipient(): void
+    {
+        $actor = $this->createUser('Rami', 'User');
+
+        $post = (new BlogPost())
+            ->setAuthor($actor)
+            ->setBlog(new Blog())
+            ->setContent('My own post');
+
+        $comment = (new BlogComment())
+            ->setPost($post)
+            ->setAuthor($actor)
+            ->setContent('self comment');
+
+        $publisher = $this->createMock(NotificationPublisher::class);
+        $publisher->expects(self::never())->method('publish');
+
+        (new BlogNotificationService($publisher))->notifyCommentCreated($comment);
+    }
+
+    public function testNotifyReactionCreatedSkipsPublishWhenActorIsRecipient(): void
+    {
+        $postAuthor = $this->createUser('Adam', 'Author');
+        $actor = $this->createUser('Rami', 'User');
+
+        $post = (new BlogPost())
+            ->setAuthor($postAuthor)
+            ->setBlog(new Blog())
+            ->setContent('General update');
+
+        $comment = (new BlogComment())
+            ->setPost($post)
+            ->setAuthor($actor)
+            ->setContent('my own comment');
+
+        $publisher = $this->createMock(NotificationPublisher::class);
+        $publisher->expects(self::never())->method('publish');
+
+        (new BlogNotificationService($publisher))->notifyReactionCreated($comment, $actor, 'like');
+    }
+
+    public function testNotifyPostReactionCreatedSkipsPublishWhenActorIsRecipient(): void
+    {
+        $actor = $this->createUser('Rami', 'User');
+
+        $post = (new BlogPost())
+            ->setAuthor($actor)
+            ->setBlog(new Blog())
+            ->setContent('Self post');
+
+        $publisher = $this->createMock(NotificationPublisher::class);
+        $publisher->expects(self::never())->method('publish');
+
+        (new BlogNotificationService($publisher))->notifyPostReactionCreated($post, $actor, 'like');
+    }
+
     private function createUser(string $firstName, string $lastName): User
     {
         return (new User())
