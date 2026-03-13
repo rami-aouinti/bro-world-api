@@ -162,9 +162,10 @@ class CacheKeyConventionService
     /**
      * @param array<string, mixed> $filters
      */
-    public function buildSchoolExamListKey(int $page, int $limit, array $filters): string
+    public function buildSchoolExamListKey(string $applicationSlug, int $page, int $limit, array $filters): string
     {
         return 'school_exam_list_' . md5((string)json_encode([
+            'applicationSlug' => $applicationSlug,
             'page' => $page,
             'limit' => $limit,
             'filters' => $filters,
@@ -287,6 +288,11 @@ class CacheKeyConventionService
     public function schoolExamListTag(): string
     {
         return 'cache_school_exam_list';
+    }
+
+    public function schoolExamListTagByApplication(string $applicationSlug): string
+    {
+        return 'cache_school_exam_list_' . $this->sanitizeSegment($applicationSlug);
     }
 
     public function schoolClassListByApplicationTag(string $applicationSlug): string

@@ -21,7 +21,7 @@ final readonly class SchoolApplicationScopeResolver
     ) {
     }
 
-    public function resolveOrCreateSchoolByApplicationSlug(string $applicationSlug, User $user): School
+    public function resolveOrCreateSchoolByApplicationSlug(string $applicationSlug, ?User $user): School
     {
         $school = $this->schoolRepository->findOneByApplicationSlug($applicationSlug);
         if ($school instanceof School) {

@@ -134,7 +134,7 @@ readonly class ProductListService
             'name' => $product->getName(),
             'sku' => $product->getSku(),
             'description' => $product->getDescription(),
-            'price' => $product->getPrice(),
+            'price' => MoneyFormatter::toApiAmount($product->getPrice()),
             'currencyCode' => $product->getCurrencyCode(),
             'stock' => $product->getStock(),
             'isFeatured' => $product->isFeatured(),

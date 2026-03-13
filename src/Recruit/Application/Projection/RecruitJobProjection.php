@@ -42,6 +42,12 @@ final class RecruitJobProjection
                 'experienceLevel' => [
                     'type' => 'keyword',
                 ],
+                'yearsExperienceMin' => [
+                    'type' => 'integer',
+                ],
+                'yearsExperienceMax' => [
+                    'type' => 'integer',
+                ],
                 'tags' => [
                     'type' => 'keyword',
                 ],

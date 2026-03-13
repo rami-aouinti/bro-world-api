@@ -9,13 +9,21 @@ use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
 use App\User\Domain\Entity\User;
+use DomainException;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Ramsey\Uuid\UuidInterface;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'blog_reaction')]
+#[ORM\Table(
+    name: 'blog_reaction',
+    uniqueConstraints: [
+        new ORM\UniqueConstraint(name: 'uniq_blog_reaction_author_comment', columns: ['author_id', 'comment_id']),
+        new ORM\UniqueConstraint(name: 'uniq_blog_reaction_author_post', columns: ['author_id', 'post_id']),
+    ],
+)]
+#[ORM\HasLifecycleCallbacks]
 class BlogReaction implements EntityInterface
 {
     use Timestampable;
@@ -56,6 +64,7 @@ class BlogReaction implements EntityInterface
     {
         $this->comment = $comment;
         $this->post = null;
+        $this->assertSingleTarget();
 
         return $this;
     }
@@ -71,6 +80,7 @@ class BlogReaction implements EntityInterface
     {
         $this->post = $post;
         $this->comment = null;
+        $this->assertSingleTarget();
 
         return $this;
     }
@@ -93,5 +103,19 @@ class BlogReaction implements EntityInterface
         $this->type = $type;
 
         return $this;
+    }
+
+    #[ORM\PrePersist]
+    #[ORM\PreUpdate]
+    public function validateTargetIntegrity(): void
+    {
+        $this->assertSingleTarget();
+    }
+
+    private function assertSingleTarget(): void
+    {
+        if (($this->comment === null) === ($this->post === null)) {
+            throw new DomainException('A blog reaction must target either a comment or a post.');
+        }
     }
 }

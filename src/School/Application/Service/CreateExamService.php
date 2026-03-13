@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\School\Application\Service;
 
 use App\General\Application\Message\EntityCreated;
+use App\School\Application\Exception\SchoolRelationException;
 use App\School\Domain\Entity\Exam;
+use App\School\Domain\Entity\SchoolClass;
+use App\School\Domain\Entity\Teacher;
 use App\School\Domain\Enum\ExamStatus;
 use App\School\Domain\Enum\ExamType;
 use App\School\Domain\Enum\Term;
@@ -32,22 +35,42 @@ final readonly class CreateExamService
         ExamStatus $status,
         Term $term,
     ): Exam {
+        if (!is_string($classId)) {
+            throw SchoolRelationException::unprocessable('classId is required');
+        }
+
+        if (!is_string($teacherId)) {
+            throw SchoolRelationException::unprocessable('teacherId is required');
+        }
+
+        $class = $this->classRepository->find($classId);
+        if (!$class instanceof SchoolClass) {
+            throw SchoolRelationException::notFound('classId');
+        }
+
+        $teacher = $this->teacherRepository->find($teacherId);
+        if (!$teacher instanceof Teacher) {
+            throw SchoolRelationException::notFound('teacherId');
+        }
+
+        if (!$teacher->getClasses()->contains($class)) {
+            throw SchoolRelationException::unprocessable('teacherId is not assigned to classId');
+        }
+
         $exam = (new Exam())
             ->setTitle($title)
             ->setType($type)
             ->setStatus($status)
-            ->setTerm($term);
-
-        if (is_string($classId)) {
-            $exam->setSchoolClass($this->classRepository->find($classId));
-        }
-        if (is_string($teacherId)) {
-            $exam->setTeacher($this->teacherRepository->find($teacherId));
-        }
+            ->setTerm($term)
+            ->setSchoolClass($class)
+            ->setTeacher($teacher);
 
         $this->entityManager->persist($exam);
         $this->entityManager->flush();
-        $this->messageBus->dispatch(new EntityCreated('school_exam', $exam->getId()));
+        $applicationSlug = $class->getSchool()?->getApplication()?->getSlug();
+        $this->messageBus->dispatch(new EntityCreated('school_exam', $exam->getId(), context: [
+            'applicationSlug' => $applicationSlug,
+        ]));
 
         return $exam;
     }

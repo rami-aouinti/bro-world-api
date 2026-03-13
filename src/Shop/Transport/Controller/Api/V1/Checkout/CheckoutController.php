@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace App\Shop\Transport\Controller\Api\V1\Checkout;
 
 use App\Shop\Application\Message\CheckoutCommand;
+use App\Shop\Application\Service\MoneyFormatter;
 use App\Shop\Domain\Entity\Order;
+use App\Shop\Transport\Controller\Api\V1\Input\Checkout\CheckoutInput;
+use App\Shop\Transport\Controller\Api\V1\Input\Checkout\CheckoutInputValidator;
+use App\Shop\Transport\Controller\Api\V1\Input\Support\ValidationResponseFactory;
 use App\User\Domain\Entity\User;
+use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,6 +31,7 @@ final readonly class CheckoutController
 {
     public function __construct(
         private Security $security,
+        private CheckoutInputValidator $checkoutInputValidator,
         private MessageBusInterface $messageBus,
     ) {
     }
@@ -40,27 +46,27 @@ final readonly class CheckoutController
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Authenticated user required.');
         }
 
-        $payload = (array)json_decode((string)$request->getContent(), true);
+        try {
+            $payload = (array) json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            return ValidationResponseFactory::invalidJson();
+        }
 
-        $billingAddress = trim((string)($payload['billingAddress'] ?? ''));
-        $shippingAddress = trim((string)($payload['shippingAddress'] ?? ''));
-        $email = trim((string)($payload['email'] ?? ''));
-        $phone = trim((string)($payload['phone'] ?? ''));
-        $shippingMethod = trim((string)($payload['shippingMethod'] ?? ''));
-
-        if ($billingAddress === '' || $shippingAddress === '' || $email === '' || $phone === '' || $shippingMethod === '') {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Missing required checkout payload.');
+        $input = CheckoutInput::fromArray($payload);
+        $validationResponse = $this->checkoutInputValidator->validate($input);
+        if ($validationResponse instanceof JsonResponse) {
+            return $validationResponse;
         }
 
         $envelope = $this->messageBus->dispatch(new CheckoutCommand(
             operationId: $request->headers->get('x-request-id', uniqid('checkout-', true)),
             shopId: $shopId,
             userId: $user->getId(),
-            billingAddress: $billingAddress,
-            shippingAddress: $shippingAddress,
-            email: $email,
-            phone: $phone,
-            shippingMethod: $shippingMethod,
+            billingAddress: $input->billingAddress,
+            shippingAddress: $input->shippingAddress,
+            email: $input->email,
+            phone: $input->phone,
+            shippingMethod: $input->shippingMethod,
         ));
 
         /** @var HandledStamp|null $handled */
@@ -75,7 +81,7 @@ final readonly class CheckoutController
         return new JsonResponse([
             'id' => $order->getId(),
             'status' => $order->getStatus()->value,
-            'subtotal' => $order->getSubtotal(),
+            'subtotal' => MoneyFormatter::toApiAmount($order->getSubtotal()),
             'itemsCount' => $order->getItems()->count(),
             'createdAt' => $order->getCreatedAt()?->format(DATE_ATOM),
         ], JsonResponse::HTTP_CREATED);

@@ -16,6 +16,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Override;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 use Throwable;
 
 #[ORM\Entity]
@@ -31,7 +32,8 @@ class Sprint implements EntityInterface
     private UuidInterface $id;
 
     #[ORM\ManyToOne(targetEntity: Project::class, inversedBy: 'sprints')]
-    #[ORM\JoinColumn(name: 'project_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'project_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[Assert\NotNull]
     private ?Project $project = null;
 
     #[ORM\Column(name: 'name', type: Types::STRING, length: 255)]

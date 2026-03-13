@@ -8,7 +8,11 @@ use App\General\Application\Message\EntityCreated;
 use App\Shop\Application\Service\ProductHydratorService;
 use App\Shop\Application\Service\ShopApplicationResolverService;
 use App\Shop\Domain\Entity\Product;
+use App\Shop\Transport\Controller\Api\V1\Input\Product\CreateProductInput;
+use App\Shop\Transport\Controller\Api\V1\Input\Product\ProductInputValidator;
+use App\Shop\Transport\Controller\Api\V1\Input\Support\ValidationResponseFactory;
 use Doctrine\ORM\EntityManagerInterface;
+use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,6 +30,7 @@ final readonly class CreateApplicationProductController
     public function __construct(
         private ShopApplicationResolverService $shopApplicationResolverService,
         private ProductHydratorService $productHydratorService,
+        private ProductInputValidator $productInputValidator,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -37,7 +42,18 @@ final readonly class CreateApplicationProductController
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
         $shop = $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
-        $payload = (array)json_decode((string)$request->getContent(), true);
+
+        try {
+            $payload = (array) json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            return ValidationResponseFactory::invalidJson();
+        }
+
+        $input = CreateProductInput::fromArray($payload);
+        $validationResponse = $this->productInputValidator->validate($input);
+        if ($validationResponse instanceof JsonResponse) {
+            return $validationResponse;
+        }
 
         $product = $this->productHydratorService->hydrateProduct((new Product())->setShop($shop), $payload);
 

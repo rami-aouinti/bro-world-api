@@ -8,6 +8,7 @@ use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
 use Doctrine\ORM\EntityManagerInterface;
+use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
@@ -108,7 +109,8 @@ class JobPublicDetailService
             ->andWhere('job.recruit = :recruit')
             ->andWhere('job.isPublished = :isPublished')
             ->andWhere('job.id IN (:ids)')
-            ->setParameter('recruit', $recruit)
+            ->setParameter('recruit', $recruit->getId(), UuidBinaryOrderedTimeType::NAME)
+            ->setParameter('isPublished', true)
             ->setParameter('ids', $similarJobIds)
             ->getQuery()
             ->getResult();

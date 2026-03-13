@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Crm\Application\Service;
 
-use App\Crm\Domain\Entity\Company;
 use App\Crm\Domain\Entity\Crm;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\General\Application\Service\CacheKeyConventionService;
@@ -40,34 +39,8 @@ readonly class CompanyApplicationListService
                 $item->tag($this->cacheKeyConventionService->crmCompanyListByApplicationTag($applicationSlug));
             }
 
-            $qb = $this->companyRepository->createQueryBuilder('company')
-                ->andWhere('company.crm = :crm')->setParameter('crm', $crm)
-                ->orderBy('company.createdAt', 'DESC')
-                ->setFirstResult(($page - 1) * $limit)
-                ->setMaxResults($limit);
-
-            if ($filters['q'] !== '') {
-                $qb->andWhere('LOWER(company.name) LIKE LOWER(:q)')->setParameter('q', '%' . $filters['q'] . '%');
-            }
-
-            $items = array_map(static fn (Company $company): array => [
-                'id' => $company->getId(),
-                'name' => $company->getName(),
-                'industry' => $company->getIndustry(),
-                'website' => $company->getWebsite(),
-                'contactEmail' => $company->getContactEmail(),
-                'phone' => $company->getPhone(),
-            ], $qb->getQuery()->getResult());
-
-            $countQb = $this->companyRepository->createQueryBuilder('company')
-                ->select('COUNT(company.id)')
-                ->andWhere('company.crm = :crm')->setParameter('crm', $crm);
-
-            if ($filters['q'] !== '') {
-                $countQb->andWhere('LOWER(company.name) LIKE LOWER(:q)')->setParameter('q', '%' . $filters['q'] . '%');
-            }
-
-            $totalItems = (int)$countQb->getQuery()->getSingleScalarResult();
+            $items = $this->companyRepository->findScopedProjection($crm->getId(), $limit, ($page - 1) * $limit, $filters);
+            $totalItems = $this->companyRepository->countScopedByCrm($crm->getId(), $filters);
 
             return [
                 'items' => $items,

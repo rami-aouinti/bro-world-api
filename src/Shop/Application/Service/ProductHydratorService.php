@@ -29,7 +29,7 @@ final readonly class ProductHydratorService
             $product->setName((string)($payload['name'] ?? ''));
         }
         if (!$partial || array_key_exists('price', $payload)) {
-            $product->setPrice((float)($payload['price'] ?? 0));
+            $product->setPrice((int)round((float)($payload['price'] ?? 0) * 100));
         }
         if (!$partial || array_key_exists('sku', $payload)) {
             $defaultSku = strtoupper(substr(md5($product->getId()), 0, 12));
@@ -68,12 +68,39 @@ final readonly class ProductHydratorService
                 $product->removeTag($tag);
             }
             foreach ((array)($payload['tagIds'] ?? []) as $tagId) {
-                if (is_string($tagId) && ($tag = $this->tagRepository->find($tagId)) instanceof Tag) {
-                    $product->addTag($tag);
+                if (!is_string($tagId)) {
+                    continue;
                 }
+
+                $tag = $this->tagRepository->find($tagId);
+                if (!$tag instanceof Tag) {
+                    continue;
+                }
+
+                if ($product->getShop() instanceof Shop && !$this->isTagInShopScope($tag, $product->getShop())) {
+                    continue;
+                }
+
+                $product->addTag($tag);
             }
         }
 
         return $product;
+    }
+
+    private function isTagInShopScope(Tag $tag, Shop $shop): bool
+    {
+        $linkedProducts = $tag->getProducts();
+        if ($linkedProducts->isEmpty()) {
+            return true;
+        }
+
+        foreach ($linkedProducts as $linkedProduct) {
+            if ($linkedProduct->getShop()?->getId() === $shop->getId()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

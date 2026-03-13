@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Shop\Transport\Controller\Api\V1\Tag;
 
 use App\General\Application\Message\EntityDeleted;
+use App\Shop\Application\Service\ShopApplicationResolverService;
 use App\Shop\Domain\Entity\Tag;
 use App\Shop\Infrastructure\Repository\TagRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,6 +24,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class DeleteTagController
 {
     public function __construct(
+        private ShopApplicationResolverService $shopApplicationResolverService,
         private TagRepository $tagRepository,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
@@ -33,7 +35,9 @@ final readonly class DeleteTagController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $id): JsonResponse
     {
-        $tag = $this->tagRepository->find($id);
+        $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
+
+        $tag = $this->tagRepository->findOneByIdAndApplicationScope($id, $applicationSlug);
         if (!$tag instanceof Tag) {
             return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
         }

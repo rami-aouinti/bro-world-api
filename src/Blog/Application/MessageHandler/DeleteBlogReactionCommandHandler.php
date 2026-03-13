@@ -35,6 +35,7 @@ final readonly class DeleteBlogReactionCommandHandler
 
         $applicationSlug = $reaction->getPost()?->getBlog()->getApplication()?->getSlug();
         $this->reactionRepository->remove($reaction);
-        $this->cacheInvalidationService->invalidateBlogCaches($applicationSlug, $command->actorUserId);
+        $affectedUserIds = array_values(array_filter(array_unique([$command->actorUserId, $reaction->getAuthor()->getId(), $reaction->getPost()?->getAuthor()->getId(), $reaction->getComment()?->getAuthor()->getId(), $reaction->getComment()?->getParent()?->getAuthor()->getId()]), static fn (?string $userId): bool => $userId !== null && $userId !== ''));
+        $this->cacheInvalidationService->invalidateBlogCaches($applicationSlug, $affectedUserIds);
     }
 }

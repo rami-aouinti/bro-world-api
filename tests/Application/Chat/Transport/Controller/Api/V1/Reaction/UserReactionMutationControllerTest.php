@@ -41,6 +41,16 @@ final class UserReactionMutationControllerTest extends WebTestCase
         $reactionId = $payload['id'] ?? null;
         self::assertIsString($reactionId);
 
+        $client->request('POST', $this->baseUrl . '/messages/' . $messageId . '/reactions', [], [], [], JSON::encode([
+            'reaction' => 'like',
+        ]));
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $duplicateContent = $client->getResponse()->getContent();
+        self::assertNotFalse($duplicateContent);
+        $duplicatePayload = JSON::decode($duplicateContent, true);
+        self::assertSame($reactionId, $duplicatePayload['id'] ?? null);
+
         $client->request('PATCH', $this->baseUrl . '/reactions/' . $reactionId, [], [], [], JSON::encode([
             'reaction' => 'love',
         ]));

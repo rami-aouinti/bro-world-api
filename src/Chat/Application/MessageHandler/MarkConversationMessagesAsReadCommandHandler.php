@@ -7,7 +7,6 @@ namespace App\Chat\Application\MessageHandler;
 use App\Chat\Application\Message\MarkConversationMessagesAsReadCommand;
 use App\Chat\Domain\Entity\Conversation;
 use App\Chat\Domain\Entity\ConversationParticipant;
-use App\Chat\Infrastructure\Repository\ChatMessageRepository;
 use App\Chat\Infrastructure\Repository\ConversationParticipantRepository;
 use App\Chat\Infrastructure\Repository\ConversationRepository;
 use App\General\Application\Service\CacheInvalidationService;
@@ -21,7 +20,6 @@ final readonly class MarkConversationMessagesAsReadCommandHandler
     public function __construct(
         private ConversationRepository $conversationRepository,
         private ConversationParticipantRepository $participantRepository,
-        private ChatMessageRepository $messageRepository,
         private CacheInvalidationService $cacheInvalidationService,
     ) {
     }
@@ -30,13 +28,9 @@ final readonly class MarkConversationMessagesAsReadCommandHandler
     {
         [$conversation, $participant] = $this->findParticipantConversation($command->conversationId, $command->actorUserId);
 
-        $updated = $this->messageRepository->markConversationMessagesAsRead($conversation->getId(), $command->actorUserId);
         $participant->setLastReadMessageAt(new \DateTimeImmutable());
         $this->participantRepository->save($participant);
-
-        if ($updated > 0) {
-            $this->cacheInvalidationService->invalidateConversationCaches($conversation->getChat()->getId(), $command->actorUserId);
-        }
+        $this->cacheInvalidationService->invalidateConversationCaches($conversation->getChat()->getId(), $command->actorUserId);
     }
 
     /**

@@ -45,8 +45,10 @@ class Product implements EntityInterface
     #[ORM\Column(name: 'description', type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(name: 'price', type: Types::FLOAT)]
-    private float $price = 0.0;
+    #[ORM\Column(name: 'price', type: Types::INTEGER, options: [
+        'default' => 0,
+    ])]
+    private int $price = 0;
 
     #[ORM\Column(name: 'currency_code', type: Types::STRING, length: 3, options: [
         'default' => 'EUR',
@@ -143,14 +145,14 @@ class Product implements EntityInterface
         return $this;
     }
 
-    public function getPrice(): float
+    public function getPrice(): int
     {
         return $this->price;
     }
 
-    public function setPrice(float $price): self
+    public function setPrice(int $price): self
     {
-        $this->price = $price;
+        $this->price = max(0, $price);
 
         return $this;
     }

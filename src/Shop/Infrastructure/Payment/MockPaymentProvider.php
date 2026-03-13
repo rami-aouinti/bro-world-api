@@ -6,15 +6,24 @@ namespace App\Shop\Infrastructure\Payment;
 
 use App\Shop\Domain\Service\Interfaces\PaymentProviderInterface;
 
+use function hash_equals;
+use function hash_hmac;
 use function is_array;
 use function is_string;
+use function json_encode;
 use function sprintf;
+use function strtolower;
 use function trim;
 use function uniqid;
 
-final class MockPaymentProvider implements PaymentProviderInterface
+final readonly class MockPaymentProvider implements PaymentProviderInterface
 {
-    public function createIntent(string $orderId, float $amount, string $currency, array $metadata = []): array
+    public function __construct(
+        private string $appSecret,
+    ) {
+    }
+
+    public function createIntent(string $orderId, int $amount, string $currency, array $metadata = []): array
     {
         $reference = sprintf('mock_intent_%s', uniqid('', true));
 
@@ -55,6 +64,18 @@ final class MockPaymentProvider implements PaymentProviderInterface
 
         if (!is_string($providerReference) || !is_string($status) || !is_string($eventId)) {
             return null;
+        }
+
+        if (is_string($signature) && trim($signature) !== '') {
+            $encodedPayload = json_encode($payload);
+            if (!is_string($encodedPayload)) {
+                return null;
+            }
+
+            $expectedSignature = hash_hmac('sha256', $encodedPayload, $this->appSecret);
+            if (!hash_equals($expectedSignature, strtolower(trim($signature)))) {
+                return null;
+            }
         }
 
         return [

@@ -17,6 +17,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Override;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'crm_task_request')]
@@ -31,7 +32,8 @@ class TaskRequest implements EntityInterface
     private UuidInterface $id;
 
     #[ORM\ManyToOne(targetEntity: Task::class, inversedBy: 'taskRequests')]
-    #[ORM\JoinColumn(name: 'task_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'task_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[Assert\NotNull]
     private ?Task $task = null;
 
     #[ORM\Column(name: 'title', type: Types::STRING, length: 255)]

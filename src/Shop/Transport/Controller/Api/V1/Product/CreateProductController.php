@@ -6,9 +6,15 @@ namespace App\Shop\Transport\Controller\Api\V1\Product;
 
 use App\General\Application\Message\EntityCreated;
 use App\Shop\Application\Service\ProductHydratorService;
+use App\Shop\Application\Service\ShopApplicationResolverService;
 use App\Shop\Domain\Entity\Product;
+use App\Shop\Domain\Entity\Shop;
 use App\Shop\Infrastructure\Repository\ShopRepository;
+use App\Shop\Transport\Controller\Api\V1\Input\Product\CreateProductInput;
+use App\Shop\Transport\Controller\Api\V1\Input\Product\ProductInputValidator;
+use App\Shop\Transport\Controller\Api\V1\Input\Support\ValidationResponseFactory;
 use Doctrine\ORM\EntityManagerInterface;
+use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,23 +31,42 @@ final readonly class CreateProductController
 {
     public function __construct(
         private ProductHydratorService $productHydratorService,
+        private ProductInputValidator $productInputValidator,
+        private ShopApplicationResolverService $shopApplicationResolverService,
         private ShopRepository $shopRepository,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
     }
 
-    #[Route('/v1/shop/applications/{applicationSlug}/products', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    #[Route('/v1/shop/products', methods: [Request::METHOD_POST])]
+    public function __invoke(Request $request): JsonResponse
     {
-        $request->attributes->set('applicationSlug', $applicationSlug);
-        $payload = (array)json_decode((string)$request->getContent(), true);
-        $product = $this->productHydratorService->hydrateProduct(new Product(), $payload);
-
-        if (is_string($payload['shopId'] ?? null)) {
-            $product->setShop($this->shopRepository->find($payload['shopId']));
+        try {
+            $payload = (array) json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            return ValidationResponseFactory::invalidJson();
         }
+
+        $input = CreateProductInput::fromArray($payload);
+        $validationResponse = $this->productInputValidator->validate($input);
+        if ($validationResponse instanceof JsonResponse) {
+            return $validationResponse;
+        }
+
+        $shop = $this->resolveShop($input);
+        if (!$shop instanceof Shop) {
+            return new JsonResponse([
+                'message' => 'Validation failed.',
+                'errors' => [[
+                    'field' => 'shopId',
+                    'message' => 'shopId is required when applicationSlug is missing.',
+                    'code' => 'SHOP_SCOPE_REQUIRED',
+                ]],
+            ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $product = $this->productHydratorService->hydrateProduct((new Product())->setShop($shop), $payload);
 
         $this->entityManager->persist($product);
         $this->entityManager->flush();
@@ -50,5 +75,20 @@ final readonly class CreateProductController
         return new JsonResponse([
             'id' => $product->getId(),
         ], JsonResponse::HTTP_CREATED);
+    }
+
+    private function resolveShop(CreateProductInput $input): ?Shop
+    {
+        if ($input->applicationSlug !== null && $input->applicationSlug !== '') {
+            return $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($input->applicationSlug);
+        }
+
+        if ($input->shopId !== null && $input->shopId !== '') {
+            $shop = $this->shopRepository->find($input->shopId);
+
+            return $shop instanceof Shop ? $shop : null;
+        }
+
+        return null;
     }
 }

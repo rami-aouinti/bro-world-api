@@ -35,6 +35,7 @@ final readonly class DeleteBlogCommentCommandHandler
 
         $applicationSlug = $comment->getPost()->getBlog()->getApplication()?->getSlug();
         $this->commentRepository->remove($comment);
-        $this->cacheInvalidationService->invalidateBlogCaches($applicationSlug, $command->actorUserId);
+        $affectedUserIds = array_values(array_filter(array_unique([$command->actorUserId, $comment->getAuthor()->getId(), $comment->getPost()->getAuthor()->getId(), $comment->getParent()?->getAuthor()->getId()]), static fn (?string $userId): bool => $userId !== null && $userId !== ''));
+        $this->cacheInvalidationService->invalidateBlogCaches($applicationSlug, $affectedUserIds);
     }
 }

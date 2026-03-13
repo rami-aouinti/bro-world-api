@@ -6,6 +6,7 @@ namespace App\Shop\Infrastructure\Repository;
 
 use App\General\Infrastructure\Repository\BaseRepository;
 use App\Shop\Domain\Entity\Product as Entity;
+use App\Shop\Domain\Entity\Shop;
 use App\Shop\Domain\Enum\ProductStatus;
 use Doctrine\DBAL\LockMode;
 use Doctrine\Persistence\ManagerRegistry;
@@ -62,5 +63,19 @@ class ProductRepository extends BaseRepository
         $results = $qb->getQuery()->getResult();
 
         return $results;
+    }
+
+    public function findOneByIdAndShop(string $id, Shop $shop): ?Entity
+    {
+        /** @var Entity|null $product */
+        $product = $this->createQueryBuilder('product')
+            ->andWhere('product.id = :id')
+            ->andWhere('product.shop = :shop')
+            ->setParameter('id', $id)
+            ->setParameter('shop', $shop)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $product;
     }
 }

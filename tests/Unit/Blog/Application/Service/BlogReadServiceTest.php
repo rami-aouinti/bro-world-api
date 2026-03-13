@@ -13,6 +13,7 @@ use App\Blog\Domain\Enum\BlogReactionType;
 use App\Blog\Domain\Enum\BlogStatus;
 use App\Blog\Domain\Enum\BlogType;
 use App\Blog\Domain\Enum\BlogVisibility;
+use App\Blog\Infrastructure\Repository\BlogPostRepository;
 use App\Blog\Infrastructure\Repository\BlogRepository;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\User\Domain\Entity\User;
@@ -36,9 +37,11 @@ final class BlogReadServiceTest extends TestCase
         $grandChildA1 = $this->mockComment('c-grand-a1', $currentUser, 'c-child-a1', []);
 
         $comments = [$childB1, $parentB, $grandChildA1, $parentA, $childA1];
+        /** @var array<string|null, list<BlogComment>> $tree */
+        $tree = $this->invokePrivate($service, 'buildCommentTreeByParent', [$comments]);
 
         /** @var array<int, array<string, mixed>> $normalized */
-        $normalized = $this->invokePrivate($service, 'normalizeComments', [$comments, null, $currentUser]);
+        $normalized = $this->invokePrivate($service, 'normalizeComments', [$tree, null, $currentUser]);
 
         self::assertSame(['c-parent-b', 'c-parent-a'], array_column($normalized, 'id'));
         self::assertFalse($normalized[0]['isAuthor']);
@@ -52,9 +55,14 @@ final class BlogReadServiceTest extends TestCase
         self::assertTrue($normalized[1]['children'][0]['children'][0]['isAuthor']);
     }
 
-    public function testNormalizeBlogNormalizesPostAndCommentTrees(): void
+    public function testNormalizeBlogUsesRepositoryPaginationAndChildrenSummary(): void
     {
-        $service = $this->createService();
+        $blogRepository = $this->createMock(BlogRepository::class);
+        $blogPostRepository = $this->createMock(BlogPostRepository::class);
+        $cache = $this->createMock(CacheInterface::class);
+
+        $service = new BlogReadService($blogRepository, $blogPostRepository, $cache, new CacheKeyConventionService());
+
         $currentUser = $this->mockUser('u-current', 'john-user');
         $otherUser = $this->mockUser('u-other', 'alice-user');
 
@@ -73,11 +81,15 @@ final class BlogReadServiceTest extends TestCase
 
         $post = $this->createMock(BlogPost::class);
         $post->method('getId')->willReturn('p-1');
+        $post->method('getSlug')->willReturn('p-1');
         $post->method('getAuthor')->willReturn($currentUser);
         $post->method('getTitle')->willReturn('Post title');
         $post->method('getContent')->willReturn('Post content');
+        $post->method('getSharedUrl')->willReturn(null);
+        $post->method('getParentPost')->willReturn(null);
         $post->method('isPinned')->willReturn(true);
         $post->method('getFilePath')->willReturn('/uploads/post.png');
+        $post->method('getMediaUrls')->willReturn([]);
         $post->method('getReactions')->willReturn(new ArrayCollection([$postReaction]));
         $post->method('getComments')->willReturn(new ArrayCollection([$childComment, $rootComment]));
 
@@ -91,26 +103,40 @@ final class BlogReadServiceTest extends TestCase
         $blog->method('getCommentStatus')->willReturn(BlogStatus::OPEN);
         $blog->method('getVisibility')->willReturn(BlogVisibility::PUBLIC);
         $blog->method('getApplication')->willReturn(null);
-        $blog->method('getPosts')->willReturn(new ArrayCollection([$post]));
+
+        $blogPostRepository->expects(self::once())->method('findRootPostsByBlogPaginated')->with($blog, 2, 5)->willReturn([$post]);
+        $blogPostRepository->expects(self::once())->method('countRootPostsByBlog')->with($blog)->willReturn(8);
+        $blogPostRepository->expects(self::once())->method('findChildrenSharesSummaryByParentIds')->with(['p-1'])->willReturn([
+            'p-1' => [
+                'count' => 1,
+                'authors' => [[
+                    'id' => 'u-other',
+                    'username' => 'alice-user',
+                    'firstName' => 'First',
+                    'lastName' => 'Last',
+                    'photo' => '/uploads/alice-user.png',
+                ]],
+            ],
+        ]);
 
         /** @var array<string, mixed> $normalized */
-        $normalized = $this->invokePrivate($service, 'normalizeBlog', [$blog, $currentUser]);
+        $normalized = $this->invokePrivate($service, 'normalizeBlog', [$blog, $currentUser, 2, 5]);
 
-        self::assertSame('b-1', $normalized['id']);
-        self::assertCount(1, $normalized['posts']);
-        self::assertTrue($normalized['posts'][0]['isAuthor']);
-        self::assertSame('heart', $normalized['posts'][0]['reactions'][0]['type']);
-        self::assertFalse($normalized['posts'][0]['reactions'][0]['isAuthor']);
+        self::assertSame(2, $normalized['pagination']['page']);
+        self::assertSame(5, $normalized['pagination']['limit']);
+        self::assertSame(8, $normalized['pagination']['totalItems']);
+        self::assertSame(2, $normalized['pagination']['totalPages']);
+        self::assertSame('p-1', $normalized['posts'][0]['id']);
+        self::assertSame(1, $normalized['posts'][0]['children']['count']);
+        self::assertSame('alice-user', $normalized['posts'][0]['children']['authors'][0]['username']);
         self::assertSame('c-root', $normalized['posts'][0]['comments'][0]['id']);
-        self::assertSame('c-child', $normalized['posts'][0]['comments'][0]['children'][0]['id']);
-        self::assertSame('laugh', $normalized['posts'][0]['comments'][0]['reactions'][0]['type']);
-        self::assertTrue($normalized['posts'][0]['comments'][0]['reactions'][0]['isAuthor']);
     }
 
     private function createService(): BlogReadService
     {
         return new BlogReadService(
             $this->createMock(BlogRepository::class),
+            $this->createMock(BlogPostRepository::class),
             $this->createMock(CacheInterface::class),
             new CacheKeyConventionService(),
         );

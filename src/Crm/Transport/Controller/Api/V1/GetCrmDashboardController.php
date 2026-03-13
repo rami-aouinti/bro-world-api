@@ -27,6 +27,7 @@ final readonly class GetCrmDashboardController
         private ProjectRepository $projectRepository,
         private TaskRepository $taskRepository,
         private TaskRequestRepository $taskRequestRepository,
+        private \App\Crm\Application\Service\CrmApplicationScopeResolver $scopeResolver,
     ) {
     }
 
@@ -34,14 +35,16 @@ final readonly class GetCrmDashboardController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug): JsonResponse
     {
+        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+
         return new JsonResponse([
-            'companies' => count($this->companyRepository->findAll()),
-            'projects' => count($this->projectRepository->findAll()),
-            'tasks' => count($this->taskRepository->findAll()),
+            'companies' => $this->companyRepository->countCompaniesByCrm($crm->getId()),
+            'projects' => $this->projectRepository->countProjectsByCrm($crm->getId()),
+            'tasks' => $this->taskRepository->countTasksByCrm($crm->getId()),
             'taskRequests' => [
-                TaskRequestStatus::PENDING->value => count($this->taskRequestRepository->findBy(['status' => TaskRequestStatus::PENDING])),
-                TaskRequestStatus::APPROVED->value => count($this->taskRequestRepository->findBy(['status' => TaskRequestStatus::APPROVED])),
-                TaskRequestStatus::REJECTED->value => count($this->taskRequestRepository->findBy(['status' => TaskRequestStatus::REJECTED])),
+                TaskRequestStatus::PENDING->value => $this->taskRequestRepository->countTaskRequestsByCrmAndStatus($crm->getId(), TaskRequestStatus::PENDING->value),
+                TaskRequestStatus::APPROVED->value => $this->taskRequestRepository->countTaskRequestsByCrmAndStatus($crm->getId(), TaskRequestStatus::APPROVED->value),
+                TaskRequestStatus::REJECTED->value => $this->taskRequestRepository->countTaskRequestsByCrmAndStatus($crm->getId(), TaskRequestStatus::REJECTED->value),
             ],
         ]);
     }

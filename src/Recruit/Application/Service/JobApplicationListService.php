@@ -67,7 +67,7 @@ class JobApplicationListService
                         'email' => $applicantUser->getEmail(),
                     ],
                     'resume' => [
-                        'id' => $applicant->getResume()->getId(),
+                        'id' => $applicant->getResume()?->getId(),
                     ],
                 ],
             ];

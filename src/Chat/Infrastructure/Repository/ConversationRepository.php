@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Chat\Infrastructure\Repository;
 
 use App\Chat\Domain\Entity\Chat;
+use App\Chat\Domain\Entity\ChatMessage;
 use App\Chat\Domain\Entity\Conversation as Entity;
 use App\Chat\Domain\Enum\ConversationType;
 use App\Chat\Domain\Repository\Interfaces\ConversationRepositoryInterface;
@@ -47,10 +48,7 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
         $offset = max(0, ($page - 1) * $limit);
 
         return $this->applyListFilters(
-            $this->createQueryBuilder('conversation')
-                ->addSelect('chat')
-                ->innerJoin('conversation.chat', 'chat')
-                ->leftJoin('conversation.messages', 'messages', 'WITH', 'messages.deletedAt IS NULL'),
+            $this->getConversationListQueryBuilder(),
             $filters,
             $esIds
         )
@@ -81,7 +79,7 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
     {
         $offset = max(0, ($page - 1) * $limit);
 
-        return $this->applyListFilters($this->getConversationQueryBuilder(), $filters, $esIds)
+        return $this->applyListFilters($this->getConversationListQueryBuilder(), $filters, $esIds)
             ->andWhere('chat.id = :chatId')
             ->andWhere('conversation.archivedAt IS NULL')
             ->setParameter('chatId', $chatId, UuidBinaryOrderedTimeType::NAME)
@@ -107,7 +105,7 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
     {
         $offset = max(0, ($page - 1) * $limit);
 
-        return $this->applyListFilters($this->getConversationQueryBuilder(), $filters, $esIds)
+        return $this->applyListFilters($this->getConversationListQueryBuilder(), $filters, $esIds)
             ->innerJoin('conversation.participants', 'participant')
             ->andWhere('chat.id = :chatId')
             ->andWhere('participant.user = :user')
@@ -178,12 +176,29 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
             ->distinct();
     }
 
+    private function getConversationListQueryBuilder(): QueryBuilder
+    {
+        return $this->createQueryBuilder('conversation')
+            ->addSelect('chat', 'participants', 'participantUser', 'lastMessage', 'lastMessageSender')
+            ->innerJoin('conversation.chat', 'chat')
+            ->leftJoin('conversation.participants', 'participants')
+            ->leftJoin('participants.user', 'participantUser')
+            ->leftJoin(
+                'conversation.messages',
+                'lastMessage',
+                'WITH',
+                'lastMessage.deletedAt IS NULL AND lastMessage.createdAt = conversation.lastMessageAt'
+            )
+            ->leftJoin('lastMessage.sender', 'lastMessageSender')
+            ->andWhere('conversation.archivedAt IS NULL')
+            ->distinct();
+    }
+
     private function getConversationCountQueryBuilder(): QueryBuilder
     {
         return $this->createQueryBuilder('conversation')
             ->select('COUNT(DISTINCT conversation.id)')
             ->innerJoin('conversation.chat', 'chat')
-            ->leftJoin('conversation.messages', 'messages', 'WITH', 'messages.deletedAt IS NULL')
             ->andWhere('conversation.archivedAt IS NULL');
     }
 
@@ -197,7 +212,10 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
 
         if (($filters['message'] ?? '') !== '') {
             $queryBuilder
-                ->andWhere('LOWER(messages.content) LIKE LOWER(:message)')
+                ->andWhere(sprintf(
+                    'EXISTS (SELECT 1 FROM %s filterMessage WHERE filterMessage.conversation = conversation AND filterMessage.deletedAt IS NULL AND LOWER(filterMessage.content) LIKE LOWER(:message))',
+                    ChatMessage::class
+                ))
                 ->setParameter('message', '%' . $filters['message'] . '%');
         }
 

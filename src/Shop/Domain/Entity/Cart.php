@@ -43,10 +43,10 @@ class Cart implements EntityInterface
     ])]
     private bool $isActive = true;
 
-    #[ORM\Column(name: 'subtotal', type: Types::FLOAT, options: [
+    #[ORM\Column(name: 'subtotal', type: Types::INTEGER, options: [
         'default' => 0,
     ])]
-    private float $subtotal = 0.0;
+    private int $subtotal = 0;
 
     #[ORM\Column(name: 'items_count', type: Types::INTEGER, options: [
         'default' => 0,
@@ -105,12 +105,12 @@ class Cart implements EntityInterface
         return $this;
     }
 
-    public function getSubtotal(): float
+    public function getSubtotal(): int
     {
         return $this->subtotal;
     }
 
-    public function setSubtotal(float $subtotal): self
+    public function setSubtotal(int $subtotal): self
     {
         $this->subtotal = max(0, $subtotal);
 

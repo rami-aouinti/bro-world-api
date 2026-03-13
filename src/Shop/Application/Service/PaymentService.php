@@ -11,10 +11,14 @@ use App\Shop\Domain\Enum\PaymentStatus;
 use App\Shop\Domain\Service\Interfaces\PaymentProviderInterface;
 use App\Shop\Infrastructure\Repository\OrderRepository;
 use App\Shop\Infrastructure\Repository\PaymentTransactionRepository;
+use App\User\Domain\Entity\User;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 use function in_array;
+use function is_string;
+use function trim;
 
 final readonly class PaymentService
 {
@@ -22,15 +26,19 @@ final readonly class PaymentService
         private OrderRepository $orderRepository,
         private PaymentTransactionRepository $paymentTransactionRepository,
         private PaymentProviderInterface $paymentProvider,
+        private Security $security,
+        private string $environment,
     ) {
     }
 
-    public function createPaymentIntent(string $orderId): PaymentTransaction
+    public function createPaymentIntent(string $applicationSlug, string $orderId): PaymentTransaction
     {
         $order = $this->orderRepository->find($orderId);
         if ($order === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Order not found.');
         }
+
+        $this->assertOrderAccess($order, $applicationSlug);
 
         if ($order->getStatus() !== OrderStatus::PENDING_PAYMENT) {
             throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Order is not in pending_payment status.');
@@ -62,12 +70,14 @@ final readonly class PaymentService
     /**
      * @param array<string, mixed> $payload
      */
-    public function confirmPayment(string $orderId, string $providerReference, array $payload = []): PaymentTransaction
+    public function confirmPayment(string $applicationSlug, string $orderId, string $providerReference, array $payload = []): PaymentTransaction
     {
         $order = $this->orderRepository->find($orderId);
         if ($order === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Order not found.');
         }
+
+        $this->assertOrderAccess($order, $applicationSlug);
 
         $transaction = $this->paymentTransactionRepository->findOneBy([
             'order' => $order,
@@ -95,9 +105,14 @@ final readonly class PaymentService
      */
     public function processWebhook(array $payload, ?string $signature = null): ?PaymentTransaction
     {
-        $verifiedPayload = $this->paymentProvider->verifyWebhook($payload, $signature);
+        $normalizedSignature = is_string($signature) ? trim($signature) : '';
+        if ($this->environment === 'prod' && $normalizedSignature === '') {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Webhook signature is required in production.');
+        }
+
+        $verifiedPayload = $this->paymentProvider->verifyWebhook($payload, $normalizedSignature !== '' ? $normalizedSignature : null);
         if ($verifiedPayload === null) {
-            return null;
+            throw new HttpException(JsonResponse::HTTP_UNAUTHORIZED, 'Invalid webhook signature or payload.');
         }
 
         if (
@@ -131,6 +146,19 @@ final readonly class PaymentService
         $this->paymentTransactionRepository->save($transaction, true);
 
         return $transaction;
+    }
+
+    private function assertOrderAccess(Order $order, string $applicationSlug): void
+    {
+        $orderApplicationSlug = $order->getShop()?->getApplication()?->getSlug();
+        if ($orderApplicationSlug !== trim($applicationSlug)) {
+            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'This order does not belong to the requested application scope.');
+        }
+
+        $user = $this->security->getUser();
+        if (!$user instanceof User || $order->getUser()?->getId() !== $user->getId()) {
+            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'This order does not belong to the authenticated user.');
+        }
     }
 
     private function applyOrderStateFromPayment(Order $order, PaymentStatus $status): void

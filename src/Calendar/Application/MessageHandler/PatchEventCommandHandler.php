@@ -8,6 +8,7 @@ use App\Calendar\Application\Message\PatchEventCommand;
 use App\Calendar\Domain\Entity\Event;
 use App\Calendar\Infrastructure\Repository\EventRepository;
 use App\General\Application\Service\CacheInvalidationService;
+use App\General\Transport\Http\ValidationErrorFactory;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Infrastructure\Repository\ApplicationRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -54,6 +55,13 @@ final readonly class PatchEventCommandHandler
             if ($command->description !== null) {
                 $event->setDescription($command->description);
             }
+
+            $effectiveStartAt = $command->startAt ?? $event->getStartAt();
+            $effectiveEndAt = $command->endAt ?? $event->getEndAt();
+            if ($effectiveEndAt < $effectiveStartAt) {
+                throw ValidationErrorFactory::unprocessable('Field "endAt" must be greater than or equal to "startAt".');
+            }
+
             if ($command->startAt !== null) {
                 $event->setStartAt($command->startAt);
             }

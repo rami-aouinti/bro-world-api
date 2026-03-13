@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Recruit\Transport\Controller\Api\V1\Application;
 
+use App\Recruit\Application\Service\RecruitResolverService;
 use App\Recruit\Domain\Entity\Application;
 use App\Recruit\Domain\Enum\ApplicationStatus;
 use App\Recruit\Infrastructure\Repository\ApplicantRepository;
@@ -29,6 +30,7 @@ class ApplicationCreateController
         private readonly ApplicationRepository $applicationRepository,
         private readonly ApplicantRepository $applicantRepository,
         private readonly JobRepository $jobRepository,
+        private readonly RecruitResolverService $recruitResolverService,
     ) {
     }
 
@@ -78,6 +80,16 @@ class ApplicationCreateController
         $job = $this->jobRepository->find($jobId);
         if ($job === null) {
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "jobId".');
+        }
+
+        $recruit = $this->recruitResolverService->resolveByApplicationSlug($applicationSlug);
+        if ($job->getRecruit()?->getId() !== $recruit->getId()) {
+            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'The given job does not belong to this application.');
+        }
+
+        $existingApplication = $this->applicationRepository->findActiveByApplicantAndJob($applicant, $job);
+        if ($existingApplication instanceof Application) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'An active application already exists for this applicant and job.');
         }
 
         $application = (new Application())

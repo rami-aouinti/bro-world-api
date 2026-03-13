@@ -130,6 +130,8 @@ services:
 
     App\Shop\Domain\Service\Interfaces\PaymentProviderInterface:
         class: App\Shop\Infrastructure\Payment\MockPaymentProvider
+        arguments:
+            $appSecret: '%kernel.secret%'
 
 when@dev:
     services:

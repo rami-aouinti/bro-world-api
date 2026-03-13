@@ -7,6 +7,7 @@ namespace App\Blog\Application\Service;
 use App\Blog\Domain\Entity\Blog;
 use App\Blog\Domain\Entity\BlogComment;
 use App\Blog\Domain\Entity\BlogPost;
+use App\Blog\Domain\Enum\BlogVisibility;
 use App\Blog\Infrastructure\Repository\BlogPostRepository;
 use App\Blog\Infrastructure\Repository\BlogRepository;
 use App\General\Application\Service\CacheKeyConventionService;
@@ -16,16 +17,11 @@ use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
-use function array_filter;
 use function array_map;
-use function array_slice;
-use function array_values;
 use function ceil;
-use function count;
 use function max;
 use function min;
 use function sprintf;
-use function usort;
 
 final readonly class BlogReadService
 {
@@ -58,7 +54,11 @@ final readonly class BlogReadService
             }
             $blog = $this->blogRepository->findGeneralBlog();
 
-            return $blog instanceof Blog ? $this->normalizeBlog($blog, $currentUser, $page, $limit) : [];
+            if (!$blog instanceof Blog || !$this->canReadBlog($blog, $currentUser)) {
+                return [];
+            }
+
+            return $this->normalizeBlog($blog, $currentUser, $page, $limit);
         });
     }
 
@@ -80,19 +80,31 @@ final readonly class BlogReadService
             }
             $blog = $this->blogRepository->findOneByApplicationSlug($applicationSlug);
 
-            return $blog instanceof Blog ? $this->normalizeBlog($blog, $currentUser) : [];
+            if (!$blog instanceof Blog || !$this->canReadBlog($blog, $currentUser)) {
+                return [];
+            }
+
+            return $this->normalizeBlog($blog, $currentUser);
         });
     }
 
     public function getPostBySlug(string $slug, ?User $currentUser): array
     {
-        $post = $this->blogPostRepository->findOneBy(['slug' => $slug]);
+        $post = $this->blogPostRepository->findOneBySlugWithDisplayRelations($slug);
 
         if (!$post instanceof BlogPost) {
             return [];
         }
 
-        return $this->normalizePost($post, $post->getBlog()->getPosts()->toArray(), $currentUser);
+        if (!$this->canReadBlog($post->getBlog(), $currentUser)) {
+            return [];
+        }
+
+        $childrenSummaryByParent = $post->getParentPost() instanceof BlogPost
+            ? []
+            : $this->blogPostRepository->findChildrenSharesSummaryByParentIds([$post->getId()]);
+
+        return $this->normalizePost($post, $currentUser, $childrenSummaryByParent);
     }
 
     public function getMyPosts(User $currentUser, int $page = 1, int $limit = 20): array
@@ -100,16 +112,17 @@ final readonly class BlogReadService
         $page = max(1, $page);
         $limit = max(1, min(100, $limit));
 
-        /** @var list<BlogPost> $posts */
-        $posts = $this->blogPostRepository->findBy(['author' => $currentUser]);
-        usort($posts, static fn (BlogPost $left, BlogPost $right): int => $right->getCreatedAt() <=> $left->getCreatedAt());
-
-        $totalItems = count($posts);
-        $offset = ($page - 1) * $limit;
-        $posts = array_slice($posts, $offset, $limit);
+        $posts = $this->blogPostRepository->findPostsByAuthorPaginatedWithRelations($currentUser, $page, $limit);
+        $totalItems = $this->blogPostRepository->countPostsByAuthor($currentUser);
+        $childrenSummaryByParent = $this->blogPostRepository->findChildrenSharesSummaryByParentIds(
+            array_map(static fn (BlogPost $post): string => $post->getId(), $posts),
+        );
 
         return [
-            'posts' => array_map(fn (BlogPost $post): array => $this->normalizePost($post, $post->getBlog()->getPosts()->toArray(), $currentUser), $posts),
+            'posts' => array_map(
+                fn (BlogPost $post): array => $this->normalizePost($post, $currentUser, $childrenSummaryByParent),
+                $posts,
+            ),
             'pagination' => [
                 'page' => $page,
                 'limit' => $limit,
@@ -121,15 +134,11 @@ final readonly class BlogReadService
 
     private function normalizeBlog(Blog $blog, ?User $currentUser, int $page = 1, int $limit = 20): array
     {
-        /** @var list<BlogPost> $posts */
-        $posts = $blog->getPosts()->toArray();
-
-        usort($posts, static fn (BlogPost $left, BlogPost $right): int => $right->getCreatedAt() <=> $left->getCreatedAt());
-        $rootPosts = array_values(array_filter($posts, static fn (BlogPost $post): bool => $post->getParentPost() === null));
-
-        $totalItems = count($rootPosts);
-        $offset = ($page - 1) * $limit;
-        $rootPosts = array_slice($rootPosts, $offset, $limit);
+        $rootPosts = $this->blogPostRepository->findRootPostsByBlogPaginated($blog, $page, $limit);
+        $totalItems = $this->blogPostRepository->countRootPostsByBlog($blog);
+        $childrenSummaryByParent = $this->blogPostRepository->findChildrenSharesSummaryByParentIds(
+            array_map(static fn (BlogPost $post): string => $post->getId(), $rootPosts),
+        );
 
         return [
             'id' => $blog->getId(),
@@ -141,7 +150,10 @@ final readonly class BlogReadService
             'commentStatus' => $blog->getCommentStatus()->value,
             'visibility' => $blog->getVisibility()->value,
             'applicationSlug' => $blog->getApplication()?->getSlug(),
-            'posts' => array_map(fn (BlogPost $post): array => $this->normalizePost($post, $posts, $currentUser), $rootPosts),
+            'posts' => array_map(
+                fn (BlogPost $post): array => $this->normalizePost($post, $currentUser, $childrenSummaryByParent),
+                $rootPosts,
+            ),
             'pagination' => [
                 'page' => $page,
                 'limit' => $limit,
@@ -152,12 +164,15 @@ final readonly class BlogReadService
     }
 
     /**
-     * @param list<BlogPost> $allPosts
+     * @param array<string, array{count: int, authors: list<array{id: string, username: ?string, firstName: ?string, lastName: ?string, photo: ?string}>}> $childrenSummaryByParent
      *
      * @return array<string, mixed>
      */
-    private function normalizePost(BlogPost $post, array $allPosts, ?User $currentUser, bool $includeParent = true): array
+    private function normalizePost(BlogPost $post, ?User $currentUser, array $childrenSummaryByParent, bool $includeParent = true): array
     {
+        $comments = $post->getComments()->toArray();
+        $commentTreeByParent = $this->buildCommentTreeByParent($comments);
+
         return [
             'id' => $post->getId(),
             'slug' => $post->getSlug(),
@@ -171,7 +186,7 @@ final readonly class BlogReadService
             'filePath' => $post->getFilePath(),
             'mediaUrls' => $post->getMediaUrls(),
             'parent' => $includeParent && $post->getParentPost() instanceof BlogPost
-                ? $this->normalizePost($post->getParentPost(), $allPosts, $currentUser, false)
+                ? $this->normalizePost($post->getParentPost(), $currentUser, $childrenSummaryByParent, false)
                 : null,
             'reactions' => array_map(fn ($reaction): array => [
                 'id' => $reaction->getId(),
@@ -180,31 +195,10 @@ final readonly class BlogReadService
                 'author' => $this->normalizeAuthor($reaction->getAuthor()),
                 'type' => $reaction->getType()->value,
             ], $post->getReactions()->toArray()),
-            'comments' => $this->normalizeComments($post->getComments()->toArray(), null, $currentUser),
+            'comments' => $this->normalizeComments($commentTreeByParent, null, $currentUser),
             'children' => $post->getParentPost() instanceof BlogPost
                 ? ['count' => 0, 'authors' => []]
-                : $this->normalizeChildrenShares($allPosts, $post->getId()),
-        ];
-    }
-
-    /**
-     * @param list<BlogPost> $allPosts
-     *
-     * @return array{count: int, authors: list<array<string, mixed>>}
-     */
-    private function normalizeChildrenShares(array $allPosts, string $parentPostId): array
-    {
-        $sharedChildren = array_values(array_filter($allPosts, static fn (BlogPost $post): bool => $post->getParentPost()?->getId() === $parentPostId));
-
-        $authorsById = [];
-        foreach ($sharedChildren as $childPost) {
-            $author = $childPost->getAuthor();
-            $authorsById[$author->getId()] = $this->normalizeAuthor($author);
-        }
-
-        return [
-            'count' => count($authorsById),
-            'authors' => array_values($authorsById),
+                : $childrenSummaryByParent[$post->getId()] ?? ['count' => 0, 'authors' => []],
         ];
     }
 
@@ -217,14 +211,39 @@ final readonly class BlogReadService
         return $this->cacheKeyConventionService->buildPrivateBlogKey($currentUser->getUsername(), $scope);
     }
 
+    private function canReadBlog(Blog $blog, ?User $currentUser): bool
+    {
+        if ($blog->getVisibility() === BlogVisibility::PUBLIC) {
+            return true;
+        }
+
+        return $currentUser !== null && $blog->getOwner()->getId() === $currentUser->getId();
+    }
+
     /**
      * @param array<int, BlogComment> $comments
+     *
+     * @return array<string|null, list<BlogComment>>
      */
-    private function normalizeComments(array $comments, ?string $parentId, ?User $currentUser): array
+    private function buildCommentTreeByParent(array $comments): array
     {
-        $filtered = array_filter($comments, static fn (BlogComment $comment): bool => $comment->getParent()?->getId() === $parentId);
+        $tree = [];
 
-        return array_map(function (BlogComment $comment) use ($comments, $currentUser): array {
+        foreach ($comments as $comment) {
+            $parentId = $comment->getParent()?->getId();
+            $tree[$parentId] ??= [];
+            $tree[$parentId][] = $comment;
+        }
+
+        return $tree;
+    }
+
+    /**
+     * @param array<string|null, list<BlogComment>> $commentTreeByParent
+     */
+    private function normalizeComments(array $commentTreeByParent, ?string $parentId, ?User $currentUser): array
+    {
+        return array_map(function (BlogComment $comment) use ($commentTreeByParent, $currentUser): array {
             return [
                 'id' => $comment->getId(),
                 'authorId' => $comment->getAuthor()->getId(),
@@ -239,9 +258,9 @@ final readonly class BlogReadService
                     'author' => $this->normalizeAuthor($reaction->getAuthor()),
                     'type' => $reaction->getType()->value,
                 ], $comment->getReactions()->toArray()),
-                'children' => $this->normalizeComments($comments, $comment->getId(), $currentUser),
+                'children' => $this->normalizeComments($commentTreeByParent, $comment->getId(), $currentUser),
             ];
-        }, array_values($filtered));
+        }, $commentTreeByParent[$parentId] ?? []);
     }
 
     private function isAuthor(User $author, ?User $currentUser): bool

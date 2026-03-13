@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\School\Application\Service;
 
 use App\General\Application\Message\EntityCreated;
+use App\School\Application\Exception\SchoolRelationException;
 use App\School\Domain\Entity\SchoolClass;
+use App\School\Domain\Entity\School;
 use App\School\Infrastructure\Repository\SchoolRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -21,10 +23,17 @@ final readonly class CreateClassService
 
     public function create(string $name, ?string $schoolId): SchoolClass
     {
-        $class = (new SchoolClass())->setName($name);
-        if (is_string($schoolId)) {
-            $class->setSchool($this->schoolRepository->find($schoolId));
+        if (!is_string($schoolId)) {
+            throw SchoolRelationException::unprocessable('schoolId is required');
         }
+
+        $school = $this->schoolRepository->find($schoolId);
+        if (!$school instanceof School) {
+            throw SchoolRelationException::notFound('schoolId');
+        }
+
+        $class = (new SchoolClass())->setName($name);
+        $class->setSchool($school);
 
         $this->entityManager->persist($class);
         $this->entityManager->flush();

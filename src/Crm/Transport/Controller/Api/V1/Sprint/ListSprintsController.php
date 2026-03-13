@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\Sprint;
 
-use App\Crm\Domain\Entity\Sprint;
+use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Application\Service\CrmApiNormalizer;
 use App\Crm\Infrastructure\Repository\SprintRepository;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,28 +21,38 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class ListSprintsController
 {
     public function __construct(
-        private SprintRepository $sprintRepository
+        private SprintRepository $sprintRepository,
+        private CrmApplicationScopeResolver $scopeResolver,
+        private CrmApiNormalizer $crmApiNormalizer,
     ) {
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/sprints', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug): JsonResponse
+    public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
-        $items = array_map(static fn (Sprint $sprint): array => [
-            'id' => $sprint->getId(),
-            'name' => $sprint->getName(),
-            'projectId' => $sprint->getProject()?->getId(),
-            'tasks' => $sprint->getTasks()->toArray(),
-            'status' => $sprint->getStatus()->value,
-            'startDate' => $sprint->getStartDate()?->format('Y-m-d'),
-            'endDate' => $sprint->getEndDate()?->format('Y-m-d'),
-        ], $this->sprintRepository->findBy([], [
-            'createdAt' => 'DESC',
-        ], 200));
+        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = max(1, min(100, $request->query->getInt('limit', 20)));
+        $filters = [
+            'q' => trim((string)$request->query->get('q', '')),
+            'status' => trim((string)$request->query->get('status', '')),
+        ];
+
+        $items = array_map(fn (array $item): array => $this->crmApiNormalizer->normalizeSprintProjection($item), $this->sprintRepository->findScopedProjection($crm->getId(), $limit, ($page - 1) * $limit, $filters));
+        $totalItems = $this->sprintRepository->countScopedByCrm($crm->getId(), $filters);
 
         return new JsonResponse([
             'items' => $items,
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'totalItems' => $totalItems,
+                'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
+            ],
+            'meta' => [
+                'filters' => array_filter($filters),
+            ],
         ]);
     }
 }

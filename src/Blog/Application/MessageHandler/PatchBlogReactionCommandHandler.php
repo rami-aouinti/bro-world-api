@@ -36,6 +36,7 @@ final readonly class PatchBlogReactionCommandHandler
         $reaction->setType($command->type);
         $this->reactionRepository->save($reaction);
         $post = $reaction->getPost();
-        $this->cacheInvalidationService->invalidateBlogCaches($post?->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
+        $affectedUserIds = array_values(array_filter(array_unique([$command->actorUserId, $reaction->getAuthor()->getId(), $post?->getAuthor()->getId(), $reaction->getComment()?->getAuthor()->getId(), $reaction->getComment()?->getParent()?->getAuthor()->getId()]), static fn (?string $userId): bool => $userId !== null && $userId !== ''));
+        $this->cacheInvalidationService->invalidateBlogCaches($post?->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
     }
 }

@@ -13,6 +13,7 @@ use App\Blog\Infrastructure\Repository\BlogReactionRepository;
 use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -38,13 +39,18 @@ final readonly class CreateBlogPostReactionCommandHandler
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Resource not found.');
         }
 
+        $affectedUserIds = array_values(array_filter(array_unique([
+            $command->actorUserId,
+            $post->getAuthor()->getId(),
+        ]), static fn (?string $userId): bool => $userId !== null && $userId !== ''));
+
         $existingReaction = $this->reactionRepository->findOneByPostAndAuthor($post, $user);
 
         if ($existingReaction instanceof BlogReaction) {
             $existingReaction->setType($command->type);
             $this->reactionRepository->save($existingReaction);
 
-            $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
+            $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
 
             return $existingReaction->getId();
         }
@@ -54,10 +60,34 @@ final readonly class CreateBlogPostReactionCommandHandler
             ->setAuthor($user)
             ->setType($command->type);
 
-        $this->reactionRepository->save($reaction);
+        try {
+            $this->reactionRepository->save($reaction);
+        } catch (UniqueConstraintViolationException) {
+            $this->reactionRepository->getEntityManager()->clear();
+
+            $post = $this->postRepository->find($command->postId);
+            $user = $this->userRepository->find($command->actorUserId);
+
+            if (!$post instanceof BlogPost || !$user instanceof User) {
+                throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Resource not found.');
+            }
+
+            $existingReaction = $this->reactionRepository->findOneByPostAndAuthor($post, $user);
+
+            if (!$existingReaction instanceof BlogReaction) {
+                throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Unable to create blog reaction.');
+            }
+
+            $existingReaction->setType($command->type);
+            $this->reactionRepository->save($existingReaction);
+
+            $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
+
+            return $existingReaction->getId();
+        }
 
         $this->blogNotificationService->notifyPostReactionCreated($post, $user, $command->type->value);
-        $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
+        $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
 
         return $reaction->getId();
     }

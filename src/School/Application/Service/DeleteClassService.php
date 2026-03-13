@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\School\Application\Service;
 
 use App\General\Application\Message\EntityDeleted;
+use App\School\Domain\Entity\School;
 use App\School\Domain\Entity\SchoolClass;
 use App\School\Infrastructure\Repository\SchoolClassRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,15 +15,16 @@ final readonly class DeleteClassService
 {
     public function __construct(
         private SchoolClassRepository $classRepository,
+        private SchoolResourceAccessService $resourceAccessService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
     }
 
-    public function delete(string $id): bool
+    public function delete(string $id, School $school): bool
     {
         $class = $this->classRepository->find($id);
-        if (!$class instanceof SchoolClass) {
+        if (!$class instanceof SchoolClass || !$this->resourceAccessService->belongsToSchool($class, $school)) {
             return false;
         }
 

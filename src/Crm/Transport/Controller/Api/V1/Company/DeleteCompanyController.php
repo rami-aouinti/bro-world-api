@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\Company;
 
+use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Domain\Entity\Company;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\General\Application\Message\EntityDeleted;
@@ -24,6 +25,7 @@ final readonly class DeleteCompanyController
 {
     public function __construct(
         private CompanyRepository $companyRepository,
+        private CrmApplicationScopeResolver $scopeResolver,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -33,7 +35,8 @@ final readonly class DeleteCompanyController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $id): JsonResponse
     {
-        $company = $this->companyRepository->find($id);
+        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $company = $this->companyRepository->findOneScopedById($id, $crm->getId());
         if (!$company instanceof Company) {
             return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
         }

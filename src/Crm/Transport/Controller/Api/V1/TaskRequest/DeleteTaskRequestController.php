@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\TaskRequest;
 
+use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Domain\Entity\TaskRequest;
 use App\Crm\Infrastructure\Repository\TaskRequestRepository;
 use App\General\Application\Message\EntityDeleted;
@@ -24,6 +25,7 @@ final readonly class DeleteTaskRequestController
 {
     public function __construct(
         private TaskRequestRepository $taskRequestRepository,
+        private CrmApplicationScopeResolver $scopeResolver,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -33,7 +35,8 @@ final readonly class DeleteTaskRequestController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $id): JsonResponse
     {
-        $taskRequest = $this->taskRequestRepository->find($id);
+        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $taskRequest = $this->taskRequestRepository->findOneScopedById($id, $crm->getId());
         if (!$taskRequest instanceof TaskRequest) {
             return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
         }

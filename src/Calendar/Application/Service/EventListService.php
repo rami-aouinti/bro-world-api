@@ -10,6 +10,7 @@ use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\User\Domain\Entity\User;
 use Psr\Cache\InvalidArgumentException;
+use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
@@ -20,11 +21,14 @@ use function array_map;
 
 final readonly class EventListService
 {
+    private const int ELASTIC_IDS_LIMIT = 1000;
+
     public function __construct(
         private EventRepositoryInterface $eventRepository,
         private CacheInterface $cache,
         private ElasticsearchServiceInterface $elasticsearchService,
         private CacheKeyConventionService $cacheKeyConventionService,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -119,7 +123,7 @@ final readonly class EventListService
                 $item->tag($this->cacheKeyConventionService->tagPublicEventsByApplication($applicationSlug));
             }
 
-            $esIds = $this->searchIdsFromElastic($filters);
+            $esIds = $this->searchIdsFromElastic($filters, $accessContext);
             if ($esIds === []) {
                 return [
                     'items' => [],
@@ -164,7 +168,7 @@ final readonly class EventListService
      *
      * @return array<int, string>|null
      */
-    private function searchIdsFromElastic(array $filters): ?array
+    private function searchIdsFromElastic(array $filters, ?string $accessContext = null): ?array
     {
         if ($filters['title'] === '' && $filters['description'] === '' && $filters['location'] === '') {
             return null;
@@ -202,13 +206,19 @@ final readonly class EventListService
                             'must' => $must,
                         ],
                     ],
+                    'track_total_hits' => true,
                     '_source' => ['id'],
                 ],
                 0,
-                1000,
+                self::ELASTIC_IDS_LIMIT,
             );
 
             if (!is_array($response) || !isset($response['hits']['hits']) || !is_array($response['hits']['hits'])) {
+                return null;
+            }
+
+            $totalHits = $this->extractTotalHits($response);
+            if ($totalHits !== null && $totalHits > self::ELASTIC_IDS_LIMIT) {
                 return null;
             }
 
@@ -220,9 +230,40 @@ final readonly class EventListService
             }
 
             return array_values(array_unique($ids));
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            $this->logger->warning('Unable to search event ids from Elasticsearch, fallback to repository filters.', [
+                'filterTypes' => array_values(array_keys(array_filter($filters, static fn (string $value): bool => $value !== ''))),
+                'exceptionClass' => $exception::class,
+                'exceptionMessage' => $exception->getMessage(),
+                'accessContext' => $accessContext,
+            ]);
+
             return null;
         }
+    }
+
+    /**
+     * @param array<string, mixed> $response
+     */
+    private function extractTotalHits(array $response): ?int
+    {
+        if (!isset($response['hits']['total'])) {
+            return null;
+        }
+
+        if (is_int($response['hits']['total'])) {
+            return $response['hits']['total'];
+        }
+
+        if (
+            is_array($response['hits']['total'])
+            && isset($response['hits']['total']['value'])
+            && is_int($response['hits']['total']['value'])
+        ) {
+            return $response['hits']['total']['value'];
+        }
+
+        return null;
     }
 
     /**

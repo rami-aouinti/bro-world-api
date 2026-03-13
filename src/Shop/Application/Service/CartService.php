@@ -79,7 +79,7 @@ readonly class CartService
             'id' => $cart->getId(),
             'shopId' => $cart->getShop()?->getId(),
             'userId' => $cart->getUser()?->getId(),
-            'subtotal' => $cart->getSubtotal(),
+            'subtotal' => MoneyFormatter::toApiAmount($cart->getSubtotal()),
             'itemsCount' => $cart->getItemsCount(),
             'currencyCode' => $cart->getItems()->first() instanceof CartItem
                 ? $cart->getItems()->first()->getProduct()?->getCurrencyCode()
@@ -93,8 +93,8 @@ readonly class CartService
                     'id' => $item->getId(),
                     'productId' => $product?->getId(),
                     'quantity' => $item->getQuantity(),
-                    'unitPriceSnapshot' => $item->getUnitPriceSnapshot(),
-                    'lineTotal' => $item->getLineTotal(),
+                    'unitPriceSnapshot' => MoneyFormatter::toApiAmount($item->getUnitPriceSnapshot()),
+                    'lineTotal' => MoneyFormatter::toApiAmount($item->getLineTotal()),
                     'updatedAt' => $item->getUpdatedAt()?->format(DATE_ATOM),
                     'product' => [
                         'id' => $serializedProduct['id'] ?? null,
@@ -139,7 +139,7 @@ readonly class CartService
 
     public function recalculate(Cart $cart): Cart
     {
-        $subtotal = 0.0;
+        $subtotal = 0;
         $itemsCount = 0;
 
         foreach ($cart->getItems() as $item) {

@@ -63,16 +63,22 @@ class CacheInvalidationService
         ]));
     }
 
-    public function invalidateSchoolExamListCaches(): void
+    public function invalidateSchoolExamListCaches(?string $applicationSlug = null): void
     {
         if ($this->cache instanceof TagAwareCacheInterface) {
-            $this->cache->invalidateTags([$this->cacheKeyConventionService->schoolExamListTag()]);
+            if ($applicationSlug !== null && $applicationSlug !== '') {
+                $this->cache->invalidateTags([$this->cacheKeyConventionService->schoolExamListTagByApplication($applicationSlug)]);
+            } else {
+                $this->cache->invalidateTags([$this->cacheKeyConventionService->schoolExamListTag()]);
+            }
         }
 
-        $this->cache->delete($this->cacheKeyConventionService->buildSchoolExamListKey(1, 20, [
-            'q' => '',
-            'title' => '',
-        ]));
+        if ($applicationSlug !== null && $applicationSlug !== '') {
+            $this->cache->delete($this->cacheKeyConventionService->buildSchoolExamListKey($applicationSlug, 1, 20, [
+                'q' => '',
+                'title' => '',
+            ]));
+        }
     }
 
     public function invalidateRecruitJobListCaches(string $applicationSlug): void
@@ -94,7 +100,10 @@ class CacheInvalidationService
         ]));
     }
 
-    public function invalidateBlogCaches(?string $applicationSlug, ?string $userId): void
+    /**
+     * @param list<string|null> $userIds
+     */
+    public function invalidateBlogCaches(?string $applicationSlug, array $userIds = []): void
     {
         if (!$this->cache instanceof TagAwareCacheInterface) {
             return;
@@ -105,7 +114,11 @@ class CacheInvalidationService
             $this->cacheKeyConventionService->tagPublicBlogByApplication($applicationSlug),
         ];
 
-        if ($userId !== null && $userId !== '') {
+        foreach (array_values(array_unique($userIds)) as $userId) {
+            if ($userId === null || $userId === '') {
+                continue;
+            }
+
             $tags[] = $this->cacheKeyConventionService->tagPrivateBlog($userId);
         }
 

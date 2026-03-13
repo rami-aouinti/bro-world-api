@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\School\Transport\Controller\Api\V1\Exam;
 
 use App\School\Application\Service\ExamListService;
+use App\School\Application\Service\SchoolApplicationScopeResolver;
+use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,15 +21,18 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class ListExamsController
 {
     public function __construct(
-        private ExamListService $examListService
+        private ExamListService $examListService,
+        private SchoolApplicationScopeResolver $scopeResolver,
     ) {
     }
 
     #[Route('/v1/school/applications/{applicationSlug}/exams', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(string $applicationSlug, Request $request, ?User $loggedInUser): JsonResponse
     {
+        $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
         $request->attributes->set('applicationSlug', $applicationSlug);
-        return new JsonResponse($this->examListService->getList($request));
+
+        return new JsonResponse($this->examListService->getList($request, $school->getId()));
     }
 }

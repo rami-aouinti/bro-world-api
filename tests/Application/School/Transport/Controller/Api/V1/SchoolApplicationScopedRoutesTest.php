@@ -34,6 +34,7 @@ final class SchoolApplicationScopedRoutesTest extends WebTestCase
 
         $forbiddenClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/teachers');
         self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
+        self::assertStringContainsString('Forbidden application scope access.', (string)$forbiddenClient->getResponse()->getContent());
 
         $ownerClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams');
         self::assertSame(Response::HTTP_OK, $ownerClient->getResponse()->getStatusCode());
@@ -56,6 +57,7 @@ final class SchoolApplicationScopedRoutesTest extends WebTestCase
 
         $forbiddenClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes/' . $classId);
         self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
+        self::assertStringContainsString('Forbidden application scope access.', (string)$forbiddenClient->getResponse()->getContent());
 
         $ownerClient->request('PATCH', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes/' . $classId, [], [], [], JSON::encode([
             'name' => 'Classe Scoped Updated',
@@ -77,4 +79,29 @@ final class SchoolApplicationScopedRoutesTest extends WebTestCase
         ]));
         self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
     }
+
+
+    #[TestDox('School scoped list endpoints only return data for the current school application.')]
+    public function testScopedListsAreIsolatedBySchoolApplication(): void
+    {
+        $ownerClient = $this->getTestClient('john-root', 'password-root');
+
+        foreach (['classes', 'students', 'teachers', 'exams', 'grades'] as $resource) {
+            $ownerClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/' . $resource);
+            self::assertSame(Response::HTTP_OK, $ownerClient->getResponse()->getStatusCode());
+            $campus = JSON::decode((string)$ownerClient->getResponse()->getContent(), true);
+            self::assertNotEmpty($campus['items']);
+
+            $ownerClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-course-flow/' . $resource);
+            self::assertSame(Response::HTTP_OK, $ownerClient->getResponse()->getStatusCode());
+            $course = JSON::decode((string)$ownerClient->getResponse()->getContent(), true);
+            self::assertNotEmpty($course['items']);
+
+            $campusIds = array_column($campus['items'], 'id');
+            $courseIds = array_column($course['items'], 'id');
+
+            self::assertEmpty(array_intersect($campusIds, $courseIds), sprintf('Resource %s leaked entities across schools.', $resource));
+        }
+    }
+
 }

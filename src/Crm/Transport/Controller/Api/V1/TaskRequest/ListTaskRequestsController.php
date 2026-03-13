@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\TaskRequest;
 
-use App\Crm\Domain\Entity\TaskRequest;
+use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Application\Service\CrmApiNormalizer;
 use App\Crm\Infrastructure\Repository\TaskRequestRepository;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,32 +21,38 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class ListTaskRequestsController
 {
     public function __construct(
-        private TaskRequestRepository $taskRequestRepository
+        private TaskRequestRepository $taskRequestRepository,
+        private CrmApplicationScopeResolver $scopeResolver,
+        private CrmApiNormalizer $crmApiNormalizer,
     ) {
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/task-requests', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug): JsonResponse
+    public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
-        $items = array_map(static fn (TaskRequest $taskRequest): array => [
-            'id' => $taskRequest->getId(),
-            'title' => $taskRequest->getTitle(),
-            'status' => $taskRequest->getStatus()->value,
-            'requestedAt' => $taskRequest->getRequestedAt()->format(DATE_ATOM),
-            'resolvedAt' => $taskRequest->getResolvedAt()?->format(DATE_ATOM),
-            'taskId' => $taskRequest->getTask()?->getId(),
-            'assignees' => array_map(static fn (\App\User\Domain\Entity\User $assignee): array => [
-                'id' => $assignee->getId(),
-                'username' => $assignee->getUsername(),
-                'email' => $assignee->getEmail(),
-            ], $taskRequest->getAssignees()->toArray()),
-        ], $this->taskRequestRepository->findBy([], [
-            'createdAt' => 'DESC',
-        ], 200));
+        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = max(1, min(100, $request->query->getInt('limit', 20)));
+        $filters = [
+            'q' => trim((string)$request->query->get('q', '')),
+            'status' => trim((string)$request->query->get('status', '')),
+        ];
+
+        $items = array_map(fn (array $item): array => $this->crmApiNormalizer->normalizeTaskRequestProjection($item), $this->taskRequestRepository->findScopedProjection($crm->getId(), $limit, ($page - 1) * $limit, $filters));
+        $totalItems = $this->taskRequestRepository->countScopedByCrm($crm->getId(), $filters);
 
         return new JsonResponse([
             'items' => $items,
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'totalItems' => $totalItems,
+                'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
+            ],
+            'meta' => [
+                'filters' => array_filter($filters),
+            ],
         ]);
     }
 }

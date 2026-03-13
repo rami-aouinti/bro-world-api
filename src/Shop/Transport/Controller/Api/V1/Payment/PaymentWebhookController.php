@@ -22,6 +22,12 @@ final readonly class PaymentWebhookController
 
     #[Route('/v1/shop/applications/{applicationSlug}/payments/webhook', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Post(
+        security: [],
+        summary: 'Handle payment provider webhook (public endpoint with strict signature verification).',
+    )]
+    #[OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Webhook signature is required in production.')]
+    #[OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Invalid webhook signature or payload.')]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);

@@ -32,6 +32,33 @@ final class SchoolListingCacheRegressionTest extends WebTestCase
         self::assertGreaterThanOrEqual(30, $firstPayload['pagination']['totalItems']);
     }
 
+
+    #[TestDox('Exam list cache is isolated per application slug.')]
+    public function testExamListCacheIsolationByApplicationSlug(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $campusEndpoint = self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams?page=1&limit=10&q=Examen';
+        $courseEndpoint = self::API_URL_PREFIX . '/v1/school/applications/school-course-flow/exams?page=1&limit=10&q=Examen';
+
+        $client->request('GET', $campusEndpoint);
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $campusPayload = JSON::decode((string)$client->getResponse()->getContent(), true);
+
+        $client->request('GET', $courseEndpoint);
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $coursePayload = JSON::decode((string)$client->getResponse()->getContent(), true);
+
+        self::assertNotSame($campusPayload['items'], $coursePayload['items']);
+
+        $client->request('GET', $campusEndpoint);
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $campusPayloadSecondCall = JSON::decode((string)$client->getResponse()->getContent(), true);
+
+        self::assertSame($campusPayload['items'], $campusPayloadSecondCall['items']);
+        self::assertSame($campusPayload['pagination'], $campusPayloadSecondCall['pagination']);
+    }
+
     #[TestDox('Class list by application remains stable across repeated calls with pagination/filters on larger fixture datasets (cache regression).')]
     public function testClassApplicationListCacheAndPaginationRegression(): void
     {

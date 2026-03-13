@@ -28,24 +28,32 @@ final readonly class BlogNotificationService
         $targetLabel = $this->formatPostTitle($post);
 
         if ($comment->getParent() instanceof BlogComment) {
-            $this->notificationPublisher->publish(
-                from: $actor,
-                recipient: $comment->getParent()->getAuthor(),
-                title: $this->buildTitle($actor, 'commented your comment', $targetLabel),
-                type: self::BLOG_NOTIFICATION_TYPE,
-                description: $this->buildPostLinkDescription($post),
-            );
+            $recipient = $comment->getParent()->getAuthor();
+
+            if ($this->shouldNotify($actor, $recipient)) {
+                $this->notificationPublisher->publish(
+                    from: $actor,
+                    recipient: $recipient,
+                    title: $this->buildTitle($actor, 'commented your comment', $targetLabel),
+                    type: self::BLOG_NOTIFICATION_TYPE,
+                    description: $this->buildPostLinkDescription($post),
+                );
+            }
 
             return;
         }
 
-        $this->notificationPublisher->publish(
-            from: $actor,
-            recipient: $post->getAuthor(),
-            title: $this->buildTitle($actor, 'commented your post', $targetLabel),
-            type: self::BLOG_NOTIFICATION_TYPE,
-            description: $this->buildPostLinkDescription($post),
-        );
+        $recipient = $post->getAuthor();
+
+        if ($this->shouldNotify($actor, $recipient)) {
+            $this->notificationPublisher->publish(
+                from: $actor,
+                recipient: $recipient,
+                title: $this->buildTitle($actor, 'commented your post', $targetLabel),
+                type: self::BLOG_NOTIFICATION_TYPE,
+                description: $this->buildPostLinkDescription($post),
+            );
+        }
     }
 
     public function notifyReactionCreated(BlogComment $comment, User $actor, string $reactionType): void
@@ -53,30 +61,42 @@ final readonly class BlogNotificationService
         $actionLabel = $reactionType === 'like' ? 'liked' : ('reacted (' . $reactionType . ') to');
 
         if ($comment->getParent() instanceof BlogComment) {
-            $this->notificationPublisher->publish(
-                from: $actor,
-                recipient: $comment->getAuthor(),
-                title: $this->buildTitle($actor, $actionLabel . ' your comment', $this->formatCommentPreview($comment)),
-                type: self::BLOG_NOTIFICATION_TYPE,
-                description: $this->buildPostLinkDescription($comment->getPost()),
-            );
+            $recipient = $comment->getAuthor();
+
+            if ($this->shouldNotify($actor, $recipient)) {
+                $this->notificationPublisher->publish(
+                    from: $actor,
+                    recipient: $recipient,
+                    title: $this->buildTitle($actor, $actionLabel . ' your comment', $this->formatCommentPreview($comment)),
+                    type: self::BLOG_NOTIFICATION_TYPE,
+                    description: $this->buildPostLinkDescription($comment->getPost()),
+                );
+            }
 
             return;
         }
 
-        $this->notificationPublisher->publish(
-            from: $actor,
-            recipient: $comment->getPost()->getAuthor(),
-            title: $this->buildTitle($actor, $actionLabel . ' your post', $this->formatPostTitle($comment->getPost())),
-            type: self::BLOG_NOTIFICATION_TYPE,
-            description: $this->buildPostLinkDescription($comment->getPost()),
-        );
+        $recipient = $comment->getPost()->getAuthor();
+
+        if ($this->shouldNotify($actor, $recipient)) {
+            $this->notificationPublisher->publish(
+                from: $actor,
+                recipient: $recipient,
+                title: $this->buildTitle($actor, $actionLabel . ' your post', $this->formatPostTitle($comment->getPost())),
+                type: self::BLOG_NOTIFICATION_TYPE,
+                description: $this->buildPostLinkDescription($comment->getPost()),
+            );
+        }
     }
 
 
     public function notifyPostReactionCreated(BlogPost $post, User $actor, string $reactionType): void
     {
         $actionLabel = $reactionType === 'like' ? 'liked' : ('reacted (' . $reactionType . ') to');
+
+        if (!$this->shouldNotify($actor, $post->getAuthor())) {
+            return;
+        }
 
         $this->notificationPublisher->publish(
             from: $actor,
@@ -117,5 +137,10 @@ final readonly class BlogNotificationService
         }
 
         return '"' . mb_strimwidth($content, 0, 60, '...') . '"';
+    }
+
+    private function shouldNotify(User $actor, User $recipient): bool
+    {
+        return $actor->getId() !== $recipient->getId();
     }
 }

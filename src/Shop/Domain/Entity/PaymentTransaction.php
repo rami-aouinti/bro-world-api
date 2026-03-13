@@ -40,8 +40,10 @@ class PaymentTransaction implements EntityInterface
     #[ORM\Column(name: 'provider_reference', type: Types::STRING, length: 190)]
     private string $providerReference = '';
 
-    #[ORM\Column(name: 'amount', type: Types::FLOAT)]
-    private float $amount = 0.0;
+    #[ORM\Column(name: 'amount', type: Types::INTEGER, options: [
+        'default' => 0,
+    ])]
+    private int $amount = 0;
 
     #[ORM\Column(name: 'currency', type: Types::STRING, length: 3)]
     private string $currency = 'EUR';
@@ -105,12 +107,12 @@ class PaymentTransaction implements EntityInterface
         return $this;
     }
 
-    public function getAmount(): float
+    public function getAmount(): int
     {
         return $this->amount;
     }
 
-    public function setAmount(float $amount): self
+    public function setAmount(int $amount): self
     {
         $this->amount = max(0, $amount);
 

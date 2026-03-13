@@ -55,6 +55,7 @@ final readonly class PatchBlogPostCommandHandler
         }
 
         $this->postRepository->save($post);
-        $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
+        $affectedUserIds = array_values(array_filter(array_unique([$command->actorUserId, $post->getAuthor()->getId()]), static fn (?string $userId): bool => $userId !== null && $userId !== ''));
+        $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
     }
 }

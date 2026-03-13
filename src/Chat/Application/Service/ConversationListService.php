@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Chat\Application\Service;
 
 use App\Chat\Domain\Entity\ChatMessage;
-use App\Chat\Domain\Entity\ChatMessageReaction;
 use App\Chat\Domain\Entity\Conversation;
 use App\Chat\Domain\Entity\ConversationParticipant;
 use App\Chat\Domain\Repository\Interfaces\ConversationRepositoryInterface;
@@ -260,44 +259,41 @@ final readonly class ConversationListService
                     },
                     0
                 ),
-                'messages' => array_map(
-                    function (ChatMessage $message) use ($connectedUserId): array {
-                        $sender = $message->getSender();
-                        $senderId = $sender?->getId();
-
-                        return [
-                            'id' => $message->getId(),
-                            'content' => $message->getContent(),
-                            'sender' => [
-                                'id' => $senderId,
-                                'firstName' => $sender?->getFirstName(),
-                                'lastName' => $sender?->getLastName(),
-                                'photo' => $sender?->getPhoto(),
-                                'owner' => $connectedUserId !== null && $senderId === $connectedUserId,
-                            ],
-                            'attachments' => $message->getAttachments(),
-                            'metadata' => $message->getMetadata(),
-                            'read' => $message->isRead(),
-                            'readAt' => $message->getReadAt()?->format(DATE_ATOM),
-                            'editedAt' => $message->getEditedAt()?->format(DATE_ATOM),
-                            'deletedAt' => $message->getDeletedAt()?->format(DATE_ATOM),
-                            'createdAt' => $message->getCreatedAt()?->format(DATE_ATOM),
-                            'reactions' => array_map(
-                                static fn (ChatMessageReaction $reaction): array => [
-                                    'id' => $reaction->getId(),
-                                    'userId' => $reaction->getUser(),
-                                    'reaction' => $reaction->getReaction()->value,
-                                ],
-                                $message->getReactions()->toArray()
-                            ),
-                        ];
-                    },
-                    $visibleMessages
-                ),
+                'lastMessage' => $this->normalizeLastMessage($visibleMessages, $connectedUserId),
                 'lastMessageAt' => $conversation->getLastMessageAt()?->format(DATE_ATOM),
                 'archivedAt' => $conversation->getArchivedAt()?->format(DATE_ATOM),
                 'createdAt' => $conversation->getCreatedAt()?->format(DATE_ATOM),
             ];
         }, $conversations);
+    }
+
+    /**
+     * @param array<int, ChatMessage> $visibleMessages
+     *
+     * @return array<string, mixed>|null
+     */
+    private function normalizeLastMessage(array $visibleMessages, ?string $connectedUserId): ?array
+    {
+        if ($visibleMessages === []) {
+            return null;
+        }
+
+        /** @var ChatMessage $lastMessage */
+        $lastMessage = $visibleMessages[array_key_last($visibleMessages)];
+        $sender = $lastMessage->getSender();
+        $senderId = $sender?->getId();
+
+        return [
+            'id' => $lastMessage->getId(),
+            'content' => mb_substr((string)$lastMessage->getContent(), 0, 280),
+            'createdAt' => $lastMessage->getCreatedAt()?->format(DATE_ATOM),
+            'sender' => [
+                'id' => $senderId,
+                'firstName' => $sender?->getFirstName(),
+                'lastName' => $sender?->getLastName(),
+                'photo' => $sender?->getPhoto(),
+                'owner' => $connectedUserId !== null && $senderId === $connectedUserId,
+            ],
+        ];
     }
 }
