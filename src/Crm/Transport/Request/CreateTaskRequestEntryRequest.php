@@ -22,6 +22,8 @@ final class CreateTaskRequestEntryRequest
     #[Assert\DateTime]
     public ?string $resolvedAt = null;
 
+    #[Assert\NotBlank]
+    #[Assert\NotNull]
     #[Assert\Uuid]
     public ?string $taskId = null;
 

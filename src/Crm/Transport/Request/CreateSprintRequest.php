@@ -25,6 +25,8 @@ final class CreateSprintRequest
     #[Assert\DateTime]
     public ?string $endDate = null;
 
+    #[Assert\NotBlank]
+    #[Assert\NotNull]
     #[Assert\Uuid]
     public ?string $projectId = null;
 

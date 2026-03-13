@@ -14,6 +14,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Override;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'crm_company')]
@@ -28,7 +29,8 @@ class Company implements EntityInterface
     private UuidInterface $id;
 
     #[ORM\ManyToOne(targetEntity: Crm::class, inversedBy: 'companies')]
-    #[ORM\JoinColumn(name: 'crm_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'crm_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[Assert\NotNull]
     private ?Crm $crm = null;
 
     #[ORM\Column(name: 'name', type: Types::STRING, length: 255)]

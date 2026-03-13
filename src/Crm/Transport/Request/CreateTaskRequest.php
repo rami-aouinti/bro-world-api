@@ -29,6 +29,8 @@ final class CreateTaskRequest
     #[Assert\Type(type: 'numeric')]
     public null|int|float|string $estimatedHours = null;
 
+    #[Assert\NotBlank]
+    #[Assert\NotNull]
     #[Assert\Uuid]
     public ?string $projectId = null;
 
