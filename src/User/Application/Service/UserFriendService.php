@@ -411,6 +411,10 @@ readonly class UserFriendService
     private function invalidateUserCaches(User $user): void
     {
         $userId = $user->getId();
+        $this->cache->delete('user_me_' . $userId);
+        $this->cache->delete('user_sessions_' . $userId);
+        $this->cache->delete('user_applications_' . $userId . '_0');
+        $this->cache->delete('user_applications_' . $userId . '_3');
         $this->cache->delete('user_friends_accepted_' . $userId);
         $this->cache->delete('user_friends_incoming_' . $userId);
         $this->cache->delete('user_friends_sent_' . $userId);

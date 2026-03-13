@@ -37,6 +37,7 @@ use function uniqid;
 readonly class UserMeService
 {
     private const string USER_ENTITY_TYPE = 'user_user';
+    private const int CACHE_TTL_SECONDS = 120;
 
     public function __construct(
         private LogLoginRepository $logLoginRepository,
@@ -60,7 +61,7 @@ readonly class UserMeService
 
         /** @var array<int,array<string,string>> $sessions */
         $sessions = $this->cache->get($cacheKey, function (ItemInterface $item) use ($user): array {
-            $item->expiresAfter(120);
+            $item->expiresAfter(self::CACHE_TTL_SECONDS);
 
             $qb = $this->logLoginRepository->createQueryBuilder('log')
                 ->andWhere('log.user = :user')
@@ -102,33 +103,42 @@ readonly class UserMeService
      */
     public function getApplications(User $user, int $limit = 0): array
     {
-        $qb = $this->entityManager->getRepository(Application::class)
-            ->createQueryBuilder('application')
-            ->leftJoin('application.platform', 'platform')
-            ->addSelect('platform')
-            ->andWhere('application.user = :user')
-            ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
-            ->orderBy('application.createdAt', 'DESC');
+        $cacheKey = sprintf('user_applications_%s_%d', $user->getId(), $limit);
 
-        if ($limit > 0) {
-            $qb->setMaxResults($limit);
-        }
+        /** @var array<int,array<string,mixed>> $applications */
+        $applications = $this->cache->get($cacheKey, function (ItemInterface $item) use ($user, $limit): array {
+            $item->expiresAfter(self::CACHE_TTL_SECONDS);
 
-        /** @var array<int, Application> $applications */
-        $applications = $qb->getQuery()->getResult();
+            $qb = $this->entityManager->getRepository(Application::class)
+                ->createQueryBuilder('application')
+                ->leftJoin('application.platform', 'platform')
+                ->addSelect('platform')
+                ->andWhere('application.user = :user')
+                ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
+                ->orderBy('application.createdAt', 'DESC');
 
-        return array_map(static fn (Application $application): array => [
-            'id' => $application->getId(),
-            'platformId' => $application->getPlatform()?->getId(),
-            'platformName' => $application->getPlatform()?->getName(),
-            'title' => $application->getTitle(),
-            'slug' => $application->getSlug(),
-            'description' => $application->getDescription(),
-            'status' => $application->getStatus()->value,
-            'private' => $application->isPrivate(),
-            'createdAt' => $application->getCreatedAt()?->format(DATE_ATOM),
-            'updatedAt' => $application->getUpdatedAt()?->format(DATE_ATOM),
-        ], $applications);
+            if ($limit > 0) {
+                $qb->setMaxResults($limit);
+            }
+
+            /** @var array<int, Application> $entities */
+            $entities = $qb->getQuery()->getResult();
+
+            return array_map(static fn (Application $application): array => [
+                'id' => $application->getId(),
+                'platformId' => $application->getPlatform()?->getId(),
+                'platformName' => $application->getPlatform()?->getName(),
+                'title' => $application->getTitle(),
+                'slug' => $application->getSlug(),
+                'description' => $application->getDescription(),
+                'status' => $application->getStatus()->value,
+                'private' => $application->isPrivate(),
+                'createdAt' => $application->getCreatedAt()?->format(DATE_ATOM),
+                'updatedAt' => $application->getUpdatedAt()?->format(DATE_ATOM),
+            ], $entities);
+        });
+
+        return $applications;
     }
 
     /**
@@ -138,27 +148,16 @@ readonly class UserMeService
      */
     public function getMe(User $user): array
     {
-        $profile = $this->ensureProfile($user);
+        $cacheKey = sprintf('user_me_%s', $user->getId());
 
-        return [
-            'id' => $user->getId(),
-            'username' => $user->getUsername(),
-            'email' => $user->getEmail(),
-            'firstName' => $user->getFirstName(),
-            'lastName' => $user->getLastName(),
-            'photo' => $user->getPhoto(),
-            'profile' => $this->normalizeProfile($profile),
-            'socials' => array_map(static fn (Social $social): array => [
-                'provider' => $social->getProvider(),
-                'providerId' => $social->getProviderId(),
-            ], $user->getSocials()->toArray()),
-            'sessions' => $this->getSessions($user),
-            'applications' => $this->getApplications($user),
-            'friends' => $this->userFriendService->getMyFriends($user),
-            'friendRequests' => $this->userFriendService->getMySentRequests($user),
-            'blockedUsers' => $this->userFriendService->getMyBlockedUsers($user),
-            'incomingRequests' => $this->userFriendService->getMyIncomingRequests($user),
-        ];
+        /** @var array<string,mixed> $payload */
+        $payload = $this->cache->get($cacheKey, function (ItemInterface $item) use ($user): array {
+            $item->expiresAfter(self::CACHE_TTL_SECONDS);
+
+            return $this->buildMePayload($user);
+        });
+
+        return $payload;
     }
 
     /**
@@ -231,6 +230,7 @@ readonly class UserMeService
 
         $this->messageBus->dispatch(new EntityPatched(uniqid('op_', true), self::USER_ENTITY_TYPE, $user->getId()));
         $this->indexUser($user, $profile);
+        $this->invalidateMeCaches($user->getId());
 
         return $this->normalizeProfile($profile);
     }
@@ -250,11 +250,15 @@ readonly class UserMeService
         $user->setPlainPassword($newPassword);
         $this->entityManager->persist($user);
         $this->entityManager->flush();
+
+        $this->indexUser($user, $this->ensureProfile($user));
+        $this->invalidateMeCaches($user->getId());
     }
 
     public function deleteMe(User $user): void
     {
         $userId = $user->getId();
+        $this->invalidateMeCaches($userId);
         $this->entityManager->remove($user);
         $this->entityManager->flush();
 
@@ -264,6 +268,35 @@ readonly class UserMeService
             $this->elasticsearchService->delete('users', $userId);
         } catch (Throwable) {
         }
+    }
+
+    /**
+     * @return array<string,mixed>
+     * @throws InvalidArgumentException
+     */
+    private function buildMePayload(User $user): array
+    {
+        $profile = $this->ensureProfile($user);
+
+        return [
+            'id' => $user->getId(),
+            'username' => $user->getUsername(),
+            'email' => $user->getEmail(),
+            'firstName' => $user->getFirstName(),
+            'lastName' => $user->getLastName(),
+            'photo' => $user->getPhoto(),
+            'profile' => $this->normalizeProfile($profile),
+            'socials' => array_map(static fn (Social $social): array => [
+                'provider' => $social->getProvider(),
+                'providerId' => $social->getProviderId(),
+            ], $user->getSocials()->toArray()),
+            'sessions' => $this->getSessions($user),
+            'applications' => $this->getApplications($user),
+            'friends' => $this->userFriendService->getMyFriends($user),
+            'friendRequests' => $this->userFriendService->getMySentRequests($user),
+            'blockedUsers' => $this->userFriendService->getMyBlockedUsers($user),
+            'incomingRequests' => $this->userFriendService->getMyIncomingRequests($user),
+        ];
     }
 
     private function ensureProfile(User $user): UserProfile
@@ -323,5 +356,13 @@ readonly class UserMeService
         $normalized = trim((string)$value);
 
         return $normalized === '' ? null : $normalized;
+    }
+
+    private function invalidateMeCaches(string $userId): void
+    {
+        $this->cache->delete(sprintf('user_me_%s', $userId));
+        $this->cache->delete(sprintf('user_sessions_%s', $userId));
+        $this->cache->delete(sprintf('user_applications_%s_0', $userId));
+        $this->cache->delete(sprintf('user_applications_%s_3', $userId));
     }
 }
