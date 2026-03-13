@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Crm\Transport\Controller\Api\V1\TaskRequest;
 
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Application\Service\CrmApiNormalizer;
 use App\Crm\Infrastructure\Repository\TaskRequestRepository;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,6 +23,7 @@ final readonly class ListTaskRequestsController
     public function __construct(
         private TaskRequestRepository $taskRequestRepository,
         private CrmApplicationScopeResolver $scopeResolver,
+        private CrmApiNormalizer $crmApiNormalizer,
     ) {
     }
 
@@ -37,7 +39,7 @@ final readonly class ListTaskRequestsController
             'status' => trim((string)$request->query->get('status', '')),
         ];
 
-        $items = $this->taskRequestRepository->findScopedProjection($crm->getId(), $limit, ($page - 1) * $limit, $filters);
+        $items = array_map(fn (array $item): array => $this->crmApiNormalizer->normalizeTaskRequestProjection($item), $this->taskRequestRepository->findScopedProjection($crm->getId(), $limit, ($page - 1) * $limit, $filters));
         $totalItems = $this->taskRequestRepository->countScopedByCrm($crm->getId(), $filters);
 
         return new JsonResponse([

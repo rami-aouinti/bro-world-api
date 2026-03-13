@@ -8,7 +8,6 @@ use App\Crm\Domain\Entity\Task;
 use App\Crm\Domain\Entity\TaskRequest;
 use App\Crm\Infrastructure\Repository\TaskRepository;
 use App\User\Domain\Entity\User;
-use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 
 final readonly class TaskBoardService
@@ -16,6 +15,7 @@ final readonly class TaskBoardService
     public function __construct(
         private TaskRepository $taskRepository,
         private CrmApplicationScopeResolver $applicationScopeResolver,
+        private CrmApiNormalizer $crmApiNormalizer,
     ) {
     }
 
@@ -47,7 +47,7 @@ final readonly class TaskBoardService
                 $items[$sprintId] = [
                     'sprint' => [
                         'id' => $task->getSprint()?->getId(),
-                        'name' => $task->getSprint()?->getName(),
+                        'title' => $task->getSprint()?->getName(),
                         'status' => $task->getSprint()?->getStatus()->value,
                     ],
                     'tasks' => [],
@@ -110,43 +110,12 @@ final readonly class TaskBoardService
     /** @return array<string,mixed> */
     private function normalizeTask(Task $task): array
     {
-        return [
-            'id' => $task->getId(),
-            'title' => $task->getTitle(),
-            'status' => $task->getStatus()->value,
-            'priority' => $task->getPriority()->value,
-            'sprintId' => $task->getSprint()?->getId(),
-            'projectId' => $task->getProject()?->getId(),
-            'assignees' => array_map(static fn (User $user): array => [
-                'id' => $user->getId(),
-                'username' => $user->getUsername(),
-                'email' => $user->getEmail(),
-                'firstName' => $user->getFirstName(),
-                'lastName' => $user->getLastName(),
-                'photo' => $user->getPhoto(),
-            ], $task->getAssignees()->toArray()),
-            'children' => array_map(fn (TaskRequest $taskRequest): array => $this->normalizeTaskRequest($taskRequest), $task->getTaskRequests()->toArray()),
-        ];
+        return $this->crmApiNormalizer->normalizeTask($task);
     }
 
     /** @return array<string,mixed> */
     private function normalizeTaskRequest(TaskRequest $taskRequest): array
     {
-        return [
-            'id' => $taskRequest->getId(),
-            'taskId' => $taskRequest->getTask()?->getId(),
-            'title' => $taskRequest->getTitle(),
-            'status' => $taskRequest->getStatus()->value,
-            'requestedAt' => $taskRequest->getRequestedAt()->format(DATE_ATOM),
-            'resolvedAt' => $taskRequest->getResolvedAt()?->format(DATE_ATOM),
-            'assignees' => array_map(static fn (User $user): array => [
-                'id' => $user->getId(),
-                'username' => $user->getUsername(),
-                'email' => $user->getEmail(),
-                'firstName' => $user->getFirstName(),
-                'lastName' => $user->getLastName(),
-                'photo' => $user->getPhoto(),
-            ], $taskRequest->getAssignees()->toArray()),
-        ];
+        return $this->crmApiNormalizer->normalizeTaskRequest($taskRequest);
     }
 }

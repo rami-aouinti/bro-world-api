@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Crm\Transport\Controller\Api\V1\Project;
 
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Application\Service\CrmApiNormalizer;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,6 +23,7 @@ final readonly class ListProjectsController
     public function __construct(
         private ProjectRepository $projectRepository,
         private CrmApplicationScopeResolver $scopeResolver,
+        private CrmApiNormalizer $crmApiNormalizer,
     ) {
     }
 
@@ -37,7 +39,7 @@ final readonly class ListProjectsController
             'status' => trim((string)$request->query->get('status', '')),
         ];
 
-        $items = $this->projectRepository->findScopedProjection($crm->getId(), $limit, ($page - 1) * $limit, $filters);
+        $items = array_map(fn (array $item): array => $this->crmApiNormalizer->normalizeProjectProjection($item), $this->projectRepository->findScopedProjection($crm->getId(), $limit, ($page - 1) * $limit, $filters));
         $totalItems = $this->projectRepository->countScopedByCrm($crm->getId(), $filters);
 
         return new JsonResponse([

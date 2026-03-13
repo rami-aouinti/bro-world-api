@@ -8,7 +8,6 @@ use App\Crm\Application\Projection\CrmTaskProjection;
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Infrastructure\Repository\TaskRepository;
 use App\General\Application\Service\CacheKeyConventionService;
-use App\User\Domain\Entity\User;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,6 +24,7 @@ readonly class TaskListService
         private ElasticsearchServiceInterface $elasticsearchService,
         private CacheKeyConventionService $cacheKeyConventionService,
         private CrmApplicationScopeResolver $applicationScopeResolver,
+        private CrmApiNormalizer $crmApiNormalizer,
     ) {
     }
 
@@ -88,27 +88,7 @@ readonly class TaskListService
                 $qb->andWhere('task.id IN (:ids)')->setParameter('ids', $esIds);
             }
 
-            $items = array_map(static fn (Task $task): array => [
-                'id' => $task->getId(),
-                'title' => $task->getTitle(),
-                'projectId' => $task->getProject()?->getId(),
-                'projectName' => $task->getProject()?->getName(),
-                'sprintId' => $task->getSprint()?->getId(),
-                'sprintName' => $task->getSprint()?->getName(),
-                'status' => $task->getStatus()->value,
-                'priority' => $task->getPriority()->value,
-                'dueAt' => $task->getDueAt()?->format(DATE_ATOM),
-                'estimatedHours' => $task->getEstimatedHours(),
-                'updatedAt' => $task->getUpdatedAt()?->format(DATE_ATOM),
-                'assignees' => array_map(static fn (User $assignee): array => [
-                    'id' => $assignee->getId(),
-                    'username' => $assignee->getUsername(),
-                    'email' => $assignee->getEmail(),
-                    'firstName' => $assignee->getFirstName(),
-                    'lastName' => $assignee->getLastName(),
-                    'photo' => $assignee->getPhoto(),
-                ], $task->getAssignees()->toArray()),
-            ], $qb->getQuery()->getResult());
+            $items = array_map(fn (Task $task): array => $this->crmApiNormalizer->normalizeTask($task), $qb->getQuery()->getResult());
 
             $countQb = $this->taskRepository->createQueryBuilder('task')->select('COUNT(task.id)')
                 ->leftJoin('task.project', 'project')
