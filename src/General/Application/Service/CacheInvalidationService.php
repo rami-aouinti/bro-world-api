@@ -94,7 +94,10 @@ class CacheInvalidationService
         ]));
     }
 
-    public function invalidateBlogCaches(?string $applicationSlug, ?string $userId): void
+    /**
+     * @param list<string|null> $userIds
+     */
+    public function invalidateBlogCaches(?string $applicationSlug, array $userIds = []): void
     {
         if (!$this->cache instanceof TagAwareCacheInterface) {
             return;
@@ -105,7 +108,11 @@ class CacheInvalidationService
             $this->cacheKeyConventionService->tagPublicBlogByApplication($applicationSlug),
         ];
 
-        if ($userId !== null && $userId !== '') {
+        foreach (array_values(array_unique($userIds)) as $userId) {
+            if ($userId === null || $userId === '') {
+                continue;
+            }
+
             $tags[] = $this->cacheKeyConventionService->tagPrivateBlog($userId);
         }
 

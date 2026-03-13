@@ -72,7 +72,14 @@ final readonly class CreateBlogCommentCommandHandler
 
         $this->commentRepository->save($comment);
         $this->blogNotificationService->notifyCommentCreated($comment);
-        $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
+
+        $affectedUserIds = array_values(array_filter(array_unique([
+            $command->actorUserId,
+            $post->getAuthor()->getId(),
+            $comment->getParent()?->getAuthor()->getId(),
+        ]), static fn (?string $userId): bool => $userId !== null && $userId !== ''));
+
+        $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
 
         return $comment->getId();
     }

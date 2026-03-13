@@ -38,13 +38,20 @@ final readonly class CreateBlogReactionCommandHandler
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Resource not found.');
         }
 
+        $affectedUserIds = array_values(array_filter(array_unique([
+            $command->actorUserId,
+            $comment->getAuthor()->getId(),
+            $comment->getPost()->getAuthor()->getId(),
+            $comment->getParent()?->getAuthor()->getId(),
+        ]), static fn (?string $userId): bool => $userId !== null && $userId !== ''));
+
         $existingReaction = $this->reactionRepository->findOneByCommentAndAuthor($comment, $user);
 
         if ($existingReaction instanceof BlogReaction) {
             $existingReaction->setType($command->type);
             $this->reactionRepository->save($existingReaction);
 
-            $this->cacheInvalidationService->invalidateBlogCaches($comment->getPost()->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
+            $this->cacheInvalidationService->invalidateBlogCaches($comment->getPost()->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
 
             return $existingReaction->getId();
         }
@@ -57,7 +64,7 @@ final readonly class CreateBlogReactionCommandHandler
         $this->reactionRepository->save($reaction);
 
         $this->blogNotificationService->notifyReactionCreated($comment, $user, $command->type->value);
-        $this->cacheInvalidationService->invalidateBlogCaches($comment->getPost()->getBlog()->getApplication()?->getSlug(), $command->actorUserId);
+        $this->cacheInvalidationService->invalidateBlogCaches($comment->getPost()->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
 
         return $reaction->getId();
     }
