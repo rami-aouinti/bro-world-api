@@ -44,6 +44,32 @@ class QuizQuestionRepository extends BaseRepository
         return $queryBuilder->getQuery()->getResult();
     }
 
+
+    /**
+     * @return array{questionCount:int, answerCount:int, totalPoints:int}
+     */
+    public function getQuizStats(Quiz $quiz): array
+    {
+        $questionStats = $this->createQueryBuilder('question')
+            ->select('COUNT(question.id) AS questionCount, COALESCE(SUM(question.points), 0) AS totalPoints')
+            ->andWhere('question.quiz = :quiz')->setParameter('quiz', $quiz->getId(), UuidBinaryOrderedTimeType::NAME)
+            ->getQuery()
+            ->getSingleResult();
+
+        $answerCount = (int) $this->createQueryBuilder('question')
+            ->select('COUNT(answer.id)')
+            ->leftJoin('question.answers', 'answer')
+            ->andWhere('question.quiz = :quiz')->setParameter('quiz', $quiz->getId(), UuidBinaryOrderedTimeType::NAME)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return [
+            'questionCount' => (int) ($questionStats['questionCount'] ?? 0),
+            'answerCount' => $answerCount,
+            'totalPoints' => (int) ($questionStats['totalPoints'] ?? 0),
+        ];
+    }
+
     public function nextPositionForQuiz(Quiz $quiz): int
     {
         $maxPosition = $this->createQueryBuilder('question')
@@ -52,6 +78,6 @@ class QuizQuestionRepository extends BaseRepository
             ->getQuery()
             ->getSingleScalarResult();
 
-        return ((int)$maxPosition) + 1;
+        return ((int) $maxPosition) + 1;
     }
 }
