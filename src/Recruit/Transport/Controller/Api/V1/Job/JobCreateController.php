@@ -10,6 +10,7 @@ use App\General\Transport\Rest\Controller;
 use App\Recruit\Application\DTO\Job\JobCreate;
 use App\Recruit\Application\Resource\JobResource;
 use AutoMapperPlus\AutoMapperInterface;
+use AutoMapperPlus\Exception\UnregisteredMappingException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -49,6 +50,9 @@ class JobCreateController extends Controller
         return $this->createMethod($request, $this->mapAndValidateDto($request, JobCreate::class));
     }
 
+    /**
+     * @throws UnregisteredMappingException
+     */
     private function mapAndValidateDto(Request $request, string $dtoClass): RestDtoInterface
     {
         /** @var RestDtoInterface $dto */

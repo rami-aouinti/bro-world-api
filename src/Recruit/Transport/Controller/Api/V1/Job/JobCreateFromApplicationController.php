@@ -10,11 +10,14 @@ use App\Recruit\Application\Service\JobPayloadHydratorService;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Infrastructure\Repository\JobRepository;
 use App\User\Domain\Entity\User;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
@@ -36,6 +39,11 @@ readonly class JobCreateFromApplicationController
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ExceptionInterface
+     * @throws ORMException
+     */
     #[Route(path: '/v1/recruit/applications/{applicationSlug}/jobs', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
@@ -56,7 +64,7 @@ readonly class JobCreateFromApplicationController
         );
         $application = $recruit->getApplication();
 
-        $job = (new Job())
+        $job = new Job()
             ->setRecruit($recruit)
             ->setTitle(trim($title));
 
