@@ -31,7 +31,6 @@ use function array_unique;
 use function array_values;
 use function ceil;
 use function count;
-use function floor;
 use function in_array;
 use function is_array;
 use function is_string;
@@ -272,31 +271,27 @@ class JobPublicListService
     private function buildPostedAtLabel(?DateTimeImmutable $createdAt): string
     {
         if ($createdAt === null) {
-            return 'vor kurzem';
+            return '30d';
         }
 
         $now = new DateTimeImmutable();
         $diff = $createdAt->diff($now);
 
-        if ($diff->y > 0) {
-            return 'vor ' . $diff->y . ' Jahr' . ($diff->y > 1 ? 'en' : '');
+        if ($diff->days !== false) {
+            if ($diff->days <= 0) {
+                return 'today';
+            }
+
+            if ($diff->days <= 3) {
+                return '3d';
+            }
+
+            if ($diff->days <= 7) {
+                return '7d';
+            }
         }
 
-        if ($diff->m > 0) {
-            return 'vor ' . $diff->m . ' Monat' . ($diff->m > 1 ? 'en' : '');
-        }
-
-        if ($diff->days !== false && $diff->days >= 7) {
-            $weeks = (int)floor($diff->days / 7);
-
-            return 'vor ' . $weeks . ' Woche' . ($weeks > 1 ? 'n' : '');
-        }
-
-        if ($diff->d > 0) {
-            return 'vor ' . $diff->d . ' Tag' . ($diff->d > 1 ? 'en' : '');
-        }
-
-        return 'vor kurzem';
+        return '30d';
     }
 
     /**
@@ -391,8 +386,32 @@ class JobPublicListService
         $now = new DateTimeImmutable();
         $label = strtolower($postedAtLabel);
 
-        if ($label === 'vor kurzem') {
+        if ($label === 'today' || $label === 'vor kurzem') {
             $from = $now->modify('-1 day');
+            $qb->andWhere('job.createdAt >= :postedAtFrom')
+                ->setParameter('postedAtFrom', $from);
+
+            return;
+        }
+
+        if ($label === '3d') {
+            $from = $now->modify('-3 day');
+            $qb->andWhere('job.createdAt >= :postedAtFrom')
+                ->setParameter('postedAtFrom', $from);
+
+            return;
+        }
+
+        if ($label === '7d') {
+            $from = $now->modify('-7 day');
+            $qb->andWhere('job.createdAt >= :postedAtFrom')
+                ->setParameter('postedAtFrom', $from);
+
+            return;
+        }
+
+        if ($label === '30d') {
+            $from = $now->modify('-30 day');
             $qb->andWhere('job.createdAt >= :postedAtFrom')
                 ->setParameter('postedAtFrom', $from);
 
