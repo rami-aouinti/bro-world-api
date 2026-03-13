@@ -10,6 +10,8 @@ use App\Chat\Domain\Enum\ChatReactionType;
 use App\Chat\Domain\Repository\Interfaces\ChatMessageReactionRepositoryInterface;
 use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -36,6 +38,10 @@ readonly class PatchReactionController
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     #[Route(path: '/v1/chat/private/reactions/{reactionId}', methods: [Request::METHOD_PATCH])]
     public function __invoke(string $reactionId, Request $request, User $loggedInUser): JsonResponse
     {

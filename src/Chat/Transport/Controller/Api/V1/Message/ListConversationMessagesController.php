@@ -30,10 +30,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
     ]
 )]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-class ListConversationMessagesController
+readonly class ListConversationMessagesController
 {
     public function __construct(
-        private readonly ChatAccessResolverService $chatAccessResolverService,
+        private ChatAccessResolverService $chatAccessResolverService,
     ) {
     }
 

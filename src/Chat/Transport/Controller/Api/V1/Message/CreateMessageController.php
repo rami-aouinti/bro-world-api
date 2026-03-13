@@ -17,6 +17,7 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Throwable;
 
 #[AsController]
 #[OA\Tag(name: 'Chat Conversation')]
@@ -48,15 +49,18 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
     ]
 )]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-class CreateMessageController
+readonly class CreateMessageController
 {
     public function __construct(
-        private readonly MessageServiceInterface $messageService,
-        private readonly MessagePayloadService $messagePayloadService,
-        private readonly OperationIdGeneratorService $operationIdGeneratorService,
+        private MessageServiceInterface     $messageService,
+        private MessagePayloadService       $messagePayloadService,
+        private OperationIdGeneratorService $operationIdGeneratorService,
     ) {
     }
 
+    /**
+     * @throws Throwable
+     */
     #[Route(path: '/v1/chat/private/conversations/{conversationId}/messages', methods: [Request::METHOD_POST])]
     public function __invoke(string $conversationId, Request $request, User $loggedInUser): JsonResponse
     {

@@ -15,19 +15,23 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Throwable;
 
 #[AsController]
 #[OA\Tag(name: 'Chat Conversation')]
 #[OA\Post(path: '/v1/chat/private/conversation/{user}/user', operationId: 'chat_conversation_find_or_create_with_user', summary: 'Trouver ou créer une conversation directe avec un utilisateur', tags: ['Chat Conversation'])]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-class FindOrCreateConversationWithUserController
+readonly class FindOrCreateConversationWithUserController
 {
     public function __construct(
-        private readonly MessageServiceInterface $messageService,
-        private readonly OperationIdGeneratorService $operationIdGeneratorService,
+        private MessageServiceInterface     $messageService,
+        private OperationIdGeneratorService $operationIdGeneratorService,
     ) {
     }
 
+    /**
+     * @throws Throwable
+     */
     #[Route(path: '/v1/chat/private/conversation/{user}/user', methods: [Request::METHOD_POST])]
     public function __invoke(User $user, User $loggedInUser): JsonResponse
     {

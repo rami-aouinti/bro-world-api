@@ -41,8 +41,13 @@ readonly class CreateReactionController
     }
 
     /**
-     * @throws OptimisticLockException
+     * @param string $messageId
+     * @param Request $request
+     * @param User $loggedInUser
+     * @return JsonResponse
      * @throws ORMException
+     * @throws OptimisticLockException
+     * @throws UniqueConstraintViolationException
      */
     #[Route(path: '/v1/chat/private/messages/{messageId}/reactions', methods: [Request::METHOD_POST])]
     public function __invoke(string $messageId, Request $request, User $loggedInUser): JsonResponse

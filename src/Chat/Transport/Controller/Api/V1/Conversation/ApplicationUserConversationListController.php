@@ -25,8 +25,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
     parameters: [
         new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world')),
         new OA\Parameter(name: 'chatId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000')),
-        new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, default: 1)),
-        new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 20)),
+        new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1, minimum: 1)),
+        new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', default: 20, maximum: 100, minimum: 1)),
         new OA\Parameter(name: 'message', in: 'query', required: false, schema: new OA\Schema(type: 'string', example: 'bonjour')),
     ],
     responses: [
@@ -34,11 +34,11 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
     ]
 )]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-class ApplicationUserConversationListController
+readonly class ApplicationUserConversationListController
 {
     public function __construct(
-        private readonly ConversationListService $conversationListService,
-        private readonly ChatApplicationScopeValidator $chatApplicationScopeValidator
+        private ConversationListService       $conversationListService,
+        private ChatApplicationScopeValidator $chatApplicationScopeValidator
     ) {
     }
 

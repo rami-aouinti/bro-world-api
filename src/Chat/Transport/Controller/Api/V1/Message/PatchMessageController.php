@@ -46,12 +46,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
     ]
 )]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-class PatchMessageController
+readonly class PatchMessageController
 {
     public function __construct(
-        private readonly MessageServiceInterface $messageService,
-        private readonly MessagePayloadService $messagePayloadService,
-        private readonly OperationIdGeneratorService $operationIdGeneratorService,
+        private MessageServiceInterface     $messageService,
+        private MessagePayloadService       $messagePayloadService,
+        private OperationIdGeneratorService $operationIdGeneratorService,
     ) {
     }
 

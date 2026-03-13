@@ -6,6 +6,7 @@ namespace App\Chat\Transport\Controller\Api\V1\Conversation;
 
 use App\Chat\Application\Service\ConversationListService;
 use App\User\Domain\Entity\User;
+use JsonException;
 use OpenApi\Attributes as OA;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -32,15 +33,15 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
     ]
 )]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-class UserConversationListController
+readonly class UserConversationListController
 {
     public function __construct(
-        private readonly ConversationListService $conversationListService
+        private ConversationListService $conversationListService
     ) {
     }
 
     /**
-     * @throws \JsonException
+     * @throws JsonException
      * @throws InvalidArgumentException
      */
     #[Route(path: '/v1/chat/private/conversations', methods: [Request::METHOD_GET])]
