@@ -11,6 +11,7 @@ use App\Chat\Domain\Enum\ChatReactionType;
 use App\Chat\Domain\Repository\Interfaces\ChatMessageReactionRepositoryInterface;
 use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use OpenApi\Attributes as OA;
@@ -49,12 +50,33 @@ readonly class CreateReactionController
         $message = $this->chatAccessResolverService->resolveAccessibleMessage($messageId, $loggedInUser);
         $reactionType = $this->reactionPayloadService->extractRequiredReaction($request->toArray());
 
+        $existingReaction = $this->reactionRepository->findOneByMessageUserReaction($message, $loggedInUser, $reactionType);
+
+        if ($existingReaction instanceof ChatMessageReaction) {
+            return new JsonResponse([
+                'id' => $existingReaction->getId(),
+            ], JsonResponse::HTTP_OK);
+        }
+
         $reaction = new ChatMessageReaction()
             ->setMessage($message)
             ->setUser($loggedInUser)
             ->setReaction($reactionType);
 
-        $this->reactionRepository->save($reaction);
+        try {
+            $this->reactionRepository->save($reaction);
+        } catch (UniqueConstraintViolationException $e) {
+            $existingReaction = $this->reactionRepository->findOneByMessageUserReaction($message, $loggedInUser, $reactionType);
+
+            if ($existingReaction instanceof ChatMessageReaction) {
+                return new JsonResponse([
+                    'id' => $existingReaction->getId(),
+                ], JsonResponse::HTTP_OK);
+            }
+
+            throw $e;
+        }
+
         $this->cacheInvalidationService->invalidateConversationCaches($message->getConversation()->getChat()->getId(), $loggedInUser->getId());
 
         return new JsonResponse([
