@@ -6,6 +6,7 @@ namespace App\Tests\Unit\Calendar\Application\Service;
 
 use App\Calendar\Application\Service\EventListService;
 use App\Calendar\Domain\Repository\Interfaces\EventRepositoryInterface;
+use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\User\Domain\Entity\User;
 use PHPUnit\Framework\TestCase;
@@ -33,7 +34,7 @@ final class EventListServiceTest extends TestCase
                 ],
             ]);
 
-        $service = new EventListService($repo, $cache, $elastic);
+        $service = new EventListService($repo, $cache, $elastic, $this->cacheKeyConventionService());
         $result = $service->getByUser($this->mockUser(), [
             'title' => 'foo',
         ], 1, 20);
@@ -52,6 +53,10 @@ final class EventListServiceTest extends TestCase
         $elastic = $this->createMock(ElasticsearchServiceInterface::class);
         $elastic->expects(self::once())->method('search')->willReturn([
             'hits' => [
+                'total' => [
+                    'value' => 0,
+                    'relation' => 'eq',
+                ],
                 'hits' => [],
             ],
         ]);
@@ -64,7 +69,7 @@ final class EventListServiceTest extends TestCase
             return $callback($item);
         });
 
-        $service = new EventListService($repo, $cache, $elastic);
+        $service = new EventListService($repo, $cache, $elastic, $this->cacheKeyConventionService());
         $result = $service->getByUser($this->mockUser(), [
             'title' => 'foo',
         ], 1, 20);
@@ -89,7 +94,7 @@ final class EventListServiceTest extends TestCase
             return $callback($item);
         });
 
-        $service = new EventListService($repo, $cache, $elastic);
+        $service = new EventListService($repo, $cache, $elastic, $this->cacheKeyConventionService());
         $result = $service->getByUser($this->mockUser(), [
             'title' => 'foo',
         ], 1, 20);
@@ -97,11 +102,60 @@ final class EventListServiceTest extends TestCase
         self::assertSame([], $result['items']);
     }
 
+    public function testGetByUserFallsBackToDatabaseWhenElasticReturnsMoreThan1000Hits(): void
+    {
+        $repo = $this->createMock(EventRepositoryInterface::class);
+        $repo->expects(self::once())->method('findByUser')->with(self::anything(), self::anything(), 2, 20, null)->willReturn([]);
+        $repo->expects(self::once())->method('countByUser')->with(self::anything(), self::anything(), null)->willReturn(1450);
+
+        $elastic = $this->createMock(ElasticsearchServiceInterface::class);
+        $elastic->expects(self::once())->method('search')->willReturn([
+            'hits' => [
+                'total' => [
+                    'value' => 1450,
+                    'relation' => 'eq',
+                ],
+                'hits' => [
+                    [
+                        '_source' => [
+                            'id' => 'event-1',
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $item = $this->createMock(ItemInterface::class);
+        $item->expects(self::once())->method('expiresAfter')->with(120);
+
+        $cache = $this->createMock(CacheInterface::class);
+        $cache->expects(self::once())->method('get')->willReturnCallback(static function (string $key, callable $callback) use ($item): array {
+            return $callback($item);
+        });
+
+        $service = new EventListService($repo, $cache, $elastic, $this->cacheKeyConventionService());
+        $result = $service->getByUser($this->mockUser(), [
+            'title' => 'foo',
+        ], 2, 20);
+
+        self::assertSame([], $result['items']);
+        self::assertSame(1450, $result['pagination']['totalItems']);
+        self::assertSame(73, $result['pagination']['totalPages']);
+        self::assertSame(2, $result['pagination']['page']);
+        self::assertSame(20, $result['pagination']['limit']);
+    }
+
     private function mockUser(): User
     {
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn('user-id');
+        $user->method('getUsername')->willReturn('john');
 
         return $user;
+    }
+
+    private function cacheKeyConventionService(): CacheKeyConventionService
+    {
+        return new CacheKeyConventionService();
     }
 }

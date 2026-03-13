@@ -20,6 +20,8 @@ use function array_map;
 
 final readonly class EventListService
 {
+    private const int ELASTIC_IDS_LIMIT = 1000;
+
     public function __construct(
         private EventRepositoryInterface $eventRepository,
         private CacheInterface $cache,
@@ -202,13 +204,19 @@ final readonly class EventListService
                             'must' => $must,
                         ],
                     ],
+                    'track_total_hits' => true,
                     '_source' => ['id'],
                 ],
                 0,
-                1000,
+                self::ELASTIC_IDS_LIMIT,
             );
 
             if (!is_array($response) || !isset($response['hits']['hits']) || !is_array($response['hits']['hits'])) {
+                return null;
+            }
+
+            $totalHits = $this->extractTotalHits($response);
+            if ($totalHits !== null && $totalHits > self::ELASTIC_IDS_LIMIT) {
                 return null;
             }
 
@@ -223,6 +231,30 @@ final readonly class EventListService
         } catch (Throwable) {
             return null;
         }
+    }
+
+    /**
+     * @param array<string, mixed> $response
+     */
+    private function extractTotalHits(array $response): ?int
+    {
+        if (!isset($response['hits']['total'])) {
+            return null;
+        }
+
+        if (is_int($response['hits']['total'])) {
+            return $response['hits']['total'];
+        }
+
+        if (
+            is_array($response['hits']['total'])
+            && isset($response['hits']['total']['value'])
+            && is_int($response['hits']['total']['value'])
+        ) {
+            return $response['hits']['total']['value'];
+        }
+
+        return null;
     }
 
     /**
