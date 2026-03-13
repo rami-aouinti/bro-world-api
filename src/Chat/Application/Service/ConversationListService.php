@@ -285,7 +285,7 @@ final readonly class ConversationListService
                             'reactions' => array_map(
                                 static fn (ChatMessageReaction $reaction): array => [
                                     'id' => $reaction->getId(),
-                                    'userId' => $reaction->getUser(),
+                                    'userId' => $reaction->getUser()->getId(),
                                     'reaction' => $reaction->getReaction()->value,
                                 ],
                                 $message->getReactions()->toArray()
