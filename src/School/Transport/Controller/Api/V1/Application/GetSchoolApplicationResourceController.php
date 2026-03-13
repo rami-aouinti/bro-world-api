@@ -7,6 +7,7 @@ namespace App\School\Transport\Controller\Api\V1\Application;
 use App\School\Application\Service\SchoolApplicationScopeResolver;
 use App\School\Application\Service\SchoolResourceAccessService;
 use App\School\Application\Service\SchoolResourceViewService;
+use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,9 +32,9 @@ final readonly class GetSchoolApplicationResourceController
         'resource' => 'classes|students|teachers|exams|grades',
     ])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, string $resource, string $id): JsonResponse
+    public function __invoke(string $applicationSlug, string $resource, string $id, ?User $loggedInUser): JsonResponse
     {
-        $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug);
+        $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
         $entity = $this->resourceViewService->findOr404($resource, $id);
         if (!$this->resourceAccessService->belongsToSchool($entity, $school)) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Resource not found in application scope.');

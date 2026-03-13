@@ -34,6 +34,7 @@ final class SchoolApplicationScopedRoutesTest extends WebTestCase
 
         $forbiddenClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/teachers');
         self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
+        self::assertStringContainsString('Forbidden application scope access.', (string)$forbiddenClient->getResponse()->getContent());
 
         $ownerClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams');
         self::assertSame(Response::HTTP_OK, $ownerClient->getResponse()->getStatusCode());
@@ -56,6 +57,7 @@ final class SchoolApplicationScopedRoutesTest extends WebTestCase
 
         $forbiddenClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes/' . $classId);
         self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
+        self::assertStringContainsString('Forbidden application scope access.', (string)$forbiddenClient->getResponse()->getContent());
 
         $ownerClient->request('PATCH', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes/' . $classId, [], [], [], JSON::encode([
             'name' => 'Classe Scoped Updated',
