@@ -26,7 +26,6 @@ use Throwable;
 use function array_filter;
 use function array_map;
 use function array_values;
-use function array_unique;
 use function count;
 
 readonly class UserStoryService
@@ -48,11 +47,12 @@ readonly class UserStoryService
      */
     public function getActiveStories(User $loggedInUser, int $limit): array
     {
-        $visibleUserIds = $this->findVisibleUserIds($loggedInUser);
+        $visibleUsers = $this->findVisibleUsers($loggedInUser);
+        $visibleUserIds = array_map(static fn (User $user): string => $user->getId(), $visibleUsers);
         $cacheKey = $this->cacheKeyConventionService->buildPrivateStoryListKey($loggedInUser->getId(), $limit);
 
         /** @var array<int, array<string, mixed>> $stories */
-        $stories = $this->cache->get($cacheKey, function (ItemInterface $item) use ($loggedInUser, $visibleUserIds, $limit): array {
+        $stories = $this->cache->get($cacheKey, function (ItemInterface $item) use ($loggedInUser, $visibleUsers, $visibleUserIds, $limit): array {
             $item->expiresAfter(60);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->tagPrivateStoryList());
@@ -63,7 +63,7 @@ readonly class UserStoryService
                 return [];
             }
 
-            return $this->findActiveStories($loggedInUser, $visibleUserIds, $limit, $esIds);
+            return $this->findActiveStories($loggedInUser, $visibleUsers, $limit, $esIds);
         });
 
         return $stories;
@@ -113,12 +113,12 @@ readonly class UserStoryService
     }
 
     /**
-     * @param array<int, string> $visibleUserIds
+     * @param array<int, User> $visibleUsers
      * @param array<int, string>|null $esIds
      *
      * @return array<int, array<string, mixed>>
      */
-    private function findActiveStories(User $loggedInUser, array $visibleUserIds, int $limit, ?array $esIds): array
+    private function findActiveStories(User $loggedInUser, array $visibleUsers, int $limit, ?array $esIds): array
     {
         $since = new DateTimeImmutable('-24 hours');
 
@@ -126,9 +126,9 @@ readonly class UserStoryService
             ->select('story', 'user')
             ->innerJoin('story.user', 'user')
             ->andWhere('story.createdAt >= :since')
-            ->andWhere('user.id IN (:visibleUserIds)')
+            ->andWhere('user IN (:visibleUsers)')
             ->setParameter('since', $since)
-            ->setParameter('visibleUserIds', $visibleUserIds)
+            ->setParameter('visibleUsers', $visibleUsers)
             ->orderBy('story.createdAt', 'DESC')
             ->setMaxResults($limit);
 
@@ -242,9 +242,9 @@ readonly class UserStoryService
     }
 
     /**
-     * @return array<int, string>
+     * @return array<int, User>
      */
-    private function findVisibleUserIds(User $loggedInUser): array
+    private function findVisibleUsers(User $loggedInUser): array
     {
         $qb = $this->entityManager->createQueryBuilder()
             ->select('relation, requester, addressee')
@@ -259,15 +259,15 @@ readonly class UserStoryService
         /** @var array<int, UserFriendRelation> $relations */
         $relations = $qb->getQuery()->getResult();
 
-        $userIds = [$loggedInUser->getId()];
+        $users = [$loggedInUser->getId() => $loggedInUser];
         foreach ($relations as $relation) {
             $friend = $relation->getRequester()->getId() === $loggedInUser->getId()
                 ? $relation->getAddressee()
                 : $relation->getRequester();
 
-            $userIds[] = $friend->getId();
+            $users[$friend->getId()] = $friend;
         }
 
-        return array_values(array_unique($userIds));
+        return array_values($users);
     }
 }
