@@ -4,23 +4,26 @@ declare(strict_types=1);
 
 namespace App\Quiz\Application\Service;
 
-use App\Quiz\Domain\Entity\Quiz;
-use App\Quiz\Domain\Enum\QuizCategory;
-use App\Quiz\Domain\Enum\QuizLevel;
-use App\Quiz\Infrastructure\Repository\QuizQuestionRepository;
-use App\Quiz\Infrastructure\Repository\QuizRepository;
-use Psr\Cache\InvalidArgumentException;
-use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\Cache\ItemInterface;
+    private const QUIZ_STATS_CACHE_TTL = 120;
+        $cacheKey = sprintf('quiz_stats_%s', $slug);
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($slug): array {
+            $item->expiresAfter(self::QUIZ_STATS_CACHE_TTL);
+            $quiz = $this->quizRepository->findOneByApplicationSlugWithConfiguration($slug);
+            if ($quiz === null) {
+                return [];
+            }
 
-final readonly class QuizReadService
-{
-    public function __construct(
-        private QuizRepository $quizRepository,
-        private QuizQuestionRepository $quizQuestionRepository,
-        private CacheInterface $cache,
-    ) {
-    }
+            $stats = $this->quizQuestionRepository->getQuizStats($quiz);
+
+            return [
+                'questionCount' => $stats['questionCount'],
+                'answerCount' => $stats['answerCount'],
+                'averageAnswersPerQuestion' => $stats['questionCount'] > 0
+                    ? round($stats['answerCount'] / $stats['questionCount'], 2)
+                    : 0.0,
+                'totalPoints' => $stats['totalPoints'],
+            ];
+        });
 
     /**
      * @throws InvalidArgumentException
@@ -30,11 +33,8 @@ final readonly class QuizReadService
         $cacheKey = sprintf('quiz_%s_%s_%s', $slug, (string)$level, (string)$category);
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($slug, $level, $category): array {
-            $item->expiresAfter(120);
-            $quiz = $this->quizRepository->createQueryBuilder('q')
-                ->leftJoin('q.application', 'a')
-                ->leftJoin('q.configuration', 'configuration')->addSelect('configuration')
-                ->andWhere('a.slug = :slug')->setParameter('slug', $slug)->getQuery()->getOneOrNullResult();
+            $item->expiresAfter(self::QUIZ_CACHE_TTL);
+            $quiz = $this->quizRepository->findOneByApplicationSlugWithConfiguration($slug);
 
             if (!$quiz instanceof Quiz) {
                 return [];
@@ -83,14 +83,21 @@ final readonly class QuizReadService
             return [];
         }
 
-        $questionCount = count($quiz['questions']);
-        $answerCount = array_reduce($quiz['questions'], static fn (int $carry, array $question): int => $carry + count($question['answers']), 0);
+        $questionCount = 0;
+        $answerCount = 0;
+        $totalPoints = 0;
+
+        foreach ($quiz['questions'] as $question) {
+            ++$questionCount;
+            $answerCount += count($question['answers']);
+            $totalPoints += (int)$question['points'];
+        }
 
         return [
             'questionCount' => $questionCount,
             'answerCount' => $answerCount,
             'averageAnswersPerQuestion' => $questionCount > 0 ? round($answerCount / $questionCount, 2) : 0.0,
-            'totalPoints' => array_reduce($quiz['questions'], static fn (int $carry, array $question): int => $carry + (int)$question['points'], 0),
+            'totalPoints' => $totalPoints,
         ];
     }
 }

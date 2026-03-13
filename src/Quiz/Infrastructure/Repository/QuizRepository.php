@@ -27,4 +27,16 @@ class QuizRepository extends BaseRepository
 
         return $result instanceof Quiz ? $result : null;
     }
+
+    public function findOneByApplicationSlugWithConfiguration(string $slug): ?Quiz
+    {
+        $result = $this->createQueryBuilder('quiz')
+            ->leftJoin('quiz.application', 'application')
+            ->leftJoin('quiz.configuration', 'configuration')->addSelect('configuration')
+            ->andWhere('application.slug = :slug')->setParameter('slug', $slug)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $result instanceof Quiz ? $result : null;
+    }
 }
