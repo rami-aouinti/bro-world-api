@@ -64,7 +64,6 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
         $offset = max(0, ($page - 1) * $limit);
 
         return $this->applyListFilters($this->createBaseQueryBuilder(), $filters, $esIds)
-            ->innerJoin('calendar.application', 'application')
             ->andWhere('application.slug = :applicationSlug')
             ->andWhere('event.visibility = :visibilityPublic')
             ->andWhere('event.isCancelled = false')
@@ -95,7 +94,6 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
         $offset = max(0, ($page - 1) * $limit);
 
         return $this->applyListFilters($this->createBaseQueryBuilder(), $filters, $esIds)
-            ->innerJoin('calendar.application', 'application')
             ->andWhere('application.slug = :applicationSlug')
             ->andWhere('event.user = :user OR calendar.user = :user')
             ->setParameter('applicationSlug', $applicationSlug)
@@ -139,7 +137,6 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
     public function findUpcomingByApplicationSlugAndUser(string $applicationSlug, User $user, int $limit = 3): array
     {
         return $this->createBaseQueryBuilder()
-            ->innerJoin('calendar.application', 'application')
             ->andWhere('application.slug = :applicationSlug')
             ->andWhere('event.user = :user OR calendar.user = :user')
             ->andWhere('event.isCancelled = false')
@@ -157,7 +154,9 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
     {
         return $this->createQueryBuilder('event')
             ->addSelect('calendar')
+            ->addSelect('application')
             ->leftJoin('event.calendar', 'calendar')
+            ->leftJoin('calendar.application', 'application')
             ->distinct();
     }
 
