@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Application\Recruit\Transport\Controller\Api\V1\Job;
 
+use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\General\Domain\Utils\JSON;
 use App\Platform\Domain\Entity\Application as PlatformApplication;
+use App\Recruit\Application\Service\JobSimilarIndexerService;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
 use App\Tests\TestCase\WebTestCase;
@@ -18,10 +20,19 @@ class PublicJobDetailControllerTest extends WebTestCase
     #[TestDox('Test that GET /v1/recruit/applications/{applicationSlug}/public/jobs/{jobSlug} returns job detail and similar jobs list.')]
     public function testThatPublicJobDetailReturnsJobAndSimilarJobsList(): void
     {
-        [$applicationSlug, $jobSlug] = $this->getApplicationSlugAndJobSlug();
+        [$applicationSlug, $jobSlug, $jobId, $similarJobSlug, $similarJobId] = $this->getApplicationSlugAndJobDetails();
+
+        self::bootKernel();
+        /** @var ElasticsearchServiceInterface $elasticsearchService */
+        $elasticsearchService = static::getContainer()->get(ElasticsearchServiceInterface::class);
+        $elasticsearchService->index(JobSimilarIndexerService::INDEX_NAME, $jobId, [
+            'jobId' => $jobId,
+            'similarJobIds' => [$similarJobId],
+            'updatedAt' => (new \DateTimeImmutable())->format(DATE_ATOM),
+        ]);
 
         $client = $this->getTestClient();
-        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/private/jobs/' . $jobSlug);
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/public/jobs/' . $jobSlug);
 
         $response = $client->getResponse();
         $content = $response->getContent();
@@ -34,12 +45,14 @@ class PublicJobDetailControllerTest extends WebTestCase
         self::assertArrayHasKey('similarJobs', $payload);
         self::assertSame($jobSlug, $payload['job']['slug'] ?? null);
         self::assertIsArray($payload['similarJobs']);
+        self::assertCount(1, $payload['similarJobs']);
+        self::assertSame($similarJobSlug, $payload['similarJobs'][0]['slug'] ?? null);
     }
 
     /**
-     * @return array{0: string, 1: string}
+     * @return array{0: string, 1: string, 2: string, 3: string, 4: string}
      */
-    private function getApplicationSlugAndJobSlug(): array
+    private function getApplicationSlugAndJobDetails(): array
     {
         self::bootKernel();
 
@@ -56,11 +69,16 @@ class PublicJobDetailControllerTest extends WebTestCase
         ]);
         self::assertInstanceOf(Recruit::class, $recruit);
 
-        $job = $entityManager->getRepository(Job::class)->findOneBy([
+        /** @var list<Job> $jobs */
+        $jobs = $entityManager->getRepository(Job::class)->findBy([
             'recruit' => $recruit,
+            'isPublished' => true,
         ]);
-        self::assertInstanceOf(Job::class, $job);
+        self::assertGreaterThanOrEqual(2, count($jobs));
 
-        return [$application->getSlug(), $job->getSlug()];
+        $job = $jobs[0];
+        $similarJob = $jobs[1];
+
+        return [$application->getSlug(), $job->getSlug(), $job->getId(), $similarJob->getSlug(), $similarJob->getId()];
     }
 }
