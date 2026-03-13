@@ -20,7 +20,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class GetQuizByApplicationController
 {
     /**
-     * @throws InvalidArgumentException
+     * @param string $applicationSlug
+     * @param Request $request
+     * @param QuizReadService $quizReadService
+     * @return JsonResponse
      */
     #[Route('/v1/quiz/applications/{applicationSlug}', methods: [Request::METHOD_GET])]
     public function __invoke(string $applicationSlug, Request $request, QuizReadService $quizReadService): JsonResponse

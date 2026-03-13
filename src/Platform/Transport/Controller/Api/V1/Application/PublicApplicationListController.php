@@ -16,10 +16,10 @@ use Throwable;
 
 #[AsController]
 #[OA\Tag(name: 'Application')]
-class PublicApplicationListController
+readonly class PublicApplicationListController
 {
     public function __construct(
-        private readonly ApplicationListService $applicationListService
+        private ApplicationListService $applicationListService
     ) {
     }
 
@@ -29,8 +29,8 @@ class PublicApplicationListController
         summary: 'Liste des applications publiques',
         security: [],
         parameters: [
-            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, default: 1), example: 1),
-            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 20), example: 20),
+            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1, minimum: 1), example: 1),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20, maximum: 100, minimum: 1), example: 20),
             new OA\Parameter(name: 'title', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'shop'),
             new OA\Parameter(name: 'description', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'growth'),
             new OA\Parameter(name: 'platformName', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'Shop'),

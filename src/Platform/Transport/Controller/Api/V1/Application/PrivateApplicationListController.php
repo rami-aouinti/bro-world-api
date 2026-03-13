@@ -18,10 +18,10 @@ use Throwable;
 
 #[AsController]
 #[OA\Tag(name: 'Application')]
-class PrivateApplicationListController
+readonly class PrivateApplicationListController
 {
     public function __construct(
-        private readonly ApplicationListService $applicationListService
+        private ApplicationListService $applicationListService
     ) {
     }
 
@@ -30,8 +30,8 @@ class PrivateApplicationListController
         description: 'Retourne les applications publiques + privées appartenant à l’utilisateur connecté, avec filtres et pagination.',
         summary: 'Liste des applications visibles par l’utilisateur',
         parameters: [
-            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, default: 1), example: 1),
-            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 20), example: 10),
+            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1, minimum: 1), example: 1),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20, maximum: 100, minimum: 1), example: 10),
             new OA\Parameter(name: 'title', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'crm'),
             new OA\Parameter(name: 'description', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'lite'),
             new OA\Parameter(name: 'platformName', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'CRM'),

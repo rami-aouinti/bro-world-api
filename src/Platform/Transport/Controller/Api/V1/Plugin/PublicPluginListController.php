@@ -21,11 +21,11 @@ use Throwable;
  */
 #[AsController]
 #[OA\Tag(name: 'Plugin')]
-class PublicPluginListController
+readonly class PublicPluginListController
 {
     public function __construct(
-        private readonly PluginResource $pluginResource,
-        private readonly ResponseHandler $responseHandler,
+        private PluginResource  $pluginResource,
+        private ResponseHandler $responseHandler,
     ) {
     }
 

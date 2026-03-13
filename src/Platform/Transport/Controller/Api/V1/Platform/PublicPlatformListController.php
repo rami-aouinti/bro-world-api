@@ -22,12 +22,12 @@ use Throwable;
  */
 #[AsController]
 #[OA\Tag(name: 'Platform')]
-class PublicPlatformListController
+readonly class PublicPlatformListController
 {
     public function __construct(
-        private readonly PublicPlatformListReadService $publicPlatformListReadService,
-        private readonly PlatformResource $platformResource,
-        private readonly ResponseHandler $responseHandler,
+        private PublicPlatformListReadService $publicPlatformListReadService,
+        private PlatformResource              $platformResource,
+        private ResponseHandler               $responseHandler,
     ) {
     }
 
