@@ -7,6 +7,7 @@ namespace App\Blog\Application\Service;
 use App\Blog\Domain\Entity\Blog;
 use App\Blog\Domain\Entity\BlogComment;
 use App\Blog\Domain\Entity\BlogPost;
+use App\Blog\Domain\Enum\BlogVisibility;
 use App\Blog\Infrastructure\Repository\BlogPostRepository;
 use App\Blog\Infrastructure\Repository\BlogRepository;
 use App\General\Application\Service\CacheKeyConventionService;
@@ -53,7 +54,11 @@ final readonly class BlogReadService
             }
             $blog = $this->blogRepository->findGeneralBlog();
 
-            return $blog instanceof Blog ? $this->normalizeBlog($blog, $currentUser, $page, $limit) : [];
+            if (!$blog instanceof Blog || !$this->canReadBlog($blog, $currentUser)) {
+                return [];
+            }
+
+            return $this->normalizeBlog($blog, $currentUser, $page, $limit);
         });
     }
 
@@ -75,7 +80,11 @@ final readonly class BlogReadService
             }
             $blog = $this->blogRepository->findOneByApplicationSlug($applicationSlug);
 
-            return $blog instanceof Blog ? $this->normalizeBlog($blog, $currentUser) : [];
+            if (!$blog instanceof Blog || !$this->canReadBlog($blog, $currentUser)) {
+                return [];
+            }
+
+            return $this->normalizeBlog($blog, $currentUser);
         });
     }
 
@@ -84,6 +93,10 @@ final readonly class BlogReadService
         $post = $this->blogPostRepository->findOneBySlugWithDisplayRelations($slug);
 
         if (!$post instanceof BlogPost) {
+            return [];
+        }
+
+        if (!$this->canReadBlog($post->getBlog(), $currentUser)) {
             return [];
         }
 
@@ -196,6 +209,15 @@ final readonly class BlogReadService
         }
 
         return $this->cacheKeyConventionService->buildPrivateBlogKey($currentUser->getUsername(), $scope);
+    }
+
+    private function canReadBlog(Blog $blog, ?User $currentUser): bool
+    {
+        if ($blog->getVisibility() === BlogVisibility::PUBLIC) {
+            return true;
+        }
+
+        return $currentUser !== null && $blog->getOwner()->getId() === $currentUser->getId();
     }
 
     /**

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Application\Blog\Transport\Controller\Api\V1;
 
+use App\Blog\Domain\Entity\Blog;
+use App\Blog\Domain\Enum\BlogVisibility;
 use App\Tests\TestCase\WebTestCase;
 use App\User\Infrastructure\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 final class BlogControllerTest extends WebTestCase
@@ -386,6 +389,81 @@ final class BlogControllerTest extends WebTestCase
             self::assertIsArray($post);
             self::assertTrue((bool)($post['isAuthor'] ?? false));
         }
+    }
+
+    public function testPrivateApplicationBlogIsHiddenForAnonymousAndNonOwner(): void
+    {
+        $this->setApplicationBlogVisibility('shop-ops-center', BlogVisibility::PRIVATE);
+
+        $anonymousClient = $this->getTestClient();
+        $anonymousClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/shop-ops-center/feed');
+        self::assertResponseStatusCodeSame(200);
+        self::assertSame([], json_decode((string)$anonymousClient->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR));
+
+        $nonOwnerClient = $this->getTestClient('john-user', 'password-user');
+        $nonOwnerClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/shop-ops-center/feed');
+        self::assertResponseStatusCodeSame(200);
+        self::assertSame([], json_decode((string)$nonOwnerClient->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR));
+    }
+
+    public function testPrivateApplicationBlogRemainsReadableForOwner(): void
+    {
+        $this->setApplicationBlogVisibility('shop-ops-center', BlogVisibility::PRIVATE);
+
+        $ownerClient = $this->getTestClient('john-root', 'password-root');
+        $ownerClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/shop-ops-center/feed');
+        self::assertResponseStatusCodeSame(200);
+
+        /** @var array<string, mixed> $payload */
+        $payload = json_decode((string)$ownerClient->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertArrayHasKey('visibility', $payload);
+        self::assertSame('private', $payload['visibility']);
+        self::assertArrayHasKey('posts', $payload);
+        self::assertIsArray($payload['posts']);
+        self::assertNotEmpty($payload['posts']);
+    }
+
+    public function testPrivateApplicationBlogPostBySlugVisibilityGuard(): void
+    {
+        $this->setApplicationBlogVisibility('shop-ops-center', BlogVisibility::PRIVATE);
+
+        $ownerClient = $this->getTestClient('john-root', 'password-root');
+        $ownerClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/shop-ops-center/feed');
+        self::assertResponseStatusCodeSame(200);
+        /** @var array<string, mixed> $ownerPayload */
+        $ownerPayload = json_decode((string)$ownerClient->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        $post = $ownerPayload['posts'][0] ?? null;
+        self::assertIsArray($post);
+        self::assertArrayHasKey('slug', $post);
+
+        $nonOwnerClient = $this->getTestClient('john-user', 'password-user');
+        $nonOwnerClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/posts/' . $post['slug']);
+        self::assertResponseStatusCodeSame(200);
+        self::assertSame([], json_decode((string)$nonOwnerClient->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR));
+
+        $ownerClient->request(Request::METHOD_GET, self::API_URL_PREFIX . '/v1/blog/posts/' . $post['slug']);
+        self::assertResponseStatusCodeSame(200);
+        /** @var array<string, mixed> $singlePost */
+        $singlePost = json_decode((string)$ownerClient->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame($post['slug'], $singlePost['slug'] ?? null);
+    }
+
+    private function setApplicationBlogVisibility(string $applicationSlug, BlogVisibility $visibility): void
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $blog = $entityManager->getRepository(Blog::class)
+            ->createQueryBuilder('blog')
+            ->innerJoin('blog.application', 'application')
+            ->where('application.slug = :applicationSlug')
+            ->setParameter('applicationSlug', $applicationSlug)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        self::assertInstanceOf(Blog::class, $blog);
+        $blog->setVisibility($visibility);
+        $entityManager->flush();
     }
 
     /**
