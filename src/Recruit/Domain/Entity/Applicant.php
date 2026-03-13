@@ -33,8 +33,8 @@ class Applicant implements EntityInterface
     private User $user;
 
     #[ORM\OneToOne(targetEntity: Resume::class, inversedBy: 'applicant', cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(name: 'resume_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE', unique: true)]
-    private Resume $resume;
+    #[ORM\JoinColumn(name: 'resume_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE', unique: true)]
+    private ?Resume $resume = null;
 
     #[ORM\Column(name: 'cover_letter', type: Types::TEXT, options: [
         'default' => '',
@@ -66,11 +66,11 @@ class Applicant implements EntityInterface
 
         return $this;
     }
-    public function getResume(): Resume
+    public function getResume(): ?Resume
     {
         return $this->resume;
     }
-    public function setResume(Resume $resume): self
+    public function setResume(?Resume $resume): self
     {
         $this->resume = $resume;
 
