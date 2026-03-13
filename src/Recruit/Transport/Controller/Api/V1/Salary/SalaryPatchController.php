@@ -21,12 +21,15 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 use function count;
+use App\General\Transport\Rest\Traits\Methods\PatchMethod;
 
 #[AsController]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 #[OA\Tag(name: 'Recruit Management')]
 class SalaryPatchController extends Controller
 {
+    use PatchMethod;
+
     public function __construct(
         SalaryResource $resource,
         private readonly AutoMapperInterface $autoMapper,

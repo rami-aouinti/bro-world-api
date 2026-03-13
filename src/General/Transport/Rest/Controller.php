@@ -9,6 +9,14 @@ use App\General\Application\Rest\Interfaces\RestSmallResourceInterface;
 use App\General\Transport\Rest\Interfaces\ControllerInterface;
 use App\General\Transport\Rest\Interfaces\ResponseHandlerInterface;
 use App\General\Transport\Rest\Traits\Actions\RestActionBase;
+use App\General\Transport\Rest\Traits\Methods\CountMethod;
+use App\General\Transport\Rest\Traits\Methods\CreateMethod;
+use App\General\Transport\Rest\Traits\Methods\DeleteMethod;
+use App\General\Transport\Rest\Traits\Methods\FindMethod;
+use App\General\Transport\Rest\Traits\Methods\FindOneMethod;
+use App\General\Transport\Rest\Traits\Methods\IdsMethod;
+use App\General\Transport\Rest\Traits\Methods\PatchMethod;
+use App\General\Transport\Rest\Traits\Methods\UpdateMethod;
 use App\General\Transport\Rest\Traits\RestMethodHelper;
 use Override;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,6 +32,14 @@ abstract class Controller implements ControllerInterface
 {
     use RestActionBase;
     use RestMethodHelper;
+    use CountMethod;
+    use CreateMethod;
+    use DeleteMethod;
+    use FindMethod;
+    use FindOneMethod;
+    use IdsMethod;
+    use PatchMethod;
+    use UpdateMethod;
 
     public const string ACTION_COUNT = 'countAction';
     public const string ACTION_CREATE = 'createAction';

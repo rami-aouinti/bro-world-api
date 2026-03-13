@@ -13,12 +13,15 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\General\Transport\Rest\Traits\Methods\CountMethod;
 
 #[AsController]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 #[OA\Tag(name: 'Recruit Management')]
 class TagCountController extends Controller
 {
+    use CountMethod;
+
     public function __construct(
         TagResource $resource,
     ) {

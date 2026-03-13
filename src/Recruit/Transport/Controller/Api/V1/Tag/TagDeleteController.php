@@ -14,12 +14,15 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\General\Transport\Rest\Traits\Methods\DeleteMethod;
 
 #[AsController]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 #[OA\Tag(name: 'Recruit Management')]
 class TagDeleteController extends Controller
 {
+    use DeleteMethod;
+
     public function __construct(
         TagResource $resource,
     ) {

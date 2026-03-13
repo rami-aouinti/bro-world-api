@@ -20,12 +20,15 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 use function count;
+use App\General\Transport\Rest\Traits\Methods\CreateMethod;
 
 #[AsController]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 #[OA\Tag(name: 'Recruit Management')]
 class SalaryCreateController extends Controller
 {
+    use CreateMethod;
+
     public function __construct(
         SalaryResource $resource,
         private readonly AutoMapperInterface $autoMapper,
