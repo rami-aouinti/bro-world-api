@@ -32,7 +32,6 @@ final class SchoolListingCacheRegressionTest extends WebTestCase
         self::assertGreaterThanOrEqual(30, $firstPayload['pagination']['totalItems']);
     }
 
-
     #[TestDox('Exam list cache is isolated per application slug.')]
     public function testExamListCacheIsolationByApplicationSlug(): void
     {

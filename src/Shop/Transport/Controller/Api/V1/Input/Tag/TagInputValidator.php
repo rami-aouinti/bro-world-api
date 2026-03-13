@@ -10,8 +10,9 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final readonly class TagInputValidator
 {
-    public function __construct(private ValidatorInterface $validator)
-    {
+    public function __construct(
+        private ValidatorInterface $validator
+    ) {
     }
 
     public function validate(CreateTagInput $input): ?JsonResponse

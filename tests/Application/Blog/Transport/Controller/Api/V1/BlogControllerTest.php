@@ -51,7 +51,6 @@ final class BlogControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
-
     public function testPrivateGeneralReadRequiresAuthentication(): void
     {
         $client = $this->getTestClient();
@@ -266,7 +265,6 @@ final class BlogControllerTest extends WebTestCase
         self::assertCount(1, $reactions);
     }
 
-
     public function testCreatePostReactionUpsertsForSameAuthorAndPost(): void
     {
         $client = $this->getTestClient('john-user', 'password-user');
@@ -334,8 +332,6 @@ final class BlogControllerTest extends WebTestCase
         self::assertCount(1, $johnUserReactionTypes);
         self::assertSame('laugh', $johnUserReactionTypes[0]);
     }
-
-
 
     public function testCreatePostCanHaveContentAndUrlAtSameTime(): void
     {
@@ -554,7 +550,6 @@ final class BlogControllerTest extends WebTestCase
 
         return null;
     }
-
 
     /**
      * @param array<string, mixed> $node

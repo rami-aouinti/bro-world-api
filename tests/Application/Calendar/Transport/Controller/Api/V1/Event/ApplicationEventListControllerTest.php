@@ -61,8 +61,8 @@ final class ApplicationEventListControllerTest extends WebTestCase
         $content = $response->getContent();
 
         self::assertNotFalse($content);
-        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:
-" . $response);
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), 'Response:
+' . $response);
 
         $responseData = JSON::decode($content, true);
 
@@ -74,7 +74,6 @@ final class ApplicationEventListControllerTest extends WebTestCase
             self::assertArrayHasKey('startAt', $responseData[0]);
         }
     }
-
 
     #[TestDox('GET listing endpoints keep business results after repository joins enrichment.')]
     public function testEventListingEndpointsKeepExpectedBusinessBehavior(): void
@@ -96,7 +95,7 @@ final class ApplicationEventListControllerTest extends WebTestCase
         self::assertGreaterThan(0, $privateData['pagination']['totalItems']);
 
         $privateTitles = array_map(
-            static fn (array $item): string => (string) ($item['title'] ?? ''),
+            static fn (array $item): string => (string)($item['title'] ?? ''),
             $privateData['items'],
         );
         self::assertContains('John Root standalone private event #1', $privateTitles);
@@ -131,5 +130,4 @@ final class ApplicationEventListControllerTest extends WebTestCase
             self::assertArrayHasKey('startAt', $upcomingData[0]);
         }
     }
-
 }

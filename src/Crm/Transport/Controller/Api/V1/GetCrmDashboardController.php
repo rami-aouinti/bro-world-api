@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1;
 
+use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
@@ -27,7 +28,7 @@ final readonly class GetCrmDashboardController
         private ProjectRepository $projectRepository,
         private TaskRepository $taskRepository,
         private TaskRequestRepository $taskRequestRepository,
-        private \App\Crm\Application\Service\CrmApplicationScopeResolver $scopeResolver,
+        private CrmApplicationScopeResolver $scopeResolver,
     ) {
     }
 

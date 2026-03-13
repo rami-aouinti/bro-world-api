@@ -226,7 +226,11 @@ readonly class UserStoryService
                     ],
                 ],
                 'sort' => [
-                    ['createdAt' => ['order' => 'desc']],
+                    [
+                        'createdAt' => [
+                            'order' => 'desc',
+                        ],
+                    ],
                 ],
                 '_source' => ['id'],
             ], 0, $limit);
@@ -257,7 +261,9 @@ readonly class UserStoryService
         /** @var array<int, UserFriendRelation> $relations */
         $relations = $qb->getQuery()->getResult();
 
-        $users = [$loggedInUser->getId() => $loggedInUser];
+        $users = [
+            $loggedInUser->getId() => $loggedInUser,
+        ];
         foreach ($relations as $relation) {
             $friend = $relation->getRequester()->getId() === $loggedInUser->getId()
                 ? $relation->getAddressee()

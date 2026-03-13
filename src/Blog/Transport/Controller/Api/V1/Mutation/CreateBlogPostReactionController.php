@@ -8,6 +8,9 @@ use App\Blog\Application\Message\CreateBlogPostReactionCommand;
 use App\Blog\Application\MessageHandler\CreateBlogPostReactionCommandHandler;
 use App\Blog\Application\Service\BlogMutationRequestService;
 use App\User\Domain\Entity\User;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
+use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,6 +29,12 @@ final readonly class CreateBlogPostReactionController
         private BlogMutationRequestService $requestService,
     ) {
     }
+
+    /**
+     * @throws OptimisticLockException
+     * @throws JsonException
+     * @throws ORMException
+     */
     #[Route('/v1/private/blog/posts/{postId}/reactions', methods: [Request::METHOD_POST])]
     public function __invoke(string $postId, Request $request, User $loggedInUser): JsonResponse
     {

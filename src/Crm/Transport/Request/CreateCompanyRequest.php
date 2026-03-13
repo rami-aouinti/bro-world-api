@@ -28,11 +28,11 @@ final class CreateCompanyRequest
     public static function fromArray(array $payload): self
     {
         $request = new self();
-        $request->name = isset($payload['name']) ? (string) $payload['name'] : null;
-        $request->industry = isset($payload['industry']) ? (string) $payload['industry'] : null;
-        $request->website = isset($payload['website']) ? (string) $payload['website'] : null;
-        $request->contactEmail = isset($payload['contactEmail']) ? (string) $payload['contactEmail'] : null;
-        $request->phone = isset($payload['phone']) ? (string) $payload['phone'] : null;
+        $request->name = isset($payload['name']) ? (string)$payload['name'] : null;
+        $request->industry = isset($payload['industry']) ? (string)$payload['industry'] : null;
+        $request->website = isset($payload['website']) ? (string)$payload['website'] : null;
+        $request->contactEmail = isset($payload['contactEmail']) ? (string)$payload['contactEmail'] : null;
+        $request->phone = isset($payload['phone']) ? (string)$payload['phone'] : null;
 
         return $request;
     }

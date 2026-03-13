@@ -13,19 +13,25 @@ use App\Chat\Infrastructure\Repository\ChatMessageRepository;
 use App\Chat\Infrastructure\Repository\ConversationParticipantRepository;
 use App\Chat\Infrastructure\Repository\ConversationRepository;
 use App\User\Domain\Entity\User;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-final class ChatAccessResolverService
+final readonly class ChatAccessResolverService
 {
     public function __construct(
-        private readonly ConversationRepository $conversationRepository,
-        private readonly ConversationParticipantRepository $participantRepository,
-        private readonly ChatMessageRepository $messageRepository,
-        private readonly ChatMessageReactionRepository $reactionRepository,
+        private ConversationRepository $conversationRepository,
+        private ConversationParticipantRepository $participantRepository,
+        private ChatMessageRepository $messageRepository,
+        private ChatMessageReactionRepository $reactionRepository,
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function resolveParticipantConversation(string $conversationId, User $loggedInUser): Conversation
     {
         $conversation = $this->conversationRepository->find($conversationId);
@@ -41,6 +47,10 @@ final class ChatAccessResolverService
         return $conversation;
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function resolveAccessibleMessage(string $messageId, User $loggedInUser): ChatMessage
     {
         $message = $this->messageRepository->find($messageId);
@@ -56,6 +66,10 @@ final class ChatAccessResolverService
         return $message;
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function resolveOwnReaction(string $reactionId, User $loggedInUser): ChatMessageReaction
     {
         $reaction = $this->reactionRepository->find($reactionId);

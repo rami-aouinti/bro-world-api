@@ -39,7 +39,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 readonly class ApplicationUserConversationListController
 {
     public function __construct(
-        private ConversationListService       $conversationListService,
+        private ConversationListService $conversationListService,
         private ChatApplicationScopeValidator $chatApplicationScopeValidator
     ) {
     }

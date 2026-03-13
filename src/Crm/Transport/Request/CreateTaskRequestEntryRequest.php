@@ -36,17 +36,19 @@ final class CreateTaskRequestEntryRequest
     public static function fromArray(array $payload): self
     {
         $request = new self();
-        $request->title = isset($payload['title']) ? (string) $payload['title'] : null;
-        $request->description = isset($payload['description']) ? (string) $payload['description'] : null;
-        $request->status = isset($payload['status']) ? (string) $payload['status'] : null;
-        $request->resolvedAt = isset($payload['resolvedAt']) ? (string) $payload['resolvedAt'] : null;
-        $request->taskId = isset($payload['taskId']) ? (string) $payload['taskId'] : null;
+        $request->title = isset($payload['title']) ? (string)$payload['title'] : null;
+        $request->description = isset($payload['description']) ? (string)$payload['description'] : null;
+        $request->status = isset($payload['status']) ? (string)$payload['status'] : null;
+        $request->resolvedAt = isset($payload['resolvedAt']) ? (string)$payload['resolvedAt'] : null;
+        $request->taskId = isset($payload['taskId']) ? (string)$payload['taskId'] : null;
         $request->assigneeIds = isset($payload['assigneeIds']) && is_array($payload['assigneeIds']) ? $payload['assigneeIds'] : $payload['assigneeIds'] ?? null;
 
         return $request;
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     public static function statusChoices(): array
     {
         return array_map(static fn (TaskRequestStatus $status): string => $status->value, TaskRequestStatus::cases());

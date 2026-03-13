@@ -36,7 +36,7 @@ use Throwable;
 readonly class MarkConversationAsReadController
 {
     public function __construct(
-        private MessageServiceInterface     $messageService,
+        private MessageServiceInterface $messageService,
         private OperationIdGeneratorService $operationIdGeneratorService,
     ) {
     }

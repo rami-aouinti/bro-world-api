@@ -24,7 +24,7 @@ use Throwable;
 readonly class FindOrCreateConversationWithUserController
 {
     public function __construct(
-        private MessageServiceInterface     $messageService,
+        private MessageServiceInterface $messageService,
         private OperationIdGeneratorService $operationIdGeneratorService,
     ) {
     }

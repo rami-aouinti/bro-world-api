@@ -80,7 +80,6 @@ final class SchoolApplicationScopedRoutesTest extends WebTestCase
         self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
     }
 
-
     #[TestDox('School scoped list endpoints only return data for the current school application.')]
     public function testScopedListsAreIsolatedBySchoolApplication(): void
     {
@@ -103,5 +102,4 @@ final class SchoolApplicationScopedRoutesTest extends WebTestCase
             self::assertEmpty(array_intersect($campusIds, $courseIds), sprintf('Resource %s leaked entities across schools.', $resource));
         }
     }
-
 }

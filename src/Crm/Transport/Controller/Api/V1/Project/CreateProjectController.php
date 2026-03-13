@@ -19,6 +19,7 @@ use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
@@ -40,6 +41,9 @@ final readonly class CreateProjectController
     ) {
     }
 
+    /**
+     * @throws ExceptionInterface
+     */
     #[Route('/v1/crm/applications/{applicationSlug}/projects', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(summary: 'POST /v1/crm/applications/{applicationSlug}/projects')]
@@ -49,7 +53,7 @@ final readonly class CreateProjectController
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
 
         try {
-            $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return $this->errorResponseFactory->invalidJson();
         }
@@ -75,10 +79,10 @@ final readonly class CreateProjectController
         }
 
         $project = new Project();
-        $project->setName((string) $input->name)
+        $project->setName((string)$input->name)
             ->setCode($input->code)
             ->setDescription($input->description)
-            ->setStatus(ProjectStatus::tryFrom((string) $input->status) ?? ProjectStatus::PLANNED)
+            ->setStatus(ProjectStatus::tryFrom((string)$input->status) ?? ProjectStatus::PLANNED)
             ->setStartedAt($startedAt)
             ->setDueAt($dueAt);
 

@@ -14,6 +14,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Override;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Ramsey\Uuid\UuidInterface;
+use Throwable;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'blog_post')]
@@ -82,6 +83,9 @@ class BlogPost implements EntityInterface
     #[ORM\OneToMany(targetEntity: BlogReaction::class, mappedBy: 'post', cascade: ['remove'])]
     private Collection $reactions;
 
+    /**
+     * @throws Throwable
+     */
     public function __construct()
     {
         $this->id = $this->createUuid();

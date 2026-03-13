@@ -6,18 +6,24 @@ namespace App\Configuration\Application\Service\Crypt;
 
 use App\Configuration\Application\Service\Crypt\Interfaces\ConfigurationValueCryptServiceInterface;
 use App\Configuration\Domain\Entity\Configuration;
+use App\Tool\Domain\Exception\Crypt\Exception;
 use App\Tool\Domain\Service\Crypt\Interfaces\OpenSslCryptServiceInterface;
+use JsonException;
 
 /**
  * @package App\Configuration
  */
-class ConfigurationValueCryptService implements ConfigurationValueCryptServiceInterface
+readonly class ConfigurationValueCryptService implements ConfigurationValueCryptServiceInterface
 {
     public function __construct(
-        private readonly OpenSslCryptServiceInterface $openSslCryptService,
+        private OpenSslCryptServiceInterface $openSslCryptService,
     ) {
     }
 
+    /**
+     * @throws Exception
+     * @throws JsonException
+     */
     public function encryptValue(Configuration $configuration): void
     {
         if (!$configuration->isPrivate() || $configuration->getConfigurationValueParameters() !== null) {
@@ -34,6 +40,10 @@ class ConfigurationValueCryptService implements ConfigurationValueCryptServiceIn
             ->setConfigurationValueParameters($data['params']);
     }
 
+    /**
+     * @throws JsonException
+     * @throws Exception
+     */
     public function decryptValue(Configuration $configuration): void
     {
         $params = $configuration->getConfigurationValueParameters();

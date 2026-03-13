@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\General\Application\Service;
 
 use JsonException;
+
 use function json_encode;
 use function md5;
 use function preg_replace;
@@ -30,7 +31,6 @@ class CacheKeyConventionService
 
     /**
      * @param array<string, mixed> $filters
-     * @return string
      * @throws JsonException
      */
     public function buildPublicUserListKey(array $filters): string
@@ -40,7 +40,6 @@ class CacheKeyConventionService
 
     /**
      * @param array<string, mixed> $filters
-     * @return string
      * @throws JsonException
      */
     public function buildPublicApplicationsListKey(array $filters): string
@@ -54,9 +53,7 @@ class CacheKeyConventionService
     }
 
     /**
-     * @param string $username
      * @param array<string, mixed> $filters
-     * @return string
      * @throws JsonException
      */
     public function buildPrivateConversationKey(string $username, array $filters): string
@@ -65,9 +62,7 @@ class CacheKeyConventionService
     }
 
     /**
-     * @param string $username
      * @param array<string, mixed> $filters
-     * @return string
      * @throws JsonException
      */
     public function buildPrivateNotificationKey(string $username, array $filters): string
@@ -76,9 +71,7 @@ class CacheKeyConventionService
     }
 
     /**
-     * @param string $username
      * @param array<string, mixed> $filters
-     * @return string
      * @throws JsonException
      */
     public function buildPrivateEventKey(string $username, array $filters): string
@@ -97,11 +90,7 @@ class CacheKeyConventionService
     }
 
     /**
-     * @param string|null $userId
-     * @param int $page
-     * @param int $limit
      * @param array<string, mixed> $filters
-     * @return string
      * @throws JsonException
      */
     public function buildApplicationListKey(?string $userId, int $page, int $limit, array $filters): string
@@ -115,12 +104,7 @@ class CacheKeyConventionService
     }
 
     /**
-     * @param string $applicationSlug
-     * @param string|null $userId
-     * @param int $page
-     * @param int $limit
      * @param array<string, mixed> $filters
-     * @return string
      * @throws JsonException
      */
     public function buildRecruitJobPublicListKey(string $applicationSlug, ?string $userId, int $page, int $limit, array $filters): string
@@ -135,10 +119,7 @@ class CacheKeyConventionService
     }
 
     /**
-     * @param int $page
-     * @param int $limit
      * @param array<string, mixed> $filters
-     * @return string
      * @throws JsonException
      */
     public function buildShopProductListKey(int $page, int $limit, array $filters): string
@@ -151,11 +132,7 @@ class CacheKeyConventionService
     }
 
     /**
-     * @param string $applicationSlug
-     * @param int $page
-     * @param int $limit
      * @param array<string, mixed> $filters
-     * @return string
      * @throws JsonException
      */
     public function buildShopProductApplicationListKey(string $applicationSlug, int $page, int $limit, array $filters): string
@@ -169,10 +146,7 @@ class CacheKeyConventionService
     }
 
     /**
-     * @param int $page
-     * @param int $limit
      * @param array<string, mixed> $filters
-     * @return string
      * @throws JsonException
      */
     public function buildCrmTaskListKey(int $page, int $limit, array $filters): string
@@ -185,11 +159,7 @@ class CacheKeyConventionService
     }
 
     /**
-     * @param string $applicationSlug
-     * @param int $page
-     * @param int $limit
      * @param array<string, mixed> $filters
-     * @return string
      * @throws JsonException
      */
     public function buildCrmCompanyApplicationListKey(string $applicationSlug, int $page, int $limit, array $filters): string
@@ -203,11 +173,7 @@ class CacheKeyConventionService
     }
 
     /**
-     * @param string $applicationSlug
-     * @param int $page
-     * @param int $limit
      * @param array<string, mixed> $filters
-     * @return string
      * @throws JsonException
      */
     public function buildSchoolExamListKey(string $applicationSlug, int $page, int $limit, array $filters): string
@@ -221,11 +187,7 @@ class CacheKeyConventionService
     }
 
     /**
-     * @param string $applicationSlug
-     * @param int $page
-     * @param int $limit
      * @param array<string, mixed> $filters
-     * @return string
      * @throws JsonException
      */
     public function buildSchoolClassApplicationListKey(string $applicationSlug, int $page, int $limit, array $filters): string
@@ -355,7 +317,6 @@ class CacheKeyConventionService
 
     /**
      * @param array<string, mixed> $payload
-     * @return string
      * @throws JsonException
      */
     private function buildHash(array $payload): string

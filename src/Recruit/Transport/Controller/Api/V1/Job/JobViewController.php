@@ -39,6 +39,7 @@ class JobViewController extends Controller
     public function __invoke(string $applicationSlug, Request $request, string $id): Response
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
+
         return $this->findOneMethod($request, $id);
     }
 }

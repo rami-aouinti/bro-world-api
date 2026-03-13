@@ -49,7 +49,7 @@ final readonly class CreateSprintController
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
 
         try {
-            $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return $this->errorResponseFactory->invalidJson();
         }
@@ -75,9 +75,9 @@ final readonly class CreateSprintController
         }
 
         $sprint = new Sprint();
-        $sprint->setName((string) $input->name)
+        $sprint->setName((string)$input->name)
             ->setGoal($input->goal)
-            ->setStatus(SprintStatus::tryFrom((string) $input->status) ?? SprintStatus::PLANNED)
+            ->setStatus(SprintStatus::tryFrom((string)$input->status) ?? SprintStatus::PLANNED)
             ->setStartDate($startDate)
             ->setEndDate($endDate);
 

@@ -9,10 +9,10 @@ use App\Calendar\Domain\Enum\EventVisibility;
 use App\Calendar\Domain\Repository\Interfaces\EventRepositoryInterface;
 use App\General\Infrastructure\Repository\BaseRepository;
 use App\User\Domain\Entity\User;
+use DateTimeImmutable;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
-use DateTimeImmutable;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 
 /**
@@ -116,7 +116,6 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
             ->getQuery()
             ->getSingleScalarResult();
     }
-
 
     public function findUpcomingPrivateByUser(User $user, int $limit = 3): array
     {

@@ -8,6 +8,8 @@ use App\Blog\Application\Message\DeleteBlogCommentCommand;
 use App\Blog\Domain\Entity\BlogComment;
 use App\Blog\Infrastructure\Repository\BlogCommentRepository;
 use App\General\Application\Service\CacheInvalidationService;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -21,6 +23,10 @@ final readonly class DeleteBlogCommentCommandHandler
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function __invoke(DeleteBlogCommentCommand $command): void
     {
         $comment = $this->commentRepository->find($command->commentId);

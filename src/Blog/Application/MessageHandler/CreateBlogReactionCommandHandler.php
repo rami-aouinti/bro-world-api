@@ -14,6 +14,8 @@ use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -30,6 +32,10 @@ final readonly class CreateBlogReactionCommandHandler
     ) {
     }
 
+    /**
+     * @throws ORMException
+     * @throws OptimisticLockException
+     */
     public function __invoke(CreateBlogReactionCommand $command): string
     {
         $comment = $this->commentRepository->find($command->commentId);
@@ -57,7 +63,7 @@ final readonly class CreateBlogReactionCommandHandler
             return $existingReaction->getId();
         }
 
-        $reaction = (new BlogReaction())
+        $reaction = new BlogReaction()
             ->setComment($comment)
             ->setAuthor($user)
             ->setType($command->type);

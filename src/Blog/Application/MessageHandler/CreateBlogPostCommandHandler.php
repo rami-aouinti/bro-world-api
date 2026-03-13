@@ -48,7 +48,11 @@ final readonly class CreateBlogPostCommandHandler
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Post creation is restricted to blog owner.');
         }
 
-        if ($this->postRepository->findOneBy(['slug' => $command->slug]) instanceof BlogPost) {
+        if (
+            $this->postRepository->findOneBy([
+            'slug' => $command->slug,
+            ]) instanceof BlogPost
+        ) {
             throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Slug already exists.');
         }
 

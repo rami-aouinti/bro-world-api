@@ -26,9 +26,9 @@ use Throwable;
 readonly class CreateConversationController
 {
     public function __construct(
-        private MessageServiceInterface       $messageService,
-        private ConversationPayloadService    $conversationPayloadService,
-        private OperationIdGeneratorService   $operationIdGeneratorService,
+        private MessageServiceInterface $messageService,
+        private ConversationPayloadService $conversationPayloadService,
+        private OperationIdGeneratorService $operationIdGeneratorService,
         private ChatApplicationScopeValidator $chatApplicationScopeValidator,
     ) {
     }

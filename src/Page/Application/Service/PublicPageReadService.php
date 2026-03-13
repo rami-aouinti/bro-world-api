@@ -36,7 +36,6 @@ final readonly class PublicPageReadService
     }
 
     /**
-     * @param string $languageCode
      * @return array<string, mixed>|null
      * @throws InvalidArgumentException
      */
@@ -46,7 +45,6 @@ final readonly class PublicPageReadService
     }
 
     /**
-     * @param string $languageCode
      * @return array<string, mixed>|null
      * @throws InvalidArgumentException
      */
@@ -56,7 +54,6 @@ final readonly class PublicPageReadService
     }
 
     /**
-     * @param string $languageCode
      * @return array<string, mixed>|null
      * @throws InvalidArgumentException
      */
@@ -66,7 +63,6 @@ final readonly class PublicPageReadService
     }
 
     /**
-     * @param string $languageCode
      * @return array<string, mixed>|null
      * @throws InvalidArgumentException
      */
@@ -86,8 +82,6 @@ final readonly class PublicPageReadService
     }
 
     /**
-     * @param string $page
-     * @param string $languageCode
      * @return array<string, mixed>|null
      * @throws InvalidArgumentException
      */

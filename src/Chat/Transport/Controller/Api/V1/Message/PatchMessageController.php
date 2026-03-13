@@ -49,8 +49,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 readonly class PatchMessageController
 {
     public function __construct(
-        private MessageServiceInterface     $messageService,
-        private MessagePayloadService       $messagePayloadService,
+        private MessageServiceInterface $messageService,
+        private MessagePayloadService $messagePayloadService,
         private OperationIdGeneratorService $operationIdGeneratorService,
     ) {
     }

@@ -46,26 +46,30 @@ final class CreateTaskRequest
     public static function fromArray(array $payload): self
     {
         $request = new self();
-        $request->title = isset($payload['title']) ? (string) $payload['title'] : null;
-        $request->description = isset($payload['description']) ? (string) $payload['description'] : null;
-        $request->status = isset($payload['status']) ? (string) $payload['status'] : null;
-        $request->priority = isset($payload['priority']) ? (string) $payload['priority'] : null;
-        $request->dueAt = isset($payload['dueAt']) ? (string) $payload['dueAt'] : null;
+        $request->title = isset($payload['title']) ? (string)$payload['title'] : null;
+        $request->description = isset($payload['description']) ? (string)$payload['description'] : null;
+        $request->status = isset($payload['status']) ? (string)$payload['status'] : null;
+        $request->priority = isset($payload['priority']) ? (string)$payload['priority'] : null;
+        $request->dueAt = isset($payload['dueAt']) ? (string)$payload['dueAt'] : null;
         $request->estimatedHours = $payload['estimatedHours'] ?? null;
-        $request->projectId = isset($payload['projectId']) ? (string) $payload['projectId'] : null;
-        $request->sprintId = isset($payload['sprintId']) ? (string) $payload['sprintId'] : null;
+        $request->projectId = isset($payload['projectId']) ? (string)$payload['projectId'] : null;
+        $request->sprintId = isset($payload['sprintId']) ? (string)$payload['sprintId'] : null;
         $request->assigneeIds = isset($payload['assigneeIds']) && is_array($payload['assigneeIds']) ? $payload['assigneeIds'] : $payload['assigneeIds'] ?? null;
 
         return $request;
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     public static function statusChoices(): array
     {
         return array_map(static fn (TaskStatus $status): string => $status->value, TaskStatus::cases());
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     public static function priorityChoices(): array
     {
         return array_map(static fn (TaskPriority $priority): string => $priority->value, TaskPriority::cases());

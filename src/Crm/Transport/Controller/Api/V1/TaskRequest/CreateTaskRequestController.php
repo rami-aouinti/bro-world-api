@@ -58,7 +58,7 @@ final readonly class CreateTaskRequestController
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
 
         try {
-            $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return $this->errorResponseFactory->invalidJson();
         }
@@ -79,9 +79,9 @@ final readonly class CreateTaskRequestController
         }
 
         $taskRequest = new TaskRequest();
-        $taskRequest->setTitle((string) $input->title)
+        $taskRequest->setTitle((string)$input->title)
             ->setDescription($input->description)
-            ->setStatus(TaskRequestStatus::tryFrom((string) $input->status) ?? TaskRequestStatus::PENDING)
+            ->setStatus(TaskRequestStatus::tryFrom((string)$input->status) ?? TaskRequestStatus::PENDING)
             ->setResolvedAt($resolvedAt);
 
         if (is_string($input->taskId)) {

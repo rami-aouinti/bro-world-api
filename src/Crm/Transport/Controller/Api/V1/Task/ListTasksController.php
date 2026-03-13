@@ -28,6 +28,7 @@ final readonly class ListTasksController
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
+
         return new JsonResponse($this->taskListService->getList($request));
     }
 }

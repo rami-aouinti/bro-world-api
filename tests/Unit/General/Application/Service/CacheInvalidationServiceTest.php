@@ -28,7 +28,6 @@ final class CacheInvalidationServiceTest extends TestCase
         $service->invalidateBlogCaches('my-app', ['actor', 'author', 'actor', '', null]);
     }
 
-
     public function testInvalidateSchoolExamCachesByApplicationUsesScopedTag(): void
     {
         $cache = $this->createMock(TagAwareCacheInterface::class);
@@ -43,5 +42,4 @@ final class CacheInvalidationServiceTest extends TestCase
 
         $service->invalidateSchoolExamListCaches('school-campus-core');
     }
-
 }

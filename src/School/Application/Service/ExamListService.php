@@ -40,7 +40,10 @@ readonly class ExamListService
             'title' => trim((string)$request->query->get('title', '')),
         ];
         $applicationSlug = (string)$request->attributes->get('applicationSlug', 'default');
-        $cacheKey = $this->cacheKeyConventionService->buildSchoolExamListKey($applicationSlug, $page, $limit, [...$filters, "schoolId" => $schoolId]);
+        $cacheKey = $this->cacheKeyConventionService->buildSchoolExamListKey($applicationSlug, $page, $limit, [
+            ...$filters,
+            'schoolId' => $schoolId,
+        ]);
 
         /** @var array<string,mixed> $result */
         $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($filters, $page, $limit, $schoolId, $applicationSlug): array {

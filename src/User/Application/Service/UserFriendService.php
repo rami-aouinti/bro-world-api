@@ -42,8 +42,6 @@ readonly class UserFriendService
     }
 
     /**
-     * @param User $loggedInUser
-     * @param User $targetUser
      * @return array<string,string>
      * @throws LoaderError
      * @throws RuntimeError
@@ -251,7 +249,6 @@ readonly class UserFriendService
     }
 
     /**
-     * @param User $loggedInUser
      * @return array<int,array<string,string>>
      * @throws InvalidArgumentException
      */
@@ -295,7 +292,6 @@ readonly class UserFriendService
     }
 
     /**
-     * @param User $loggedInUser
      * @return array<int,array<string,string>>
      * @throws InvalidArgumentException
      */
@@ -332,7 +328,6 @@ readonly class UserFriendService
     }
 
     /**
-     * @param User $loggedInUser
      * @return array<int,array<string,string>>
      * @throws InvalidArgumentException
      */

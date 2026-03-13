@@ -44,7 +44,9 @@ readonly class TaskListService
         ];
         $applicationSlug = (string)$request->attributes->get('applicationSlug', '');
         $crm = $this->applicationScopeResolver->resolveOrFail($applicationSlug);
-        $cacheKey = $this->cacheKeyConventionService->buildCrmTaskListKey($page, $limit, array_merge($filters, ['applicationSlug' => $applicationSlug]));
+        $cacheKey = $this->cacheKeyConventionService->buildCrmTaskListKey($page, $limit, array_merge($filters, [
+            'applicationSlug' => $applicationSlug,
+        ]));
 
         /** @var array<string,mixed> $result */
         $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($filters, $page, $limit, $crm): array {

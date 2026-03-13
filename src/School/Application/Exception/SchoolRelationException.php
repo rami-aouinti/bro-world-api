@@ -31,4 +31,3 @@ final class SchoolRelationException extends RuntimeException implements ClientEr
         return $this->statusCode;
     }
 }
-

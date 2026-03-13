@@ -490,7 +490,6 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         }
     }
 
-
     private function ensureJohnRootStandalonePrivateEvents(ObjectManager $manager, User $johnRoot): void
     {
         for ($dayOffset = 1; $dayOffset <= 3; $dayOffset++) {
@@ -515,7 +514,6 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             'Event dédié au scénario fixtures john-root pour tests fonctionnels.'
         );
     }
-
 
     private function ensureStandaloneEvent(
         ObjectManager $manager,

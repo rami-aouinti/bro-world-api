@@ -11,7 +11,9 @@ use DateTimeInterface;
 
 final class CrmApiNormalizer
 {
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     public function normalizeTask(Task $task): array
     {
         $assignees = [];
@@ -49,7 +51,9 @@ final class CrmApiNormalizer
         ];
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     public function normalizeTaskRequest(TaskRequest $taskRequest): array
     {
         $assignees = [];
@@ -116,7 +120,9 @@ final class CrmApiNormalizer
         ];
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     private function normalizeAssignee(User $user): array
     {
         return [

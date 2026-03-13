@@ -24,15 +24,17 @@ final class CheckoutInput
     #[Assert\NotBlank(message: 'shippingMethod is required.')]
     public string $shippingMethod = '';
 
-    /** @param array<string, mixed> $payload */
+    /**
+     * @param array<string, mixed> $payload
+     */
     public static function fromArray(array $payload): self
     {
         $input = new self();
-        $input->billingAddress = trim((string) ($payload['billingAddress'] ?? ''));
-        $input->shippingAddress = trim((string) ($payload['shippingAddress'] ?? ''));
-        $input->email = trim((string) ($payload['email'] ?? ''));
-        $input->phone = trim((string) ($payload['phone'] ?? ''));
-        $input->shippingMethod = trim((string) ($payload['shippingMethod'] ?? ''));
+        $input->billingAddress = trim((string)($payload['billingAddress'] ?? ''));
+        $input->shippingAddress = trim((string)($payload['shippingAddress'] ?? ''));
+        $input->email = trim((string)($payload['email'] ?? ''));
+        $input->phone = trim((string)($payload['phone'] ?? ''));
+        $input->shippingMethod = trim((string)($payload['shippingMethod'] ?? ''));
 
         return $input;
     }

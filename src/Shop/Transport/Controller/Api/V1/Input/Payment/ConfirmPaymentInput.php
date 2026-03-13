@@ -11,11 +11,13 @@ final class ConfirmPaymentInput
     #[Assert\NotBlank(message: 'providerReference is required.')]
     public string $providerReference = '';
 
-    /** @param array<string, mixed> $payload */
+    /**
+     * @param array<string, mixed> $payload
+     */
     public static function fromArray(array $payload): self
     {
         $input = new self();
-        $input->providerReference = trim((string) ($payload['providerReference'] ?? ''));
+        $input->providerReference = trim((string)($payload['providerReference'] ?? ''));
 
         return $input;
     }

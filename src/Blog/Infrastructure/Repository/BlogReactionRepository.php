@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Blog\Infrastructure\Repository;
 
 use App\Blog\Domain\Entity\BlogComment;
+use App\Blog\Domain\Entity\BlogPost;
 use App\Blog\Domain\Entity\BlogReaction;
 use App\General\Infrastructure\Repository\BaseRepository;
-use App\Blog\Domain\Entity\BlogPost;
 use App\User\Domain\Entity\User;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -39,6 +39,4 @@ class BlogReactionRepository extends BaseRepository
 
         return $reaction instanceof BlogReaction ? $reaction : null;
     }
-
 }
-

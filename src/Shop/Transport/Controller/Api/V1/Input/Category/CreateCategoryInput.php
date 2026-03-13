@@ -14,13 +14,15 @@ final class CreateCategoryInput
     public ?string $slug = null;
     public ?string $description = null;
 
-    /** @param array<string, mixed> $payload */
+    /**
+     * @param array<string, mixed> $payload
+     */
     public static function fromArray(array $payload): self
     {
         $input = new self();
-        $input->name = trim((string) ($payload['name'] ?? ''));
-        $input->slug = is_string($payload['slug'] ?? null) ? trim((string) $payload['slug']) : null;
-        $input->description = ($payload['description'] ?? null) !== null ? (string) $payload['description'] : null;
+        $input->name = trim((string)($payload['name'] ?? ''));
+        $input->slug = is_string($payload['slug'] ?? null) ? trim((string)$payload['slug']) : null;
+        $input->description = ($payload['description'] ?? null) !== null ? (string)$payload['description'] : null;
 
         return $input;
     }

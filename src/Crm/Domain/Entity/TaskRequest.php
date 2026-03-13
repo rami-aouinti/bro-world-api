@@ -145,7 +145,6 @@ class TaskRequest implements EntityInterface
         return $this;
     }
 
-
     /**
      * @return Collection<int, User>|ArrayCollection<int, User>
      */

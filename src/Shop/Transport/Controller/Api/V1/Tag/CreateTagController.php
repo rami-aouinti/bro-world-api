@@ -43,7 +43,7 @@ final readonly class CreateTagController
         $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
 
         try {
-            $payload = (array) json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return ValidationResponseFactory::invalidJson();
         }
@@ -56,7 +56,7 @@ final readonly class CreateTagController
 
         $tag = (new Tag())
             ->setLabel($input->label)
-            ->setType(TagType::tryFrom((string) ($input->type ?? '')) ?? TagType::MARKETING);
+            ->setType(TagType::tryFrom((string)($input->type ?? '')) ?? TagType::MARKETING);
 
         $this->entityManager->persist($tag);
         $this->entityManager->flush();

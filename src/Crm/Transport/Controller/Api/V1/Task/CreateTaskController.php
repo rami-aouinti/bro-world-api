@@ -61,7 +61,7 @@ final readonly class CreateTaskController
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
 
         try {
-            $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return $this->errorResponseFactory->invalidJson();
         }
@@ -82,12 +82,12 @@ final readonly class CreateTaskController
         }
 
         $task = new Task();
-        $task->setTitle((string) $input->title)
+        $task->setTitle((string)$input->title)
             ->setDescription($input->description)
-            ->setStatus(TaskStatus::tryFrom((string) $input->status) ?? TaskStatus::TODO)
-            ->setPriority(TaskPriority::tryFrom((string) $input->priority) ?? TaskPriority::MEDIUM)
+            ->setStatus(TaskStatus::tryFrom((string)$input->status) ?? TaskStatus::TODO)
+            ->setPriority(TaskPriority::tryFrom((string)$input->priority) ?? TaskPriority::MEDIUM)
             ->setDueAt($dueAt)
-            ->setEstimatedHours($input->estimatedHours !== null ? (float) $input->estimatedHours : null);
+            ->setEstimatedHours($input->estimatedHours !== null ? (float)$input->estimatedHours : null);
 
         $project = null;
         if (is_string($input->projectId)) {

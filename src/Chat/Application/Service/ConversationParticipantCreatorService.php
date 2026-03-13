@@ -10,12 +10,13 @@ use App\Chat\Domain\Repository\Interfaces\ConversationParticipantRepositoryInter
 use App\User\Domain\Entity\User;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
+use RuntimeException;
 
-class ConversationParticipantCreatorService
+readonly class ConversationParticipantCreatorService
 {
     public function __construct(
-        private readonly ConversationParticipantRepositoryInterface $conversationParticipantRepository,
-        private readonly EntityManagerInterface $entityManager,
+        private ConversationParticipantRepositoryInterface $conversationParticipantRepository,
+        private EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -26,7 +27,7 @@ class ConversationParticipantCreatorService
             return $conversationParticipant;
         }
 
-        $conversationParticipant = (new ConversationParticipant())
+        $conversationParticipant = new ConversationParticipant()
             ->setConversation($conversation)
             ->setUser($user);
 
@@ -41,7 +42,7 @@ class ConversationParticipantCreatorService
                 return $conversationParticipant;
             }
 
-            throw new \RuntimeException('Unable to create an idempotent conversation participant.');
+            throw new RuntimeException('Unable to create an idempotent conversation participant.');
         }
     }
 }

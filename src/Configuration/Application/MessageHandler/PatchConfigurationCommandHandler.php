@@ -8,6 +8,7 @@ use App\Configuration\Application\Message\PatchConfigurationCommand;
 use App\Configuration\Application\Resource\ConfigurationResource;
 use App\Configuration\Infrastructure\Repository\ConfigurationRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Throwable;
 
 #[AsMessageHandler]
 final readonly class PatchConfigurationCommandHandler
@@ -18,6 +19,9 @@ final readonly class PatchConfigurationCommandHandler
     ) {
     }
 
+    /**
+     * @throws Throwable
+     */
     public function __invoke(PatchConfigurationCommand $command): void
     {
         $entityManager = $this->repository->getEntityManager();

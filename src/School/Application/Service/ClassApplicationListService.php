@@ -27,9 +27,6 @@ readonly class ClassApplicationListService
     }
 
     /**
-     * @param Request $request
-     * @param string $applicationSlug
-     * @param School $school
      * @return array<string,mixed>
      * @throws \JsonException
      * @throws InvalidArgumentException

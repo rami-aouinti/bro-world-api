@@ -51,7 +51,6 @@ readonly class UserMeService
     }
 
     /**
-     * @param User $user
      * @return array<int,array<string,string>>
      * @throws InvalidArgumentException
      */
@@ -142,7 +141,6 @@ readonly class UserMeService
     }
 
     /**
-     * @param User $user
      * @return array<string,mixed>
      * @throws InvalidArgumentException
      */
@@ -161,9 +159,7 @@ readonly class UserMeService
     }
 
     /**
-     * @param User $user
      * @param array<string,mixed> $payload
-     * @return array
      * @throws \DateMalformedStringException
      * @throws ExceptionInterface
      */

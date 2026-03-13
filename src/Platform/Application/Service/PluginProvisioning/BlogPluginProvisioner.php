@@ -85,9 +85,11 @@ final readonly class BlogPluginProvisioner
         $slug = $baseSlug;
         $suffix = 2;
 
-        while ($this->blogRepository->findOneBy([
-            'slug' => $slug,
-        ]) instanceof Blog) {
+        while (
+            $this->blogRepository->findOneBy([
+                'slug' => $slug,
+            ]) instanceof Blog
+        ) {
             $suffixToken = '-' . $suffix;
             $slug = substr($baseSlug, 0, 150 - strlen($suffixToken)) . $suffixToken;
             $suffix++;

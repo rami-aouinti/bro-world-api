@@ -45,7 +45,6 @@ class UserMeController
         return new JsonResponse($this->userMeService->getSessions($loggedInUser));
     }
 
-
     #[Route(path: '/v1/users/me/applications', methods: [Request::METHOD_GET])]
     #[OA\Response(response: 200, description: 'Applications created by current user')]
     public function applications(User $loggedInUser): JsonResponse

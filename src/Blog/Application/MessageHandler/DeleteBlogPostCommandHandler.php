@@ -8,6 +8,8 @@ use App\Blog\Application\Message\DeleteBlogPostCommand;
 use App\Blog\Domain\Entity\BlogPost;
 use App\Blog\Infrastructure\Repository\BlogPostRepository;
 use App\General\Application\Service\CacheInvalidationService;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -21,6 +23,10 @@ final readonly class DeleteBlogPostCommandHandler
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function __invoke(DeleteBlogPostCommand $command): void
     {
         $post = $this->postRepository->find($command->postId);

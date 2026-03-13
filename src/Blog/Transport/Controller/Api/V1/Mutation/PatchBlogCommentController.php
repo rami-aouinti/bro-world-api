@@ -7,10 +7,12 @@ namespace App\Blog\Transport\Controller\Api\V1\Mutation;
 use App\Blog\Application\Message\PatchBlogCommentCommand;
 use App\Blog\Application\Service\BlogMutationRequestService;
 use App\User\Domain\Entity\User;
+use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
@@ -27,6 +29,10 @@ final readonly class PatchBlogCommentController
     ) {
     }
 
+    /**
+     * @throws ExceptionInterface
+     * @throws JsonException
+     */
     #[Route('/v1/private/blog/comments/{commentId}', methods: [Request::METHOD_PATCH])]
     public function __invoke(string $commentId, Request $request, User $loggedInUser): JsonResponse
     {

@@ -8,6 +8,7 @@ use App\Configuration\Application\Message\DeleteConfigurationCommand;
 use App\Configuration\Application\Resource\ConfigurationResource;
 use App\Configuration\Infrastructure\Repository\ConfigurationRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Throwable;
 
 #[AsMessageHandler]
 final readonly class DeleteConfigurationCommandHandler
@@ -18,6 +19,9 @@ final readonly class DeleteConfigurationCommandHandler
     ) {
     }
 
+    /**
+     * @throws Throwable
+     */
     public function __invoke(DeleteConfigurationCommand $command): void
     {
         $entityManager = $this->repository->getEntityManager();

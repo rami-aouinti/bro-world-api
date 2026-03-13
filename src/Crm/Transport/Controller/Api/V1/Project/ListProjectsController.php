@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\Project;
 
-use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Application\Service\CrmApiNormalizer;
+use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;

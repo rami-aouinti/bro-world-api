@@ -6,10 +6,10 @@ namespace App\Chat\Application\Service;
 
 use App\Chat\Domain\Enum\ChatReactionType;
 
-class ReactionPayloadService
+readonly class ReactionPayloadService
 {
     public function __construct(
-        private readonly ReactionTypeParser $reactionTypeParser,
+        private ReactionTypeParser $reactionTypeParser,
     ) {
     }
 

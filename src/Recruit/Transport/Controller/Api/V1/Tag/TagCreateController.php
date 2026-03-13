@@ -45,6 +45,7 @@ class TagCreateController extends Controller
     public function __invoke(string $applicationSlug, Request $request): Response
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
+
         return $this->createMethod($request, $this->mapAndValidateDto($request, TagCreate::class));
     }
 

@@ -197,8 +197,14 @@ final readonly class BlogReadService
             ], $post->getReactions()->toArray()),
             'comments' => $this->normalizeComments($commentTreeByParent, null, $currentUser),
             'children' => $post->getParentPost() instanceof BlogPost
-                ? ['count' => 0, 'authors' => []]
-                : $childrenSummaryByParent[$post->getId()] ?? ['count' => 0, 'authors' => []],
+                ? [
+                    'count' => 0,
+                    'authors' => [],
+                ]
+                : $childrenSummaryByParent[$post->getId()] ?? [
+                    'count' => 0,
+                    'authors' => [],
+                ],
         ];
     }
 

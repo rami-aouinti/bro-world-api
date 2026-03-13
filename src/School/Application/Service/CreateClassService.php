@@ -6,8 +6,8 @@ namespace App\School\Application\Service;
 
 use App\General\Application\Message\EntityCreated;
 use App\School\Application\Exception\SchoolRelationException;
-use App\School\Domain\Entity\SchoolClass;
 use App\School\Domain\Entity\School;
+use App\School\Domain\Entity\SchoolClass;
 use App\School\Infrastructure\Repository\SchoolRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;

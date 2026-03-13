@@ -49,6 +49,7 @@ class TagUpdateController extends Controller
     public function __invoke(string $applicationSlug, Request $request, string $id): Response
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
+
         return $this->updateMethod($request, $this->mapAndValidateDto($request, TagUpdate::class), $id);
     }
 

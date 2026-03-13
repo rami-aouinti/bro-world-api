@@ -19,7 +19,9 @@ final readonly class TaskBoardService
     ) {
     }
 
-    /** @return array{items:list<array<string,mixed>>} */
+    /**
+     * @return array{items:list<array<string,mixed>>}
+     */
     public function listBySprint(string $applicationSlug): array
     {
         $crm = $this->applicationScopeResolver->resolveOrFail($applicationSlug);
@@ -62,7 +64,9 @@ final readonly class TaskBoardService
         ];
     }
 
-    /** @return array{items:array{tasks:list<array<string,mixed>>,taskRequests:list<array<string,mixed>>}} */
+    /**
+     * @return array{items:array{tasks:list<array<string,mixed>>,taskRequests:list<array<string,mixed>>}}
+     */
     public function listMine(string $applicationSlug, User $loggedInUser): array
     {
         $crm = $this->applicationScopeResolver->resolveOrFail($applicationSlug);
@@ -107,13 +111,17 @@ final readonly class TaskBoardService
         ];
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     private function normalizeTask(Task $task): array
     {
         return $this->crmApiNormalizer->normalizeTask($task);
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     private function normalizeTaskRequest(TaskRequest $taskRequest): array
     {
         return $this->crmApiNormalizer->normalizeTaskRequest($taskRequest);

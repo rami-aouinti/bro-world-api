@@ -10,8 +10,9 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final readonly class CheckoutInputValidator
 {
-    public function __construct(private ValidatorInterface $validator)
-    {
+    public function __construct(
+        private ValidatorInterface $validator
+    ) {
     }
 
     public function validate(CheckoutInput $input): ?JsonResponse

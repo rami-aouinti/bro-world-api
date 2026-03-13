@@ -84,7 +84,7 @@ class JobStatsServiceTest extends TestCase
         $query
             ->expects(self::once())
             ->method('getSingleScalarResult')
-            ->willReturn((string) $count);
+            ->willReturn((string)$count);
 
         $queryBuilder = $this->createMock(QueryBuilder::class);
         $queryBuilder->method('andWhere')->willReturnSelf();

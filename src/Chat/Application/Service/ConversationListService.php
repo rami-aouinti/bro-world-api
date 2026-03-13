@@ -279,7 +279,6 @@ final readonly class ConversationListService
             return null;
         }
 
-        /** @var ChatMessage $lastMessage */
         $lastMessage = $visibleMessages[array_key_last($visibleMessages)];
         $sender = $lastMessage->getSender();
         $senderId = $sender?->getId();

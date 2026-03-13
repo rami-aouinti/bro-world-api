@@ -24,7 +24,7 @@ use Throwable;
 readonly class DeleteMessageController
 {
     public function __construct(
-        private MessageServiceInterface     $messageService,
+        private MessageServiceInterface $messageService,
         private OperationIdGeneratorService $operationIdGeneratorService,
     ) {
     }

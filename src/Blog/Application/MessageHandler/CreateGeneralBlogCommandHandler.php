@@ -11,6 +11,8 @@ use App\Blog\Infrastructure\Repository\BlogRepository;
 use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -25,6 +27,10 @@ final readonly class CreateGeneralBlogCommandHandler
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function __invoke(CreateGeneralBlogCommand $command): void
     {
         $user = $this->userRepository->find($command->actorUserId);
@@ -36,7 +42,7 @@ final readonly class CreateGeneralBlogCommandHandler
             return;
         }
 
-        $this->blogRepository->save((new Blog())->setTitle($command->title)->setSlug('general')->setDescription($command->description)->setOwner($user)->setType(BlogType::GENERAL));
+        $this->blogRepository->save(new Blog()->setTitle($command->title)->setSlug('general')->setDescription($command->description)->setOwner($user)->setType(BlogType::GENERAL));
         $this->cacheInvalidationService->invalidateBlogCaches(null, [$command->actorUserId]);
     }
 }

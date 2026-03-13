@@ -36,7 +36,7 @@ final class ApplicationScopedRouteConventionTest extends TestCase
                     continue;
                 }
 
-                $content = (string) \file_get_contents($file->getPathname());
+                $content = (string)\file_get_contents($file->getPathname());
                 if (!\preg_match_all("/Route\\((?:[^'\\n]*?)'([^']+)'/", $content, $matches)) {
                     continue;
                 }
@@ -49,6 +49,7 @@ final class ApplicationScopedRouteConventionTest extends TestCase
                     $expectedPrefix = '/v1/' . $module . '/applications/{applicationSlug}';
                     if (!\str_starts_with($path, $expectedPrefix)) {
                         $violations[] = $file->getPathname() . ' -> ' . $path;
+
                         continue;
                     }
 

@@ -39,6 +39,7 @@ class SalaryDeleteController extends Controller
     public function __invoke(string $applicationSlug, Request $request, string $id): Response
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
+
         return $this->deleteMethod($request, $id);
     }
 }

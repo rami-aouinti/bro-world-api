@@ -42,7 +42,9 @@ class CompanyRepository extends BaseRepository
         return $entity instanceof Entity ? $entity : null;
     }
 
-    /** @return list<Entity> */
+    /**
+     * @return list<Entity>
+     */
     public function findScoped(string $crmId, int $limit = 200, int $offset = 0): array
     {
         return $this->createQueryBuilder('company')
@@ -87,7 +89,9 @@ class CompanyRepository extends BaseRepository
         return $qb->getQuery()->getArrayResult();
     }
 
-    /** @param array{q?:string} $filters */
+    /**
+     * @param array{q?:string} $filters
+     */
     public function countScopedByCrm(string $crmId, array $filters = []): int
     {
         $qb = $this->createQueryBuilder('company')

@@ -36,18 +36,20 @@ final class CreateProjectRequest
     public static function fromArray(array $payload): self
     {
         $request = new self();
-        $request->name = isset($payload['name']) ? (string) $payload['name'] : null;
-        $request->code = isset($payload['code']) ? (string) $payload['code'] : null;
-        $request->description = isset($payload['description']) ? (string) $payload['description'] : null;
-        $request->status = isset($payload['status']) ? (string) $payload['status'] : null;
-        $request->startedAt = isset($payload['startedAt']) ? (string) $payload['startedAt'] : null;
-        $request->dueAt = isset($payload['dueAt']) ? (string) $payload['dueAt'] : null;
-        $request->companyId = isset($payload['companyId']) ? (string) $payload['companyId'] : null;
+        $request->name = isset($payload['name']) ? (string)$payload['name'] : null;
+        $request->code = isset($payload['code']) ? (string)$payload['code'] : null;
+        $request->description = isset($payload['description']) ? (string)$payload['description'] : null;
+        $request->status = isset($payload['status']) ? (string)$payload['status'] : null;
+        $request->startedAt = isset($payload['startedAt']) ? (string)$payload['startedAt'] : null;
+        $request->dueAt = isset($payload['dueAt']) ? (string)$payload['dueAt'] : null;
+        $request->companyId = isset($payload['companyId']) ? (string)$payload['companyId'] : null;
 
         return $request;
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     public static function statusChoices(): array
     {
         return array_map(static fn (ProjectStatus $status): string => $status->value, ProjectStatus::cases());

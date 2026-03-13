@@ -35,6 +35,7 @@ class SalaryListController extends Controller
     public function __invoke(string $applicationSlug, Request $request): Response
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
+
         return $this->findMethod($request);
     }
 }

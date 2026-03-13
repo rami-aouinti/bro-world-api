@@ -15,6 +15,7 @@ use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
@@ -35,6 +36,9 @@ final readonly class CreateCompanyByApplicationController
     ) {
     }
 
+    /**
+     * @throws ExceptionInterface
+     */
     #[Route('/v1/crm/applications/{applicationSlug}/companies', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
@@ -45,10 +49,10 @@ final readonly class CreateCompanyByApplicationController
                 required: ['name'],
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Acme'),
-                    new OA\Property(property: 'industry', type: 'string', nullable: true, example: 'SaaS'),
-                    new OA\Property(property: 'website', type: 'string', nullable: true, example: 'https://acme.example'),
-                    new OA\Property(property: 'contactEmail', type: 'string', nullable: true, example: 'contact@acme.example'),
-                    new OA\Property(property: 'phone', type: 'string', nullable: true, example: '+33102030405'),
+                    new OA\Property(property: 'industry', type: 'string', example: 'SaaS', nullable: true),
+                    new OA\Property(property: 'website', type: 'string', example: 'https://acme.example', nullable: true),
+                    new OA\Property(property: 'contactEmail', type: 'string', example: 'contact@acme.example', nullable: true),
+                    new OA\Property(property: 'phone', type: 'string', example: '+33102030405', nullable: true),
                 ],
             ),
         ),
@@ -62,7 +66,7 @@ final readonly class CreateCompanyByApplicationController
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
 
         try {
-            $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return $this->errorResponseFactory->invalidJson();
         }
@@ -79,7 +83,7 @@ final readonly class CreateCompanyByApplicationController
 
         $company = new Company()
             ->setCrm($crm)
-            ->setName((string) $input->name)
+            ->setName((string)$input->name)
             ->setIndustry($input->industry)
             ->setWebsite($input->website)
             ->setContactEmail($input->contactEmail)

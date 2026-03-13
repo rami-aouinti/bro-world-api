@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Recruit\Application\Service;
 
-use BackedEnum;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
+use BackedEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
@@ -44,7 +44,7 @@ class JobStatsService
                 ->setParameter('isPublished', $isPublished);
         }
 
-        return (int) $queryBuilder->getQuery()->getSingleScalarResult();
+        return (int)$queryBuilder->getQuery()->getSingleScalarResult();
     }
 
     /**
@@ -62,8 +62,8 @@ class JobStatsService
 
         foreach ($rows as $row) {
             $rawKey = $row['statKey'] ?? '';
-            $key = $rawKey instanceof BackedEnum ? $rawKey->value : (string) $rawKey;
-            $result[$key] = (int) ($row['statCount'] ?? 0);
+            $key = $rawKey instanceof BackedEnum ? $rawKey->value : (string)$rawKey;
+            $result[$key] = (int)($row['statCount'] ?? 0);
         }
 
         return $result;

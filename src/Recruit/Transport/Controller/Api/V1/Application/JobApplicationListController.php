@@ -80,6 +80,7 @@ class JobApplicationListController
     public function __invoke(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
+
         return new JsonResponse($this->jobApplicationListService->getList(
             $loggedInUser,
             $request->query->getString('jobId', ''),

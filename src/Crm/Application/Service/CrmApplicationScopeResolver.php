@@ -8,9 +8,7 @@ use App\Crm\Domain\Entity\Crm;
 use App\Crm\Infrastructure\Repository\CrmRepository;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PlatformKey;
-use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -18,8 +16,7 @@ final readonly class CrmApplicationScopeResolver
 {
     public function __construct(
         private CrmRepository $crmRepository,
-        private EntityManagerInterface $entityManager,
-        private Security $security,
+        private EntityManagerInterface $entityManager
     ) {
     }
 

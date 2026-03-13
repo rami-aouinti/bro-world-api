@@ -25,8 +25,8 @@ use Throwable;
 readonly class PatchConversationController
 {
     public function __construct(
-        private MessageServiceInterface     $messageService,
-        private ConversationPayloadService  $conversationPayloadService,
+        private MessageServiceInterface $messageService,
+        private ConversationPayloadService $conversationPayloadService,
         private OperationIdGeneratorService $operationIdGeneratorService,
     ) {
     }

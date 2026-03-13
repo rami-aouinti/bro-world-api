@@ -25,7 +25,9 @@ final class CreateProductInput
     public ?string $currencyCode = null;
     public ?string $categoryId = null;
 
-    /** @var array<int, string> */
+    /**
+     * @var array<int, string>
+     */
     public array $tagIds = [];
 
     public bool $isFeatured = false;
@@ -39,18 +41,18 @@ final class CreateProductInput
     public static function fromArray(array $payload): self
     {
         $input = new self();
-        $input->name = trim((string) ($payload['name'] ?? ''));
-        $input->sku = strtoupper(trim((string) ($payload['sku'] ?? '')));
-        $input->price = (float) ($payload['price'] ?? 0);
-        $input->stock = (int) ($payload['stock'] ?? 0);
-        $input->description = ($payload['description'] ?? null) !== null ? (string) $payload['description'] : null;
-        $input->currencyCode = is_string($payload['currencyCode'] ?? null) ? trim((string) $payload['currencyCode']) : null;
-        $input->categoryId = is_string($payload['categoryId'] ?? null) ? trim((string) $payload['categoryId']) : null;
-        $input->tagIds = array_values(array_filter((array) ($payload['tagIds'] ?? []), static fn (mixed $id): bool => is_string($id)));
-        $input->isFeatured = (bool) ($payload['isFeatured'] ?? false);
-        $input->status = is_string($payload['status'] ?? null) ? (string) $payload['status'] : null;
-        $input->shopId = is_string($payload['shopId'] ?? null) ? trim((string) $payload['shopId']) : null;
-        $input->applicationSlug = is_string($payload['applicationSlug'] ?? null) ? trim((string) $payload['applicationSlug']) : null;
+        $input->name = trim((string)($payload['name'] ?? ''));
+        $input->sku = strtoupper(trim((string)($payload['sku'] ?? '')));
+        $input->price = (float)($payload['price'] ?? 0);
+        $input->stock = (int)($payload['stock'] ?? 0);
+        $input->description = ($payload['description'] ?? null) !== null ? (string)$payload['description'] : null;
+        $input->currencyCode = is_string($payload['currencyCode'] ?? null) ? trim((string)$payload['currencyCode']) : null;
+        $input->categoryId = is_string($payload['categoryId'] ?? null) ? trim((string)$payload['categoryId']) : null;
+        $input->tagIds = array_values(array_filter((array)($payload['tagIds'] ?? []), static fn (mixed $id): bool => is_string($id)));
+        $input->isFeatured = (bool)($payload['isFeatured'] ?? false);
+        $input->status = is_string($payload['status'] ?? null) ? (string)$payload['status'] : null;
+        $input->shopId = is_string($payload['shopId'] ?? null) ? trim((string)$payload['shopId']) : null;
+        $input->applicationSlug = is_string($payload['applicationSlug'] ?? null) ? trim((string)$payload['applicationSlug']) : null;
 
         return $input;
     }

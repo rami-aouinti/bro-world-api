@@ -49,6 +49,7 @@ class SalaryPatchController extends Controller
     public function __invoke(string $applicationSlug, Request $request, string $id): Response
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
+
         return $this->patchMethod($request, $this->mapAndValidateDto($request, SalaryPatch::class), $id);
     }
 

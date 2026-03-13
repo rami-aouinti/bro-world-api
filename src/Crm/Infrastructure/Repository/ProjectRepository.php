@@ -41,7 +41,9 @@ class ProjectRepository extends BaseRepository
         return $entity instanceof Entity ? $entity : null;
     }
 
-    /** @return list<Entity> */
+    /**
+     * @return list<Entity>
+     */
     public function findScoped(string $crmId, int $limit = 200, int $offset = 0): array
     {
         return $this->createQueryBuilder('project')
@@ -54,7 +56,6 @@ class ProjectRepository extends BaseRepository
             ->getQuery()
             ->getResult();
     }
-
 
     public function countProjectsByCrm(string $crmId): int
     {
@@ -95,7 +96,9 @@ class ProjectRepository extends BaseRepository
         return $qb->getQuery()->getArrayResult();
     }
 
-    /** @param array{q?:string,status?:string} $filters */
+    /**
+     * @param array{q?:string,status?:string} $filters
+     */
     public function countScopedByCrm(string $crmId, array $filters = []): int
     {
         $qb = $this->createQueryBuilder('project')
@@ -116,5 +119,4 @@ class ProjectRepository extends BaseRepository
 
         return (int)$qb->getQuery()->getSingleScalarResult();
     }
-
 }

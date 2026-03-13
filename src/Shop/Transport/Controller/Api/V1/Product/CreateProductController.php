@@ -43,7 +43,7 @@ final readonly class CreateProductController
     public function __invoke(Request $request): JsonResponse
     {
         try {
-            $payload = (array) json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return ValidationResponseFactory::invalidJson();
         }

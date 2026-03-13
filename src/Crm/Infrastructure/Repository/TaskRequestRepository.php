@@ -43,7 +43,9 @@ class TaskRequestRepository extends BaseRepository
         return $entity instanceof Entity ? $entity : null;
     }
 
-    /** @return list<Entity> */
+    /**
+     * @return list<Entity>
+     */
     public function findScoped(string $crmId, int $limit = 200, int $offset = 0): array
     {
         return $this->createQueryBuilder('taskRequest')
@@ -58,7 +60,6 @@ class TaskRequestRepository extends BaseRepository
             ->getQuery()
             ->getResult();
     }
-
 
     public function countTaskRequestsByCrm(string $crmId): int
     {
@@ -118,7 +119,9 @@ class TaskRequestRepository extends BaseRepository
         return $qb->getQuery()->getArrayResult();
     }
 
-    /** @param array{q?:string,status?:string} $filters */
+    /**
+     * @param array{q?:string,status?:string} $filters
+     */
     public function countScopedByCrm(string $crmId, array $filters = []): int
     {
         $qb = $this->createQueryBuilder('taskRequest')
@@ -141,5 +144,4 @@ class TaskRequestRepository extends BaseRepository
 
         return (int)$qb->getQuery()->getSingleScalarResult();
     }
-
 }

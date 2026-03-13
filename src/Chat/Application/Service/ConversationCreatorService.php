@@ -9,12 +9,13 @@ use App\Chat\Domain\Entity\Conversation;
 use App\Chat\Domain\Repository\Interfaces\ConversationRepositoryInterface;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
+use RuntimeException;
 
-class ConversationCreatorService
+readonly class ConversationCreatorService
 {
     public function __construct(
-        private readonly ConversationRepositoryInterface $conversationRepository,
-        private readonly EntityManagerInterface $entityManager,
+        private ConversationRepositoryInterface $conversationRepository,
+        private EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -25,7 +26,7 @@ class ConversationCreatorService
             return $conversation;
         }
 
-        $conversation = (new Conversation())
+        $conversation = new Conversation()
             ->setChat($chat);
 
         try {
@@ -39,7 +40,7 @@ class ConversationCreatorService
                 return $conversation;
             }
 
-            throw new \RuntimeException('Unable to create an idempotent conversation.');
+            throw new RuntimeException('Unable to create an idempotent conversation.');
         }
     }
 }

@@ -141,7 +141,10 @@ class BlogPostRepository extends BaseRepository
 
         foreach ($rows as $row) {
             $parentId = (string)$row['parentId'];
-            $summary[$parentId] ??= ['count' => 0, 'authors' => []];
+            $summary[$parentId] ??= [
+                'count' => 0,
+                'authors' => [],
+            ];
             $summary[$parentId]['count']++;
             $summary[$parentId]['authors'][] = [
                 'id' => (string)$row['authorId'],

@@ -68,7 +68,6 @@ final readonly class EventListService
         return $this->getList('application_private', $filters, $page, $limit, $user, $applicationSlug);
     }
 
-
     /**
      * @return array<int, array<string, mixed>>
      */

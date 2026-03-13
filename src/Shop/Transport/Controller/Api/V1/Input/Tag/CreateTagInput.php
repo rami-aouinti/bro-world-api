@@ -13,12 +13,14 @@ final class CreateTagInput
 
     public ?string $type = null;
 
-    /** @param array<string, mixed> $payload */
+    /**
+     * @param array<string, mixed> $payload
+     */
     public static function fromArray(array $payload): self
     {
         $input = new self();
-        $input->label = trim((string) ($payload['label'] ?? ''));
-        $input->type = is_string($payload['type'] ?? null) ? trim((string) $payload['type']) : null;
+        $input->label = trim((string)($payload['label'] ?? ''));
+        $input->type = is_string($payload['type'] ?? null) ? trim((string)$payload['type']) : null;
 
         return $input;
     }

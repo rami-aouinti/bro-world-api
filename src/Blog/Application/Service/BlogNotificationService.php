@@ -89,7 +89,6 @@ final readonly class BlogNotificationService
         }
     }
 
-
     public function notifyPostReactionCreated(BlogPost $post, User $actor, string $reactionType): void
     {
         $actionLabel = $reactionType === 'like' ? 'liked' : ('reacted (' . $reactionType . ') to');

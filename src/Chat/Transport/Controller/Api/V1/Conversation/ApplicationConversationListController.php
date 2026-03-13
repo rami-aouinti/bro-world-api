@@ -35,7 +35,7 @@ use Symfony\Component\Routing\Attribute\Route;
 readonly class ApplicationConversationListController
 {
     public function __construct(
-        private ConversationListService       $conversationListService,
+        private ConversationListService $conversationListService,
         private ChatApplicationScopeValidator $chatApplicationScopeValidator
     ) {
     }

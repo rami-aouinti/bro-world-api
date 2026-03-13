@@ -44,7 +44,6 @@ class QuizQuestionRepository extends BaseRepository
         return $queryBuilder->getQuery()->getResult();
     }
 
-
     /**
      * @return array{questionCount:int, answerCount:int, totalPoints:int}
      */
@@ -56,7 +55,7 @@ class QuizQuestionRepository extends BaseRepository
             ->getQuery()
             ->getSingleResult();
 
-        $answerCount = (int) $this->createQueryBuilder('question')
+        $answerCount = (int)$this->createQueryBuilder('question')
             ->select('COUNT(answer.id)')
             ->leftJoin('question.answers', 'answer')
             ->andWhere('question.quiz = :quiz')->setParameter('quiz', $quiz->getId(), UuidBinaryOrderedTimeType::NAME)
@@ -64,9 +63,9 @@ class QuizQuestionRepository extends BaseRepository
             ->getSingleScalarResult();
 
         return [
-            'questionCount' => (int) ($questionStats['questionCount'] ?? 0),
+            'questionCount' => (int)($questionStats['questionCount'] ?? 0),
             'answerCount' => $answerCount,
-            'totalPoints' => (int) ($questionStats['totalPoints'] ?? 0),
+            'totalPoints' => (int)($questionStats['totalPoints'] ?? 0),
         ];
     }
 
@@ -78,6 +77,6 @@ class QuizQuestionRepository extends BaseRepository
             ->getQuery()
             ->getSingleScalarResult();
 
-        return ((int) $maxPosition) + 1;
+        return ((int)$maxPosition) + 1;
     }
 }

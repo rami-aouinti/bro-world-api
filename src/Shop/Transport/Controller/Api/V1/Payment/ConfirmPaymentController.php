@@ -31,7 +31,9 @@ final readonly class ConfirmPaymentController
     #[Route('/v1/shop/applications/{applicationSlug}/orders/{orderId}/payment-confirm', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
-        security: [['Bearer' => []]],
+        security: [[
+            'Bearer' => [],
+        ]],
         summary: 'Confirm a payment for an order (private endpoint, full authentication required).',
     )]
     #[OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Forbidden. The order does not belong to the authenticated user or requested application.')]
@@ -40,7 +42,7 @@ final readonly class ConfirmPaymentController
         $request->attributes->set('applicationSlug', $applicationSlug);
 
         try {
-            $payload = (array) json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return ValidationResponseFactory::invalidJson();
         }

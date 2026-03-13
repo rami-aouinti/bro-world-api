@@ -8,11 +8,13 @@ use App\Blog\Application\Message\CreateBlogReactionCommand;
 use App\Blog\Application\MessageHandler\CreateBlogReactionCommandHandler;
 use App\Blog\Application\Service\BlogMutationRequestService;
 use App\User\Domain\Entity\User;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
+use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -28,6 +30,11 @@ final readonly class CreateBlogReactionController
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     * @throws JsonException
+     */
     #[Route('/v1/private/blog/comments/{commentId}/reactions', methods: [Request::METHOD_POST])]
     public function __invoke(string $commentId, Request $request, User $loggedInUser): JsonResponse
     {

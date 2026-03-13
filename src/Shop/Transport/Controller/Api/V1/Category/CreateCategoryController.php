@@ -44,7 +44,7 @@ final readonly class CreateCategoryController
         $shop = $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
 
         try {
-            $payload = (array) json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return ValidationResponseFactory::invalidJson();
         }
@@ -58,7 +58,7 @@ final readonly class CreateCategoryController
         $category = (new Category())
             ->setShop($shop)
             ->setName($input->name)
-            ->setSlug($this->slugBuilderService->buildSlug((string) ($input->slug ?? $input->name)))
+            ->setSlug($this->slugBuilderService->buildSlug((string)($input->slug ?? $input->name)))
             ->setDescription($input->description);
 
         $this->entityManager->persist($category);

@@ -41,10 +41,6 @@ readonly class CreateReactionController
     }
 
     /**
-     * @param string $messageId
-     * @param Request $request
-     * @param User $loggedInUser
-     * @return JsonResponse
      * @throws ORMException
      * @throws OptimisticLockException
      * @throws UniqueConstraintViolationException

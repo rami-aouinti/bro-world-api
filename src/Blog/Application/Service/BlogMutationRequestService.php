@@ -7,6 +7,7 @@ namespace App\Blog\Application\Service;
 use App\Blog\Domain\Enum\BlogReactionType;
 use App\Media\Application\Service\MediaUploaderService;
 use App\Media\Application\Service\MediaUploadValidationPolicy;
+use JsonException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,11 +28,13 @@ final readonly class BlogMutationRequestService
     }
 
     /**
+     * @param Request $request
      * @return array<string, mixed>
+     * @throws JsonException
      */
     public function extractPayload(Request $request): array
     {
-        $payload = (array)json_decode((string)$request->getContent(), true);
+        $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         if ($payload === []) {
             $payload = $request->request->all();
@@ -69,7 +72,7 @@ final readonly class BlogMutationRequestService
     {
         $files = $request->files->all('files');
 
-        if (!is_array($files) || $files === []) {
+        if ($files === []) {
             return [];
         }
 
