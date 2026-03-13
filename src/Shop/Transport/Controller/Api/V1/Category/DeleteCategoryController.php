@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Shop\Transport\Controller\Api\V1\Category;
 
 use App\General\Application\Message\EntityDeleted;
+use App\Shop\Application\Service\ShopApplicationResolverService;
 use App\Shop\Domain\Entity\Category;
 use App\Shop\Infrastructure\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,6 +24,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class DeleteCategoryController
 {
     public function __construct(
+        private ShopApplicationResolverService $shopApplicationResolverService,
         private CategoryRepository $categoryRepository,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
@@ -33,7 +35,8 @@ final readonly class DeleteCategoryController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $id): JsonResponse
     {
-        $category = $this->categoryRepository->find($id);
+        $shop = $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
+        $category = $this->categoryRepository->findOneByIdAndShop($id, $shop);
         if (!$category instanceof Category) {
             return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
         }

@@ -7,6 +7,7 @@ namespace App\Shop\Transport\Controller\Api\V1\Product;
 use App\General\Application\Message\EntityCreated;
 use App\Shop\Application\Service\ProductHydratorService;
 use App\Shop\Application\Service\ProductListService;
+use App\Shop\Application\Service\ShopApplicationResolverService;
 use App\Shop\Domain\Entity\Product;
 use App\Shop\Infrastructure\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -25,6 +26,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class PatchProductController
 {
     public function __construct(
+        private ShopApplicationResolverService $shopApplicationResolverService,
         private ProductRepository $productRepository,
         private ProductHydratorService $productHydratorService,
         private EntityManagerInterface $entityManager,
@@ -37,7 +39,8 @@ final readonly class PatchProductController
     public function __invoke(string $applicationSlug, string $id, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
-        $product = $this->productRepository->find($id);
+        $shop = $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
+        $product = $this->productRepository->findOneByIdAndShop($id, $shop);
         if (!$product instanceof Product) {
             return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
         }

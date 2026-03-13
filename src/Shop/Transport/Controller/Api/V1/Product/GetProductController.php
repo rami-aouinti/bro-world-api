@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Shop\Transport\Controller\Api\V1\Product;
 
 use App\Shop\Application\Service\ProductListService;
+use App\Shop\Application\Service\ShopApplicationResolverService;
 use App\Shop\Application\Service\SimilarProductService;
 use App\Shop\Domain\Entity\Product;
 use App\Shop\Infrastructure\Repository\ProductRepository;
@@ -22,6 +23,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class GetProductController
 {
     public function __construct(
+        private ShopApplicationResolverService $shopApplicationResolverService,
         private ProductRepository $productRepository,
         private SimilarProductService $similarProductService,
     ) {
@@ -31,7 +33,8 @@ final readonly class GetProductController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $id): JsonResponse
     {
-        $product = $this->productRepository->find($id);
+        $shop = $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
+        $product = $this->productRepository->findOneByIdAndShop($id, $shop);
         if (!$product instanceof Product) {
             return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
         }

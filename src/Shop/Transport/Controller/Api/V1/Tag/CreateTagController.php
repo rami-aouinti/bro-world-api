@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Shop\Transport\Controller\Api\V1\Tag;
 
 use App\General\Application\Message\EntityCreated;
+use App\Shop\Application\Service\ShopApplicationResolverService;
 use App\Shop\Domain\Entity\Tag;
 use App\Shop\Domain\Enum\TagType;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,6 +24,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class CreateTagController
 {
     public function __construct(
+        private ShopApplicationResolverService $shopApplicationResolverService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -33,6 +35,8 @@ final readonly class CreateTagController
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
+        $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
+
         $payload = (array)json_decode((string)$request->getContent(), true);
         $tag = (new Tag())
             ->setLabel((string)($payload['label'] ?? ''))

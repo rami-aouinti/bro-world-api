@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Shop\Transport\Controller\Api\V1\Category;
 
 use App\General\Application\Message\EntityCreated;
+use App\Shop\Application\Service\ShopApplicationResolverService;
 use App\Shop\Application\Service\SlugBuilderService;
 use App\Shop\Domain\Entity\Category;
-use App\Shop\Infrastructure\Repository\ShopRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,7 +24,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class CreateCategoryController
 {
     public function __construct(
-        private ShopRepository $shopRepository,
+        private ShopApplicationResolverService $shopApplicationResolverService,
         private SlugBuilderService $slugBuilderService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
@@ -36,15 +36,13 @@ final readonly class CreateCategoryController
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
+        $shop = $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
         $payload = (array)json_decode((string)$request->getContent(), true);
         $category = (new Category())
+            ->setShop($shop)
             ->setName((string)($payload['name'] ?? ''))
             ->setSlug($this->slugBuilderService->buildSlug((string)($payload['slug'] ?? $payload['name'] ?? '')))
             ->setDescription(($payload['description'] ?? null) !== null ? (string)$payload['description'] : null);
-
-        if (is_string($payload['shopId'] ?? null)) {
-            $category->setShop($this->shopRepository->find($payload['shopId']));
-        }
 
         $this->entityManager->persist($category);
         $this->entityManager->flush();

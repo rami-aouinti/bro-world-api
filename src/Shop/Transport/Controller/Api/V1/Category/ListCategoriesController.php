@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shop\Transport\Controller\Api\V1\Category;
 
+use App\Shop\Application\Service\ShopApplicationResolverService;
 use App\Shop\Domain\Entity\Category;
 use App\Shop\Infrastructure\Repository\CategoryRepository;
 use OpenApi\Attributes as OA;
@@ -20,7 +21,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class ListCategoriesController
 {
     public function __construct(
-        private CategoryRepository $categoryRepository
+        private ShopApplicationResolverService $shopApplicationResolverService,
+        private CategoryRepository $categoryRepository,
     ) {
     }
 
@@ -28,14 +30,14 @@ final readonly class ListCategoriesController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug): JsonResponse
     {
+        $shop = $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
+
         $items = array_map(static fn (Category $category): array => [
             'id' => $category->getId(),
             'name' => $category->getName(),
             'slug' => $category->getSlug(),
             'description' => $category->getDescription(),
-        ], $this->categoryRepository->findBy([], [
-            'createdAt' => 'DESC',
-        ], 200));
+        ], $this->categoryRepository->findByShop($shop));
 
         return new JsonResponse([
             'items' => $items,

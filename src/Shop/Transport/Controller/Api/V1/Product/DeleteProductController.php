@@ -6,6 +6,9 @@ namespace App\Shop\Transport\Controller\Api\V1\Product;
 
 use App\General\Domain\Service\Interfaces\MessageServiceInterface;
 use App\Shop\Application\Message\DeleteProductCommand;
+use App\Shop\Application\Service\ShopApplicationResolverService;
+use App\Shop\Domain\Entity\Product;
+use App\Shop\Infrastructure\Repository\ProductRepository;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,7 +23,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class DeleteProductController
 {
     public function __construct(
-        private MessageServiceInterface $messageService
+        private ShopApplicationResolverService $shopApplicationResolverService,
+        private ProductRepository $productRepository,
+        private MessageServiceInterface $messageService,
     ) {
     }
 
@@ -28,6 +33,12 @@ final readonly class DeleteProductController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $id): JsonResponse
     {
+        $shop = $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
+        $product = $this->productRepository->findOneByIdAndShop($id, $shop);
+        if (!$product instanceof Product) {
+            return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
+        }
+
         $operationId = \Ramsey\Uuid\Uuid::uuid4()->toString();
         $this->messageService->sendMessage(new DeleteProductCommand(
             operationId: $operationId,
