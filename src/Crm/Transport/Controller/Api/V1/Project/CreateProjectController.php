@@ -8,9 +8,13 @@ use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Domain\Entity\Project;
 use App\Crm\Domain\Enum\ProjectStatus;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
+use App\Crm\Transport\Request\CreateProjectRequest;
+use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\General\Application\Message\EntityCreated;
 use DateTimeImmutable;
+use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,6 +23,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
@@ -28,6 +33,8 @@ final readonly class CreateProjectController
     public function __construct(
         private CompanyRepository $companyRepository,
         private CrmApplicationScopeResolver $scopeResolver,
+        private CrmApiErrorResponseFactory $errorResponseFactory,
+        private ValidatorInterface $validator,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -40,18 +47,45 @@ final readonly class CreateProjectController
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
-        $payload = (array)json_decode((string)$request->getContent(), true);
+
+        try {
+            $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            return $this->errorResponseFactory->invalidJson();
+        }
+
+        if (!is_array($payload)) {
+            return $this->errorResponseFactory->invalidJson();
+        }
+
+        $input = CreateProjectRequest::fromArray($payload);
+        $violations = $this->validator->validate($input);
+        if ($violations->count() > 0) {
+            return $this->errorResponseFactory->validationFailed($violations);
+        }
+
+        $startedAt = $this->parseDate($input->startedAt, 'startedAt');
+        if ($startedAt instanceof JsonResponse) {
+            return $startedAt;
+        }
+
+        $dueAt = $this->parseDate($input->dueAt, 'dueAt');
+        if ($dueAt instanceof JsonResponse) {
+            return $dueAt;
+        }
+
         $project = new Project();
-        $project->setName((string)($payload['name'] ?? ''))
-            ->setCode(isset($payload['code']) ? (string)$payload['code'] : null)
-            ->setDescription(isset($payload['description']) ? (string)$payload['description'] : null)
-            ->setStatus(ProjectStatus::tryFrom((string)($payload['status'] ?? '')) ?? ProjectStatus::PLANNED)
-            ->setStartedAt(isset($payload['startedAt']) ? new DateTimeImmutable((string)$payload['startedAt']) : null)
-            ->setDueAt(isset($payload['dueAt']) ? new DateTimeImmutable((string)$payload['dueAt']) : null);
-        if (is_string($payload['companyId'] ?? null)) {
-            $company = $this->companyRepository->findOneScopedById($payload['companyId'], $crm->getId());
+        $project->setName((string) $input->name)
+            ->setCode($input->code)
+            ->setDescription($input->description)
+            ->setStatus(ProjectStatus::tryFrom((string) $input->status) ?? ProjectStatus::PLANNED)
+            ->setStartedAt($startedAt)
+            ->setDueAt($dueAt);
+
+        if (is_string($input->companyId)) {
+            $company = $this->companyRepository->findOneScopedById($input->companyId, $crm->getId());
             if ($company === null) {
-                return new JsonResponse(['message' => 'Unknown "companyId" in this CRM scope.'], JsonResponse::HTTP_NOT_FOUND);
+                return $this->errorResponseFactory->notFoundReference('companyId');
             }
 
             $project->setCompany($company);
@@ -64,5 +98,19 @@ final readonly class CreateProjectController
         return new JsonResponse([
             'id' => $project->getId(),
         ], JsonResponse::HTTP_CREATED);
+    }
+
+    private function parseDate(?string $value, string $field): DateTimeImmutable|JsonResponse|null
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $date = DateTimeImmutable::createFromFormat(DateTimeInterface::ATOM, $value);
+        if ($date === false) {
+            return $this->errorResponseFactory->invalidDate($field);
+        }
+
+        return $date;
     }
 }

@@ -8,9 +8,13 @@ use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Domain\Entity\Sprint;
 use App\Crm\Domain\Enum\SprintStatus;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
+use App\Crm\Transport\Request\CreateSprintRequest;
+use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\General\Application\Message\EntityCreated;
 use DateTimeImmutable;
+use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,6 +23,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
@@ -28,6 +33,8 @@ final readonly class CreateSprintController
     public function __construct(
         private ProjectRepository $projectRepository,
         private CrmApplicationScopeResolver $scopeResolver,
+        private CrmApiErrorResponseFactory $errorResponseFactory,
+        private ValidatorInterface $validator,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -40,17 +47,44 @@ final readonly class CreateSprintController
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
-        $payload = (array)json_decode((string)$request->getContent(), true);
+
+        try {
+            $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            return $this->errorResponseFactory->invalidJson();
+        }
+
+        if (!is_array($payload)) {
+            return $this->errorResponseFactory->invalidJson();
+        }
+
+        $input = CreateSprintRequest::fromArray($payload);
+        $violations = $this->validator->validate($input);
+        if ($violations->count() > 0) {
+            return $this->errorResponseFactory->validationFailed($violations);
+        }
+
+        $startDate = $this->parseDate($input->startDate, 'startDate');
+        if ($startDate instanceof JsonResponse) {
+            return $startDate;
+        }
+
+        $endDate = $this->parseDate($input->endDate, 'endDate');
+        if ($endDate instanceof JsonResponse) {
+            return $endDate;
+        }
+
         $sprint = new Sprint();
-        $sprint->setName((string)($payload['name'] ?? ''))
-            ->setGoal(isset($payload['goal']) ? (string)$payload['goal'] : null)
-            ->setStatus(SprintStatus::tryFrom((string)($payload['status'] ?? '')) ?? SprintStatus::PLANNED)
-            ->setStartDate(isset($payload['startDate']) ? new DateTimeImmutable((string)$payload['startDate']) : null)
-            ->setEndDate(isset($payload['endDate']) ? new DateTimeImmutable((string)$payload['endDate']) : null);
-        if (is_string($payload['projectId'] ?? null)) {
-            $project = $this->projectRepository->findOneScopedById($payload['projectId'], $crm->getId());
+        $sprint->setName((string) $input->name)
+            ->setGoal($input->goal)
+            ->setStatus(SprintStatus::tryFrom((string) $input->status) ?? SprintStatus::PLANNED)
+            ->setStartDate($startDate)
+            ->setEndDate($endDate);
+
+        if (is_string($input->projectId)) {
+            $project = $this->projectRepository->findOneScopedById($input->projectId, $crm->getId());
             if ($project === null) {
-                return new JsonResponse(['message' => 'Unknown "projectId" in this CRM scope.'], JsonResponse::HTTP_NOT_FOUND);
+                return $this->errorResponseFactory->notFoundReference('projectId');
             }
 
             $sprint->setProject($project);
@@ -63,5 +97,19 @@ final readonly class CreateSprintController
         return new JsonResponse([
             'id' => $sprint->getId(),
         ], JsonResponse::HTTP_CREATED);
+    }
+
+    private function parseDate(?string $value, string $field): DateTimeImmutable|JsonResponse|null
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $date = DateTimeImmutable::createFromFormat(DateTimeInterface::ATOM, $value);
+        if ($date === false) {
+            return $this->errorResponseFactory->invalidDate($field);
+        }
+
+        return $date;
     }
 }
