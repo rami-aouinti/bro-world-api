@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Recruit\Application\Service;
 
+use BackedEnum;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 
 class JobStatsService
@@ -21,34 +23,57 @@ class JobStatsService
      */
     public function getStats(Recruit $recruit): array
     {
-        $jobs = $this->entityManager->getRepository(Job::class)
-            ->createQueryBuilder('job')
-            ->andWhere('job.recruit = :recruit')
-            ->setParameter('recruit', $recruit->getId(), UuidBinaryOrderedTimeType::NAME)
-            ->getQuery()
-            ->getResult();
-
-        $stats = [
-            'total' => 0,
-            'published' => 0,
-            'draft' => 0,
-            'byContractType' => [],
-            'byWorkMode' => [],
-            'byExperienceLevel' => [],
+        return [
+            'total' => $this->getCount($recruit),
+            'published' => $this->getCount($recruit, true),
+            'draft' => $this->getCount($recruit, false),
+            'byContractType' => $this->getGroupedCounts($recruit, 'contractType'),
+            'byWorkMode' => $this->getGroupedCounts($recruit, 'workMode'),
+            'byExperienceLevel' => $this->getGroupedCounts($recruit, 'experienceLevel'),
         ];
+    }
 
-        foreach ($jobs as $job) {
-            if (!$job instanceof Job) {
-                continue;
-            }
+    private function getCount(Recruit $recruit, ?bool $isPublished = null): int
+    {
+        $queryBuilder = $this->createBaseQueryBuilder($recruit)
+            ->select('COUNT(job.id)');
 
-            $stats['total']++;
-            $stats[$job->isPublished() ? 'published' : 'draft']++;
-            $stats['byContractType'][$job->getContractTypeValue()] = ($stats['byContractType'][$job->getContractTypeValue()] ?? 0) + 1;
-            $stats['byWorkMode'][$job->getWorkModeValue()] = ($stats['byWorkMode'][$job->getWorkModeValue()] ?? 0) + 1;
-            $stats['byExperienceLevel'][$job->getExperienceLevelValue()] = ($stats['byExperienceLevel'][$job->getExperienceLevelValue()] ?? 0) + 1;
+        if ($isPublished !== null) {
+            $queryBuilder
+                ->andWhere('job.isPublished = :isPublished')
+                ->setParameter('isPublished', $isPublished);
         }
 
-        return $stats;
+        return (int) $queryBuilder->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function getGroupedCounts(Recruit $recruit, string $field): array
+    {
+        $rows = $this->createBaseQueryBuilder($recruit)
+            ->select(sprintf('job.%s AS statKey', $field), 'COUNT(job.id) AS statCount')
+            ->groupBy(sprintf('job.%s', $field))
+            ->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+
+        foreach ($rows as $row) {
+            $rawKey = $row['statKey'] ?? '';
+            $key = $rawKey instanceof BackedEnum ? $rawKey->value : (string) $rawKey;
+            $result[$key] = (int) ($row['statCount'] ?? 0);
+        }
+
+        return $result;
+    }
+
+    private function createBaseQueryBuilder(Recruit $recruit): QueryBuilder
+    {
+        return $this->entityManager->getRepository(Job::class)
+            ->createQueryBuilder('job')
+            ->andWhere('job.recruit = :recruit')
+            ->setParameter('recruit', $recruit->getId(), UuidBinaryOrderedTimeType::NAME);
     }
 }
