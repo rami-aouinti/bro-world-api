@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Shop\Transport\Controller\Api\V1\Checkout;
 
 use App\Shop\Application\Message\CheckoutCommand;
+use App\Shop\Application\Service\MoneyFormatter;
 use App\Shop\Domain\Entity\Order;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
@@ -75,7 +76,7 @@ final readonly class CheckoutController
         return new JsonResponse([
             'id' => $order->getId(),
             'status' => $order->getStatus()->value,
-            'subtotal' => $order->getSubtotal(),
+            'subtotal' => MoneyFormatter::toApiAmount($order->getSubtotal()),
             'itemsCount' => $order->getItems()->count(),
             'createdAt' => $order->getCreatedAt()?->format(DATE_ATOM),
         ], JsonResponse::HTTP_CREATED);

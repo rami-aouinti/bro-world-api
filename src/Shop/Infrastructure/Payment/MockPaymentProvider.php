@@ -23,7 +23,7 @@ final readonly class MockPaymentProvider implements PaymentProviderInterface
     ) {
     }
 
-    public function createIntent(string $orderId, float $amount, string $currency, array $metadata = []): array
+    public function createIntent(string $orderId, int $amount, string $currency, array $metadata = []): array
     {
         $reference = sprintf('mock_intent_%s', uniqid('', true));
 

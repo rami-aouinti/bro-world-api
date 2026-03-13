@@ -11,7 +11,7 @@ interface PaymentProviderInterface
      *
      * @return array{provider:string,providerReference:string,status:string,payload:array<string,mixed>}
      */
-    public function createIntent(string $orderId, float $amount, string $currency, array $metadata = []): array;
+    public function createIntent(string $orderId, int $amount, string $currency, array $metadata = []): array;
 
     /**
      * @param array<string, mixed> $payload

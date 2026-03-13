@@ -39,11 +39,15 @@ class CartItem implements EntityInterface
     ])]
     private int $quantity = 1;
 
-    #[ORM\Column(name: 'unit_price_snapshot', type: Types::FLOAT)]
-    private float $unitPriceSnapshot = 0.0;
+    #[ORM\Column(name: 'unit_price_snapshot', type: Types::INTEGER, options: [
+        'default' => 0,
+    ])]
+    private int $unitPriceSnapshot = 0;
 
-    #[ORM\Column(name: 'line_total', type: Types::FLOAT)]
-    private float $lineTotal = 0.0;
+    #[ORM\Column(name: 'line_total', type: Types::INTEGER, options: [
+        'default' => 0,
+    ])]
+    private int $lineTotal = 0;
 
     public function __construct()
     {
@@ -92,24 +96,24 @@ class CartItem implements EntityInterface
         return $this;
     }
 
-    public function getUnitPriceSnapshot(): float
+    public function getUnitPriceSnapshot(): int
     {
         return $this->unitPriceSnapshot;
     }
 
-    public function setUnitPriceSnapshot(float $unitPriceSnapshot): self
+    public function setUnitPriceSnapshot(int $unitPriceSnapshot): self
     {
         $this->unitPriceSnapshot = max(0, $unitPriceSnapshot);
 
         return $this;
     }
 
-    public function getLineTotal(): float
+    public function getLineTotal(): int
     {
         return $this->lineTotal;
     }
 
-    public function setLineTotal(float $lineTotal): self
+    public function setLineTotal(int $lineTotal): self
     {
         $this->lineTotal = max(0, $lineTotal);
 

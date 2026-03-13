@@ -65,7 +65,7 @@ final readonly class CheckoutService
             ->setPhone($command->phone)
             ->setShippingMethod($command->shippingMethod);
 
-        $subtotal = 0.0;
+        $subtotal = 0;
 
         foreach ($cart->getItems() as $cartItem) {
             $product = $this->productRepository->find($cartItem->getProduct()?->getId() ?? '', LockMode::PESSIMISTIC_WRITE);

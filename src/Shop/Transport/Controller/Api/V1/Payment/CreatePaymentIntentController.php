@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shop\Transport\Controller\Api\V1\Payment;
 
+use App\Shop\Application\Service\MoneyFormatter;
 use App\Shop\Application\Service\PaymentService;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -40,7 +41,7 @@ final readonly class CreatePaymentIntentController
             'provider' => $transaction->getProvider(),
             'providerReference' => $transaction->getProviderReference(),
             'status' => $transaction->getStatus()->value,
-            'amount' => $transaction->getAmount(),
+            'amount' => MoneyFormatter::toApiAmount($transaction->getAmount()),
             'currency' => $transaction->getCurrency(),
         ], JsonResponse::HTTP_CREATED);
     }

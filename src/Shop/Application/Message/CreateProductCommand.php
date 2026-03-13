@@ -14,7 +14,7 @@ final readonly class CreateProductCommand implements MessageHighInterface
     public function __construct(
         public string $operationId,
         public string $name,
-        public float $price,
+        public int $price,
         public ?string $shopId = null,
         public ?string $categoryId = null,
         public array $tagIds = [],

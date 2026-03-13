@@ -29,7 +29,7 @@ final readonly class ProductHydratorService
             $product->setName((string)($payload['name'] ?? ''));
         }
         if (!$partial || array_key_exists('price', $payload)) {
-            $product->setPrice((float)($payload['price'] ?? 0));
+            $product->setPrice((int)round((float)($payload['price'] ?? 0) * 100));
         }
         if (!$partial || array_key_exists('sku', $payload)) {
             $defaultSku = strtoupper(substr(md5($product->getId()), 0, 12));

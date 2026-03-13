@@ -44,8 +44,10 @@ class Order implements EntityInterface
     #[ORM\Column(name: 'status', type: Types::STRING, length: 30, enumType: OrderStatus::class)]
     private OrderStatus $status = OrderStatus::DRAFT;
 
-    #[ORM\Column(name: 'subtotal', type: Types::FLOAT)]
-    private float $subtotal = 0.0;
+    #[ORM\Column(name: 'subtotal', type: Types::INTEGER, options: [
+        'default' => 0,
+    ])]
+    private int $subtotal = 0;
 
     #[ORM\Column(name: 'billing_address', type: Types::TEXT)]
     private string $billingAddress = '';
@@ -114,12 +116,12 @@ class Order implements EntityInterface
         return $this;
     }
 
-    public function getSubtotal(): float
+    public function getSubtotal(): int
     {
         return $this->subtotal;
     }
 
-    public function setSubtotal(float $subtotal): self
+    public function setSubtotal(int $subtotal): self
     {
         $this->subtotal = max(0, $subtotal);
 
