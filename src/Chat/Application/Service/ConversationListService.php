@@ -11,6 +11,7 @@ use App\Chat\Domain\Repository\Interfaces\ConversationRepositoryInterface;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\User\Domain\Entity\User;
+use JsonException;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -35,7 +36,7 @@ final readonly class ConversationListService
      *
      * @return array<string, mixed>
      * @throws InvalidArgumentException
-     * @throws \JsonException
+     * @throws JsonException
      */
     public function getByUser(User $user, array $filters = [], int $page = 1, int $limit = 20): array
     {
@@ -47,7 +48,7 @@ final readonly class ConversationListService
      *
      * @return array<string, mixed>
      * @throws InvalidArgumentException
-     * @throws \JsonException
+     * @throws JsonException
      */
     public function getByChatId(string $chatId, array $filters = [], int $page = 1, int $limit = 20): array
     {
@@ -59,7 +60,7 @@ final readonly class ConversationListService
      *
      * @return array<string, mixed>
      * @throws InvalidArgumentException
-     * @throws \JsonException
+     * @throws JsonException
      */
     public function getByChatIdAndUser(string $chatId, User $user, array $filters = [], int $page = 1, int $limit = 20): array
     {
@@ -71,7 +72,7 @@ final readonly class ConversationListService
      *
      * @return array<string, mixed>
      * @throws InvalidArgumentException
-     * @throws \JsonException
+     * @throws JsonException
      */
     private function getList(string $accessContext, array $filters, int $page, int $limit, ?User $user, ?string $chatId): array
     {
