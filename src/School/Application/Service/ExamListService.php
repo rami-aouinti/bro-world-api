@@ -31,7 +31,7 @@ readonly class ExamListService
     /**
      * @return array<string,mixed>
      */
-    public function getList(Request $request): array
+    public function getList(Request $request, string $schoolId): array
     {
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
@@ -39,10 +39,10 @@ readonly class ExamListService
             'q' => trim((string)$request->query->get('q', '')),
             'title' => trim((string)$request->query->get('title', '')),
         ];
-        $cacheKey = $this->cacheKeyConventionService->buildSchoolExamListKey($page, $limit, $filters);
+        $cacheKey = $this->cacheKeyConventionService->buildSchoolExamListKey($page, $limit, [...$filters, "schoolId" => $schoolId]);
 
         /** @var array<string,mixed> $result */
-        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($filters, $page, $limit): array {
+        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($filters, $page, $limit, $schoolId): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->schoolExamListTag());
@@ -59,6 +59,9 @@ readonly class ExamListService
             }
 
             $qb = $this->examRepository->createQueryBuilder('exam')->leftJoin('exam.schoolClass', 'class')->leftJoin('exam.teacher', 'teacher')
+                ->innerJoin('class.school', 'school')
+                ->andWhere('school.id = :schoolId')
+                ->setParameter('schoolId', $schoolId)
                 ->setFirstResult(($page - 1) * $limit)->setMaxResults($limit)->orderBy('exam.createdAt', 'DESC');
             if ($filters['title'] !== '') {
                 $qb->andWhere('LOWER(exam.title) LIKE LOWER(:title)')->setParameter('title', '%' . $filters['title'] . '%');
@@ -69,7 +72,11 @@ readonly class ExamListService
 
             $items = $this->viewMapper->mapExamCollection($qb->getQuery()->getResult());
 
-            $countQb = $this->examRepository->createQueryBuilder('exam')->select('COUNT(exam.id)');
+            $countQb = $this->examRepository->createQueryBuilder('exam')->select('COUNT(exam.id)')
+                ->innerJoin('exam.schoolClass', 'class')
+                ->innerJoin('class.school', 'school')
+                ->andWhere('school.id = :schoolId')
+                ->setParameter('schoolId', $schoolId);
             if ($filters['title'] !== '') {
                 $countQb->andWhere('LOWER(exam.title) LIKE LOWER(:title)')->setParameter('title', '%' . $filters['title'] . '%');
             }
