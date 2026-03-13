@@ -96,11 +96,10 @@ final class MessageHandlersTest extends TestCase
         self::assertNull($message->getReadAt());
     }
 
-    public function testMarkConversationMessagesAsReadInvalidatesCacheOnlyWhenMessagesWereUpdated(): void
+    public function testMarkConversationMessagesAsReadUpdatesParticipantReadPointerAndInvalidatesCache(): void
     {
         $conversationRepo = $this->createMock(ConversationRepository::class);
         $participantRepo = $this->createMock(ConversationParticipantRepository::class);
-        $messageRepo = $this->createMock(ChatMessageRepository::class);
         $cache = $this->createMock(CacheInvalidationService::class);
 
         $actor = $this->makeUser('20000000-0000-1000-8000-000000000006');
@@ -111,13 +110,9 @@ final class MessageHandlersTest extends TestCase
         $participantRepo->method('findOneBy')->willReturn($participant);
         $participantRepo->expects(self::exactly(2))->method('save');
 
-        $messageRepo->expects(self::exactly(2))->method('markConversationMessagesAsRead')
-            ->with($conversation->getId(), $actor->getId())
-            ->willReturnOnConsecutiveCalls(0, 2);
+        $cache->expects(self::exactly(2))->method('invalidateConversationCaches')->with($conversation->getChat()->getId(), $actor->getId());
 
-        $cache->expects(self::once())->method('invalidateConversationCaches')->with($conversation->getChat()->getId(), $actor->getId());
-
-        $handler = new MarkConversationMessagesAsReadCommandHandler($conversationRepo, $participantRepo, $messageRepo, $cache);
+        $handler = new MarkConversationMessagesAsReadCommandHandler($conversationRepo, $participantRepo, $cache);
 
         $handler(new MarkConversationMessagesAsReadCommand('op-1', $actor->getId(), $conversation->getId()));
         $firstReadAt = $participant->getLastReadMessageAt();

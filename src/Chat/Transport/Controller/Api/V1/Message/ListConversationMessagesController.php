@@ -41,11 +41,21 @@ class ListConversationMessagesController
     public function __invoke(string $conversationId, User $loggedInUser): JsonResponse
     {
         $conversation = $this->chatAccessResolverService->resolveParticipantConversation($conversationId, $loggedInUser);
+        $lastReadMessageAt = null;
+        foreach ($conversation->getParticipants() as $participant) {
+            if ($participant->getUser()->getId() === $loggedInUser->getId()) {
+                $lastReadMessageAt = $participant->getLastReadMessageAt();
+                break;
+            }
+        }
 
         $items = [];
         foreach ($conversation->getMessages()->toArray() as $message) {
             $sender = $message->getSender();
             $senderId = $sender->getId();
+
+            $isOwner = $senderId === $loggedInUser->getId();
+            $isRead = $isOwner || ($lastReadMessageAt !== null && $message->getCreatedAt() !== null && $message->getCreatedAt() <= $lastReadMessageAt);
 
             $items[] = [
                 'id' => $message->getId(),
@@ -55,11 +65,11 @@ class ListConversationMessagesController
                     'firstName' => $sender->getFirstName(),
                     'lastName' => $sender->getLastName(),
                     'photo' => $sender->getPhoto(),
-                    'owner' => $senderId === $loggedInUser->getId(),
+                    'owner' => $isOwner,
                 ],
                 'attachments' => $message->getAttachments(),
-                'read' => $message->isRead(),
-                'readAt' => $message->getReadAt()?->format(DATE_ATOM),
+                'read' => $isRead,
+                'readAt' => $isRead && !$isOwner ? $lastReadMessageAt?->format(DATE_ATOM) : null,
                 'createdAt' => $message->getCreatedAt()?->format(DATE_ATOM),
             ];
         }

@@ -113,17 +113,24 @@ final class ConversationListServiceTest extends TestCase
         $sender->method('getLastName')->willReturn('User');
         $sender->method('getPhoto')->willReturn(null);
 
+        $readMessage = $this->createMock(ChatMessage::class);
+        $readMessage->method('getId')->willReturn('message-read-id');
+        $readMessage->method('getContent')->willReturn('older message');
+        $readMessage->method('getSender')->willReturn($sender);
+        $readMessage->method('getDeletedAt')->willReturn(null);
+        $readMessage->method('getCreatedAt')->willReturn(new \DateTimeImmutable('2024-01-01T10:00:00+00:00'));
+
         $message = $this->createMock(ChatMessage::class);
         $message->method('getId')->willReturn('message-id');
         $message->method('getContent')->willReturn(str_repeat('hello', 80));
         $message->method('getSender')->willReturn($sender);
         $message->method('getDeletedAt')->willReturn(null);
-        $message->method('getCreatedAt')->willReturn(new \DateTimeImmutable('2024-01-01T10:00:00+00:00'));
+        $message->method('getCreatedAt')->willReturn(new \DateTimeImmutable('2024-01-01T12:00:00+00:00'));
 
         $participant = $this->createMock(ConversationParticipant::class);
         $participant->method('getUser')->willReturn($connectedUser);
         $participant->method('getId')->willReturn('participant-id');
-        $participant->method('getLastReadMessageAt')->willReturn(null);
+        $participant->method('getLastReadMessageAt')->willReturn(new \DateTimeImmutable('2024-01-01T11:00:00+00:00'));
 
         $conversation = $this->createMock(Conversation::class);
         $conversation->method('getId')->willReturn('conversation-id');
@@ -131,7 +138,7 @@ final class ConversationListServiceTest extends TestCase
         $conversation->method('getType')->willReturn(ConversationType::DIRECT);
         $conversation->method('getTitle')->willReturn('Conversation');
         $conversation->method('getParticipants')->willReturn(new ArrayCollection([$participant]));
-        $conversation->method('getMessages')->willReturn(new ArrayCollection([$message]));
+        $conversation->method('getMessages')->willReturn(new ArrayCollection([$readMessage, $message]));
         $conversation->method('getLastMessageAt')->willReturn(null);
         $conversation->method('getArchivedAt')->willReturn(null);
         $conversation->method('getCreatedAt')->willReturn(new \DateTimeImmutable('2024-01-01T00:00:00+00:00'));
@@ -163,7 +170,8 @@ final class ConversationListServiceTest extends TestCase
         self::assertSame('message-id', $result['items'][0]['lastMessage']['id']);
         self::assertSame(280, mb_strlen($result['items'][0]['lastMessage']['content']));
         self::assertSame('sender-id', $result['items'][0]['lastMessage']['sender']['id']);
-        self::assertSame('2024-01-01T10:00:00+00:00', $result['items'][0]['lastMessage']['createdAt']);
+        self::assertSame('2024-01-01T12:00:00+00:00', $result['items'][0]['lastMessage']['createdAt']);
+        self::assertSame(1, $result['items'][0]['unreadMessagesCount']);
     }
 
     private function mockUser(): User
