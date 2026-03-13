@@ -10,6 +10,9 @@ use App\Shop\Domain\Entity\Shop;
 use App\Shop\Infrastructure\Repository\ProductRepository;
 use App\Shop\Infrastructure\Repository\ShopRepository;
 use App\User\Domain\Entity\User;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
+use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -33,6 +36,11 @@ final readonly class AddCartItemController
     ) {
     }
 
+    /**
+     * @throws ORMException
+     * @throws JsonException
+     * @throws OptimisticLockException
+     */
     #[Route('/v1/shop/applications/{applicationSlug}/carts/{shopId}/items', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $shopId, Request $request): JsonResponse
@@ -50,7 +58,7 @@ final readonly class AddCartItemController
             ], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $payload = (array)json_decode((string)$request->getContent(), true);
+        $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $productId = (string)($payload['productId'] ?? '');
         $quantity = max(1, (int)($payload['quantity'] ?? 1));
 

@@ -12,6 +12,8 @@ use App\Shop\Domain\Service\Interfaces\PaymentProviderInterface;
 use App\Shop\Infrastructure\Repository\OrderRepository;
 use App\Shop\Infrastructure\Repository\PaymentTransactionRepository;
 use App\User\Domain\Entity\User;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -31,6 +33,10 @@ final readonly class PaymentService
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function createPaymentIntent(string $applicationSlug, string $orderId): PaymentTransaction
     {
         $order = $this->orderRepository->find($orderId);
@@ -53,7 +59,7 @@ final readonly class PaymentService
             ],
         );
 
-        $transaction = (new PaymentTransaction())
+        $transaction = new PaymentTransaction()
             ->setOrder($order)
             ->setProvider((string)$providerIntent['provider'])
             ->setProviderReference((string)$providerIntent['providerReference'])
@@ -68,7 +74,13 @@ final readonly class PaymentService
     }
 
     /**
+     * @param string $applicationSlug
+     * @param string $orderId
+     * @param string $providerReference
      * @param array<string, mixed> $payload
+     * @return PaymentTransaction
+     * @throws ORMException
+     * @throws OptimisticLockException
      */
     public function confirmPayment(string $applicationSlug, string $orderId, string $providerReference, array $payload = []): PaymentTransaction
     {
@@ -102,6 +114,10 @@ final readonly class PaymentService
 
     /**
      * @param array<string, mixed> $payload
+     * @param string|null $signature
+     * @return PaymentTransaction|null
+     * @throws ORMException
+     * @throws OptimisticLockException
      */
     public function processWebhook(array $payload, ?string $signature = null): ?PaymentTransaction
     {
@@ -169,7 +185,7 @@ final readonly class PaymentService
             return;
         }
 
-        if (in_array($status, [PaymentStatus::FAILED], true)) {
+        if ($status === PaymentStatus::FAILED) {
             $order->setStatus(OrderStatus::FAILED);
         }
     }

@@ -10,6 +10,8 @@ use App\Shop\Domain\Entity\Shop;
 use App\Shop\Infrastructure\Repository\CartItemRepository;
 use App\Shop\Infrastructure\Repository\ShopRepository;
 use App\User\Domain\Entity\User;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,22 +28,20 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class DeleteCartItemController
 {
     public function __construct(
-        private Security $security,
         private ShopRepository $shopRepository,
         private CartItemRepository $cartItemRepository,
         private CartService $cartService,
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     #[Route('/v1/shop/applications/{applicationSlug}/carts/{shopId}/items/{itemId}', methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, string $shopId, string $itemId): JsonResponse
+    public function __invoke(string $applicationSlug, string $shopId, string $itemId, User $loggedInUser): JsonResponse
     {
-        $user = $this->security->getUser();
-        if (!$user instanceof User) {
-            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Authenticated user required.');
-        }
-
         $shop = $this->shopRepository->find($shopId);
         if (!$shop instanceof Shop) {
             return new JsonResponse([
@@ -49,7 +49,7 @@ final readonly class DeleteCartItemController
             ], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $cart = $this->cartService->getOrCreateActiveCart($user, $shop);
+        $cart = $this->cartService->getOrCreateActiveCart($loggedInUser, $shop);
 
         $item = $this->cartItemRepository->find($itemId);
         if (!$item instanceof CartItem || $item->getCart()?->getId() !== $cart->getId()) {

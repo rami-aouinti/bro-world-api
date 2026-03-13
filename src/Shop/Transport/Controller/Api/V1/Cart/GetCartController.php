@@ -8,6 +8,8 @@ use App\Shop\Application\Service\CartService;
 use App\Shop\Domain\Entity\Shop;
 use App\Shop\Infrastructure\Repository\ShopRepository;
 use App\User\Domain\Entity\User;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,21 +26,19 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class GetCartController
 {
     public function __construct(
-        private Security $security,
         private ShopRepository $shopRepository,
         private CartService $cartService,
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     #[Route('/v1/shop/applications/{applicationSlug}/carts/{shopId}', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, string $shopId): JsonResponse
+    public function __invoke(string $applicationSlug, string $shopId, User $loggedInUser): JsonResponse
     {
-        $user = $this->security->getUser();
-        if (!$user instanceof User) {
-            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Authenticated user required.');
-        }
-
         $shop = $this->shopRepository->find($shopId);
         if (!$shop instanceof Shop) {
             return new JsonResponse([
@@ -46,7 +46,7 @@ final readonly class GetCartController
             ], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $cart = $this->cartService->getOrCreateActiveCart($user, $shop);
+        $cart = $this->cartService->getOrCreateActiveCart($loggedInUser, $shop);
         $cart = $this->cartService->recalculate($cart);
 
         return new JsonResponse($this->cartService->serializeCart($cart));

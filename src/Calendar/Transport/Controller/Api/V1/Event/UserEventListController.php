@@ -6,7 +6,9 @@ namespace App\Calendar\Transport\Controller\Api\V1\Event;
 
 use App\Calendar\Application\Service\EventListService;
 use App\User\Domain\Entity\User;
+use JsonException;
 use OpenApi\Attributes as OA;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -17,13 +19,17 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[AsController]
 #[OA\Tag(name: 'Calendar Event')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-class UserEventListController
+readonly class UserEventListController
 {
     public function __construct(
-        public readonly EventListService $eventListService
+        public EventListService $eventListService
     ) {
     }
 
+    /**
+     * @throws JsonException
+     * @throws InvalidArgumentException
+     */
     #[Route(path: '/v1/calendar/private/events', methods: [Request::METHOD_GET])]
     #[OA\Get(
         path: '/v1/calendar/private/events',
@@ -31,8 +37,8 @@ class UserEventListController
         summary: 'Lister mes événements calendrier',
         tags: ['Calendar Event'],
         parameters: [
-            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page (min 1)', schema: new OA\Schema(type: 'integer', minimum: 1, example: 1)),
-            new OA\Parameter(name: 'limit', in: 'query', required: false, description: 'Taille de page (1..100)', schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, example: 20)),
+            new OA\Parameter(name: 'page', description: 'Page (min 1)', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, example: 1)),
+            new OA\Parameter(name: 'limit', description: 'Taille de page (1..100)', in: 'query', required: false, schema: new OA\Schema(type: 'integer', maximum: 100, minimum: 1, example: 20)),
             new OA\Parameter(name: 'title', in: 'query', required: false, schema: new OA\Schema(type: 'string', maxLength: 255, example: 'Entretien technique')),
             new OA\Parameter(name: 'description', in: 'query', required: false, schema: new OA\Schema(type: 'string', maxLength: 1000, example: 'Préparation avec l’équipe produit')),
             new OA\Parameter(name: 'location', in: 'query', required: false, schema: new OA\Schema(type: 'string', maxLength: 255, example: 'Visio Google Meet')),

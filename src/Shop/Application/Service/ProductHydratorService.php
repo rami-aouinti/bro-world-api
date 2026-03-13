@@ -11,6 +11,8 @@ use App\Shop\Domain\Entity\Tag;
 use App\Shop\Domain\Enum\ProductStatus;
 use App\Shop\Infrastructure\Repository\CategoryRepository;
 use App\Shop\Infrastructure\Repository\TagRepository;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 
 final readonly class ProductHydratorService
 {
@@ -21,7 +23,12 @@ final readonly class ProductHydratorService
     }
 
     /**
+     * @param Product $product
      * @param array<string,mixed> $payload
+     * @param bool $partial
+     * @return Product
+     * @throws ORMException
+     * @throws OptimisticLockException
      */
     public function hydrateProduct(Product $product, array $payload, bool $partial = false): Product
     {

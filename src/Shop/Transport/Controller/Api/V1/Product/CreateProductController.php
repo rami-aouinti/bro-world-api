@@ -14,11 +14,14 @@ use App\Shop\Transport\Controller\Api\V1\Input\Product\CreateProductInput;
 use App\Shop\Transport\Controller\Api\V1\Input\Product\ProductInputValidator;
 use App\Shop\Transport\Controller\Api\V1\Input\Support\ValidationResponseFactory;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
@@ -39,6 +42,11 @@ final readonly class CreateProductController
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     * @throws ExceptionInterface
+     */
     #[Route('/v1/shop/products', methods: [Request::METHOD_POST])]
     public function __invoke(Request $request): JsonResponse
     {
@@ -66,7 +74,7 @@ final readonly class CreateProductController
             ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $product = $this->productHydratorService->hydrateProduct((new Product())->setShop($shop), $payload);
+        $product = $this->productHydratorService->hydrateProduct(new Product()->setShop($shop), $payload);
 
         $this->entityManager->persist($product);
         $this->entityManager->flush();
@@ -77,6 +85,10 @@ final readonly class CreateProductController
         ], JsonResponse::HTTP_CREATED);
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     private function resolveShop(CreateProductInput $input): ?Shop
     {
         if ($input->applicationSlug !== null && $input->applicationSlug !== '') {

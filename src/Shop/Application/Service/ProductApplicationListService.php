@@ -10,6 +10,7 @@ use App\Shop\Application\Projection\ShopProductProjection;
 use App\Shop\Domain\Entity\Product;
 use App\Shop\Domain\Entity\Shop;
 use App\Shop\Infrastructure\Repository\ProductRepository;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -27,7 +28,12 @@ readonly class ProductApplicationListService
     }
 
     /**
+     * @param Request $request
+     * @param string $applicationSlug
+     * @param Shop $shop
      * @return array<string,mixed>
+     * @throws \JsonException
+     * @throws InvalidArgumentException
      */
     public function getList(Request $request, string $applicationSlug, Shop $shop): array
     {

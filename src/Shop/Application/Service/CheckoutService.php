@@ -18,6 +18,8 @@ use App\Shop\Infrastructure\Repository\ProductRepository;
 use App\Shop\Infrastructure\Repository\ShopRepository;
 use App\User\Infrastructure\Repository\UserRepository;
 use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -34,6 +36,10 @@ final readonly class CheckoutService
     ) {
     }
 
+    /**
+     * @throws ORMException
+     * @throws OptimisticLockException
+     */
     public function checkout(CheckoutCommand $command): Order
     {
         $shop = $this->shopRepository->find($command->shopId);
@@ -55,7 +61,7 @@ final readonly class CheckoutService
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Cart is empty.');
         }
 
-        $order = (new Order())
+        $order = new Order()
             ->setShop($shop)
             ->setUser($user)
             ->setStatus(OrderStatus::PENDING_PAYMENT)

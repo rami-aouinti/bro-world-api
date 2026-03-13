@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Calendar\Transport\Controller\Api\V1\Event;
 
 use App\Calendar\Application\Service\EventListService;
+use JsonException;
 use OpenApi\Attributes as OA;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -21,6 +23,10 @@ class ApplicationEventListController
     ) {
     }
 
+    /**
+     * @throws JsonException
+     * @throws InvalidArgumentException
+     */
     #[Route(path: '/v1/calendar/applications/{applicationSlug}/events', methods: [Request::METHOD_GET])]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {

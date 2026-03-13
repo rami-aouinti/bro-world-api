@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Shop\Transport\Controller\Api\V1\Product;
 
 use App\Shop\Application\Service\ProductListService;
+use JsonException;
 use OpenApi\Attributes as OA;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -23,6 +25,10 @@ final readonly class ListProductsController
     ) {
     }
 
+    /**
+     * @throws JsonException
+     * @throws InvalidArgumentException
+     */
     #[Route('/v1/shop/products', methods: [Request::METHOD_GET])]
     public function __invoke(Request $request): JsonResponse
     {

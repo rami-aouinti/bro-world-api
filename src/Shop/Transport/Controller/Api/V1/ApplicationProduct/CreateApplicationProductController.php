@@ -12,11 +12,14 @@ use App\Shop\Transport\Controller\Api\V1\Input\Product\CreateProductInput;
 use App\Shop\Transport\Controller\Api\V1\Input\Product\ProductInputValidator;
 use App\Shop\Transport\Controller\Api\V1\Input\Support\ValidationResponseFactory;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
@@ -36,6 +39,11 @@ final readonly class CreateApplicationProductController
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     * @throws ExceptionInterface
+     */
     #[Route('/v1/shop/applications/{applicationSlug}/products', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
@@ -55,7 +63,7 @@ final readonly class CreateApplicationProductController
             return $validationResponse;
         }
 
-        $product = $this->productHydratorService->hydrateProduct((new Product())->setShop($shop), $payload);
+        $product = $this->productHydratorService->hydrateProduct(new Product()->setShop($shop), $payload);
 
         $this->entityManager->persist($product);
         $this->entityManager->flush();

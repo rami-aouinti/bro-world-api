@@ -55,7 +55,7 @@ final readonly class CreateCategoryController
             return $validationResponse;
         }
 
-        $category = (new Category())
+        $category = new Category()
             ->setShop($shop)
             ->setName($input->name)
             ->setSlug($this->slugBuilderService->buildSlug((string)($input->slug ?? $input->name)))

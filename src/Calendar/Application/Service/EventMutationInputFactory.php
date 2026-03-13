@@ -14,10 +14,10 @@ use App\General\Transport\Http\ValidationErrorFactory;
 use DateTimeImmutable;
 use Ramsey\Uuid\Uuid;
 
-final class EventMutationInputFactory
+final readonly class EventMutationInputFactory
 {
     public function __construct(
-        private readonly EventMutationPayloadValidator $payloadValidator,
+        private EventMutationPayloadValidator $payloadValidator,
     ) {
     }
 
@@ -94,7 +94,7 @@ final class EventMutationInputFactory
             status: $this->parseStatus((string)($payload['status'] ?? EventStatus::CONFIRMED->value)),
             visibility: $this->parseVisibility((string)($payload['visibility'] ?? EventVisibility::PRIVATE->value)),
             location: isset($payload['location']) && is_string($payload['location']) ? $payload['location'] : null,
-            isAllDay: isset($payload['isAllDay']) && is_bool($payload['isAllDay']) ? $payload['isAllDay'] : false,
+            isAllDay: isset($payload['isAllDay']) && is_bool($payload['isAllDay']) && $payload['isAllDay'],
             timezone: isset($payload['timezone']) && is_string($payload['timezone']) ? $payload['timezone'] : null,
             url: isset($payload['url']) && is_string($payload['url']) ? $payload['url'] : null,
             color: isset($payload['color']) && is_string($payload['color']) ? $payload['color'] : null,
@@ -232,7 +232,7 @@ final class EventMutationInputFactory
 
     private function assertApplicationSlug(?string $applicationSlug): void
     {
-        if ($applicationSlug !== null && $applicationSlug === '') {
+        if ($applicationSlug === '') {
             throw ValidationErrorFactory::badRequest('Field "applicationSlug" is required.');
         }
     }

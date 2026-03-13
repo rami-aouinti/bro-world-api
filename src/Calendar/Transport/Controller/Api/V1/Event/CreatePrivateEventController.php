@@ -14,19 +14,64 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Throwable;
 
 #[AsController]
 #[OA\Tag(name: 'Calendar Event')]
-#[OA\Post(path: '/v1/calendar/private/events', operationId: 'calendar_private_event_create', summary: 'Créer un événement personnel', tags: ['Calendar Event'], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['title', 'startAt', 'endAt'], properties: [new OA\Property(property: 'title', type: 'string', minLength: 1, maxLength: 255, example: 'Entretien RH'), new OA\Property(property: 'description', type: 'string', example: 'Point de cadrage'), new OA\Property(property: 'startAt', type: 'string', format: 'date-time', example: '2026-04-10T09:00:00+00:00'), new OA\Property(property: 'endAt', type: 'string', format: 'date-time', example: '2026-04-10T10:00:00+00:00'), new OA\Property(property: 'status', type: 'string', enum: ['confirmed', 'tentative', 'cancelled'], example: 'confirmed'), new OA\Property(property: 'location', type: 'string', nullable: true, example: 'Paris'), new OA\Property(property: 'visibility', type: 'string', enum: ['private', 'public'], example: 'private'), new OA\Property(property: 'isAllDay', type: 'boolean', example: false), new OA\Property(property: 'timezone', type: 'string', nullable: true, example: 'Europe/Paris'), new OA\Property(property: 'url', type: 'string', nullable: true, example: 'https://example.com/event'), new OA\Property(property: 'color', type: 'string', nullable: true, example: '#2563eb'), new OA\Property(property: 'backgroundColor', type: 'string', nullable: true, example: '#dbeafe'), new OA\Property(property: 'borderColor', type: 'string', nullable: true, example: '#1d4ed8'), new OA\Property(property: 'textColor', type: 'string', nullable: true, example: '#0f172a'), new OA\Property(property: 'organizerName', type: 'string', nullable: true, example: 'Jane Doe'), new OA\Property(property: 'organizerEmail', type: 'string', nullable: true, example: 'jane@example.com'), new OA\Property(property: 'attendees', type: 'array', items: new OA\Items(type: 'object')), new OA\Property(property: 'rrule', type: 'string', nullable: true, example: 'FREQ=WEEKLY;COUNT=4'), new OA\Property(property: 'recurrenceExceptions', type: 'array', items: new OA\Items(type: 'string', format: 'date-time')), new OA\Property(property: 'recurrenceEndAt', type: 'string', format: 'date-time', nullable: true, example: '2026-06-01T00:00:00+00:00'), new OA\Property(property: 'recurrenceCount', type: 'integer', nullable: true, example: 4), new OA\Property(property: 'reminders', type: 'array', items: new OA\Items(type: 'object')), new OA\Property(property: 'metadata', type: 'object', additionalProperties: true)])), responses: [new OA\Response(response: 202, description: 'Commande acceptée'), new OA\Response(response: 400, description: 'Payload invalide'), new OA\Response(response: 422, description: 'Règle date invalide')])]
+#[OA\Post(
+    path: '/v1/calendar/private/events',
+    operationId: 'calendar_private_event_create',
+    summary: 'Créer un événement personnel',
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ['title', 'startAt', 'endAt'],
+            properties: [
+                new OA\Property(property: 'title', type: 'string', maxLength: 255, minLength: 1, example: 'Entretien RH'),
+                new OA\Property(property: 'description', type: 'string', example: 'Point de cadrage'),
+                new OA\Property(property: 'startAt', type: 'string', format: 'date-time', example: '2026-04-10T09:00:00+00:00'),
+                new OA\Property(property: 'endAt', type: 'string', format: 'date-time', example: '2026-04-10T10:00:00+00:00'),
+                new OA\Property(property: 'status', type: 'string', enum: ['confirmed', 'tentative', 'cancelled'], example: 'confirmed'),
+                new OA\Property(property: 'location', type: 'string', example: 'Paris', nullable: true),
+                new OA\Property(property: 'visibility', type: 'string', enum: ['private', 'public'], example: 'private'),
+                new OA\Property(property: 'isAllDay', type: 'boolean', example: false),
+                new OA\Property(property: 'timezone', type: 'string', example: 'Europe/Paris', nullable: true),
+                new OA\Property(property: 'url', type: 'string', example: 'https://example.com/event', nullable: true),
+                new OA\Property(property: 'color', type: 'string', example: '#2563eb', nullable: true),
+                new OA\Property(property: 'backgroundColor', type: 'string', example: '#dbeafe', nullable: true),
+                new OA\Property(property: 'borderColor', type: 'string', example: '#1d4ed8', nullable: true),
+                new OA\Property(property: 'textColor', type: 'string', example: '#0f172a', nullable: true),
+                new OA\Property(property: 'organizerName', type: 'string', example: 'Jane Doe', nullable: true),
+                new OA\Property(property: 'organizerEmail', type: 'string', example: 'jane@example.com', nullable: true),
+                new OA\Property(property: 'attendees', type: 'array', items: new OA\Items(type: 'object')),
+                new OA\Property(property: 'rrule', type: 'string', example: 'FREQ=WEEKLY;COUNT=4', nullable: true),
+                new OA\Property(property: 'recurrenceExceptions', type: 'array', items: new OA\Items(type: 'string', format: 'date-time')),
+                new OA\Property(property: 'recurrenceEndAt', type: 'string', format: 'date-time', example: '2026-06-01T00:00:00+00:00', nullable: true),
+                new OA\Property(property: 'recurrenceCount', type: 'integer', example: 4, nullable: true),
+                new OA\Property(property: 'reminders', type: 'array', items: new OA\Items(type: 'object')),
+                new OA\Property(
+                    property: 'metadata',
+                    type: 'object',
+                    additionalProperties: true)]
+        )),
+    tags: ['Calendar Event'],
+    responses: [new OA\Response(
+        response: 202, description: 'Commande acceptée'),
+        new OA\Response(response: 400, description: 'Payload invalide'),
+        new OA\Response(response: 422, description: 'Règle date invalide')]
+)]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-class CreatePrivateEventController
+readonly class CreatePrivateEventController
 {
     public function __construct(
-        public readonly MessageServiceInterface $messageService,
-        public readonly EventMutationInputFactory $eventMutationInputFactory,
+        public MessageServiceInterface   $messageService,
+        public EventMutationInputFactory $eventMutationInputFactory,
     ) {
     }
 
+    /**
+     * @throws Throwable
+     */
     #[Route(path: '/v1/calendar/private/events', methods: [Request::METHOD_POST])]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {

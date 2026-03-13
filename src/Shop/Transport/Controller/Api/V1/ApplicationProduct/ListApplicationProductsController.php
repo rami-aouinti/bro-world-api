@@ -6,7 +6,9 @@ namespace App\Shop\Transport\Controller\Api\V1\ApplicationProduct;
 
 use App\Shop\Application\Service\ProductApplicationListService;
 use App\Shop\Application\Service\ShopApplicationResolverService;
+use JsonException;
 use OpenApi\Attributes as OA;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -25,6 +27,10 @@ final readonly class ListApplicationProductsController
     ) {
     }
 
+    /**
+     * @throws JsonException
+     * @throws InvalidArgumentException
+     */
     #[Route('/v1/shop/applications/{applicationSlug}/products', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse

@@ -17,10 +17,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[AsController]
 #[OA\Tag(name: 'Calendar Event')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-class UpcomingEventListController
+readonly class UpcomingEventListController
 {
     public function __construct(
-        public readonly EventListService $eventListService
+        public EventListService $eventListService
     ) {
     }
 
@@ -32,7 +32,7 @@ class UpcomingEventListController
         tags: ['Calendar Event'],
         parameters: [
             new OA\Parameter(name: 'applicationSlug', in: 'query', required: false, schema: new OA\Schema(type: 'string', example: 'crm-pipeline-pro')),
-            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 20, example: 3)),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', maximum: 20, minimum: 1, example: 3)),
         ],
         responses: [
             new OA\Response(response: 200, description: 'Liste des événements à venir'),

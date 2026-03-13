@@ -11,6 +11,8 @@ use App\Shop\Domain\Entity\Shop;
 use App\Shop\Infrastructure\Repository\CartItemRepository;
 use App\Shop\Infrastructure\Repository\CartRepository;
 use App\User\Domain\Entity\User;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 
 readonly class CartService
 {
@@ -20,6 +22,10 @@ readonly class CartService
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function getOrCreateActiveCart(User $user, Shop $shop): Cart
     {
         $cart = $this->cartRepository->findActiveByUserAndShop($user->getId(), $shop->getId());
@@ -27,7 +33,7 @@ readonly class CartService
             return $cart;
         }
 
-        $cart = (new Cart())
+        $cart = new Cart()
             ->setUser($user)
             ->setShop($shop)
             ->setIsActive(true)
@@ -40,6 +46,10 @@ readonly class CartService
         return $cart;
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function addProduct(Cart $cart, Product $product, int $quantity): Cart
     {
         $quantity = max(1, $quantity);
@@ -57,7 +67,7 @@ readonly class CartService
             return $this->recalculate($cart);
         }
 
-        $item = (new CartItem())
+        $item = new CartItem()
             ->setCart($cart)
             ->setProduct($product)
             ->setQuantity($quantity)
@@ -110,6 +120,10 @@ readonly class CartService
         ];
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function updateItemQuantity(Cart $cart, CartItem $item, int $quantity): Cart
     {
         if ($item->getCart()?->getId() !== $cart->getId()) {
@@ -125,6 +139,10 @@ readonly class CartService
         return $this->recalculate($cart);
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function removeItem(Cart $cart, CartItem $item): Cart
     {
         if ($item->getCart()?->getId() !== $cart->getId()) {
@@ -137,6 +155,10 @@ readonly class CartService
         return $this->recalculate($cart);
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function recalculate(Cart $cart): Cart
     {
         $subtotal = 0;

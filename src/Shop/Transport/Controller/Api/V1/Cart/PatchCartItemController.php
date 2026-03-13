@@ -10,6 +10,9 @@ use App\Shop\Domain\Entity\Shop;
 use App\Shop\Infrastructure\Repository\CartItemRepository;
 use App\Shop\Infrastructure\Repository\ShopRepository;
 use App\User\Domain\Entity\User;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
+use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -33,6 +36,11 @@ final readonly class PatchCartItemController
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     * @throws JsonException
+     */
     #[Route('/v1/shop/applications/{applicationSlug}/carts/{shopId}/items/{itemId}', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $shopId, string $itemId, Request $request): JsonResponse
@@ -59,7 +67,7 @@ final readonly class PatchCartItemController
             ], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $payload = (array)json_decode((string)$request->getContent(), true);
+        $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $quantity = (int)($payload['quantity'] ?? 0);
         if ($quantity <= 0) {
             return new JsonResponse([

@@ -8,6 +8,8 @@ use App\Shop\Application\Service\PaymentService;
 use App\Shop\Transport\Controller\Api\V1\Input\Payment\ConfirmPaymentInput;
 use App\Shop\Transport\Controller\Api\V1\Input\Payment\PaymentInputValidator;
 use App\Shop\Transport\Controller\Api\V1\Input\Support\ValidationResponseFactory;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -28,13 +30,17 @@ final readonly class ConfirmPaymentController
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     #[Route('/v1/shop/applications/{applicationSlug}/orders/{orderId}/payment-confirm', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
+        summary: 'Confirm a payment for an order (private endpoint, full authentication required).',
         security: [[
             'Bearer' => [],
         ]],
-        summary: 'Confirm a payment for an order (private endpoint, full authentication required).',
     )]
     #[OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Forbidden. The order does not belong to the authenticated user or requested application.')]
     public function __invoke(string $applicationSlug, string $orderId, Request $request): JsonResponse

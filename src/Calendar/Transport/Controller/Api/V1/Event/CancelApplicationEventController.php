@@ -14,19 +14,23 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Throwable;
 
 #[AsController]
 #[OA\Tag(name: 'Calendar Event')]
 #[OA\Post(path: '/v1/calendar/applications/{applicationSlug}/events/{eventId}/cancel', operationId: 'calendar_application_event_cancel', summary: 'Annuler un événement application', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world')), new OA\Parameter(name: 'eventId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], responses: [new OA\Response(response: 202, description: 'Commande acceptée'), new OA\Response(response: 400, description: 'Paramètres de path invalides'), new OA\Response(response: 404, description: 'Application ou événement introuvable'), new OA\Response(response: 422, description: 'Annulation impossible')])]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-class CancelApplicationEventController
+readonly class CancelApplicationEventController
 {
     public function __construct(
-        public readonly MessageServiceInterface $messageService,
-        public readonly EventMutationInputFactory $eventMutationInputFactory,
+        public MessageServiceInterface   $messageService,
+        public EventMutationInputFactory $eventMutationInputFactory,
     ) {
     }
 
+    /**
+     * @throws Throwable
+     */
     #[Route(path: '/v1/calendar/applications/{applicationSlug}/events/{eventId}/cancel', methods: [Request::METHOD_POST])]
     public function __invoke(string $applicationSlug, string $eventId, User $loggedInUser): JsonResponse
     {

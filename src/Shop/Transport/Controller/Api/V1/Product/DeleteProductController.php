@@ -10,6 +10,7 @@ use App\Shop\Application\Service\ShopApplicationResolverService;
 use App\Shop\Domain\Entity\Product;
 use App\Shop\Infrastructure\Repository\ProductRepository;
 use OpenApi\Attributes as OA;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -29,6 +30,9 @@ final readonly class DeleteProductController
     ) {
     }
 
+    /**
+     * @throws \Throwable
+     */
     #[Route('/v1/shop/applications/{applicationSlug}/products/{id}', methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $id): JsonResponse
@@ -39,7 +43,7 @@ final readonly class DeleteProductController
             return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $operationId = \Ramsey\Uuid\Uuid::uuid4()->toString();
+        $operationId = Uuid::uuid4()->toString();
         $this->messageService->sendMessage(new DeleteProductCommand(
             operationId: $operationId,
             productId: $id,

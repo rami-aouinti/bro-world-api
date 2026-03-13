@@ -9,6 +9,7 @@ use App\Calendar\Domain\Repository\Interfaces\EventRepositoryInterface;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\User\Domain\Entity\User;
+use JsonException;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -37,7 +38,7 @@ final readonly class EventListService
      *
      * @return array<string, mixed>
      * @throws InvalidArgumentException
-     * @throws \JsonException
+     * @throws JsonException
      */
     public function getByUser(User $user, array $filters = [], int $page = 1, int $limit = 20): array
     {
@@ -49,7 +50,7 @@ final readonly class EventListService
      *
      * @return array<string, mixed>
      * @throws InvalidArgumentException
-     * @throws \JsonException
+     * @throws JsonException
      */
     public function getByApplicationSlug(string $applicationSlug, array $filters = [], int $page = 1, int $limit = 20): array
     {
@@ -61,7 +62,7 @@ final readonly class EventListService
      *
      * @return array<string, mixed>
      * @throws InvalidArgumentException
-     * @throws \JsonException
+     * @throws JsonException
      */
     public function getByApplicationSlugAndUser(string $applicationSlug, User $user, array $filters = [], int $page = 1, int $limit = 20): array
     {
@@ -86,7 +87,7 @@ final readonly class EventListService
      *
      * @return array<string, mixed>
      * @throws InvalidArgumentException
-     * @throws \JsonException
+     * @throws JsonException
      */
     private function getList(string $accessContext, array $filters, int $page, int $limit, ?User $user, ?string $applicationSlug): array
     {

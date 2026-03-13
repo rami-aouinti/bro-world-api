@@ -14,11 +14,14 @@ use App\Shop\Transport\Controller\Api\V1\Input\Product\PatchProductInput;
 use App\Shop\Transport\Controller\Api\V1\Input\Product\ProductInputValidator;
 use App\Shop\Transport\Controller\Api\V1\Input\Support\ValidationResponseFactory;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
@@ -39,6 +42,11 @@ final readonly class PatchProductController
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ExceptionInterface
+     * @throws ORMException
+     */
     #[Route('/v1/shop/applications/{applicationSlug}/products/{id}', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $id, Request $request): JsonResponse
