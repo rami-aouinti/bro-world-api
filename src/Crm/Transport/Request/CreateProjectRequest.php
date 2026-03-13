@@ -28,6 +28,8 @@ final class CreateProjectRequest
     #[Assert\DateTime]
     public ?string $dueAt = null;
 
+    #[Assert\NotBlank]
+    #[Assert\NotNull]
     #[Assert\Uuid]
     public ?string $companyId = null;
 
