@@ -15,6 +15,8 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 final readonly class QuizReadService
 {
+    private const QUIZ_CACHE_TTL = 120;
+
     public function __construct(
         private QuizRepository $quizRepository,
         private QuizQuestionRepository $quizQuestionRepository,
@@ -30,11 +32,8 @@ final readonly class QuizReadService
         $cacheKey = sprintf('quiz_%s_%s_%s', $slug, (string)$level, (string)$category);
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($slug, $level, $category): array {
-            $item->expiresAfter(120);
-            $quiz = $this->quizRepository->createQueryBuilder('q')
-                ->leftJoin('q.application', 'a')
-                ->leftJoin('q.configuration', 'configuration')->addSelect('configuration')
-                ->andWhere('a.slug = :slug')->setParameter('slug', $slug)->getQuery()->getOneOrNullResult();
+            $item->expiresAfter(self::QUIZ_CACHE_TTL);
+            $quiz = $this->quizRepository->findOneByApplicationSlugWithConfiguration($slug);
 
             if (!$quiz instanceof Quiz) {
                 return [];
@@ -83,14 +82,21 @@ final readonly class QuizReadService
             return [];
         }
 
-        $questionCount = count($quiz['questions']);
-        $answerCount = array_reduce($quiz['questions'], static fn (int $carry, array $question): int => $carry + count($question['answers']), 0);
+        $questionCount = 0;
+        $answerCount = 0;
+        $totalPoints = 0;
+
+        foreach ($quiz['questions'] as $question) {
+            ++$questionCount;
+            $answerCount += count($question['answers']);
+            $totalPoints += (int)$question['points'];
+        }
 
         return [
             'questionCount' => $questionCount,
             'answerCount' => $answerCount,
             'averageAnswersPerQuestion' => $questionCount > 0 ? round($answerCount / $questionCount, 2) : 0.0,
-            'totalPoints' => array_reduce($quiz['questions'], static fn (int $carry, array $question): int => $carry + (int)$question['points'], 0),
+            'totalPoints' => $totalPoints,
         ];
     }
 }
