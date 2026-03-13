@@ -15,7 +15,6 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
-use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
@@ -38,8 +37,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 readonly class UserConversationListController
 {
     public function __construct(
-        private ConversationListService $conversationListService,
-        private Security $security,
+        private ConversationListService $conversationListService
     ) {
     }
 
@@ -48,19 +46,19 @@ readonly class UserConversationListController
      * @throws InvalidArgumentException
      */
     #[Route(path: '/v1/chat/private/conversations', methods: [Request::METHOD_GET])]
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        $loggedInUser = $this->security->getUser();
-        if (!$loggedInUser instanceof User) {
-            throw new AccessDeniedHttpException('User not authenticated.');
-        }
-
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
         $filters = [
             'message' => trim((string)$request->query->get('message', '')),
         ];
 
-        return ConversationJsonResponseFactory::create($this->conversationListService->getByUser($loggedInUser, $filters, $page, $limit));
+        return ConversationJsonResponseFactory::create($this->conversationListService->getByUser(
+            $loggedInUser,
+            $filters,
+            $page,
+            $limit)
+        );
     }
 }
