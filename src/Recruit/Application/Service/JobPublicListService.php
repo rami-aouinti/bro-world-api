@@ -72,6 +72,8 @@ class JobPublicListService
             'workMode' => trim((string)$request->query->get('workMode', '')),
             'schedule' => trim((string)$request->query->get('schedule', '')),
             'experienceLevel' => trim((string)$request->query->get('experienceLevel', '')),
+            'yearsExperienceMin' => max(0, $request->query->getInt('yearsExperienceMin', 0)),
+            'yearsExperienceMax' => max(0, $request->query->getInt('yearsExperienceMax', 0)),
             'postedAtLabel' => trim((string)$request->query->get('postedAtLabel', '')),
             'location' => trim((string)$request->query->get('location', '')),
             'q' => trim((string)$request->query->get('q', '')),
@@ -120,6 +122,21 @@ class JobPublicListService
             if ($filters['schedule'] !== '') {
                 $qb->andWhere('job.schedule = :schedule')
                     ->setParameter('schedule', $filters['schedule']);
+            }
+
+            if ($filters['experienceLevel'] !== '') {
+                $qb->andWhere('job.experienceLevel = :experienceLevel')
+                    ->setParameter('experienceLevel', $filters['experienceLevel']);
+            }
+
+            if ($filters['yearsExperienceMin'] > 0) {
+                $qb->andWhere('job.yearsExperienceMax >= :yearsExperienceMin')
+                    ->setParameter('yearsExperienceMin', $filters['yearsExperienceMin']);
+            }
+
+            if ($filters['yearsExperienceMax'] > 0) {
+                $qb->andWhere('job.yearsExperienceMin <= :yearsExperienceMax')
+                    ->setParameter('yearsExperienceMax', $filters['yearsExperienceMax']);
             }
 
             if ($filters['location'] !== '') {
