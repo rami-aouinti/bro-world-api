@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Chat\Transport\Controller\Api\V1\Message;
 
 use App\Chat\Application\Message\CreateMessageCommand;
-use App\Chat\Application\MessageHandler\CreateMessageCommandHandler;
 use App\Chat\Application\Service\MessagePayloadService;
 use App\General\Application\Service\OperationIdGeneratorService;
+use App\General\Domain\Service\Interfaces\MessageServiceInterface;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -43,7 +43,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
     responses: [
         new OA\Response(response: 202, description: 'Commande acceptée', content: new OA\JsonContent(example: [
             'operationId' => 'op_123',
-            'id' => '550e8400-e29b-41d4-a716-446655440000',
         ])),
         new OA\Response(response: 400, description: 'Payload invalide'),
     ]
@@ -52,7 +51,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class CreateMessageController
 {
     public function __construct(
-        private readonly CreateMessageCommandHandler $handler,
+        private readonly MessageServiceInterface $messageService,
         private readonly MessagePayloadService $messagePayloadService,
         private readonly OperationIdGeneratorService $operationIdGeneratorService,
     ) {
@@ -64,7 +63,7 @@ class CreateMessageController
         $content = $this->messagePayloadService->extractRequiredContent($request->toArray());
         $operationId = $this->operationIdGeneratorService->generate();
 
-        $entityId = $this->handler->__invoke(new CreateMessageCommand(
+        $this->messageService->sendMessage(new CreateMessageCommand(
             operationId: $operationId,
             actorUserId: $loggedInUser->getId(),
             conversationId: $conversationId,
@@ -73,7 +72,6 @@ class CreateMessageController
 
         return new JsonResponse([
             'operationId' => $operationId,
-            'id' => is_string($entityId) ? $entityId : null,
         ], JsonResponse::HTTP_ACCEPTED);
     }
 }
