@@ -9,4 +9,8 @@ enum TaskRequestStatus: string
     case PENDING = 'pending';
     case APPROVED = 'approved';
     case REJECTED = 'rejected';
+    case PROGRESS = 'progress';
+
+    case DONE = 'done';
+    case REvIEW = 'review';
 }
