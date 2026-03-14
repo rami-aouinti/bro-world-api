@@ -7,8 +7,8 @@ namespace App\Crm\Infrastructure\DataFixtures\ORM;
 use App\Crm\Domain\Entity\Billing;
 use App\Crm\Domain\Entity\Company;
 use App\Crm\Domain\Entity\Contact;
-use App\Crm\Domain\Entity\Employee;
 use App\Crm\Domain\Entity\Crm;
+use App\Crm\Domain\Entity\Employee;
 use App\Crm\Domain\Entity\Project;
 use App\Crm\Domain\Entity\Sprint;
 use App\Crm\Domain\Entity\Task;
@@ -24,10 +24,16 @@ use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
+use Faker\Factory;
+use Faker\Generator;
 use Override;
 
 final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 {
+    private const int FAKER_SEED = 14021991;
+
+    private const string DEFAULT_VOLUME = 'medium';
+
     /**
      * @var array<non-empty-string, array<int, non-empty-string>>
      */
@@ -39,131 +45,118 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         ],
     ];
 
+    /**
+     * @var array<non-empty-string, array{
+     *     companies:int,
+     *     contactsPerCompany:int,
+     *     employeesPerCompany:int,
+     *     projectsPerCompany:int,
+     *     sprintsPerProject:int,
+     *     tasksPerSprint:int,
+     *     taskRequestsPerTask:int,
+     *     billingsPerCompany:int,
+     *     projectAttachments:int,
+     *     taskAttachments:int,
+     *     wikiPagesPerProject:int
+     * }>
+     */
+    private const array VOLUME_PROFILES = [
+        'small' => [
+            'companies' => 2,
+            'contactsPerCompany' => 1,
+            'employeesPerCompany' => 1,
+            'projectsPerCompany' => 1,
+            'sprintsPerProject' => 1,
+            'tasksPerSprint' => 2,
+            'taskRequestsPerTask' => 1,
+            'billingsPerCompany' => 1,
+            'projectAttachments' => 1,
+            'taskAttachments' => 1,
+            'wikiPagesPerProject' => 1,
+        ],
+        'medium' => [
+            'companies' => 4,
+            'contactsPerCompany' => 2,
+            'employeesPerCompany' => 2,
+            'projectsPerCompany' => 2,
+            'sprintsPerProject' => 2,
+            'tasksPerSprint' => 3,
+            'taskRequestsPerTask' => 2,
+            'billingsPerCompany' => 2,
+            'projectAttachments' => 2,
+            'taskAttachments' => 2,
+            'wikiPagesPerProject' => 2,
+        ],
+        'large' => [
+            'companies' => 8,
+            'contactsPerCompany' => 4,
+            'employeesPerCompany' => 3,
+            'projectsPerCompany' => 3,
+            'sprintsPerProject' => 3,
+            'tasksPerSprint' => 5,
+            'taskRequestsPerTask' => 3,
+            'billingsPerCompany' => 3,
+            'projectAttachments' => 3,
+            'taskAttachments' => 3,
+            'wikiPagesPerProject' => 4,
+        ],
+    ];
+
     #[Override]
     public function load(ObjectManager $manager): void
     {
+        $faker = Factory::create('fr_FR');
+        $faker->seed(self::FAKER_SEED);
+
+        $profile = self::VOLUME_PROFILES[$this->resolveVolume()] ?? self::VOLUME_PROFILES[self::DEFAULT_VOLUME];
+
         foreach ($this->getApplicationsByPlatform(PlatformKey::CRM) as $application) {
-            /** @var Crm|null $crm */
-            $crm = $manager->getRepository(Crm::class)->findOneBy([
-                'application' => $application,
-            ]);
+            $crm = $this->findOrCreateCrm($manager, $application);
 
-            if (!$crm instanceof Crm) {
-                $crm = (new Crm())->setApplication($application);
-                $manager->persist($crm);
-            }
-
-            $companies = [
-                new Company()
-                    ->setCrm($crm)
-                    ->setName($application->getTitle() . ' - Acme Corp')
-                    ->setIndustry('SaaS')
-                    ->setWebsite('https://acme.example.com')
-                    ->setContactEmail('contact@acme.example.com')
-                    ->setPhone('+33 1 00 00 00 00'),
-                new Company()
-                    ->setCrm($crm)
-                    ->setName($application->getTitle() . ' - Globex')
-                    ->setIndustry('Consulting')
-                    ->setWebsite('https://globex.example.com')
-                    ->setContactEmail('sales@globex.example.com')
-                    ->setPhone('+33 1 11 11 11 11'),
-            ];
+            // Companies
+            $companies = $this->generateCompanies($manager, $faker, $crm, $application, $profile['companies']);
 
             foreach ($companies as $companyIndex => $company) {
-                $manager->persist($company);
+                // Contacts
+                $this->generateContacts($manager, $faker, $crm, $company, $profile['contactsPerCompany']);
 
-                $project = new Project()
-                    ->setCompany($company)
-                    ->setName($company->getName() . ' - Projet Transformation')
-                    ->setCode('PRJ-' . (string)($companyIndex + 1))
-                    ->setDescription('Optimisation du pipeline CRM et outillage commercial')
-                    ->setStatus(ProjectStatus::ACTIVE)
-                    ->setStartedAt(new DateTimeImmutable('-12 days'))
-                    ->setDueAt(new DateTimeImmutable('+60 days'));
-                $manager->persist($project);
+                // Employees
+                $this->generateEmployees($manager, $faker, $crm, $profile['employeesPerCompany']);
 
-                $sprint = new Sprint()
-                    ->setProject($project)
-                    ->setName('Sprint ' . (string)($companyIndex + 1))
-                    ->setGoal('Livrer les automatisations de relance')
-                    ->setStatus(SprintStatus::ACTIVE)
-                    ->setStartDate(new DateTimeImmutable('-7 days'))
-                    ->setEndDate(new DateTimeImmutable('+7 days'));
-                $manager->persist($sprint);
-
-                $taskBacklog = new Task()
-                    ->setProject($project)
-                    ->setSprint($sprint)
-                    ->setTitle('Consolider le backlog')
-                    ->setDescription('Rassembler toutes les opportunités dans un backlog unique')
-                    ->setStatus(TaskStatus::IN_PROGRESS)
-                    ->setPriority(TaskPriority::HIGH)
-                    ->setDueAt(new DateTimeImmutable('+10 days'))
-                    ->setEstimatedHours(12.5);
-                $taskAutomation = new Task()
-                    ->setProject($project)
-                    ->setSprint($sprint)
-                    ->setTitle('Automatiser les relances')
-                    ->setDescription('Créer les séquences mails selon la probabilité de closing')
-                    ->setStatus(TaskStatus::TODO)
-                    ->setPriority(TaskPriority::CRITICAL)
-                    ->setDueAt(new DateTimeImmutable('+5 days'))
-                    ->setEstimatedHours(18.0);
-
-                $manager->persist($taskBacklog);
-                $manager->persist($taskAutomation);
-
-                $manager->persist(
-                    new TaskRequest()
-                        ->setTask($taskBacklog)
-                        ->setTitle('Prioriser les leads chauds')
-                        ->setDescription('Ajouter une règle SLA pour les leads > 80%')
-                        ->setStatus(TaskRequestStatus::PENDING),
+                // Projects
+                $projects = $this->generateProjects(
+                    $manager,
+                    $faker,
+                    $company,
+                    $application,
+                    $companyIndex,
+                    $profile['projectsPerCompany'],
+                    $profile['projectAttachments'],
+                    $profile['wikiPagesPerProject'],
                 );
 
+                foreach ($projects as $project) {
+                    // Sprints
+                    $sprints = $this->generateSprints($manager, $faker, $project, $profile['sprintsPerProject']);
 
-                $manager->persist(
-                    new TaskRequest()
-                        ->setTask($taskAutomation)
-                        ->setTitle('Valider le workflow de notifications')
-                        ->setDescription('Valider la conformité RGPD avant diffusion')
-                        ->setStatus(TaskRequestStatus::APPROVED)
-                        ->setResolvedAt(new DateTimeImmutable('-1 day')),
-                );
+                    foreach ($sprints as $sprint) {
+                        // Tasks
+                        $tasks = $this->generateTasks(
+                            $manager,
+                            $faker,
+                            $project,
+                            $sprint,
+                            $profile['tasksPerSprint'],
+                            $profile['taskAttachments'],
+                        );
 
-                $manager->persist(
-                    (new Contact())
-                        ->setCrm($crm)
-                        ->setCompany($company)
-                        ->setFirstName($companyIndex === 0 ? 'Camille' : 'Nadia')
-                        ->setLastName($companyIndex === 0 ? 'R.' : 'K.')
-                        ->setEmail($companyIndex === 0 ? 'camille@acme.example.com' : 'nadia@globex.example.com')
-                        ->setPhone($companyIndex === 0 ? '+33 6 11 22 33 44' : '+33 6 22 33 44 55')
-                        ->setJobTitle($companyIndex === 0 ? 'Senior Frontend Engineer' : 'Product Designer')
-                        ->setCity($companyIndex === 0 ? 'Paris' : 'Remote')
-                        ->setScore($companyIndex === 0 ? 92 : 88),
-                );
+                        // Task requests
+                        $this->generateTaskRequests($manager, $faker, $tasks, $profile['taskRequestsPerTask']);
+                    }
+                }
 
-                $manager->persist(
-                    (new Employee())
-                        ->setCrm($crm)
-                        ->setFirstName($companyIndex === 0 ? 'Yanis' : 'Lina')
-                        ->setLastName($companyIndex === 0 ? 'M.' : 'D.')
-                        ->setEmail($companyIndex === 0 ? 'yanis@acme.example.com' : 'lina@globex.example.com')
-                        ->setPositionName($companyIndex === 0 ? 'Data Analyst' : 'Customer Success Manager')
-                        ->setRoleName($companyIndex === 0 ? 'sales' : 'support'),
-                );
-
-                $manager->persist(
-                    (new Billing())
-                        ->setCompany($company)
-                        ->setLabel('Abonnement CRM ' . (string)($companyIndex + 1))
-                        ->setAmount($companyIndex === 0 ? 1800.0 : 2400.0)
-                        ->setCurrency('EUR')
-                        ->setStatus($companyIndex === 0 ? 'paid' : 'pending')
-                        ->setDueAt(new DateTimeImmutable('+15 days')),
-                );
+                // Billings
+                $this->generateBillings($manager, $faker, $company, $profile['billingsPerCompany']);
             }
         }
 
@@ -188,5 +181,267 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         }
 
         return $applications;
+    }
+
+    private function findOrCreateCrm(ObjectManager $manager, Application $application): Crm
+    {
+        /** @var Crm|null $crm */
+        $crm = $manager->getRepository(Crm::class)->findOneBy(['application' => $application]);
+
+        if (!$crm instanceof Crm) {
+            $crm = (new Crm())->setApplication($application);
+            $manager->persist($crm);
+        }
+
+        return $crm;
+    }
+
+    /**
+     * @return array<int, Company>
+     */
+    private function generateCompanies(
+        ObjectManager $manager,
+        Generator $faker,
+        Crm $crm,
+        Application $application,
+        int $count,
+    ): array {
+        $companies = [];
+
+        for ($index = 0; $index < $count; ++$index) {
+            $company = (new Company())
+                ->setCrm($crm)
+                ->setName(sprintf('%s - %s', $application->getTitle(), $faker->company()))
+                ->setIndustry($faker->randomElement(['SaaS', 'Consulting', 'Retail', 'Finance', 'Healthcare', 'Education']))
+                ->setWebsite($faker->url())
+                ->setContactEmail($faker->companyEmail())
+                ->setPhone($faker->e164PhoneNumber());
+
+            $manager->persist($company);
+            $companies[] = $company;
+        }
+
+        return $companies;
+    }
+
+    private function generateContacts(ObjectManager $manager, Generator $faker, Crm $crm, Company $company, int $count): void
+    {
+        for ($index = 0; $index < $count; ++$index) {
+            $contact = (new Contact())
+                ->setCrm($crm)
+                ->setCompany($company)
+                ->setFirstName($faker->firstName())
+                ->setLastName($faker->lastName())
+                ->setEmail($faker->safeEmail())
+                ->setPhone($faker->e164PhoneNumber())
+                ->setJobTitle($faker->jobTitle())
+                ->setCity($faker->city())
+                ->setScore($faker->numberBetween(45, 100));
+
+            $manager->persist($contact);
+        }
+    }
+
+    private function generateEmployees(ObjectManager $manager, Generator $faker, Crm $crm, int $count): void
+    {
+        for ($index = 0; $index < $count; ++$index) {
+            $employee = (new Employee())
+                ->setCrm($crm)
+                ->setFirstName($faker->firstName())
+                ->setLastName($faker->lastName())
+                ->setEmail($faker->companyEmail())
+                ->setPositionName($faker->jobTitle())
+                ->setRoleName($faker->randomElement(['sales', 'support', 'manager', 'finance']));
+
+            $manager->persist($employee);
+        }
+    }
+
+    /**
+     * @return array<int, Project>
+     */
+    private function generateProjects(
+        ObjectManager $manager,
+        Generator $faker,
+        Company $company,
+        Application $application,
+        int $companyIndex,
+        int $projectCount,
+        int $attachmentCount,
+        int $wikiPageCount,
+    ): array {
+        $projects = [];
+
+        for ($index = 0; $index < $projectCount; ++$index) {
+            $startedAt = $faker->dateTimeBetween('-3 months', '-2 weeks');
+            $dueAt = $faker->dateTimeBetween($startedAt, '+4 months');
+
+            $project = (new Project())
+                ->setCompany($company)
+                ->setName(sprintf('%s - %s', $application->getTitle(), $faker->bs()))
+                ->setCode(sprintf('PRJ-%d-%02d', $companyIndex + 1, $index + 1))
+                ->setDescription($faker->paragraph(2))
+                ->setStatus($faker->randomElement(ProjectStatus::cases()))
+                ->setStartedAt(DateTimeImmutable::createFromMutable($startedAt))
+                ->setDueAt(DateTimeImmutable::createFromMutable($dueAt));
+
+            for ($attachmentIndex = 0; $attachmentIndex < $attachmentCount; ++$attachmentIndex) {
+                $project->addAttachment($this->generateAttachment($faker, '/uploads/crm/projects/', $project->getId()));
+            }
+
+            for ($wikiIndex = 0; $wikiIndex < $wikiPageCount; ++$wikiIndex) {
+                $project->addWikiPage($this->generateWikiPage($faker));
+            }
+
+            $manager->persist($project);
+            $projects[] = $project;
+        }
+
+        return $projects;
+    }
+
+    /**
+     * @return array<int, Sprint>
+     */
+    private function generateSprints(ObjectManager $manager, Generator $faker, Project $project, int $count): array
+    {
+        $sprints = [];
+
+        for ($index = 0; $index < $count; ++$index) {
+            $startDate = $faker->dateTimeBetween('-6 weeks', '+2 weeks');
+            $endDate = $faker->dateTimeBetween($startDate, '+4 weeks');
+
+            $sprint = (new Sprint())
+                ->setProject($project)
+                ->setName(sprintf('Sprint %d - %s', $index + 1, $faker->word()))
+                ->setGoal($faker->sentence(8))
+                ->setStatus($faker->randomElement(SprintStatus::cases()))
+                ->setStartDate(DateTimeImmutable::createFromMutable($startDate))
+                ->setEndDate(DateTimeImmutable::createFromMutable($endDate));
+
+            $manager->persist($sprint);
+            $sprints[] = $sprint;
+        }
+
+        return $sprints;
+    }
+
+    /**
+     * @return array<int, Task>
+     */
+    private function generateTasks(
+        ObjectManager $manager,
+        Generator $faker,
+        Project $project,
+        Sprint $sprint,
+        int $count,
+        int $attachmentCount,
+    ): array {
+        $tasks = [];
+
+        for ($index = 0; $index < $count; ++$index) {
+            $task = (new Task())
+                ->setProject($project)
+                ->setSprint($sprint)
+                ->setTitle($faker->sentence(5))
+                ->setDescription($faker->paragraph(2))
+                ->setStatus($faker->randomElement(TaskStatus::cases()))
+                ->setPriority($faker->randomElement(TaskPriority::cases()))
+                ->setDueAt(DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-1 week', '+2 months')))
+                ->setEstimatedHours((float) $faker->randomFloat(1, 2, 30));
+
+            for ($attachmentIndex = 0; $attachmentIndex < $attachmentCount; ++$attachmentIndex) {
+                $task->addAttachment($this->generateAttachment($faker, '/uploads/crm/tasks/', $task->getId()));
+            }
+
+            $manager->persist($task);
+            $tasks[] = $task;
+        }
+
+        return $tasks;
+    }
+
+    /**
+     * @param array<int, Task> $tasks
+     */
+    private function generateTaskRequests(ObjectManager $manager, Generator $faker, array $tasks, int $countByTask): void
+    {
+        foreach ($tasks as $task) {
+            for ($index = 0; $index < $countByTask; ++$index) {
+                $status = $faker->randomElement(TaskRequestStatus::cases());
+                $taskRequest = (new TaskRequest())
+                    ->setTask($task)
+                    ->setTitle($faker->sentence(6))
+                    ->setDescription($faker->paragraph())
+                    ->setStatus($status);
+
+                if (in_array($status, [TaskRequestStatus::APPROVED, TaskRequestStatus::DONE, TaskRequestStatus::REJECTED], true)) {
+                    $taskRequest->setResolvedAt(DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-2 weeks', 'now')));
+                }
+
+                $manager->persist($taskRequest);
+            }
+        }
+    }
+
+    private function generateBillings(ObjectManager $manager, Generator $faker, Company $company, int $count): void
+    {
+        for ($index = 0; $index < $count; ++$index) {
+            $billing = (new Billing())
+                ->setCompany($company)
+                ->setLabel('Abonnement CRM - ' . $faker->words(2, true))
+                ->setAmount((float) $faker->randomFloat(2, 499, 12000))
+                ->setCurrency($faker->randomElement(['EUR', 'USD', 'GBP']))
+                ->setStatus($faker->randomElement(['paid', 'pending', 'overdue']))
+                ->setDueAt(DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-10 days', '+40 days')));
+
+            $manager->persist($billing);
+        }
+    }
+
+    /**
+     * @return array<string, int|string>
+     */
+    private function generateAttachment(Generator $faker, string $basePath, string $entityId): array
+    {
+        $mimeByExtension = [
+            'pdf' => 'application/pdf',
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ];
+
+        $extension = $faker->randomElement(array_keys($mimeByExtension));
+        $name = sprintf('%s-%s.%s', $faker->slug(2), $faker->bothify('##??'), $extension);
+
+        return [
+            'url' => sprintf('%s%s/%s', $basePath, $entityId, $name),
+            'originalName' => $name,
+            'mimeType' => $mimeByExtension[$extension],
+            'size' => $faker->numberBetween(10_000, 5_000_000),
+            'extension' => $extension,
+            'uploadedAt' => DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-3 months', 'now'))->format(DATE_ATOM),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function generateWikiPage(Generator $faker): array
+    {
+        return [
+            'id' => str_replace('-', '', $faker->uuid()),
+            'title' => ucfirst($faker->words(4, true)),
+            'content' => $faker->paragraphs(3, true),
+            'createdAt' => DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-4 months', 'now'))->format(DATE_ATOM),
+        ];
+    }
+
+    private function resolveVolume(): string
+    {
+        $volume = strtolower((string) ($_ENV['CRM_FIXTURE_VOLUME'] ?? $_SERVER['CRM_FIXTURE_VOLUME'] ?? getenv('CRM_FIXTURE_VOLUME') ?: self::DEFAULT_VOLUME));
+
+        return array_key_exists($volume, self::VOLUME_PROFILES) ? $volume : self::DEFAULT_VOLUME;
     }
 }
