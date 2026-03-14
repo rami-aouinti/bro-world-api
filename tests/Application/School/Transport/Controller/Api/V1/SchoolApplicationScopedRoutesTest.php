@@ -164,4 +164,69 @@ final class SchoolApplicationScopedRoutesTest extends WebTestCase
             self::assertEmpty(array_intersect($campusIds, $courseIds), sprintf('Resource %s leaked entities across schools.', $resource));
         }
     }
+
+    #[TestDox('School scoped POST endpoints deny forbidden user on students, teachers, exams and grades resources.')]
+    public function testScopedPostRoutesAreForbiddenForForeignUser(): void
+    {
+        $ownerClient = $this->getTestClient('john-root', 'password-root');
+        $forbiddenClient = $this->getTestClient('john-user', 'password-user');
+
+        $ownerClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes');
+        self::assertSame(Response::HTTP_OK, $ownerClient->getResponse()->getStatusCode());
+        $classId = JSON::decode((string)$ownerClient->getResponse()->getContent(), true)['items'][0]['id'];
+
+        $ownerClient->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/teachers', [], [], [], JSON::encode([
+            'name' => 'Prof Forbidden Scope Setup',
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $ownerClient->getResponse()->getStatusCode());
+        $teacherId = JSON::decode((string)$ownerClient->getResponse()->getContent(), true)['id'];
+
+        $ownerClient->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/students', [], [], [], JSON::encode([
+            'name' => 'Eleve Forbidden Scope Setup',
+            'classId' => $classId,
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $ownerClient->getResponse()->getStatusCode());
+        $studentId = JSON::decode((string)$ownerClient->getResponse()->getContent(), true)['id'];
+
+        $ownerClient->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams', [], [], [], JSON::encode([
+            'title' => 'Examen Forbidden Scope Setup',
+            'classId' => $classId,
+            'teacherId' => $teacherId,
+            'type' => 'QUIZ',
+            'status' => 'DRAFT',
+            'term' => 'TERM_1',
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $ownerClient->getResponse()->getStatusCode());
+        $examId = JSON::decode((string)$ownerClient->getResponse()->getContent(), true)['id'];
+
+        $forbiddenPayloads = [
+            'students' => [
+                'name' => 'Eleve Forbidden Scoped Post',
+                'classId' => $classId,
+            ],
+            'teachers' => [
+                'name' => 'Prof Forbidden Scoped Post',
+            ],
+            'exams' => [
+                'title' => 'Examen Forbidden Scoped Post',
+                'classId' => $classId,
+                'teacherId' => $teacherId,
+                'type' => 'QUIZ',
+                'status' => 'DRAFT',
+                'term' => 'TERM_1',
+            ],
+            'grades' => [
+                'score' => 11.5,
+                'studentId' => $studentId,
+                'examId' => $examId,
+            ],
+        ];
+
+        foreach ($forbiddenPayloads as $endpoint => $payload) {
+            $forbiddenClient->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/' . $endpoint, [], [], [], JSON::encode($payload));
+            self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
+        }
+
+        self::assertStringContainsString('Forbidden application scope access.', (string)$forbiddenClient->getResponse()->getContent());
+    }
 }
