@@ -78,6 +78,68 @@ final class SchoolApplicationScopedRoutesTest extends WebTestCase
             'name' => 'Classe Forbidden',
         ]));
         self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
+
+        $ownerClient->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/students', [], [], [], JSON::encode([
+            'name' => 'Eleve Scoped Create',
+            'classId' => $classId,
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $ownerClient->getResponse()->getStatusCode());
+
+        $forbiddenClient->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/students', [], [], [], JSON::encode([
+            'name' => 'Eleve Forbidden',
+            'classId' => $classId,
+        ]));
+        self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
+
+        $ownerClient->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/teachers', [], [], [], JSON::encode([
+            'name' => 'Prof Scoped Create',
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $ownerClient->getResponse()->getStatusCode());
+        $teacherId = JSON::decode((string)$ownerClient->getResponse()->getContent(), true)['id'];
+
+        $forbiddenClient->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/teachers', [], [], [], JSON::encode([
+            'name' => 'Prof Forbidden',
+        ]));
+        self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
+
+        $ownerClient->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams', [], [], [], JSON::encode([
+            'title' => 'Examen Scoped Create',
+            'classId' => $classId,
+            'teacherId' => $teacherId,
+            'type' => 'QUIZ',
+            'status' => 'DRAFT',
+            'term' => 'TERM_1',
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $ownerClient->getResponse()->getStatusCode());
+        $examId = JSON::decode((string)$ownerClient->getResponse()->getContent(), true)['id'];
+
+        $forbiddenClient->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams', [], [], [], JSON::encode([
+            'title' => 'Examen Forbidden',
+            'classId' => $classId,
+            'teacherId' => $teacherId,
+            'type' => 'QUIZ',
+            'status' => 'DRAFT',
+            'term' => 'TERM_1',
+        ]));
+        self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
+
+        $ownerClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/students');
+        $studentsResponseData = JSON::decode((string)$ownerClient->getResponse()->getContent(), true);
+        $studentId = $studentsResponseData['items'][0]['id'];
+
+        $ownerClient->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/grades', [], [], [], JSON::encode([
+            'score' => 15.5,
+            'studentId' => $studentId,
+            'examId' => $examId,
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $ownerClient->getResponse()->getStatusCode());
+
+        $forbiddenClient->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/grades', [], [], [], JSON::encode([
+            'score' => 12.0,
+            'studentId' => $studentId,
+            'examId' => $examId,
+        ]));
+        self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
     }
 
     #[TestDox('School scoped list endpoints only return data for the current school application.')]

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\School\Transport\Controller\Api\V1\Teacher;
 
+use App\School\Application\Service\SchoolApplicationScopeResolver;
 use App\School\Application\Service\CreateTeacherService;
 use App\School\Transport\Controller\Api\V1\Input\CreateTeacherInput;
 use App\School\Transport\Controller\Api\V1\Input\SchoolInputValidator;
+use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,6 +23,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class CreateTeacherController
 {
     public function __construct(
+        private SchoolApplicationScopeResolver $scopeResolver,
         private CreateTeacherService $createTeacherService,
         private SchoolInputValidator $inputValidator,
     ) {
@@ -28,9 +31,10 @@ final readonly class CreateTeacherController
 
     #[Route('/v1/school/applications/{applicationSlug}/teachers', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(string $applicationSlug, ?User $loggedInUser, Request $request): JsonResponse
     {
-        $request->attributes->set('applicationSlug', $applicationSlug);
+        $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
+
         $payload = $request->toArray();
 
         $input = new CreateTeacherInput();
