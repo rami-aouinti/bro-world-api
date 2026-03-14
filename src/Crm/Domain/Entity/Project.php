@@ -56,6 +56,14 @@ class Project implements EntityInterface
     #[ORM\Column(name: 'due_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $dueAt = null;
 
+    /** @var list<array<string,mixed>> */
+    #[ORM\Column(name: 'attachments', type: Types::JSON)]
+    private array $attachments = [];
+
+    /** @var list<array<string,mixed>> */
+    #[ORM\Column(name: 'wiki_pages', type: Types::JSON)]
+    private array $wikiPages = [];
+
     /** @var Collection<int, Task>|ArrayCollection<int, Task> */
     #[ORM\OneToMany(targetEntity: Task::class, mappedBy: 'project')]
     private Collection|ArrayCollection $tasks;
@@ -165,6 +173,50 @@ class Project implements EntityInterface
     public function setDueAt(?DateTimeImmutable $dueAt): self
     {
         $this->dueAt = $dueAt;
+
+        return $this;
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function getAttachments(): array
+    {
+        return $this->attachments;
+    }
+
+    /** @param list<array<string,mixed>> $attachments */
+    public function setAttachments(array $attachments): self
+    {
+        $this->attachments = $attachments;
+
+        return $this;
+    }
+
+    /** @param array<string,mixed> $attachment */
+    public function addAttachment(array $attachment): self
+    {
+        $this->attachments[] = $attachment;
+
+        return $this;
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function getWikiPages(): array
+    {
+        return $this->wikiPages;
+    }
+
+    /** @param list<array<string,mixed>> $wikiPages */
+    public function setWikiPages(array $wikiPages): self
+    {
+        $this->wikiPages = $wikiPages;
+
+        return $this;
+    }
+
+    /** @param array<string,mixed> $wikiPage */
+    public function addWikiPage(array $wikiPage): self
+    {
+        $this->wikiPages[] = $wikiPage;
 
         return $this;
     }

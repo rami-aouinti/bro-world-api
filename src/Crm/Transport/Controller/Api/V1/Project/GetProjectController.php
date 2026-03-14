@@ -35,6 +35,8 @@ final readonly class GetProjectController
             'status' => $project->getStatus()->value,
             'startedAt' => $project->getStartedAt()?->format(DATE_ATOM),
             'dueAt' => $project->getDueAt()?->format(DATE_ATOM),
+            'attachments' => $project->getAttachments(),
+            'wikiPages' => $project->getWikiPages(),
         ]);
     }
 }
