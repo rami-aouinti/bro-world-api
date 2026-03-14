@@ -7,6 +7,7 @@ namespace App\School\Application\Service;
 use App\General\Application\Message\EntityCreated;
 use App\School\Application\Exception\SchoolRelationException;
 use App\School\Domain\Entity\Exam;
+use App\School\Domain\Entity\School;
 use App\School\Domain\Entity\SchoolClass;
 use App\School\Domain\Entity\Teacher;
 use App\School\Domain\Enum\ExamStatus;
@@ -28,6 +29,7 @@ final readonly class CreateExamService
     }
 
     public function create(
+        School $school,
         string $title,
         ?string $classId,
         ?string $teacherId,
@@ -44,12 +46,24 @@ final readonly class CreateExamService
         }
 
         $class = $this->classRepository->find($classId);
-        if (!$class instanceof SchoolClass) {
+        if (!$class instanceof SchoolClass || $class->getSchool()?->getId() !== $school->getId()) {
             throw SchoolRelationException::notFound('classId');
         }
 
         $teacher = $this->teacherRepository->find($teacherId);
         if (!$teacher instanceof Teacher) {
+            throw SchoolRelationException::notFound('teacherId');
+        }
+
+        $teacherBelongsToSchool = false;
+        foreach ($teacher->getClasses() as $teacherClass) {
+            if ($teacherClass->getSchool()?->getId() === $school->getId()) {
+                $teacherBelongsToSchool = true;
+                break;
+            }
+        }
+
+        if (!$teacherBelongsToSchool) {
             throw SchoolRelationException::notFound('teacherId');
         }
 

@@ -8,6 +8,7 @@ use App\General\Application\Message\EntityCreated;
 use App\School\Application\Exception\SchoolRelationException;
 use App\School\Domain\Entity\Exam;
 use App\School\Domain\Entity\Grade;
+use App\School\Domain\Entity\School;
 use App\School\Domain\Entity\Student;
 use App\School\Infrastructure\Repository\ExamRepository;
 use App\School\Infrastructure\Repository\StudentRepository;
@@ -24,7 +25,7 @@ final readonly class CreateGradeService
     ) {
     }
 
-    public function create(float $score, ?string $studentId, ?string $examId): Grade
+    public function create(School $school, float $score, ?string $studentId, ?string $examId): Grade
     {
         if (!is_string($studentId)) {
             throw SchoolRelationException::unprocessable('studentId is required');
@@ -35,12 +36,12 @@ final readonly class CreateGradeService
         }
 
         $student = $this->studentRepository->find($studentId);
-        if (!$student instanceof Student) {
+        if (!$student instanceof Student || $student->getSchoolClass()?->getSchool()?->getId() !== $school->getId()) {
             throw SchoolRelationException::notFound('studentId');
         }
 
         $exam = $this->examRepository->find($examId);
-        if (!$exam instanceof Exam) {
+        if (!$exam instanceof Exam || $exam->getSchoolClass()?->getSchool()?->getId() !== $school->getId()) {
             throw SchoolRelationException::notFound('examId');
         }
 

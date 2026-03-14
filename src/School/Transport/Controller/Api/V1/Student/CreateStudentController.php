@@ -33,7 +33,7 @@ final readonly class CreateStudentController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, ?User $loggedInUser, Request $request): JsonResponse
     {
-        $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
+        $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
 
         $payload = $request->toArray();
 
@@ -46,7 +46,7 @@ final readonly class CreateStudentController
             return $validationResponse;
         }
 
-        $student = $this->createStudentService->create($input->name, $input->classId);
+        $student = $this->createStudentService->create($school, $input->name, $input->classId);
 
         return new JsonResponse([
             'id' => $student->getId(),

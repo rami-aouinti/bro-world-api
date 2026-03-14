@@ -6,6 +6,7 @@ namespace App\School\Application\Service;
 
 use App\General\Application\Message\EntityCreated;
 use App\School\Application\Exception\SchoolRelationException;
+use App\School\Domain\Entity\School;
 use App\School\Domain\Entity\SchoolClass;
 use App\School\Domain\Entity\Student;
 use App\School\Infrastructure\Repository\SchoolClassRepository;
@@ -21,14 +22,14 @@ final readonly class CreateStudentService
     ) {
     }
 
-    public function create(string $name, ?string $classId): Student
+    public function create(School $school, string $name, ?string $classId): Student
     {
         if (!is_string($classId)) {
             throw SchoolRelationException::unprocessable('classId is required');
         }
 
         $class = $this->classRepository->find($classId);
-        if (!$class instanceof SchoolClass) {
+        if (!$class instanceof SchoolClass || $class->getSchool()?->getId() !== $school->getId()) {
             throw SchoolRelationException::notFound('classId');
         }
 

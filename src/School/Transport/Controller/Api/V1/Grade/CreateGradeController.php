@@ -33,7 +33,7 @@ final readonly class CreateGradeController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, ?User $loggedInUser, Request $request): JsonResponse
     {
-        $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
+        $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
 
         $payload = $request->toArray();
 
@@ -47,7 +47,7 @@ final readonly class CreateGradeController
             return $validationResponse;
         }
 
-        $grade = $this->createGradeService->create($input->score, $input->studentId, $input->examId);
+        $grade = $this->createGradeService->create($school, $input->score, $input->studentId, $input->examId);
 
         return new JsonResponse([
             'id' => $grade->getId(),

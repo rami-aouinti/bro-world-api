@@ -56,7 +56,7 @@ final readonly class CreateExamController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, ?User $loggedInUser, Request $request): JsonResponse
     {
-        $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
+        $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
 
         $payload = $request->toArray();
 
@@ -74,6 +74,7 @@ final readonly class CreateExamController
         }
 
         $exam = $this->createExamService->create(
+            $school,
             $input->title,
             $input->classId,
             $input->teacherId,
