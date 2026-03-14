@@ -5,7 +5,12 @@ declare(strict_types=1);
 namespace App\Quiz\Application\Service;
 
 use App\Quiz\Domain\Entity\Quiz;
+use App\Quiz\Domain\Entity\QuizAttempt;
+use App\Quiz\Domain\Entity\QuizAttemptAnswer;
+use App\Quiz\Infrastructure\Repository\QuizAttemptAnswerRepository;
+use App\Quiz\Infrastructure\Repository\QuizAttemptRepository;
 use App\Quiz\Infrastructure\Repository\QuizRepository;
+use App\User\Domain\Entity\User;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -23,6 +28,9 @@ final readonly class QuizSubmissionService
     public function __construct(
         private QuizRepository $quizRepository,
         private QuizReadService $quizReadService,
+        private QuizAttemptRepository $quizAttemptRepository,
+        private QuizAttemptAnswerRepository $quizAttemptAnswerRepository,
+        private QuizCacheService $quizCacheService,
     ) {
     }
 
@@ -31,7 +39,7 @@ final readonly class QuizSubmissionService
      *
      * @return array<string, mixed>
      */
-    public function submitByApplicationSlug(string $applicationSlug, array $payload): array
+    public function submitByApplicationSlug(string $applicationSlug, array $payload, User $loggedInUser): array
     {
         $quiz = $this->quizRepository->findPublishedByApplicationSlugWithConfiguration($applicationSlug);
 
@@ -118,7 +126,44 @@ final readonly class QuizSubmissionService
 
         $score = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 100, 2) : 0.0;
 
+        $attempt = (new QuizAttempt())
+            ->setQuiz($quiz)
+            ->setUser($loggedInUser)
+            ->setScore($score)
+            ->setPassed($score >= $quiz->getPassScore())
+            ->setTotalQuestions(count($questionById))
+            ->setCorrectAnswers($correctAnswers);
+        $this->quizAttemptRepository->save($attempt, false);
+
+        foreach ($results as $result) {
+            $question = $this->quizRepository->getEntityManager()->getRepository(\App\Quiz\Domain\Entity\QuizQuestion::class)
+                ->find($result['questionId']);
+            if (!$question instanceof \App\Quiz\Domain\Entity\QuizQuestion) {
+                continue;
+            }
+
+            $selectedAnswer = null;
+            if (is_string($result['selectedAnswerId'])) {
+                $selectedAnswerEntity = $this->quizRepository->getEntityManager()->getRepository(\App\Quiz\Domain\Entity\QuizAnswer::class)
+                    ->find($result['selectedAnswerId']);
+                if ($selectedAnswerEntity instanceof \App\Quiz\Domain\Entity\QuizAnswer) {
+                    $selectedAnswer = $selectedAnswerEntity;
+                }
+            }
+
+            $attemptAnswer = (new QuizAttemptAnswer())
+                ->setAttempt($attempt)
+                ->setQuestion($question)
+                ->setSelectedAnswer($selectedAnswer)
+                ->setIsCorrect((bool)$result['isCorrect']);
+            $this->quizAttemptAnswerRepository->save($attemptAnswer, false);
+        }
+
+        $this->quizAttemptRepository->getEntityManager()->flush();
+        $this->quizCacheService->invalidateByApplicationSlug($applicationSlug);
+
         return [
+            'attemptId' => $attempt->getId(),
             'quizId' => $quiz->getId(),
             'applicationSlug' => $applicationSlug,
             'passScore' => $quiz->getPassScore(),

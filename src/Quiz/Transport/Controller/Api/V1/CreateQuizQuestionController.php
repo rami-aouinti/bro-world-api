@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Quiz\Transport\Controller\Api\V1;
 
+use App\Platform\Domain\Entity\Application;
+use App\Platform\Infrastructure\Repository\ApplicationRepository;
+use App\Quiz\Application\Service\QuizEditorAccessService;
+use App\Quiz\Infrastructure\Repository\QuizRepository;
 use App\Quiz\Application\Message\CreateQuizQuestionCommand;
 use App\User\Domain\Entity\User;
 use JsonException;
@@ -28,9 +32,21 @@ final class CreateQuizQuestionController
      */
     #[Route('/v1/quiz/applications/{applicationSlug}/questions', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'POST /v1/quiz/applications/{applicationSlug}/questions', tags: ['Quiz'])]
-    public function __invoke(string $applicationSlug, Request $request, MessageBusInterface $messageBus, User $loggedInUser): JsonResponse
+    public function __invoke(string $applicationSlug, Request $request, MessageBusInterface $messageBus, User $loggedInUser, ApplicationRepository $applicationRepository, QuizRepository $quizRepository, QuizEditorAccessService $accessService): JsonResponse
     {
         $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        $application = $applicationRepository->findOneBy(['slug' => $applicationSlug]);
+        if (!$application instanceof Application) {
+            return new JsonResponse(['message' => 'Application not found.'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $quiz = $quizRepository->findOneByApplication($application);
+        if ($quiz === null) {
+            return new JsonResponse(['message' => 'Quiz not found for application.'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $accessService->assertCanEdit($quiz, $loggedInUser);
         $messageBus->dispatch(new CreateQuizQuestionCommand(
             (string)uniqid('op_', true),
             $loggedInUser->getId(),

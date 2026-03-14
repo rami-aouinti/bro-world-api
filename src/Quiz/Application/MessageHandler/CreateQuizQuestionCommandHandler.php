@@ -54,10 +54,6 @@ final readonly class CreateQuizQuestionCommandHandler
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Quiz not found for application.');
         }
 
-        if ($quiz->getOwner()->getId() !== $command->actorUserId) {
-            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Only application owner can create quiz questions.');
-        }
-
         if (count($command->answers) < 2) {
             throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'At least two answers are required.');
         }

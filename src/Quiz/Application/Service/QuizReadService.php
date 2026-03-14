@@ -7,6 +7,7 @@ namespace App\Quiz\Application\Service;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Quiz\Domain\Enum\QuizCategory;
 use App\Quiz\Domain\Enum\QuizLevel;
+use App\Quiz\Infrastructure\Repository\QuizAttemptRepository;
 use App\Quiz\Infrastructure\Repository\QuizQuestionRepository;
 use App\Quiz\Infrastructure\Repository\QuizRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,6 +26,7 @@ final readonly class QuizReadService
     public function __construct(
         private QuizRepository $quizRepository,
         private QuizQuestionRepository $quizQuestionRepository,
+        private QuizAttemptRepository $quizAttemptRepository,
         private CacheInterface $cache,
         private QuizCacheService $quizCacheService,
     ) {
@@ -116,6 +118,7 @@ final readonly class QuizReadService
             }
 
             $stats = $this->quizQuestionRepository->getQuizStats($quiz);
+            $attemptStats = $this->quizAttemptRepository->getStatsByQuiz($quiz);
 
             return [
                 'questionCount' => $stats['questionCount'],
@@ -124,6 +127,9 @@ final readonly class QuizReadService
                     ? round($stats['answerCount'] / $stats['questionCount'], 2)
                     : 0.0,
                 'totalPoints' => $stats['totalPoints'],
+                'attemptCount' => $attemptStats['attemptCount'],
+                'averageScore' => $attemptStats['averageScore'] !== null ? round((float)$attemptStats['averageScore'], 2) : null,
+                'passRate' => $attemptStats['attemptCount'] > 0 ? round(($attemptStats['passedCount'] / $attemptStats['attemptCount']) * 100, 2) : 0.0,
             ];
         });
     }
