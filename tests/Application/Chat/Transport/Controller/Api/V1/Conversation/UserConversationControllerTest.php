@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace App\Tests\Application\Chat\Transport\Controller\Api\V1\Conversation;
 
+use App\Chat\Domain\Entity\ChatMessage;
+use App\Chat\Domain\Entity\Conversation;
+use App\Chat\Domain\Entity\ConversationParticipant;
 use App\General\Domain\Utils\JSON;
 use App\Recruit\Infrastructure\DataFixtures\ORM\LoadRecruitChatCalendarScenarioData;
 use App\Tests\TestCase\WebTestCase;
+use App\User\Domain\Entity\User;
 use App\User\Infrastructure\DataFixtures\ORM\LoadUserData;
+use DateTimeImmutable;
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -63,6 +69,104 @@ final class UserConversationControllerTest extends WebTestCase
 
         $client->request('POST', $this->baseUrl . '/chats/' . $chatId . '/conversations', [], [], [], JSON::encode([]));
         self::assertSame(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
+    }
+
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('GET conversations excludes archived conversations from items and pagination total, including with page/limit')]
+    public function testListExcludesArchivedConversationFromItemsAndTotal(): void
+    {
+        $this->createActiveAndArchivedConversationsForJohnRoot();
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('GET', $this->baseUrl . '/conversations?message=archived-filter-token');
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $content = $client->getResponse()->getContent();
+        self::assertNotFalse($content);
+        $payload = JSON::decode($content, true);
+
+        self::assertCount(1, $payload['items']);
+        self::assertSame(1, $payload['pagination']['totalItems']);
+
+        $client->request('GET', $this->baseUrl . '/conversations?message=archived-filter-token&page=2&limit=1');
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $pagedContent = $client->getResponse()->getContent();
+        self::assertNotFalse($pagedContent);
+        $pagedPayload = JSON::decode($pagedContent, true);
+
+        self::assertCount(0, $pagedPayload['items']);
+        self::assertSame(1, $pagedPayload['pagination']['totalItems']);
+    }
+
+    private function createActiveAndArchivedConversationsForJohnRoot(): void
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+
+        /** @var Conversation|null $seedConversation */
+        $seedConversation = $entityManager->getRepository(Conversation::class)->find(
+            LoadRecruitChatCalendarScenarioData::getUuidByKey('conversation-john-root-scenario')
+        );
+
+        self::assertInstanceOf(Conversation::class, $seedConversation);
+
+        $chat = $seedConversation->getChat();
+        $johnRoot = $this->getUserReference($entityManager, 'john-root');
+        $johnAdmin = $this->getUserReference($entityManager, 'john-admin');
+
+        $activeConversation = (new Conversation())
+            ->setChat($chat);
+
+        $archivedConversation = (new Conversation())
+            ->setChat($chat)
+            ->setArchivedAt(new DateTimeImmutable('now'));
+
+        $this->addParticipant($activeConversation, $johnRoot, $johnAdmin);
+        $this->addParticipant($archivedConversation, $johnRoot, $johnAdmin);
+
+        $this->addMessage($activeConversation, $johnRoot, 'archived-filter-token active');
+        $this->addMessage($archivedConversation, $johnRoot, 'archived-filter-token archived');
+
+        $entityManager->persist($activeConversation);
+        $entityManager->persist($archivedConversation);
+        $entityManager->flush();
+    }
+
+    private function addParticipant(Conversation $conversation, User ...$users): void
+    {
+        foreach ($users as $user) {
+            $participant = (new ConversationParticipant())
+                ->setConversation($conversation)
+                ->setUser($user);
+
+            $conversation->addParticipant($participant);
+        }
+    }
+
+    private function addMessage(Conversation $conversation, User $sender, string $content): void
+    {
+        $message = (new ChatMessage())
+            ->setConversation($conversation)
+            ->setSender($sender)
+            ->setContent($content);
+
+        $conversation->addMessage($message);
+        $conversation->setLastMessageAt(new DateTimeImmutable('now'));
+    }
+
+    private function getUserReference(EntityManagerInterface $entityManager, string $key): User
+    {
+        $user = $entityManager->getRepository(User::class)->find(
+            LoadUserData::getUuidByKey($key)
+        );
+
+        self::assertNotNull($user);
+
+        return $user;
     }
 
     /**

@@ -47,26 +47,14 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
     {
         $offset = max(0, ($page - 1) * $limit);
 
-        $qb = $this->createQueryBuilder('conversation')
-            ->addSelect('chat')
-            ->innerJoin('conversation.chat', 'chat')
+        $qb = $this->applyListFilters($this->getConversationListQueryBuilder(), $filters, $esIds)
             ->innerJoin('conversation.participants', 'participant');
 
-        if (($filters['message'] ?? '') !== '') {
-            $qb->innerJoin('conversation.messages', 'messages')
-                ->andWhere('LOWER(messages.content) LIKE LOWER(:message)')
-                ->setParameter('message', '%' . $filters['message'] . '%');
-        }
-
-        if ($esIds !== null) {
-            $qb->andWhere('conversation.id IN (:esIds)')
-                ->setParameter('esIds', $esIds);
-        }
-
         return $qb
-            ->andWhere('IDENTITY(participant.user) = :userId')
-            ->setParameter('userId', $user->getId(), UuidBinaryOrderedTimeType::NAME)
-            ->orderBy('conversation.createdAt', 'DESC')
+            ->andWhere('participant.user = :user')
+            ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
+            ->orderBy('conversation.lastMessageAt', 'DESC')
+            ->addOrderBy('conversation.createdAt', 'DESC')
             ->setFirstResult($offset)
             ->setMaxResults($limit)
             ->getQuery()
