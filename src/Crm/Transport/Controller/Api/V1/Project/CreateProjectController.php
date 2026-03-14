@@ -79,6 +79,7 @@ final readonly class CreateProjectController
                 content: new OA\JsonContent(
                     examples: [
                         'invalidJson' => new OA\Examples(
+                            example: 'invalidJson',
                             summary: 'JSON invalide',
                             value: [
                                 'message' => 'Invalid JSON payload.',
@@ -86,6 +87,7 @@ final readonly class CreateProjectController
                             ],
                         ),
                         'invalidDate' => new OA\Examples(
+                            example: 'invalidDate',
                             summary: 'Date invalide',
                             value: [
                                 'message' => 'Invalid date format for "startedAt".',
