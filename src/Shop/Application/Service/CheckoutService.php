@@ -47,6 +47,10 @@ final readonly class CheckoutService
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Shop not found.');
         }
 
+        if ($shop->getApplication()?->getSlug() !== $command->applicationSlug) {
+            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Shop does not belong to the requested application scope.');
+        }
+
         $user = $this->userRepository->find($command->userId);
         if ($user === null) {
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Authenticated user required.');

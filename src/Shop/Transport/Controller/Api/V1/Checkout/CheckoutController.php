@@ -60,6 +60,7 @@ final readonly class CheckoutController
 
         $envelope = $this->messageBus->dispatch(new CheckoutCommand(
             operationId: $request->headers->get('x-request-id', uniqid('checkout-', true)),
+            applicationSlug: $applicationSlug,
             shopId: $shopId,
             userId: $user->getId(),
             billingAddress: $input->billingAddress,
