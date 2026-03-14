@@ -167,7 +167,9 @@ final class ConversationListServiceTest extends TestCase
         $result = $service->getByUser($connectedUser, [], 1, 20);
 
         self::assertArrayNotHasKey('messages', $result['items'][0]);
+        self::assertArrayHasKey('lastMessage', $result['items'][0]);
         self::assertSame('message-id', $result['items'][0]['lastMessage']['id']);
+        self::assertSame(str_repeat('hello', 56), $result['items'][0]['lastMessage']['content']);
         self::assertSame(280, mb_strlen($result['items'][0]['lastMessage']['content']));
         self::assertSame('sender-id', $result['items'][0]['lastMessage']['sender']['id']);
         self::assertSame('2024-01-01T12:00:00+00:00', $result['items'][0]['lastMessage']['createdAt']);
