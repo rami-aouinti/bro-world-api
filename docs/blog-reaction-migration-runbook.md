@@ -103,3 +103,9 @@ WHERE remediated_at >= '<timestamp_de_la_fenetre_incident>';
 3. **Hygiène durable**:
    - conserver le backup de remédiation au moins un cycle de release;
    - archiver la sortie d'audit par environnement (preuve de conformité).
+
+4. **Revue post-déploiement J+7**:
+   - comparer les métriques avant/après (`latence read`, `taux erreurs handlers`, `conflits unicité SQL`);
+   - formaliser un compte-rendu et les actions dans le template J+7 du document `docs/blog-reaction-operability.md`.
+5. **SLO/SLA**:
+   - valider les tendances observées par rapport aux objectifs opérationnels décrits dans `docs/blog-reaction-operability.md`.
