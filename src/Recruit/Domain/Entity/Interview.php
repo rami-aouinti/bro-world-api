@@ -9,6 +9,8 @@ use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
 use App\Recruit\Domain\Enum\InterviewMode;
 use App\Recruit\Domain\Enum\InterviewStatus;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
@@ -56,9 +58,14 @@ class Interview implements EntityInterface
     #[ORM\Column(name: 'notes', type: Types::TEXT, nullable: true)]
     private ?string $notes = null;
 
+    /** @var Collection<int, InterviewFeedback>|ArrayCollection<int, InterviewFeedback> */
+    #[ORM\OneToMany(targetEntity: InterviewFeedback::class, mappedBy: 'interview', cascade: ['remove'], orphanRemoval: true)]
+    private Collection|ArrayCollection $feedbacks;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
+        $this->feedbacks = new ArrayCollection();
     }
 
     #[Override]
@@ -167,5 +174,13 @@ class Interview implements EntityInterface
         $this->notes = $notes;
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, InterviewFeedback>|ArrayCollection<int, InterviewFeedback>
+     */
+    public function getFeedbacks(): Collection|ArrayCollection
+    {
+        return $this->feedbacks;
     }
 }

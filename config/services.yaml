@@ -5,6 +5,10 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     locale: 'en'
+    recruit.interview_calendar.default_timezone: '%env(default:UTC:RECRUIT_INTERVIEW_CALENDAR_DEFAULT_TIMEZONE)%'
+    recruit.interview_invitation.sender_email: '%env(resolve:RECRUIT_INTERVIEW_INVITATION_SENDER_EMAIL)%'
+    recruit.interview_invitation.template_create: '%env(default:Emails/interview_invitation_created.html.twig:RECRUIT_INTERVIEW_TEMPLATE_CREATE)%'
+    recruit.interview_invitation.template_update: '%env(default:Emails/interview_invitation_updated.html.twig:RECRUIT_INTERVIEW_TEMPLATE_UPDATE)%'
 
 services:
     # default configuration for services in *this* file
@@ -92,6 +96,23 @@ services:
             $username: '%env(ELASTICSEARCH_USERNAME)%'
             $password: '%env(ELASTICSEARCH_PASSWORD)%'
         #lazy: true
+
+
+    App\Recruit\Domain\Service\Interfaces\CalendarProviderInterface:
+        class: App\Recruit\Infrastructure\Calendar\NullCalendarProvider
+
+    App\Recruit\Application\Service\InterviewCalendarService:
+        arguments:
+            $defaultTimezone: '%recruit.interview_calendar.default_timezone%'
+
+    App\Recruit\Application\Service\InterviewInvitationService:
+        arguments:
+            $senderEmail: '%recruit.interview_invitation.sender_email%'
+            $createTemplate: '%recruit.interview_invitation.template_create%'
+            $updateTemplate: '%recruit.interview_invitation.template_update%'
+            
+    App\General\Domain\Service\Interfaces\MetricsCounterInterface:
+        class: App\General\Infrastructure\Service\NullMetricsCounter
 
     app.serializer.normalizer.object.external_message:
         class: Symfony\Component\Serializer\Normalizer\ObjectNormalizer

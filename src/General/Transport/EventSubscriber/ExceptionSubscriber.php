@@ -7,6 +7,7 @@ namespace App\General\Transport\EventSubscriber;
 use App\General\Application\Exception\Interfaces\ClientErrorInterface;
 use App\General\Domain\Exception\Interfaces\TranslatableExceptionInterface;
 use App\General\Domain\Utils\JSON;
+use App\School\Application\Exception\SchoolClientExceptionInterface;
 use App\User\Application\Security\UserTypeIdentification;
 use Doctrine\DBAL\Exception;
 use Doctrine\ORM\Exception\ORMException;
@@ -27,6 +28,7 @@ use function array_intersect;
 use function array_key_exists;
 use function class_implements;
 use function in_array;
+use function str_starts_with;
 use function spl_object_hash;
 
 /**
@@ -84,7 +86,7 @@ class ExceptionSubscriber implements EventSubscriberInterface
         $response = new Response();
         $response->headers->set('Content-Type', 'application/json');
         $response->setStatusCode($this->getStatusCode($exception));
-        $response->setContent(JSON::encode($this->getErrorMessage($exception, $response)));
+        $response->setContent(JSON::encode($this->getErrorMessage($exception, $response, $event)));
         // Send the modified response object to the event
         $event->setResponse($response);
     }
@@ -102,8 +104,12 @@ class ExceptionSubscriber implements EventSubscriberInterface
      *
      * @return array<string, mixed>
      */
-    private function getErrorMessage(Throwable $exception, Response $response): array
+    private function getErrorMessage(Throwable $exception, Response $response, ExceptionEvent $event): array
     {
+        if ($this->isSchoolRequest($event)) {
+            return $this->getSchoolErrorMessage($exception, $response);
+        }
+
         $message = $exception instanceof TranslatableExceptionInterface
             ? $this->translator->trans($exception->getMessage(), $exception->getParameters(), $exception->getDomain())
             : $this->getExceptionMessage($exception);
@@ -129,6 +135,36 @@ class ExceptionSubscriber implements EventSubscriberInterface
         }
 
         return $error;
+    }
+
+    /**
+     * @return array{message: string, code: string, details: array<int, array<string, mixed>>}
+     */
+    private function getSchoolErrorMessage(Throwable $exception, Response $response): array
+    {
+        $statusCode = $response->getStatusCode();
+
+        $defaultErrorCode = match ($statusCode) {
+            Response::HTTP_FORBIDDEN => 'SCHOOL_FORBIDDEN',
+            Response::HTTP_NOT_FOUND => 'SCHOOL_NOT_FOUND',
+            Response::HTTP_UNPROCESSABLE_ENTITY => 'SCHOOL_UNPROCESSABLE',
+            default => 'SCHOOL_ERROR',
+        };
+
+        return [
+            'message' => $this->getExceptionMessage($exception),
+            'code' => $exception instanceof SchoolClientExceptionInterface
+                ? $exception->getErrorCode()
+                : $defaultErrorCode,
+            'details' => $exception instanceof SchoolClientExceptionInterface
+                ? $exception->getDetails()
+                : [],
+        ];
+    }
+
+    private function isSchoolRequest(ExceptionEvent $event): bool
+    {
+        return str_starts_with($event->getRequest()->getPathInfo(), '/v1/school');
     }
 
     /**

@@ -31,6 +31,18 @@ final readonly class GetSchoolApplicationResourceController
     #[Route('/v1/school/applications/{applicationSlug}/{resource}/{id}', methods: [Request::METHOD_GET], requirements: [
         'resource' => 'classes|students|teachers|exams|grades',
     ])]
+    #[OA\Get(
+        summary: 'Détail d\'une ressource school dans le scope application',
+        parameters: [
+            new OA\Parameter(name: 'resource', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['classes', 'students', 'teachers', 'exams', 'grades'])),
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Ressource trouvée.', content: new OA\JsonContent(example: ['id' => '4cfada53-2cf2-49a7-a4fb-4a9682c3a0c0', 'name' => 'Alice Martin'])),
+            new OA\Response(response: 403, description: 'Accès refusé.'),
+            new OA\Response(response: 404, description: 'Ressource introuvable dans ce scope application.'),
+        ],
+    )]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $resource, string $id, ?User $loggedInUser): JsonResponse
     {

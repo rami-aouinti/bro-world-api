@@ -27,7 +27,8 @@ final readonly class SchoolInputValidator
 
         return new JsonResponse([
             'message' => 'Validation failed.',
-            'violations' => array_map(
+            'code' => 'SCHOOL_VALIDATION_FAILED',
+            'details' => array_map(
                 static fn (ConstraintViolationInterface $violation): array => [
                     'propertyPath' => $violation->getPropertyPath(),
                     'message' => $violation->getMessage(),

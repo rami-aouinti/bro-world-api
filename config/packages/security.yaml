@@ -44,7 +44,10 @@ security:
     role_hierarchy:
         ROLE_API: [ROLE_LOGGED]
         ROLE_USER: [ROLE_LOGGED]
-        ROLE_ADMIN: [ROLE_USER]
+        ROLE_INTERVIEWER: [ROLE_USER]
+        ROLE_RECRUITER: [ROLE_INTERVIEWER]
+        ROLE_HIRING_MANAGER: [ROLE_INTERVIEWER]
+        ROLE_ADMIN: [ROLE_USER, ROLE_RECRUITER, ROLE_HIRING_MANAGER]
         ROLE_ROOT: [ROLE_ADMIN]
 
     access_decision_manager:

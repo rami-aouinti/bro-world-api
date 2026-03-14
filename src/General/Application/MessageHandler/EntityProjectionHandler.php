@@ -100,7 +100,7 @@ final readonly class EntityProjectionHandler
             || $message->entityType === self::CRM_TASK_REQUEST
             || $message->entityType === self::CRM_SPRINT
         ) {
-            $this->projectCrmSupportEntities();
+            $this->projectCrmSupportEntities($message);
 
             return;
         }
@@ -229,9 +229,13 @@ final readonly class EntityProjectionHandler
 
     private function projectCrmTask(EntityMutationMessage $message): void
     {
+        $applicationSlug = (string)($message->context['applicationSlug'] ?? '');
+
         if ($message instanceof EntityDeleted) {
             $this->elasticsearchService->delete(CrmTaskProjection::INDEX_NAME, $message->entityId);
-            $this->cacheInvalidationService->invalidateCrmTaskListCaches();
+            if ($applicationSlug !== '') {
+                $this->cacheInvalidationService->invalidateCrmTaskListCaches($applicationSlug);
+            }
 
             return;
         }
@@ -250,7 +254,10 @@ final readonly class EntityProjectionHandler
             'updatedAt' => $task->getUpdatedAt()?->format(DATE_ATOM),
         ]);
 
-        $this->cacheInvalidationService->invalidateCrmTaskListCaches();
+        $applicationSlug = $task->getProject()?->getCompany()?->getCrm()?->getApplication()?->getSlug() ?? $applicationSlug;
+        if ($applicationSlug !== '') {
+            $this->cacheInvalidationService->invalidateCrmTaskListCaches($applicationSlug);
+        }
     }
 
     private function projectSchoolExam(EntityMutationMessage $message): void
@@ -285,9 +292,12 @@ final readonly class EntityProjectionHandler
         $this->cacheInvalidationService->invalidateShopProductListCaches();
     }
 
-    private function projectCrmSupportEntities(): void
+    private function projectCrmSupportEntities(EntityMutationMessage $message): void
     {
-        $this->cacheInvalidationService->invalidateCrmTaskListCaches();
+        $applicationSlug = (string)($message->context['applicationSlug'] ?? '');
+        if ($applicationSlug !== '') {
+            $this->cacheInvalidationService->invalidateCrmTaskListCaches($applicationSlug);
+        }
     }
 
     private function projectSchoolSupportEntities(): void

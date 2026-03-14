@@ -42,4 +42,20 @@ final class CacheInvalidationServiceTest extends TestCase
 
         $service->invalidateSchoolExamListCaches('school-campus-core');
     }
+
+    public function testInvalidateCrmTaskListCachesByApplicationUsesScopedTag(): void
+    {
+        $cache = $this->createMock(TagAwareCacheInterface::class);
+        $cache->expects(self::once())
+            ->method('invalidateTags')
+            ->with(['cache_crm_task_list_crm-app-core']);
+        $cache->expects(self::once())
+            ->method('delete')
+            ->with(self::stringStartsWith('crm_task_list_'));
+
+        $service = new CacheInvalidationService($cache, new CacheKeyConventionService());
+
+        $service->invalidateCrmTaskListCaches('crm-app-core');
+    }
+
 }

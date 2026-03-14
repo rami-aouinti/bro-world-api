@@ -37,6 +37,7 @@ readonly class InterviewService
         private ApplicationRepository $applicationRepository,
         private InterviewRepository $interviewRepository,
         private RecruitNotificationService $recruitNotificationService,
+        private InterviewInvitationService $interviewInvitationService,
     ) {
     }
 
@@ -58,6 +59,7 @@ readonly class InterviewService
 
         $this->interviewRepository->save($interview);
         $this->recruitNotificationService->notifyInterviewScheduled($interview);
+        $this->interviewInvitationService->sendInvitation($interview, false);
 
         return $interview;
     }
@@ -105,6 +107,7 @@ readonly class InterviewService
         }
 
         $this->interviewRepository->save($interview);
+        $this->interviewInvitationService->sendInvitation($interview, true);
 
         if ($interview->getStatus() === InterviewStatus::CANCELED && $statusBeforeUpdate !== InterviewStatus::CANCELED) {
             $this->recruitNotificationService->notifyInterviewCanceled($interview);

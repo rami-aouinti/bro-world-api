@@ -25,7 +25,7 @@ class MessagePayloadService
     /**
      * @param array<string, mixed> $payload
      *
-     * @return array{content: ?string, read: ?bool}
+     * @return array{content: ?string}
      */
     public function extractPatchFields(array $payload): array
     {
@@ -38,18 +38,8 @@ class MessagePayloadService
             $content = $payload['content'];
         }
 
-        $read = null;
-        if (array_key_exists('read', $payload)) {
-            if (!is_bool($payload['read'])) {
-                throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "read" must be a boolean when provided.');
-            }
-
-            $read = $payload['read'];
-        }
-
         return [
             'content' => $content,
-            'read' => $read,
         ];
     }
 }

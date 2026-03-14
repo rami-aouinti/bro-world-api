@@ -16,6 +16,9 @@ enum Role: string
     case ADMIN = 'ROLE_ADMIN';
     case ROOT = 'ROLE_ROOT';
     case API = 'ROLE_API';
+    case RECRUITER = 'ROLE_RECRUITER';
+    case HIRING_MANAGER = 'ROLE_HIRING_MANAGER';
+    case INTERVIEWER = 'ROLE_INTERVIEWER';
 
     public function label(): string
     {
@@ -25,6 +28,9 @@ enum Role: string
             self::ADMIN => 'Admin users',
             self::ROOT => 'Root users',
             self::API => 'API users',
+            self::RECRUITER => 'Recruiters',
+            self::HIRING_MANAGER => 'Hiring managers',
+            self::INTERVIEWER => 'Interviewers',
         };
     }
 }

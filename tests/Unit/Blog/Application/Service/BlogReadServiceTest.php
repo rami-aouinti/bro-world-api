@@ -15,11 +15,14 @@ use App\Blog\Domain\Enum\BlogType;
 use App\Blog\Domain\Enum\BlogVisibility;
 use App\Blog\Infrastructure\Repository\BlogPostRepository;
 use App\Blog\Infrastructure\Repository\BlogRepository;
+use App\General\Application\Service\CacheInvalidationService;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\User\Domain\Entity\User;
 use Doctrine\Common\Collections\ArrayCollection;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 use Symfony\Contracts\Cache\CacheInterface;
 
 final class BlogReadServiceTest extends TestCase
@@ -130,6 +133,52 @@ final class BlogReadServiceTest extends TestCase
         self::assertSame(1, $normalized['posts'][0]['children']['count']);
         self::assertSame('alice-user', $normalized['posts'][0]['children']['authors'][0]['username']);
         self::assertSame('c-root', $normalized['posts'][0]['comments'][0]['id']);
+    }
+
+
+    public function testPrivateBlogCacheIsRefreshedAfterBlogMutationInvalidation(): void
+    {
+        $blogRepository = $this->createMock(BlogRepository::class);
+        $blogPostRepository = $this->createMock(BlogPostRepository::class);
+        $cache = new TagAwareAdapter(new ArrayAdapter());
+        $cacheKeyConventionService = new CacheKeyConventionService();
+
+        $service = new BlogReadService($blogRepository, $blogPostRepository, $cache, $cacheKeyConventionService);
+        $invalidationService = new CacheInvalidationService($cache, $cacheKeyConventionService);
+
+        $currentUser = $this->mockUser('u-owner', 'owner-user');
+        $application = $this->createMock(\App\Platform\Domain\Entity\Application::class);
+        $application->method('getSlug')->willReturn('my-app');
+
+        $version = 'v1';
+        $blog = $this->createMock(Blog::class);
+        $blog->method('getId')->willReturn('b-private');
+        $blog->method('getTitle')->willReturn('Private Blog');
+        $blog->method('getSlug')->willReturn('private-blog');
+        $blog->method('getDescription')->willReturnCallback(static fn (): string => 'description-' . $version);
+        $blog->method('getType')->willReturn(BlogType::APPLICATION);
+        $blog->method('getPostStatus')->willReturn(BlogStatus::OPEN);
+        $blog->method('getCommentStatus')->willReturn(BlogStatus::OPEN);
+        $blog->method('getVisibility')->willReturn(BlogVisibility::PRIVATE);
+        $blog->method('getOwner')->willReturn($currentUser);
+        $blog->method('getApplication')->willReturn($application);
+
+        $blogRepository->expects(self::exactly(2))->method('findOneByApplicationSlug')->with('my-app')->willReturn($blog);
+        $blogPostRepository->expects(self::exactly(2))->method('findRootPostsByBlogPaginated')->with($blog, 1, 20)->willReturn([]);
+        $blogPostRepository->expects(self::exactly(2))->method('countRootPostsByBlog')->with($blog)->willReturn(0);
+        $blogPostRepository->expects(self::exactly(2))->method('findChildrenSharesSummaryByParentIds')->with([])->willReturn([]);
+
+        $firstRead = $service->getByApplicationSlug('my-app', $currentUser);
+        self::assertSame('description-v1', $firstRead['description']);
+
+        $version = 'v2';
+        $staleRead = $service->getByApplicationSlug('my-app', $currentUser);
+        self::assertSame('description-v1', $staleRead['description']);
+
+        $invalidationService->invalidateBlogCaches('my-app', ['u-owner']);
+
+        $freshRead = $service->getByApplicationSlug('my-app', $currentUser);
+        self::assertSame('description-v2', $freshRead['description']);
     }
 
     private function createService(): BlogReadService

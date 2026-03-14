@@ -23,6 +23,7 @@ use Ramsey\Uuid\UuidInterface;
 #[ORM\Index(name: 'idx_chat_message_created_at', columns: ['created_at'])]
 #[ORM\Index(name: 'idx_chat_message_sender_id', columns: ['sender_id'])]
 #[ORM\Index(name: 'idx_chat_message_conversation_created_deleted', columns: ['conversation_id', 'created_at', 'deleted_at'])]
+#[ORM\Index(name: 'idx_chat_message_conversation_deleted_created', columns: ['conversation_id', 'deleted_at', 'created_at'])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class ChatMessage implements EntityInterface
 {
@@ -44,11 +45,19 @@ class ChatMessage implements EntityInterface
     #[ORM\Column(name: 'content', type: Types::TEXT)]
     private string $content = '';
 
+    /**
+     * @deprecated Legacy global read flag kept for backward compatibility.
+     *             Business unread status must be computed from ConversationParticipant::lastReadMessageAt.
+     */
     #[ORM\Column(name: 'is_read', type: Types::BOOLEAN, options: [
         'default' => false,
     ])]
     private bool $read = false;
 
+    /**
+     * @deprecated Legacy global read timestamp kept for backward compatibility.
+     *             Business unread status must be computed from ConversationParticipant::lastReadMessageAt.
+     */
     #[ORM\Column(name: 'read_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $readAt = null;
 
@@ -124,11 +133,17 @@ class ChatMessage implements EntityInterface
         return $this;
     }
 
+    /**
+     * @deprecated Legacy global read flag kept for backward compatibility.
+     */
     public function isRead(): bool
     {
         return $this->read;
     }
 
+    /**
+     * @deprecated Legacy global read flag kept for backward compatibility.
+     */
     public function setRead(bool $read): self
     {
         $this->read = $read;
@@ -136,11 +151,17 @@ class ChatMessage implements EntityInterface
         return $this;
     }
 
+    /**
+     * @deprecated Legacy global read timestamp kept for backward compatibility.
+     */
     public function getReadAt(): ?DateTimeImmutable
     {
         return $this->readAt;
     }
 
+    /**
+     * @deprecated Legacy global read timestamp kept for backward compatibility.
+     */
     public function setReadAt(?DateTimeImmutable $readAt): self
     {
         $this->readAt = $readAt;

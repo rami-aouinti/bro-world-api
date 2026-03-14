@@ -20,6 +20,11 @@ use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
+use function array_key_exists;
+use function is_array;
+use function is_int;
+use function is_string;
+
 class PrivateInterviewControllerTest extends WebTestCase
 {
     /** @throws Throwable */
@@ -39,6 +44,14 @@ class PrivateInterviewControllerTest extends WebTestCase
         ]));
 
         self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
+
+        $content = $client->getResponse()->getContent();
+        self::assertNotFalse($content);
+        /** @var array<string,mixed> $payload */
+        $payload = JSON::decode($content, true);
+
+        $this->assertInterviewContract($payload);
+        self::assertSame($applicationId, $payload['applicationId']);
     }
 
     /** @throws Throwable */
@@ -73,6 +86,20 @@ class PrivateInterviewControllerTest extends WebTestCase
         ]));
 
         self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $content = $client->getResponse()->getContent();
+        self::assertNotFalse($content);
+        /** @var array<string,mixed> $payload */
+        $payload = JSON::decode($content, true);
+
+        self::assertSame([
+            'id',
+            'status',
+            'scheduledAt',
+            'durationMinutes',
+        ], array_keys($payload), 'Snapshot mismatch for PATCH interview response keys.');
+        self::assertSame('done', $payload['status']);
+        self::assertSame(90, $payload['durationMinutes']);
     }
 
     /** @throws Throwable */
@@ -90,6 +117,20 @@ class PrivateInterviewControllerTest extends WebTestCase
         $payload = JSON::decode($content, true);
         self::assertIsArray($payload);
         self::assertNotEmpty($payload);
+
+        $first = $payload[array_key_first($payload)];
+        self::assertTrue(is_array($first));
+        $this->assertInterviewListItemContract($first);
+        self::assertSame([
+            'id',
+            'scheduledAt',
+            'durationMinutes',
+            'mode',
+            'locationOrUrl',
+            'interviewerIds',
+            'status',
+            'notes',
+        ], array_keys($first), 'Snapshot mismatch for interview list item response keys.');
     }
 
     /** @throws Throwable */
@@ -102,6 +143,18 @@ class PrivateInterviewControllerTest extends WebTestCase
         $client->request('DELETE', self::API_URL_PREFIX . '/v1/recruit/private/interviews/' . $interviewId);
 
         self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
+    }
+
+    /** @throws Throwable */
+    #[TestDox('Interview endpoints are forbidden for ROLE_USER.')]
+    public function testInterviewListIsForbiddenForRegularUserRole(): void
+    {
+        [$applicationId] = $this->createDedicatedInterview('john-root');
+
+        $client = $this->getTestClient('john-user', 'password-user');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/private/applications/' . $applicationId . '/interviews');
+
+        self::assertSame(Response::HTTP_FORBIDDEN, $client->getResponse()->getStatusCode());
     }
 
     /**
@@ -172,4 +225,40 @@ class PrivateInterviewControllerTest extends WebTestCase
 
         return [$applicationId, $interview->getId()];
     }
+
+    /** @param array<string,mixed> $payload */
+    private function assertInterviewContract(array $payload): void
+    {
+        foreach (['id', 'applicationId', 'scheduledAt', 'durationMinutes', 'mode', 'locationOrUrl', 'interviewerIds', 'status', 'notes'] as $key) {
+            self::assertTrue(array_key_exists($key, $payload), 'Missing key in interview payload: ' . $key);
+        }
+
+        self::assertTrue(is_string($payload['id']));
+        self::assertTrue(is_string($payload['applicationId']));
+        self::assertTrue(is_string($payload['scheduledAt']));
+        self::assertTrue(is_int($payload['durationMinutes']));
+        self::assertTrue(is_string($payload['mode']));
+        self::assertTrue($payload['locationOrUrl'] === null || is_string($payload['locationOrUrl']));
+        self::assertTrue(is_array($payload['interviewerIds']));
+        self::assertTrue(is_string($payload['status']));
+        self::assertTrue($payload['notes'] === null || is_string($payload['notes']));
+    }
+
+    /** @param array<string,mixed> $payload */
+    private function assertInterviewListItemContract(array $payload): void
+    {
+        foreach (['id', 'scheduledAt', 'durationMinutes', 'mode', 'locationOrUrl', 'interviewerIds', 'status', 'notes'] as $key) {
+            self::assertTrue(array_key_exists($key, $payload), 'Missing key in interview list payload: ' . $key);
+        }
+
+        self::assertTrue(is_string($payload['id']));
+        self::assertTrue(is_string($payload['scheduledAt']));
+        self::assertTrue(is_int($payload['durationMinutes']));
+        self::assertTrue(is_string($payload['mode']));
+        self::assertTrue($payload['locationOrUrl'] === null || is_string($payload['locationOrUrl']));
+        self::assertTrue(is_array($payload['interviewerIds']));
+        self::assertTrue(is_string($payload['status']));
+        self::assertTrue($payload['notes'] === null || is_string($payload['notes']));
+    }
+
 }
