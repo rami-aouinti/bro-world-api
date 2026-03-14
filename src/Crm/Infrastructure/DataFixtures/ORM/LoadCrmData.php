@@ -51,14 +51,14 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
             }
 
             $companies = [
-                (new Company())
+                new Company()
                     ->setCrm($crm)
                     ->setName($application->getTitle() . ' - Acme Corp')
                     ->setIndustry('SaaS')
                     ->setWebsite('https://acme.example.com')
                     ->setContactEmail('contact@acme.example.com')
                     ->setPhone('+33 1 00 00 00 00'),
-                (new Company())
+                new Company()
                     ->setCrm($crm)
                     ->setName($application->getTitle() . ' - Globex')
                     ->setIndustry('Consulting')
@@ -70,7 +70,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
             foreach ($companies as $companyIndex => $company) {
                 $manager->persist($company);
 
-                $project = (new Project())
+                $project = new Project()
                     ->setCompany($company)
                     ->setName($company->getName() . ' - Projet Transformation')
                     ->setCode('PRJ-' . (string)($companyIndex + 1))
@@ -80,7 +80,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                     ->setDueAt(new DateTimeImmutable('+60 days'));
                 $manager->persist($project);
 
-                $sprint = (new Sprint())
+                $sprint = new Sprint()
                     ->setProject($project)
                     ->setName('Sprint ' . (string)($companyIndex + 1))
                     ->setGoal('Livrer les automatisations de relance')
@@ -89,7 +89,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                     ->setEndDate(new DateTimeImmutable('+7 days'));
                 $manager->persist($sprint);
 
-                $taskBacklog = (new Task())
+                $taskBacklog = new Task()
                     ->setProject($project)
                     ->setSprint($sprint)
                     ->setTitle('Consolider le backlog')
@@ -98,7 +98,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                     ->setPriority(TaskPriority::HIGH)
                     ->setDueAt(new DateTimeImmutable('+10 days'))
                     ->setEstimatedHours(12.5);
-                $taskAutomation = (new Task())
+                $taskAutomation = new Task()
                     ->setProject($project)
                     ->setSprint($sprint)
                     ->setTitle('Automatiser les relances')
@@ -112,7 +112,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                 $manager->persist($taskAutomation);
 
                 $manager->persist(
-                    (new TaskRequest())
+                    new TaskRequest()
                         ->setTask($taskBacklog)
                         ->setTitle('Prioriser les leads chauds')
                         ->setDescription('Ajouter une règle SLA pour les leads > 80%')
@@ -120,7 +120,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                 );
 
                 $manager->persist(
-                    (new TaskRequest())
+                    new TaskRequest()
                         ->setTask($taskAutomation)
                         ->setTitle('Valider le workflow de notifications')
                         ->setDescription('Valider la conformité RGPD avant diffusion')
