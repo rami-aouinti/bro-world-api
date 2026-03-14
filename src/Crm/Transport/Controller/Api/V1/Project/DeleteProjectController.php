@@ -49,7 +49,10 @@ final readonly class DeleteProjectController
 
         $this->entityManager->remove($project);
         $this->entityManager->flush();
-        $this->messageBus->dispatch(new EntityDeleted('crm_project', $id));
+        $this->messageBus->dispatch(new EntityDeleted('crm_project', $id, context: [
+            'applicationSlug' => $applicationSlug,
+            'crmId' => $crm->getId(),
+        ]));
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
