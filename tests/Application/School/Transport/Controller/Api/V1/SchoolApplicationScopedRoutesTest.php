@@ -35,7 +35,10 @@ final class SchoolApplicationScopedRoutesTest extends WebTestCase
 
         $forbiddenClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/teachers');
         self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
-        self::assertStringContainsString('Forbidden application scope access.', (string)$forbiddenClient->getResponse()->getContent());
+        $forbiddenPayload = JSON::decode((string)$forbiddenClient->getResponse()->getContent(), true);
+        self::assertSame('Forbidden application scope access.', $forbiddenPayload['message']);
+        self::assertSame('SCHOOL_FORBIDDEN', $forbiddenPayload['code']);
+        self::assertSame([], $forbiddenPayload['details']);
 
         $ownerClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams');
         self::assertSame(Response::HTTP_OK, $ownerClient->getResponse()->getStatusCode());
@@ -226,6 +229,10 @@ final class SchoolApplicationScopedRoutesTest extends WebTestCase
         foreach ($forbiddenPayloads as $endpoint => $payload) {
             $forbiddenClient->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/' . $endpoint, [], [], [], JSON::encode($payload));
             self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
+
+            $forbiddenPayload = JSON::decode((string)$forbiddenClient->getResponse()->getContent(), true);
+            self::assertSame('SCHOOL_FORBIDDEN', $forbiddenPayload['code']);
+            self::assertSame([], $forbiddenPayload['details']);
         }
 
         self::assertStringContainsString('Forbidden application scope access.', (string)$forbiddenClient->getResponse()->getContent());
