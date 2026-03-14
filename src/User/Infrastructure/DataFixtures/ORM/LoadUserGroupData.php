@@ -33,6 +33,9 @@ final class LoadUserGroupData extends Fixture implements OrderedFixtureInterface
         'Role-user' => '10000000-0000-1000-8000-000000000003',
         'Role-admin' => '10000000-0000-1000-8000-000000000004',
         'Role-root' => '10000000-0000-1000-8000-000000000005',
+        'Role-recruiter' => '10000000-0000-1000-8000-000000000006',
+        'Role-hiring_manager' => '10000000-0000-1000-8000-000000000007',
+        'Role-interviewer' => '10000000-0000-1000-8000-000000000008',
     ];
 
     public function __construct(
