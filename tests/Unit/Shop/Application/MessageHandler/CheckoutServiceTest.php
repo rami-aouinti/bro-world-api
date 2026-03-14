@@ -32,21 +32,21 @@ final class CheckoutServiceTest extends TestCase
             ->setShop($shop)
             ->setName('Gaming Keyboard')
             ->setSku('kb-01')
-            ->setPrice(49.9)
+            ->setPrice(4990)
             ->setStock(10);
 
         $cartItem = (new CartItem())
             ->setProduct($product)
             ->setQuantity(2)
             ->setUnitPriceSnapshot($product->getPrice())
-            ->setLineTotal(99.8);
+            ->setLineTotal(9980);
 
         $cart = (new Cart())
             ->setShop($shop)
             ->setUser($user)
             ->setIsActive(true)
             ->setItemsCount(2)
-            ->setSubtotal(99.8)
+            ->setSubtotal(9980)
             ->addItem($cartItem);
 
         $service = $this->buildService($shop, $user, $cart, $product);
@@ -56,8 +56,8 @@ final class CheckoutServiceTest extends TestCase
         self::assertSame(8, $product->getStock());
         self::assertFalse($cart->isActive());
         self::assertSame(0, $cart->getItemsCount());
-        self::assertSame(0.0, $cart->getSubtotal());
-        self::assertSame(99.8, $order->getSubtotal());
+        self::assertSame(0, $cart->getSubtotal());
+        self::assertSame(9980, $order->getSubtotal());
         self::assertCount(1, $order->getItems());
     }
 

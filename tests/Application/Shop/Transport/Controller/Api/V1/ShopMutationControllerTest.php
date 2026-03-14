@@ -43,6 +43,7 @@ final class ShopMutationControllerTest extends WebTestCase
 
         self::assertNotEmpty($products);
         self::assertSame($products[0]->getId(), $payload['id']);
+        self::assertSame(1234, $products[0]->getPrice());
     }
 
     public function testCreateApplicationProductReturnsCreatedWithIdAndPersistsEntity(): void
@@ -77,6 +78,7 @@ final class ShopMutationControllerTest extends WebTestCase
 
         self::assertNotEmpty($products);
         self::assertSame($products[0]->getId(), $payload['id']);
+        self::assertSame(2345, $products[0]->getPrice());
     }
 
 
@@ -101,6 +103,15 @@ final class ShopMutationControllerTest extends WebTestCase
         self::assertSame('true', $client->getResponse()->headers->get('Deprecation'));
         self::assertSame('Wed, 31 Dec 2026 23:59:59 GMT', $client->getResponse()->headers->get('Sunset'));
         self::assertNotFalse(strpos((string)$client->getResponse()->headers->get('Warning'), 'Deprecated endpoint'));
+
+        /** @var ProductRepository $productRepository */
+        $productRepository = static::getContainer()->get(ProductRepository::class);
+        $products = $productRepository->findBy([
+            'name' => 'Legacy Messenger Product',
+        ]);
+
+        self::assertNotEmpty($products);
+        self::assertSame(4567, $products[0]->getPrice());
     }
 
     public function testDeleteProductDispatchesCommandAndRemovesEntity(): void
