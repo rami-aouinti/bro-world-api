@@ -18,7 +18,7 @@ use Throwable;
 
 #[AsController]
 #[OA\Tag(name: 'Calendar Event')]
-#[OA\Delete(path: '/v1/calendar/private/events/{eventId}', operationId: 'calendar_private_event_delete', summary: 'Supprimer un événement personnel', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'eventId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], responses: [new OA\Response(response: 202, description: 'Suppression acceptée')])]
+#[OA\Delete(path: '/v1/calendar/private/events/{eventId}', operationId: 'calendar_private_event_delete', summary: 'Supprimer un événement personnel', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'eventId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], responses: [new OA\Response(response: 202, description: 'Suppression acceptée'), new OA\Response(response: 400, description: 'UUID/payload invalide'), new OA\Response(response: 404, description: 'Événement introuvable'), new OA\Response(response: 422, description: 'Contrainte métier non respectée')])]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 readonly class DeletePrivateEventController
 {
