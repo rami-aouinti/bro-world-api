@@ -31,7 +31,9 @@ final readonly class PatchSchoolResourceController
         $request->attributes->set('applicationSlug', $applicationSlug);
         $entity = $this->resourceViewService->findOr404($resource, $id);
         $this->resourcePatchService->patch($entity, $resource, $request->toArray());
-        $this->messageBus->dispatch(new EntityPatched('school_' . substr($resource, 0, -1), $id));
+        $this->messageBus->dispatch(new EntityPatched('school_' . substr($resource, 0, -1), $id, context: [
+            'applicationSlug' => $applicationSlug,
+        ]));
 
         return new JsonResponse($this->resourceViewService->map($entity));
     }

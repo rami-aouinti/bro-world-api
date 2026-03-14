@@ -81,6 +81,21 @@ class CacheInvalidationService
         }
     }
 
+    public function invalidateSchoolClassListCaches(?string $applicationSlug = null): void
+    {
+        if ($applicationSlug === null || $applicationSlug === '') {
+            return;
+        }
+
+        if ($this->cache instanceof TagAwareCacheInterface) {
+            $this->cache->invalidateTags([$this->cacheKeyConventionService->schoolClassListByApplicationTag($applicationSlug)]);
+        }
+
+        $this->cache->delete($this->cacheKeyConventionService->buildSchoolClassApplicationListKey($applicationSlug, 1, 20, [
+            'q' => '',
+        ]));
+    }
+
     public function invalidateRecruitJobListCaches(string $applicationSlug): void
     {
         if ($this->cache instanceof TagAwareCacheInterface) {

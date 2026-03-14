@@ -28,9 +28,13 @@ final readonly class DeleteClassService
             return false;
         }
 
+        $applicationSlug = $class->getSchool()?->getApplication()?->getSlug();
+
         $this->entityManager->remove($class);
         $this->entityManager->flush();
-        $this->messageBus->dispatch(new EntityDeleted('school_class', $id));
+        $this->messageBus->dispatch(new EntityDeleted('school_class', $id, context: [
+            'applicationSlug' => $applicationSlug,
+        ]));
 
         return true;
     }

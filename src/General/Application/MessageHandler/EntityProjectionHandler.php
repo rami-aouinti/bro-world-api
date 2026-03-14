@@ -117,7 +117,7 @@ final readonly class EntityProjectionHandler
             || $message->entityType === self::SCHOOL_STUDENT
             || $message->entityType === self::SCHOOL_GRADE
         ) {
-            $this->projectSchoolSupportEntities();
+            $this->projectSchoolSupportEntities($message);
         }
     }
 
@@ -256,8 +256,10 @@ final readonly class EntityProjectionHandler
     private function projectSchoolExam(EntityMutationMessage $message): void
     {
         if ($message instanceof EntityDeleted) {
+            $applicationSlug = isset($message->context['applicationSlug']) ? (string)$message->context['applicationSlug'] : null;
             $this->elasticsearchService->delete(SchoolExamProjection::INDEX_NAME, $message->entityId);
-            $this->cacheInvalidationService->invalidateSchoolExamListCaches(isset($message->context['applicationSlug']) ? (string)$message->context['applicationSlug'] : null);
+            $this->cacheInvalidationService->invalidateSchoolExamListCaches($applicationSlug);
+            $this->cacheInvalidationService->invalidateSchoolClassListCaches($applicationSlug);
 
             return;
         }
@@ -278,6 +280,10 @@ final readonly class EntityProjectionHandler
 
         $applicationSlug = $exam->getSchoolClass()?->getSchool()?->getApplication()?->getSlug();
         $this->cacheInvalidationService->invalidateSchoolExamListCaches($applicationSlug);
+
+        if ($exam->getSchoolClass() !== null) {
+            $this->cacheInvalidationService->invalidateSchoolClassListCaches($applicationSlug);
+        }
     }
 
     private function projectShopCatalog(): void
@@ -290,8 +296,11 @@ final readonly class EntityProjectionHandler
         $this->cacheInvalidationService->invalidateCrmTaskListCaches();
     }
 
-    private function projectSchoolSupportEntities(): void
+    private function projectSchoolSupportEntities(EntityMutationMessage $message): void
     {
-        $this->cacheInvalidationService->invalidateSchoolExamListCaches(null);
+        $applicationSlug = isset($message->context['applicationSlug']) ? (string)$message->context['applicationSlug'] : null;
+
+        $this->cacheInvalidationService->invalidateSchoolExamListCaches($applicationSlug);
+        $this->cacheInvalidationService->invalidateSchoolClassListCaches($applicationSlug);
     }
 }

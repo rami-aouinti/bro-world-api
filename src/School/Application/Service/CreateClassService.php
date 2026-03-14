@@ -37,7 +37,10 @@ final readonly class CreateClassService
 
         $this->entityManager->persist($class);
         $this->entityManager->flush();
-        $this->messageBus->dispatch(new EntityCreated('school_class', $class->getId()));
+        $applicationSlug = $school->getApplication()?->getSlug();
+        $this->messageBus->dispatch(new EntityCreated('school_class', $class->getId(), context: [
+            'applicationSlug' => $applicationSlug,
+        ]));
 
         return $class;
     }

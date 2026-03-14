@@ -46,7 +46,9 @@ final readonly class PatchSchoolApplicationResourceController
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Resource not found in application scope.');
         }
         $this->resourcePatchService->patch($entity, $resource, $request->toArray());
-        $this->messageBus->dispatch(new EntityPatched('school_' . substr($resource, 0, -1), $id));
+        $this->messageBus->dispatch(new EntityPatched('school_' . substr($resource, 0, -1), $id, context: [
+            'applicationSlug' => $applicationSlug,
+        ]));
 
         return new JsonResponse($this->resourceViewService->map($entity));
     }
