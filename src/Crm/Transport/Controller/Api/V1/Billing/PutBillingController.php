@@ -1,0 +1,88 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Crm\Transport\Controller\Api\V1\Billing;
+
+use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Infrastructure\Repository\BillingRepository;
+use App\Crm\Infrastructure\Repository\CompanyRepository;
+use App\Crm\Transport\Request\CreateBillingRequest;
+use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
+use App\Role\Domain\Enum\Role;
+use DateTimeImmutable;
+use JsonException;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+
+#[AsController]
+#[OA\Tag(name: 'Crm')]
+#[IsGranted(Role::CRM_MANAGER->value)]
+final readonly class PutBillingController
+{
+    public function __construct(
+        private BillingRepository $billingRepository,
+        private CompanyRepository $companyRepository,
+        private CrmApplicationScopeResolver $scopeResolver,
+        private CrmApiErrorResponseFactory $errorResponseFactory,
+        private ValidatorInterface $validator,
+    ) {
+    }
+
+    #[Route('/v1/crm/applications/{applicationSlug}/billings/{billing}', methods: [Request::METHOD_PUT])]
+    public function __invoke(string $applicationSlug, string $billing, Request $request): JsonResponse
+    {
+        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $entity = $this->billingRepository->findOneScopedById($billing, $crm->getId());
+        if ($entity === null) {
+            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Billing not found for this CRM scope.');
+        }
+
+        try {
+            $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            return $this->errorResponseFactory->invalidJson();
+        }
+
+        if (!is_array($payload)) {
+            return $this->errorResponseFactory->invalidJson();
+        }
+
+        $input = CreateBillingRequest::fromArray($payload);
+        $violations = $this->validator->validate($input);
+        if ($violations->count() > 0) {
+            return $this->errorResponseFactory->validationFailed($violations);
+        }
+
+        $companyId = (string) ($input->companyId ?? '');
+        if ($companyId === '') {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'companyId is required.');
+        }
+
+        $company = $this->companyRepository->findOneScopedById($companyId, $crm->getId());
+        if ($company === null) {
+            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Company not found for this CRM scope.');
+        }
+
+        $entity
+            ->setCompany($company)
+            ->setLabel((string) $input->label)
+            ->setAmount((float) $input->amount)
+            ->setCurrency($input->currency ?: 'EUR')
+            ->setStatus($input->status ?: 'pending')
+            ->setDueAt(($input->dueAt ?? '') !== '' ? new DateTimeImmutable((string) $input->dueAt) : null);
+
+        $this->billingRepository->save($entity);
+
+        return new JsonResponse([
+            'id' => $entity->getId(),
+            'companyId' => $entity->getCompany()?->getId(),
+        ]);
+    }
+}
