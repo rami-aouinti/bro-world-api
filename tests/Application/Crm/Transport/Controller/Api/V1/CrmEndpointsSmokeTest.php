@@ -288,6 +288,100 @@ final class CrmEndpointsSmokeTest extends WebTestCase
         self::assertSame([], $payload['errors'] ?? null);
     }
 
+
+    #[TestDox('Project and sprint list payloads expose "name" instead of legacy "title".')]
+    public function testProjectAndSprintListUseNameField(): void
+    {
+        $companyId = $this->createCompany();
+        $projectId = $this->createProject($companyId);
+        $sprintId = $this->createSprint($projectId);
+
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('GET', sprintf('%s/v1/crm/applications/%s/projects?page=1&limit=100', self::API_URL_PREFIX, self::APPLICATION_SLUG));
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $projectsPayload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        $projectItem = $this->findItemById($projectsPayload['items'] ?? [], $projectId);
+        self::assertNotNull($projectItem);
+        self::assertArrayHasKey('name', $projectItem);
+        self::assertArrayNotHasKey('title', $projectItem);
+
+        $client->request('GET', sprintf('%s/v1/crm/applications/%s/sprints?page=1&limit=100', self::API_URL_PREFIX, self::APPLICATION_SLUG));
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $sprintsPayload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        $sprintItem = $this->findItemById($sprintsPayload['items'] ?? [], $sprintId);
+        self::assertNotNull($sprintItem);
+        self::assertArrayHasKey('name', $sprintItem);
+        self::assertArrayNotHasKey('title', $sprintItem);
+
+        $this->assertDeleteSucceeds('sprints', $sprintId);
+        $this->assertDeleteSucceeds('projects', $projectId);
+        $this->assertDeleteSucceeds('companies', $companyId);
+    }
+
+    #[TestDox('Tasks by sprint board payload exposes sprint.name instead of sprint.title.')]
+    public function testTasksBySprintBoardUsesSprintNameField(): void
+    {
+        $companyId = $this->createCompany();
+        $projectId = $this->createProject($companyId);
+        $sprintId = $this->createSprint($projectId);
+
+        $taskClient = $this->getTestClient('john-root', 'password-root');
+        $taskClient->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/tasks', self::API_URL_PREFIX, self::APPLICATION_SLUG),
+            content: JSON::encode([
+                'title' => 'Board task ' . uniqid('', true),
+                'projectId' => $projectId,
+                'sprintId' => $sprintId,
+            ])
+        );
+        self::assertSame(Response::HTTP_CREATED, $taskClient->getResponse()->getStatusCode());
+        $taskPayload = $this->decodeJsonResponse($taskClient->getResponse()->getContent());
+        $taskId = (string)($taskPayload['id'] ?? '');
+        self::assertNotSame('', $taskId);
+
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('GET', sprintf('%s/v1/crm/applications/%s/tasks/by-sprint', self::API_URL_PREFIX, self::APPLICATION_SLUG));
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertIsArray($payload['items'] ?? null);
+
+        $group = null;
+        foreach ($payload['items'] as $item) {
+            if (($item['sprint']['id'] ?? null) === $sprintId) {
+                $group = $item;
+                break;
+            }
+        }
+
+        self::assertIsArray($group);
+        self::assertArrayHasKey('sprint', $group);
+        self::assertArrayHasKey('name', $group['sprint']);
+        self::assertArrayNotHasKey('title', $group['sprint']);
+
+        $this->assertDeleteSucceeds('tasks', $taskId);
+        $this->assertDeleteSucceeds('sprints', $sprintId);
+        $this->assertDeleteSucceeds('projects', $projectId);
+        $this->assertDeleteSucceeds('companies', $companyId);
+    }
+
+    #[TestDox('OpenAPI documentation exposes name for CRM projects/sprints and by-sprint board schema example.')]
+    public function testOpenApiShowsNameForProjectSprintAndBoardPayloads(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('GET', '/api/doc.json');
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        $paths = $payload['paths'] ?? [];
+
+        self::assertSame('Projects list with normalized name field.', $paths['/v1/crm/applications/{applicationSlug}/projects']['get']['responses']['200']['description'] ?? null);
+        self::assertSame('Sprints list with normalized name field.', $paths['/v1/crm/applications/{applicationSlug}/sprints']['get']['responses']['200']['description'] ?? null);
+        self::assertSame('Board payload grouped by sprint with sprint.name.', $paths['/v1/crm/applications/{applicationSlug}/tasks/by-sprint']['get']['responses']['200']['description'] ?? null);
+    }
+
     /**
      * @return array<int, array{string}>
      */
@@ -436,6 +530,21 @@ final class CrmEndpointsSmokeTest extends WebTestCase
         $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
         self::assertArrayHasKey('message', $payload);
         self::assertSame([], $payload['errors'] ?? null);
+    }
+
+    /**
+     * @param list<array<string,mixed>> $items
+     * @return array<string,mixed>|null
+     */
+    private function findItemById(array $items, string $id): ?array
+    {
+        foreach ($items as $item) {
+            if (($item['id'] ?? null) === $id) {
+                return $item;
+            }
+        }
+
+        return null;
     }
 
     /**

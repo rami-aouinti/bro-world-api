@@ -49,7 +49,7 @@ final readonly class TaskBoardService
                 $items[$sprintId] = [
                     'sprint' => [
                         'id' => $task->getSprint()?->getId(),
-                        'title' => $task->getSprint()?->getName(),
+                        'name' => $task->getSprint()?->getName(),
                         'status' => $task->getSprint()?->getStatus()->value,
                     ],
                     'tasks' => [],

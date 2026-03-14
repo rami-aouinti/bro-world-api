@@ -29,6 +29,7 @@ final readonly class ListProjectsController
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Response(response: 200, description: 'Projects list with normalized name field.')]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
