@@ -33,11 +33,7 @@ final readonly class QuizSubmissionService
      */
     public function submitByApplicationSlug(string $applicationSlug, array $payload): array
     {
-        $quiz = $this->quizRepository->createQueryBuilder('q')
-            ->leftJoin('q.application', 'application')->addSelect('application')
-            ->andWhere('application.slug = :slug')->setParameter('slug', $applicationSlug)
-            ->getQuery()
-            ->getOneOrNullResult();
+        $quiz = $this->quizRepository->findPublishedByApplicationSlugWithConfiguration($applicationSlug);
 
         if (!$quiz instanceof Quiz) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Quiz not found for this application.');

@@ -95,6 +95,41 @@ final class SubmitQuizByApplicationControllerTest extends WebTestCase
         }
     }
 
+
+    #[TestDox('GET quiz by application returns 404 for an unpublished quiz.')]
+    public function testGetQuizByApplicationReturnsNotFoundWhenQuizIsNotPublished(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $quiz = $this->getAnyPublishedQuiz($entityManager);
+        $quiz->setPublished(false);
+        $entityManager->flush();
+
+        $client = $this->getTestClient('john-user', 'password-user');
+        $client->request('GET', $this->baseUrl . '/' . $quiz->getApplication()->getSlug());
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+    }
+
+    #[TestDox('Submitting a quiz returns 404 when the quiz is not published.')]
+    public function testSubmitQuizReturnsNotFoundWhenQuizIsNotPublished(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $quiz = $this->getAnyPublishedQuiz($entityManager);
+        $quiz->setPublished(false);
+        $entityManager->flush();
+
+        $client = $this->getTestClient('john-user', 'password-user');
+        $client->request(
+            'POST',
+            $this->baseUrl . '/' . $quiz->getApplication()->getSlug() . '/submit',
+            content: JSON::encode([
+                'answers' => [],
+            ])
+        );
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+    }
+
     #[TestDox('Submitting invalid quiz payload returns 422.')]
     public function testSubmitQuizWithInvalidPayloadReturnsValidationError(): void
     {

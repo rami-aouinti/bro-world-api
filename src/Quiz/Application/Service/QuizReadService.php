@@ -9,6 +9,8 @@ use App\Quiz\Domain\Enum\QuizCategory;
 use App\Quiz\Domain\Enum\QuizLevel;
 use App\Quiz\Infrastructure\Repository\QuizQuestionRepository;
 use App\Quiz\Infrastructure\Repository\QuizRepository;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -59,6 +61,10 @@ final readonly class QuizReadService
 
             if (!$quiz instanceof Quiz) {
                 return [];
+            }
+
+            if (!$quiz->isPublished()) {
+                throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Quiz not found for this application.');
             }
 
             $questions = $this->quizQuestionRepository->findByFilters(
