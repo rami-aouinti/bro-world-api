@@ -28,6 +28,51 @@ when@dev: &dev
                         name: Authorization
                         description: 'Value: ApiKey {token}'
                         in: header
+                schemas:
+                    SchoolError:
+                        type: object
+                        required:
+                            - message
+                            - code
+                            - details
+                        properties:
+                            message:
+                                type: string
+                                example: Forbidden application scope access.
+                            code:
+                                type: string
+                                example: SCHOOL_FORBIDDEN
+                            details:
+                                type: array
+                                items:
+                                    type: object
+                    SchoolValidationError:
+                        type: object
+                        required:
+                            - message
+                            - code
+                            - details
+                        properties:
+                            message:
+                                type: string
+                                example: Validation failed.
+                            code:
+                                type: string
+                                example: SCHOOL_VALIDATION_FAILED
+                            details:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        propertyPath:
+                                            type: string
+                                            example: classId
+                                        message:
+                                            type: string
+                                            example: This value should not be blank.
+                                        code:
+                                            type: string
+                                            nullable: true
             security:
                 -   Bearer: []
                 -   ApiKey: []
