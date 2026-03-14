@@ -1,0 +1,360 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Application\Crm\Transport\Controller\Api\V1;
+
+use App\General\Domain\Utils\JSON;
+use App\Tests\TestCase\WebTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestDox;
+use Symfony\Component\HttpFoundation\Response;
+
+final class CrmEndpointsSmokeTest extends WebTestCase
+{
+    private const string APPLICATION_SLUG = 'crm-sales-hub';
+    private const string UNKNOWN_UUID = '00000000-0000-0000-0000-000000000000';
+
+    #[TestDox('GET list CRM endpoints return 200 and items/pagination/meta structure.')]
+    #[DataProvider('listEndpointsProvider')]
+    public function testListEndpointsPayloadStructure(string $resource): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('GET', sprintf('%s/v1/crm/applications/%s/%s?page=1&limit=5', self::API_URL_PREFIX, self::APPLICATION_SLUG, $resource));
+        $response = $client->getResponse();
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:\n" . $response);
+
+        $payload = $this->decodeJsonResponse($response->getContent());
+        self::assertArrayHasKey('items', $payload);
+        self::assertArrayHasKey('pagination', $payload);
+        self::assertArrayHasKey('meta', $payload);
+    }
+
+    #[TestDox('GET list CRM endpoints return 404 for unknown application slug.')]
+    #[DataProvider('listEndpointsProvider')]
+    public function testListEndpointsErrorCase(string $resource): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('GET', sprintf('%s/v1/crm/applications/not-found-slug/%s', self::API_URL_PREFIX, $resource));
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+    }
+
+    #[TestDox('POST /companies returns 201 and then DELETE /companies/{id} returns 204.')]
+    public function testCompanyCreateAndDelete(): void
+    {
+        $companyId = $this->createCompany();
+        $this->assertDeleteSucceeds('companies', $companyId);
+    }
+
+    #[TestDox('POST /companies returns error for invalid payload.')]
+    public function testCompanyCreateErrorCase(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('POST', sprintf('%s/v1/crm/applications/%s/companies', self::API_URL_PREFIX, self::APPLICATION_SLUG), content: JSON::encode(['name' => '']));
+
+        self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $client->getResponse()->getStatusCode());
+    }
+
+    #[TestDox('DELETE /companies/{id} returns 404 for unknown entity.')]
+    public function testCompanyDeleteErrorCase(): void
+    {
+        $this->assertDeleteNotFound('companies');
+    }
+
+    #[TestDox('POST /projects returns 201 and then DELETE /projects/{id} returns 204.')]
+    public function testProjectCreateAndDelete(): void
+    {
+        $companyId = $this->createCompany();
+        $projectId = $this->createProject($companyId);
+
+        $this->assertDeleteSucceeds('projects', $projectId);
+        $this->assertDeleteSucceeds('companies', $companyId);
+    }
+
+    #[TestDox('POST /projects returns error for invalid reference.')]
+    public function testProjectCreateErrorCase(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/projects', self::API_URL_PREFIX, self::APPLICATION_SLUG),
+            content: JSON::encode([
+                'name' => 'Broken project',
+                'companyId' => self::UNKNOWN_UUID,
+            ])
+        );
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+    }
+
+    #[TestDox('DELETE /projects/{id} returns 404 for unknown entity.')]
+    public function testProjectDeleteErrorCase(): void
+    {
+        $this->assertDeleteNotFound('projects');
+    }
+
+    #[TestDox('POST /sprints returns 201 and then DELETE /sprints/{id} returns 204.')]
+    public function testSprintCreateAndDelete(): void
+    {
+        $companyId = $this->createCompany();
+        $projectId = $this->createProject($companyId);
+        $sprintId = $this->createSprint($projectId);
+
+        $this->assertDeleteSucceeds('sprints', $sprintId);
+        $this->assertDeleteSucceeds('projects', $projectId);
+        $this->assertDeleteSucceeds('companies', $companyId);
+    }
+
+    #[TestDox('POST /sprints returns error for invalid reference.')]
+    public function testSprintCreateErrorCase(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/sprints', self::API_URL_PREFIX, self::APPLICATION_SLUG),
+            content: JSON::encode([
+                'name' => 'Broken sprint',
+                'projectId' => self::UNKNOWN_UUID,
+            ])
+        );
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+    }
+
+    #[TestDox('DELETE /sprints/{id} returns 404 for unknown entity.')]
+    public function testSprintDeleteErrorCase(): void
+    {
+        $this->assertDeleteNotFound('sprints');
+    }
+
+    #[TestDox('POST /tasks returns 201 and then DELETE /tasks/{id} returns 204.')]
+    public function testTaskCreateAndDelete(): void
+    {
+        $companyId = $this->createCompany();
+        $projectId = $this->createProject($companyId);
+        $taskId = $this->createTask($projectId);
+
+        $this->assertDeleteSucceeds('tasks', $taskId);
+        $this->assertDeleteSucceeds('projects', $projectId);
+        $this->assertDeleteSucceeds('companies', $companyId);
+    }
+
+    #[TestDox('POST /tasks returns error for invalid reference.')]
+    public function testTaskCreateErrorCase(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/tasks', self::API_URL_PREFIX, self::APPLICATION_SLUG),
+            content: JSON::encode([
+                'title' => 'Broken task',
+                'projectId' => self::UNKNOWN_UUID,
+            ])
+        );
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+    }
+
+    #[TestDox('DELETE /tasks/{id} returns 404 for unknown entity.')]
+    public function testTaskDeleteErrorCase(): void
+    {
+        $this->assertDeleteNotFound('tasks');
+    }
+
+    #[TestDox('POST /task-requests returns 201 and then DELETE /task-requests/{id} returns 204.')]
+    public function testTaskRequestCreateAndDelete(): void
+    {
+        $companyId = $this->createCompany();
+        $projectId = $this->createProject($companyId);
+        $taskId = $this->createTask($projectId);
+        $taskRequestId = $this->createTaskRequest($taskId);
+
+        $this->assertDeleteSucceeds('task-requests', $taskRequestId);
+        $this->assertDeleteSucceeds('tasks', $taskId);
+        $this->assertDeleteSucceeds('projects', $projectId);
+        $this->assertDeleteSucceeds('companies', $companyId);
+    }
+
+    #[TestDox('POST /task-requests returns error for invalid reference.')]
+    public function testTaskRequestCreateErrorCase(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/task-requests', self::API_URL_PREFIX, self::APPLICATION_SLUG),
+            content: JSON::encode([
+                'title' => 'Broken task request',
+                'taskId' => self::UNKNOWN_UUID,
+            ])
+        );
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+    }
+
+    #[TestDox('DELETE /task-requests/{id} returns 404 for unknown entity.')]
+    public function testTaskRequestDeleteErrorCase(): void
+    {
+        $this->assertDeleteNotFound('task-requests');
+    }
+
+    #[TestDox('GET /dashboard returns 200 and expected keys.')]
+    public function testDashboardSuccess(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('GET', sprintf('%s/v1/crm/applications/%s/dashboard', self::API_URL_PREFIX, self::APPLICATION_SLUG));
+
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+
+        self::assertArrayHasKey('companies', $payload);
+        self::assertArrayHasKey('projects', $payload);
+        self::assertArrayHasKey('tasks', $payload);
+        self::assertArrayHasKey('taskRequests', $payload);
+    }
+
+    #[TestDox('GET /dashboard returns 404 for unknown application slug.')]
+    public function testDashboardErrorCase(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/crm/applications/not-found-slug/dashboard');
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * @return array<int, array{string}>
+     */
+    public static function listEndpointsProvider(): array
+    {
+        return [
+            ['companies'],
+            ['projects'],
+            ['sprints'],
+            ['tasks'],
+            ['task-requests'],
+        ];
+    }
+
+    private function createCompany(): string
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/companies', self::API_URL_PREFIX, self::APPLICATION_SLUG),
+            content: JSON::encode([
+                'name' => 'Smoke Company ' . uniqid('', true),
+                'contactEmail' => 'smoke.company@example.com',
+            ])
+        );
+
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+
+        return (string)$payload['id'];
+    }
+
+    private function createProject(string $companyId): string
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/projects', self::API_URL_PREFIX, self::APPLICATION_SLUG),
+            content: JSON::encode([
+                'name' => 'Smoke Project ' . uniqid('', true),
+                'companyId' => $companyId,
+            ])
+        );
+
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+
+        return (string)$payload['id'];
+    }
+
+    private function createSprint(string $projectId): string
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/sprints', self::API_URL_PREFIX, self::APPLICATION_SLUG),
+            content: JSON::encode([
+                'name' => 'Smoke Sprint ' . uniqid('', true),
+                'projectId' => $projectId,
+            ])
+        );
+
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+
+        return (string)$payload['id'];
+    }
+
+    private function createTask(string $projectId): string
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/tasks', self::API_URL_PREFIX, self::APPLICATION_SLUG),
+            content: JSON::encode([
+                'title' => 'Smoke Task ' . uniqid('', true),
+                'projectId' => $projectId,
+            ])
+        );
+
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+
+        return (string)$payload['id'];
+    }
+
+    private function createTaskRequest(string $taskId): string
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/task-requests', self::API_URL_PREFIX, self::APPLICATION_SLUG),
+            content: JSON::encode([
+                'title' => 'Smoke Task Request ' . uniqid('', true),
+                'taskId' => $taskId,
+            ])
+        );
+
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+
+        return (string)$payload['id'];
+    }
+
+    private function assertDeleteSucceeds(string $resource, string $id): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('DELETE', sprintf('%s/v1/crm/applications/%s/%s/%s', self::API_URL_PREFIX, self::APPLICATION_SLUG, $resource, $id));
+
+        self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
+    }
+
+    private function assertDeleteNotFound(string $resource): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('DELETE', sprintf('%s/v1/crm/applications/%s/%s/%s', self::API_URL_PREFIX, self::APPLICATION_SLUG, $resource, self::UNKNOWN_UUID));
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function decodeJsonResponse(string|false $content): array
+    {
+        self::assertNotFalse($content);
+
+        $decoded = JSON::decode($content, true);
+        self::assertIsArray($decoded);
+
+        return $decoded;
+    }
+}
