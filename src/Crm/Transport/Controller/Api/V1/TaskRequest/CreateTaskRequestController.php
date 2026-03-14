@@ -74,8 +74,8 @@ final readonly class CreateTaskRequestController
                 description: 'Invalid JSON payload or invalid date format.',
                 content: new OA\JsonContent(
                     examples: [
-                        'invalidJson' => new OA\Examples(summary: 'JSON invalide', value: ['message' => 'Invalid JSON payload.', 'errors' => []]),
-                        'invalidDate' => new OA\Examples(summary: 'Date invalide', value: ['message' => 'Invalid date format for "resolvedAt".', 'errors' => []]),
+                        'invalidJson' => new OA\Examples(example: 'invalidJson', summary: 'JSON invalide', value: ['message' => 'Invalid JSON payload.', 'errors' => []]),
+                        'invalidDate' => new OA\Examples(example: 'invalidJson', summary: 'Date invalide', value: ['message' => 'Invalid date format for "resolvedAt".', 'errors' => []]),
                     ],
                 ),
             ),
