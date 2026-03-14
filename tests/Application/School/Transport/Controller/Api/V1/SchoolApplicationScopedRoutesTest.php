@@ -229,4 +229,81 @@ final class SchoolApplicationScopedRoutesTest extends WebTestCase
 
         self::assertStringContainsString('Forbidden application scope access.', (string)$forbiddenClient->getResponse()->getContent());
     }
+
+    #[TestDox('School scoped routes support class-teacher assignment workflow for class, student, exam and grade lifecycle.')]
+    public function testScopedAssignmentWorkflowForListAndDetailWithCleanup(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes', [], [], [], JSON::encode([
+            'name' => 'Classe Scoped Workflow',
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
+        $classId = JSON::decode((string)$client->getResponse()->getContent(), true)['id'];
+
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/teachers', [], [], [], JSON::encode([
+            'name' => 'Prof Scoped Workflow',
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
+        $teacherId = JSON::decode((string)$client->getResponse()->getContent(), true)['id'];
+
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes/' . $classId . '/teachers/' . $teacherId);
+        self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
+
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/students', [], [], [], JSON::encode([
+            'name' => 'Eleve Scoped Workflow',
+            'classId' => $classId,
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
+        $studentId = JSON::decode((string)$client->getResponse()->getContent(), true)['id'];
+
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams', [], [], [], JSON::encode([
+            'title' => 'Examen Scoped Workflow',
+            'classId' => $classId,
+            'teacherId' => $teacherId,
+            'type' => 'QUIZ',
+            'status' => 'DRAFT',
+            'term' => 'TERM_1',
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
+        $examId = JSON::decode((string)$client->getResponse()->getContent(), true)['id'];
+
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/grades', [], [], [], JSON::encode([
+            'score' => 17.5,
+            'studentId' => $studentId,
+            'examId' => $examId,
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
+        $gradeId = JSON::decode((string)$client->getResponse()->getContent(), true)['id'];
+
+        $client->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/grades');
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $grades = JSON::decode((string)$client->getResponse()->getContent(), true);
+        self::assertContains($gradeId, array_column($grades['items'], 'id'));
+
+        $client->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/grades/' . $gradeId);
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $gradeDetail = JSON::decode((string)$client->getResponse()->getContent(), true);
+        self::assertSame($gradeId, $gradeDetail['id']);
+        self::assertSame($studentId, $gradeDetail['student']['id']);
+        self::assertSame($examId, $gradeDetail['exam']['id']);
+
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/grades/' . $gradeId);
+        self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
+
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams/' . $examId);
+        self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
+
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/students/' . $studentId);
+        self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
+
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes/' . $classId . '/teachers/' . $teacherId);
+        self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
+
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/teachers/' . $teacherId);
+        self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
+
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes/' . $classId);
+        self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
+    }
 }
