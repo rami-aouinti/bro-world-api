@@ -57,7 +57,52 @@ final readonly class CreateCompanyByApplicationController
             ),
         ),
         responses: [
-            new OA\Response(response: 201, description: 'Company created in the scoped CRM application.'),
+            new OA\Response(
+                response: 201,
+                description: 'Company created in the scoped CRM application.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '7e2f5f7c-2878-438a-a2ff-27fc2382cedf'),
+                        new OA\Property(property: 'crmId', type: 'string', format: 'uuid', example: '0c9b6cba-4ed6-4977-9545-5f8564d5ac7e'),
+                        new OA\Property(property: 'applicationSlug', type: 'string', example: 'my-crm-app'),
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Invalid JSON payload.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Invalid JSON payload.',
+                        'errors' => [],
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Unknown CRM application scope.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Unknown application scope.',
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation failed.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Validation failed.',
+                        'errors' => [
+                            [
+                                'propertyPath' => 'name',
+                                'message' => 'This value should not be blank.',
+                                'code' => 'c1051bb4-d103-4f74-8988-acbcafc7fdc3',
+                            ],
+                        ],
+                    ],
+                ),
+            ),
         ],
     )]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse

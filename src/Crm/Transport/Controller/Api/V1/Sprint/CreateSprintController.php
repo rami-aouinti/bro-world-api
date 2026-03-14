@@ -42,7 +42,70 @@ final readonly class CreateSprintController
 
     #[Route('/v1/crm/applications/{applicationSlug}/sprints', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Post(summary: 'POST /v1/crm/applications/{applicationSlug}/sprints')]
+    #[OA\Post(
+        summary: 'POST /v1/crm/applications/{applicationSlug}/sprints',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name', 'projectId'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', maxLength: 255, example: 'Sprint Q1 - Pipeline'),
+                    new OA\Property(property: 'goal', type: 'string', maxLength: 5000, nullable: true, example: 'Automatiser la qualification des leads.'),
+                    new OA\Property(property: 'status', type: 'string', enum: ['planned', 'active', 'closed'], nullable: true, example: 'planned'),
+                    new OA\Property(property: 'startDate', type: 'string', format: 'date-time', nullable: true, example: '2026-02-01T08:00:00+00:00'),
+                    new OA\Property(property: 'endDate', type: 'string', format: 'date-time', nullable: true, example: '2026-02-14T18:00:00+00:00'),
+                    new OA\Property(property: 'projectId', type: 'string', format: 'uuid', example: 'ebf77366-d60c-4ac4-b204-9f91a7f7ee12'),
+                ],
+            ),
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Sprint created.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '220670e1-4bc3-40da-92bb-89d5dca347a8'),
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Invalid JSON payload or invalid date format.',
+                content: new OA\JsonContent(
+                    examples: [
+                        'invalidJson' => new OA\Examples(summary: 'JSON invalide', value: ['message' => 'Invalid JSON payload.', 'errors' => []]),
+                        'invalidDate' => new OA\Examples(summary: 'Date invalide', value: ['message' => 'Invalid date format for "endDate".', 'errors' => []]),
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Referenced resource not found in CRM scope.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Unknown "projectId" in this CRM scope.',
+                        'errors' => [],
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation failed.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Validation failed.',
+                        'errors' => [
+                            [
+                                'propertyPath' => 'name',
+                                'message' => 'This value should not be blank.',
+                                'code' => 'c1051bb4-d103-4f74-8988-acbcafc7fdc3',
+                            ],
+                        ],
+                    ],
+                ),
+            ),
+        ],
+    )]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);

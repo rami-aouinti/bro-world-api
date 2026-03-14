@@ -46,7 +46,83 @@ final readonly class CreateProjectController
      */
     #[Route('/v1/crm/applications/{applicationSlug}/projects', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Post(summary: 'POST /v1/crm/applications/{applicationSlug}/projects')]
+    #[OA\Post(
+        summary: 'POST /v1/crm/applications/{applicationSlug}/projects',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name', 'companyId'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', maxLength: 255, example: 'Refonte CRM 2026'),
+                    new OA\Property(property: 'code', type: 'string', maxLength: 64, nullable: true, example: 'CRM26'),
+                    new OA\Property(property: 'description', type: 'string', maxLength: 5000, nullable: true, example: 'Refonte des workflows commerciaux.'),
+                    new OA\Property(property: 'status', type: 'string', enum: ['planned', 'active', 'on_hold', 'completed'], nullable: true, example: 'active'),
+                    new OA\Property(property: 'startedAt', type: 'string', format: 'date-time', nullable: true, example: '2026-01-15T09:00:00+00:00'),
+                    new OA\Property(property: 'dueAt', type: 'string', format: 'date-time', nullable: true, example: '2026-06-30T18:00:00+00:00'),
+                    new OA\Property(property: 'companyId', type: 'string', format: 'uuid', example: '4db7f53d-cf31-4b36-9b9b-78e914c36a39'),
+                ],
+            ),
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Project created.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'string', format: 'uuid', example: 'ebf77366-d60c-4ac4-b204-9f91a7f7ee12'),
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Invalid JSON payload or invalid date format.',
+                content: new OA\JsonContent(
+                    examples: [
+                        'invalidJson' => new OA\Examples(
+                            summary: 'JSON invalide',
+                            value: [
+                                'message' => 'Invalid JSON payload.',
+                                'errors' => [],
+                            ],
+                        ),
+                        'invalidDate' => new OA\Examples(
+                            summary: 'Date invalide',
+                            value: [
+                                'message' => 'Invalid date format for "startedAt".',
+                                'errors' => [],
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Referenced resource not found in CRM scope.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Unknown "companyId" in this CRM scope.',
+                        'errors' => [],
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation failed.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Validation failed.',
+                        'errors' => [
+                            [
+                                'propertyPath' => 'companyId',
+                                'message' => 'This is not a valid UUID.',
+                                'code' => '51120b12-a2bc-41bf-aa53-cd73daf330d0',
+                            ],
+                        ],
+                    ],
+                ),
+            ),
+        ],
+    )]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);

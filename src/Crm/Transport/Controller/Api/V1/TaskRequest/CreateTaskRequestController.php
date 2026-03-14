@@ -43,15 +43,70 @@ final readonly class CreateTaskRequestController
 
     #[Route('/v1/crm/applications/{applicationSlug}/task-requests', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Post(summary: 'POST /v1/crm/applications/{applicationSlug}/task-requests')]
-
-    #[OA\RequestBody(required: false, content: new OA\JsonContent(
-        properties: [
-            new OA\Property(property: 'title', type: 'string'),
-            new OA\Property(property: 'description', type: 'string', nullable: true),
-            new OA\Property(property: 'assigneeIds', type: 'array', items: new OA\Items(type: 'string', format: 'uuid'), nullable: true),
-        ]
-    ))]
+    #[OA\Post(
+        summary: 'POST /v1/crm/applications/{applicationSlug}/task-requests',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['title', 'taskId'],
+                properties: [
+                    new OA\Property(property: 'title', type: 'string', maxLength: 255, example: 'Demande de revue produit'),
+                    new OA\Property(property: 'description', type: 'string', maxLength: 5000, nullable: true, example: 'Valider les nouveaux critères de qualification.'),
+                    new OA\Property(property: 'status', type: 'string', enum: ['pending', 'approved', 'rejected'], nullable: true, example: 'pending'),
+                    new OA\Property(property: 'resolvedAt', type: 'string', format: 'date-time', nullable: true, example: '2026-03-20T16:30:00+00:00'),
+                    new OA\Property(property: 'taskId', type: 'string', format: 'uuid', example: '8f6a3550-9a07-4f69-9f75-0089f7d83e7f'),
+                    new OA\Property(property: 'assigneeIds', type: 'array', nullable: true, items: new OA\Items(type: 'string', format: 'uuid'), example: ['7d3c919e-5d4e-406a-a615-ffaf6dddbd85']),
+                ],
+            ),
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Task request created.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'string', format: 'uuid', example: 'a8ebfd5d-0fa8-4346-8ca2-ff5b7b1f6657'),
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Invalid JSON payload or invalid date format.',
+                content: new OA\JsonContent(
+                    examples: [
+                        'invalidJson' => new OA\Examples(summary: 'JSON invalide', value: ['message' => 'Invalid JSON payload.', 'errors' => []]),
+                        'invalidDate' => new OA\Examples(summary: 'Date invalide', value: ['message' => 'Invalid date format for "resolvedAt".', 'errors' => []]),
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Referenced resource not found in CRM scope.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Unknown "taskId" in this CRM scope.',
+                        'errors' => [],
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation failed.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Validation failed.',
+                        'errors' => [
+                            [
+                                'propertyPath' => 'taskId',
+                                'message' => 'This is not a valid UUID.',
+                                'code' => '51120b12-a2bc-41bf-aa53-cd73daf330d0',
+                            ],
+                        ],
+                    ],
+                ),
+            ),
+        ],
+    )]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
