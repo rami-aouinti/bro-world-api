@@ -22,6 +22,32 @@ final class CrmControllerTest extends WebTestCase
     private const string PRIMARY_APPLICATION_SLUG = 'crm-sales-hub';
     private const string FOREIGN_APPLICATION_SLUG = 'crm-pipeline-pro';
 
+    #[TestDox('ROLE_ADMIN is forbidden from CRM endpoints when no CRM role is assigned.')]
+    public function testGlobalAdminCannotAccessCrmListWithoutCrmRole(): void
+    {
+        $client = $this->getTestClient('john-admin', 'password-admin');
+        $client->request('GET', sprintf('%s/v1/crm/applications/%s/companies', self::API_URL_PREFIX, self::PRIMARY_APPLICATION_SLUG));
+
+        self::assertSame(Response::HTTP_FORBIDDEN, $client->getResponse()->getStatusCode());
+    }
+
+    #[TestDox('ROLE_CRM_ADMIN can access and manage CRM resources without global ROLE_ADMIN.')]
+    public function testCrmAdminCanAccessAndManageCrmResources(): void
+    {
+        $viewerClient = $this->getTestClient('john-crm_admin', 'password-crm_admin');
+        $viewerClient->request('GET', sprintf('%s/v1/crm/applications/%s/companies', self::API_URL_PREFIX, self::PRIMARY_APPLICATION_SLUG));
+        self::assertSame(Response::HTTP_OK, $viewerClient->getResponse()->getStatusCode());
+
+        $companyId = $this->createCompany();
+        $managerClient = $this->getTestClient('john-crm_admin', 'password-crm_admin');
+        $managerClient->request(
+            'DELETE',
+            sprintf('%s/v1/crm/applications/%s/companies/%s', self::API_URL_PREFIX, self::PRIMARY_APPLICATION_SLUG, $companyId)
+        );
+
+        self::assertSame(Response::HTTP_NO_CONTENT, $managerClient->getResponse()->getStatusCode());
+    }
+
     #[TestDox('CreateProjectController rejects companyId from another CRM application scope.')]
     public function testCreateProjectRejectsForeignCompanyId(): void
     {

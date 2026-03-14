@@ -31,7 +31,7 @@ final class CrmPermissionVoter extends Voter
         }
 
         $roles = $user->getRoles();
-        if (in_array(Role::ROOT->value, $roles, true) || in_array(Role::ADMIN->value, $roles, true)) {
+        if (in_array(Role::ROOT->value, $roles, true)) {
             return true;
         }
 
