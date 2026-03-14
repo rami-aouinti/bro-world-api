@@ -149,6 +149,7 @@ final class CheckoutServiceTest extends TestCase
     {
         return new CheckoutCommand(
             operationId: 'op',
+            applicationSlug: 'shop-ops-center',
             shopId: $shop->getId(),
             userId: $user->getId(),
             billingAddress: '10 Main street',

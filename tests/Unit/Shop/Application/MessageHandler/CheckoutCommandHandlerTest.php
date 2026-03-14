@@ -17,7 +17,7 @@ final class CheckoutCommandHandlerTest extends TestCase
 {
     public function testInvokeExecutesCheckoutInTransaction(): void
     {
-        $command = new CheckoutCommand('op', 'shop-id', 'user-id', 'a', 'b', 'c@d.test', '123', 'pickup');
+        $command = new CheckoutCommand('op', 'shop-ops-center', 'shop-id', 'user-id', 'a', 'b', 'c@d.test', '123', 'pickup');
         $order = new Order();
 
         $connection = $this->createMock(Connection::class);
