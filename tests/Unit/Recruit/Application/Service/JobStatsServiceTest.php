@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Recruit\Application\Service;
 
 use App\Recruit\Application\Service\JobStatsService;
+use App\Recruit\Application\Service\ApplicationSlaService;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
 use App\Recruit\Domain\Enum\ContractType;
 use App\Recruit\Domain\Enum\ExperienceLevel;
 use App\Recruit\Domain\Enum\WorkMode;
+use App\Recruit\Infrastructure\Repository\ApplicationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
@@ -25,6 +27,12 @@ class JobStatsServiceTest extends TestCase
         $jobs = $this->createRepresentativeJobs();
 
         $expectedStats = $this->computeLegacyStats($jobs);
+        $expectedSlaRules = ['WAITING' => 72];
+        $expectedBreaches = ['WAITING' => 3];
+        $expectedStats['sla'] = [
+            'rulesHours' => $expectedSlaRules,
+            'breachesByStatus' => $expectedBreaches,
+        ];
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $repository = $this->getMockBuilder(stdClass::class)
@@ -35,6 +43,19 @@ class JobStatsServiceTest extends TestCase
             ->expects(self::exactly(6))
             ->method('getRepository')
             ->willReturn($repository);
+
+        $applicationSlaService = $this->createMock(ApplicationSlaService::class);
+        $applicationSlaService
+            ->expects(self::exactly(2))
+            ->method('getRulesInHours')
+            ->willReturn($expectedSlaRules);
+
+        $applicationRepository = $this->createMock(ApplicationRepository::class);
+        $applicationRepository
+            ->expects(self::once())
+            ->method('countSlaBreachesByRecruit')
+            ->with($recruit, $expectedSlaRules)
+            ->willReturn($expectedBreaches);
 
         $repository
             ->expects(self::exactly(6))
@@ -49,7 +70,7 @@ class JobStatsServiceTest extends TestCase
                 $this->createGroupedQueryBuilderMock($expectedStats['byExperienceLevel']),
             );
 
-        $service = new JobStatsService($entityManager);
+        $service = new JobStatsService($entityManager, $applicationSlaService, $applicationRepository);
 
         self::assertSame($expectedStats, $service->getStats($recruit));
     }

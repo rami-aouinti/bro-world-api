@@ -6,6 +6,7 @@ namespace App\Recruit\Application\Service;
 
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
+use App\Recruit\Infrastructure\Repository\ApplicationRepository;
 use BackedEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
@@ -15,6 +16,8 @@ readonly class JobStatsService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
+        private ApplicationSlaService $applicationSlaService,
+        private ApplicationRepository $applicationRepository,
     ) {
     }
 
@@ -30,6 +33,10 @@ readonly class JobStatsService
             'byContractType' => $this->getGroupedCounts($recruit, 'contractType'),
             'byWorkMode' => $this->getGroupedCounts($recruit, 'workMode'),
             'byExperienceLevel' => $this->getGroupedCounts($recruit, 'experienceLevel'),
+            'sla' => [
+                'rulesHours' => $this->applicationSlaService->getRulesInHours(),
+                'breachesByStatus' => $this->applicationRepository->countSlaBreachesByRecruit($recruit, $this->applicationSlaService->getRulesInHours()),
+            ],
         ];
     }
 
