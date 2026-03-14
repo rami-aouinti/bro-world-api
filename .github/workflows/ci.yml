@@ -43,6 +43,8 @@ jobs:
         run: make elastic-create-or-update-template
       - name: Show framework version and additional info, php & composer version
         run: make info
+      - name: Run API contract tests (OpenAPI + payload snapshots)
+        run: make contract-tests
       - name: Run test suite
         run: make phpunit
       - name: Archive coverage data for Qodana

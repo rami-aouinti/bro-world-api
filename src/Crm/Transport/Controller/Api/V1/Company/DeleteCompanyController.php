@@ -45,7 +45,10 @@ final readonly class DeleteCompanyController
 
         $this->entityManager->remove($company);
         $this->entityManager->flush();
-        $this->messageBus->dispatch(new EntityDeleted('crm_company', $id));
+        $this->messageBus->dispatch(new EntityDeleted('crm_company', $id, context: [
+            'applicationSlug' => $applicationSlug,
+            'crmId' => $crm->getId(),
+        ]));
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }

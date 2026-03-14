@@ -28,11 +28,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
         content: new OA\JsonContent(
             properties: [
                 new OA\Property(property: 'content', type: 'string', minLength: 1, example: 'Bonjour, finalement mercredi 10h ?'),
-                new OA\Property(property: 'read', type: 'boolean', example: true),
             ],
             example: [
                 'content' => 'Bonjour, finalement mercredi 10h ?',
-                'read' => true,
             ]
         )
     ),
@@ -41,7 +39,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
         new OA\Parameter(name: 'messageId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000')),
     ],
     responses: [
-        new OA\Response(response: 202, description: 'Commande acceptée'),
+        new OA\Response(response: 202, description: 'Commande acceptée', content: new OA\JsonContent(example: [
+            'operationId' => 'op_123',
+        ])),
         new OA\Response(response: 404, description: 'Message introuvable'),
     ]
 )]
@@ -66,12 +66,10 @@ readonly class PatchMessageController
             actorUserId: $loggedInUser->getId(),
             messageId: $messageId,
             content: $fields['content'],
-            read: $fields['read'],
         ));
 
         return new JsonResponse([
             'operationId' => $operationId,
-            'id' => $messageId,
         ], JsonResponse::HTTP_ACCEPTED);
     }
 }

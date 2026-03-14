@@ -93,6 +93,7 @@ final readonly class CreateCompanyByApplicationController
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityCreated('crm_company', $company->getId(), context: [
             'applicationSlug' => $applicationSlug,
+            'crmId' => $crm->getId(),
         ]));
 
         return new JsonResponse([

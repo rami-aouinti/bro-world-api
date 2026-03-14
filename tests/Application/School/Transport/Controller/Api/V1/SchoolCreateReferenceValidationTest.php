@@ -24,14 +24,20 @@ final class SchoolCreateReferenceValidationTest extends WebTestCase
             'schoolId' => self::UNKNOWN_UUID,
         ]));
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
-        self::assertSame('schoolId not found', $this->responsePayload($client)['message']);
+        $payload = $this->responsePayload($client);
+        self::assertSame('schoolId not found', $payload['message']);
+        self::assertSame('SCHOOL_RELATION_NOT_FOUND', $payload['code']);
+        self::assertSame([], $payload['details']);
 
         $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/students', [], [], [], JSON::encode([
             'name' => 'Eleve API',
             'classId' => self::UNKNOWN_UUID,
         ]));
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
-        self::assertSame('classId not found', $this->responsePayload($client)['message']);
+        $payload = $this->responsePayload($client);
+        self::assertSame('classId not found', $payload['message']);
+        self::assertSame('SCHOOL_RELATION_NOT_FOUND', $payload['code']);
+        self::assertSame([], $payload['details']);
 
         $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams', [], [], [], JSON::encode([
             'title' => 'Examen API',
@@ -42,7 +48,10 @@ final class SchoolCreateReferenceValidationTest extends WebTestCase
             'term' => 'term_1',
         ]));
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
-        self::assertSame('classId not found', $this->responsePayload($client)['message']);
+        $payload = $this->responsePayload($client);
+        self::assertSame('classId not found', $payload['message']);
+        self::assertSame('SCHOOL_RELATION_NOT_FOUND', $payload['code']);
+        self::assertSame([], $payload['details']);
 
         $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/grades', [], [], [], JSON::encode([
             'score' => 12,
@@ -50,7 +59,10 @@ final class SchoolCreateReferenceValidationTest extends WebTestCase
             'examId' => self::UNKNOWN_UUID,
         ]));
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
-        self::assertSame('studentId not found', $this->responsePayload($client)['message']);
+        $payload = $this->responsePayload($client);
+        self::assertSame('studentId not found', $payload['message']);
+        self::assertSame('SCHOOL_RELATION_NOT_FOUND', $payload['code']);
+        self::assertSame([], $payload['details']);
     }
 
     #[TestDox('School create endpoints reject cross-scope relations with stable 422 messages.')]
@@ -70,7 +82,10 @@ final class SchoolCreateReferenceValidationTest extends WebTestCase
             'term' => 'term_1',
         ]));
         self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $client->getResponse()->getStatusCode());
-        self::assertSame('teacherId is not assigned to classId', $this->responsePayload($client)['message']);
+        $payload = $this->responsePayload($client);
+        self::assertSame('teacherId is not assigned to classId', $payload['message']);
+        self::assertSame('SCHOOL_RELATION_UNPROCESSABLE', $payload['code']);
+        self::assertSame([], $payload['details']);
 
         $campusStudentId = $this->firstResourceId($client, '/v1/school/applications/school-campus-core/students');
         $courseExamId = $this->firstResourceId($client, '/v1/school/applications/school-course-flow/exams');
@@ -81,7 +96,10 @@ final class SchoolCreateReferenceValidationTest extends WebTestCase
             'examId' => $courseExamId,
         ]));
         self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $client->getResponse()->getStatusCode());
-        self::assertSame('studentId and examId must belong to the same class', $this->responsePayload($client)['message']);
+        $payload = $this->responsePayload($client);
+        self::assertSame('studentId and examId must belong to the same class', $payload['message']);
+        self::assertSame('SCHOOL_RELATION_UNPROCESSABLE', $payload['code']);
+        self::assertSame([], $payload['details']);
     }
 
     /**

@@ -46,8 +46,8 @@ final class UserMessageControllerTest extends WebTestCase
         self::assertNotFalse($createContent);
         $createPayload = JSON::decode($createContent, true);
         self::assertIsArray($createPayload);
-        self::assertArrayHasKey('operationId', $createPayload);
-        self::assertArrayNotHasKey('id', $createPayload);
+        self::assertSame(['operationId'], array_keys($createPayload));
+        self::assertIsString($createPayload['operationId']);
 
         $client->request('POST', $this->baseUrl . '/conversations/' . $conversationId . '/messages', [], [], [], JSON::encode([
             'content' => '',
@@ -63,8 +63,8 @@ final class UserMessageControllerTest extends WebTestCase
         self::assertNotFalse($patchContent);
         $patchPayload = JSON::decode($patchContent, true);
         self::assertIsArray($patchPayload);
-        self::assertArrayHasKey('operationId', $patchPayload);
-        self::assertArrayHasKey('id', $patchPayload);
+        self::assertSame(['operationId'], array_keys($patchPayload));
+        self::assertIsString($patchPayload['operationId']);
 
         $client->request('PATCH', $this->baseUrl . '/messages/' . $messageId, [], [], [], JSON::encode([
             'read' => 'yes',
@@ -73,6 +73,12 @@ final class UserMessageControllerTest extends WebTestCase
 
         $client->request('POST', $this->baseUrl . '/conversations/' . $conversationId . '/messages/read');
         self::assertSame(Response::HTTP_ACCEPTED, $client->getResponse()->getStatusCode());
+        $markReadContent = $client->getResponse()->getContent();
+        self::assertNotFalse($markReadContent);
+        $markReadPayload = JSON::decode($markReadContent, true);
+        self::assertIsArray($markReadPayload);
+        self::assertSame(['operationId'], array_keys($markReadPayload));
+        self::assertIsString($markReadPayload['operationId']);
 
         $unauthorizedClient = $this->getTestClient('john-user', 'password-user');
         $directConversationId = LoadRecruitChatCalendarScenarioData::getUuidByKey('conversation-direct-john-root-john-admin');
@@ -85,7 +91,7 @@ final class UserMessageControllerTest extends WebTestCase
         self::assertNotFalse($deleteContent);
         $deletePayload = JSON::decode($deleteContent, true);
         self::assertIsArray($deletePayload);
-        self::assertArrayHasKey('operationId', $deletePayload);
-        self::assertArrayHasKey('id', $deletePayload);
+        self::assertSame(['operationId'], array_keys($deletePayload));
+        self::assertIsString($deletePayload['operationId']);
     }
 }

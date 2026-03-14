@@ -7,6 +7,40 @@ Valider et exploiter la migration `migrations/Version20260313130000.php` qui ajo
 - l'index unique `(author_id, post_id)`;
 - la contrainte CHECK `chk_blog_reaction_exactly_one_target`.
 
+## 0) Checklist GO/NO-GO (unique)
+
+> Cette checklist est **obligatoire** et doit être remplie dans un unique ticket de release (ou document d'exploitation) avant toute mise en production.
+
+| Domaine | Vérification | Statut | Preuve/lien | Validateur |
+| --- | --- | --- | --- | --- |
+| DB | `docs/sql/blog_reaction_integrity_audit.sql` exécuté, anomalies à `0` | ⬜ |  |  |
+| Tests | Tests applicatifs de non-régression exécutés et verts | ⬜ |  |  |
+| Cache | Invalidation/échauffement cache validés selon stratégie env | ⬜ |  |  |
+| Visibilité | Dashboards/logs consultables (erreurs SQL, taux d'échec) | ⬜ |  |  |
+| Monitoring | Alertes opérationnelles actives (DB + app) pour J+0/J+1 | ⬜ |  |  |
+| Runbook | Procédure de remédiation + rollback relue et accessible | ⬜ |  |  |
+
+### Validation obligatoire avant GO
+
+Le passage en GO est autorisé uniquement si les trois validations suivantes sont explicitement enregistrées:
+
+- **Dev**: conformité technique de la migration, scripts et impacts applicatifs.
+- **QA**: couverture des scénarios de test et non-régression.
+- **Ops**: monitoring, capacité de rollback, fenêtre d'exploitation.
+
+Sans validation **Dev + QA + Ops**, la décision doit rester **NO-GO**.
+
+### Journal de décision GO/NO-GO
+
+Tracer la décision dans le ticket/document unique avec le format minimal suivant:
+
+```text
+Décision: GO | NO-GO
+Date de validation: YYYY-MM-DD HH:MM TZ
+Validations: Dev=<nom> ; QA=<nom> ; Ops=<nom>
+Commentaires: <risques / réserves éventuelles>
+```
+
 ## 1) Vérifier l'état de migration en dev / staging / prod
 
 > Pré-requis: exécuter ces commandes depuis le conteneur/app avec dépendances PHP installées.
@@ -93,6 +127,23 @@ FROM blog_reaction_remediation_20260313_backup
 WHERE remediated_at >= '<timestamp_de_la_fenetre_incident>';
 ```
 
+## 4.1) Risques connus + stratégie de rollback
+
+### Risques connus
+
+- **Conflits de contraintes**: échecs en écriture si des doublons historiques subsistent (`duplicate key`).
+- **Conflits métier**: rejet d'insert/update si `comment_id` et `post_id` sont simultanément NULL ou non-NULL (CHECK).
+- **Perte de données ciblée**: la remédiation peut supprimer des lignes incohérentes (sauvegardées dans la table backup).
+- **Bruit opérationnel**: hausse temporaire d'erreurs applicatives côté endpoints de réaction pendant la fenêtre de déploiement.
+
+### Stratégie de rollback
+
+1. Confirmer l'incident via logs + audit SQL.
+2. Exécuter le rollback Doctrine (section 4).
+3. Si remédiation effectuée, évaluer la restauration depuis `blog_reaction_remediation_20260313_backup`.
+4. Rejouer l'audit SQL pour confirmer le retour à un état stable.
+5. Consigner la décision finale (**GO** de reprise ou **NO-GO** prolongé) avec date/heure et validateurs Dev/QA/Ops.
+
 ## 5) Procédure d'exploitation post-déploiement
 
 1. **Monitoring J+0/J+1**:
@@ -103,3 +154,9 @@ WHERE remediated_at >= '<timestamp_de_la_fenetre_incident>';
 3. **Hygiène durable**:
    - conserver le backup de remédiation au moins un cycle de release;
    - archiver la sortie d'audit par environnement (preuve de conformité).
+
+4. **Revue post-déploiement J+7**:
+   - comparer les métriques avant/après (`latence read`, `taux erreurs handlers`, `conflits unicité SQL`);
+   - formaliser un compte-rendu et les actions dans le template J+7 du document `docs/blog-reaction-operability.md`.
+5. **SLO/SLA**:
+   - valider les tendances observées par rapport aux objectifs opérationnels décrits dans `docs/blog-reaction-operability.md`.

@@ -519,3 +519,39 @@ Toujours sur la liste des candidatures (étape 3), vérifier qu'un nombre signif
 ### Étape 7 — Vérifier le comportement anti-doublon applicatif
 
 Tenter de créer deux fois la même candidature (même applicant/job) et valider que la seconde requête est rejetée (conflit applicatif / duplication bloquée).
+## 6) Matrice des permissions métier (RBAC recrutement)
+
+Rôles métier introduits:
+- `ROLE_RECRUITER`
+- `ROLE_HIRING_MANAGER`
+- `ROLE_INTERVIEWER`
+
+Permissions fonctionnelles:
+- `RECRUIT_INTERVIEW_MANAGE`
+- `RECRUIT_INTERVIEW_VIEW`
+- `RECRUIT_APPLICATION_STATUS_TRANSITION`
+- `RECRUIT_APPLICATION_STATUS_HISTORY_VIEW`
+- `RECRUIT_OFFER_MANAGE`
+- `RECRUIT_SENSITIVE_DATA_VIEW`
+
+### Matrice d'accès
+
+| Endpoint clé | Permission requise | RECRUITER | HIRING_MANAGER | INTERVIEWER |
+|---|---|---:|---:|---:|
+| `POST/PATCH/DELETE /v1/recruit/private/interviews/...` | `RECRUIT_INTERVIEW_MANAGE` | ✅ | ✅ | ❌ |
+| `GET /v1/recruit/private/applications/{id}/interviews` | `RECRUIT_INTERVIEW_VIEW` | ✅ | ✅ | ✅ |
+| `PATCH /v1/recruit/applications/{slug}/private/applications/{id}/status` | `RECRUIT_APPLICATION_STATUS_TRANSITION` | ✅ | ✅ | ❌ |
+| `GET /v1/recruit/applications/{slug}/private/applications/{id}/status-history` | `RECRUIT_APPLICATION_STATUS_HISTORY_VIEW` | ✅ | ✅ | ✅ |
+| `POST/PATCH/DELETE /v1/recruit/applications/{slug}/jobs/...` (offers) | `RECRUIT_OFFER_MANAGE` | ✅ | ✅ | ❌ |
+| Lecture de données sensibles (`CV`, `notes`, `feedback/comment`) | `RECRUIT_SENSITIVE_DATA_VIEW` | ✅ | ✅ | ❌ |
+
+### Règles de confidentialité appliquées
+
+- Les champs sensibles sont masqués (`null`) lorsque l'utilisateur n'a pas `RECRUIT_SENSITIVE_DATA_VIEW`.
+- Sont considérés sensibles dans le module Recruit:
+  - le CV (référence de resume),
+  - les notes internes d'entretien,
+  - les commentaires d'historique de statut (feedback interne),
+  - les données personnelles non nécessaires (`email`, `coverLetter`).
+
+> `ROLE_ADMIN` et `ROLE_ROOT` gardent un accès complet (override) via le voter Recruit.

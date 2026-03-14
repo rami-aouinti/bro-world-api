@@ -60,7 +60,7 @@ final class MessageHandlersTest extends TestCase
         $handler(new CreateMessageCommand('op', $actor->getId(), $conversation->getId(), 'hello'));
     }
 
-    public function testPatchMessageHandlerUpdatesReadTransitionsAndInvalidatesCache(): void
+    public function testPatchMessageHandlerUpdatesContentAndInvalidatesCache(): void
     {
         $messageRepo = $this->createMock(ChatMessageRepository::class);
         $cache = $this->createMock(CacheInvalidationService::class);
@@ -70,12 +70,11 @@ final class MessageHandlersTest extends TestCase
         $message = (new ChatMessage())
             ->setConversation($conversation)
             ->setSender($sender)
-            ->setContent('draft')
-            ->setRead(false);
+            ->setContent('draft');
         PhpUnitUtil::setProperty('id', UuidHelper::fromString('91000000-0000-1000-8000-000000000010'), $message);
 
         $messageRepo->method('find')->willReturn($message);
-        $messageRepo->expects(self::exactly(2))->method('save');
+        $messageRepo->expects(self::once())->method('save');
 
         $connection = $this->createMock(Connection::class);
         $connection->method('transactional')->willReturnCallback(static fn (callable $func) => $func());
@@ -83,17 +82,13 @@ final class MessageHandlersTest extends TestCase
         $em->method('getConnection')->willReturn($connection);
         $messageRepo->method('getEntityManager')->willReturn($em);
 
-        $cache->expects(self::exactly(2))->method('invalidateConversationCaches')->with($conversation->getChat()->getId(), $sender->getId());
+        $cache->expects(self::once())->method('invalidateConversationCaches')->with($conversation->getChat()->getId(), $sender->getId());
 
         $handler = new PatchMessageCommandHandler($messageRepo, $cache);
 
-        $handler(new PatchMessageCommand('op-1', $sender->getId(), $message->getId(), null, true));
-        self::assertTrue($message->isRead());
-        self::assertNotNull($message->getReadAt());
-
-        $handler(new PatchMessageCommand('op-2', $sender->getId(), $message->getId(), null, false));
-        self::assertFalse($message->isRead());
-        self::assertNull($message->getReadAt());
+        $handler(new PatchMessageCommand('op-1', $sender->getId(), $message->getId(), 'updated content'));
+        self::assertSame('updated content', $message->getContent());
+        self::assertNotNull($message->getEditedAt());
     }
 
     public function testMarkConversationMessagesAsReadUpdatesParticipantReadPointerAndInvalidatesCache(): void

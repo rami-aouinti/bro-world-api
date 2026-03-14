@@ -8,6 +8,7 @@ use App\Calendar\Application\Service\EventListService;
 use App\Calendar\Domain\Repository\Interfaces\EventRepositoryInterface;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
+use App\General\Domain\Service\Interfaces\MetricsCounterInterface;
 use App\User\Domain\Entity\User;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -38,7 +39,7 @@ final class EventListServiceTest extends TestCase
             ]);
 
         $cacheKeyConvention = $this->cacheKeyConventionService($user);
-        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class));
+        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class), $this->createMock(MetricsCounterInterface::class));
         $result = $service->getByUser($user, [
             'title' => 'foo',
         ], 1, 20);
@@ -75,7 +76,7 @@ final class EventListServiceTest extends TestCase
         });
 
         $cacheKeyConvention = $this->cacheKeyConventionService($user);
-        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class));
+        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class), $this->createMock(MetricsCounterInterface::class));
         $result = $service->getByUser($user, [
             'title' => 'foo',
         ], 1, 20);
@@ -101,8 +102,13 @@ final class EventListServiceTest extends TestCase
             return $callback($item);
         });
 
+        $metricsCounter = $this->createMock(MetricsCounterInterface::class);
+        $metricsCounter->expects(self::once())
+            ->method('increment')
+            ->with('calendar.elastic_fallback.count', ['reason' => 'exception'], 1);
+
         $cacheKeyConvention = $this->cacheKeyConventionService($user);
-        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class));
+        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class), $metricsCounter);
         $result = $service->getByUser($user, [
             'title' => 'foo',
         ], 1, 20);
@@ -142,8 +148,13 @@ final class EventListServiceTest extends TestCase
             return $callback($item);
         });
 
+        $metricsCounter = $this->createMock(MetricsCounterInterface::class);
+        $metricsCounter->expects(self::once())
+            ->method('increment')
+            ->with('calendar.elastic_fallback.count', ['reason' => 'too_many_hits'], 1);
+
         $cacheKeyConvention = $this->cacheKeyConventionService($user);
-        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class));
+        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class), $metricsCounter);
         $result = $service->getByUser($user, [
             'title' => 'foo',
         ], 2, 20);
@@ -185,7 +196,7 @@ final class EventListServiceTest extends TestCase
         $cacheKeyConvention->expects(self::once())->method('tagPrivateEvents')->with('user-id')->willReturn('private_events_user-id');
         $cacheKeyConvention->expects(self::never())->method('tagPublicEventsByApplication');
 
-        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class));
+        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class), $this->createMock(MetricsCounterInterface::class));
         $service->getByUser($user, ['title' => 'foo'], 1, 20);
     }
 
@@ -218,7 +229,7 @@ final class EventListServiceTest extends TestCase
         $cacheKeyConvention->expects(self::never())->method('tagPrivateEvents');
         $cacheKeyConvention->expects(self::once())->method('tagPublicEventsByApplication')->with('app-bro-world')->willReturn('public_events_app-bro-world');
 
-        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class));
+        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class), $this->createMock(MetricsCounterInterface::class));
         $service->getByApplicationSlug('app-bro-world', ['title' => 'foo'], 1, 20);
     }
 
@@ -252,7 +263,7 @@ final class EventListServiceTest extends TestCase
         $cacheKeyConvention->expects(self::never())->method('tagPrivateEvents');
         $cacheKeyConvention->expects(self::never())->method('tagPublicEventsByApplication');
 
-        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class));
+        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class), $this->createMock(MetricsCounterInterface::class));
         $service->getByUser($user, ['title' => 'foo'], 1, 20);
     }
 

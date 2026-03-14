@@ -97,7 +97,10 @@ final readonly class CreateProjectController
 
         $this->entityManager->persist($project);
         $this->entityManager->flush();
-        $this->messageBus->dispatch(new EntityCreated('crm_project', $project->getId()));
+        $this->messageBus->dispatch(new EntityCreated('crm_project', $project->getId(), context: [
+            'applicationSlug' => $applicationSlug,
+            'crmId' => $crm->getId(),
+        ]));
 
         return new JsonResponse([
             'id' => $project->getId(),

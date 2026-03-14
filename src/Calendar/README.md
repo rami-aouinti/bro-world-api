@@ -30,3 +30,13 @@ These routes are reserved to personal resources only (events not linked to an ap
 - `PATCH /v1/calendar/applications/{applicationSlug}/events/{eventId}`
 - `DELETE /v1/calendar/applications/{applicationSlug}/events/{eventId}`
 - `POST /v1/calendar/applications/{applicationSlug}/events/{eventId}/cancel`
+
+## Non-régression
+
+Checklist pré-merge (PR) :
+
+- [ ] PATCH partiel `startAt` / `endAt` validé.
+- [ ] Pagination + filtres texte vérifiés (avec Elastic et sans Elastic).
+- [ ] Invalidation par tags de cache contrôlée (privé et public).
+- [ ] Cohérence OpenAPI confirmée pour les endpoints de mutation.
+- [ ] Cas `404` / `422` couverts pour routes `private` et `application`.

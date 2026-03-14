@@ -28,7 +28,9 @@ use Throwable;
         new OA\Parameter(name: 'conversationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000')),
     ],
     responses: [
-        new OA\Response(response: 202, description: 'Commande acceptée'),
+        new OA\Response(response: 202, description: 'Commande acceptée', content: new OA\JsonContent(example: [
+            'operationId' => 'op_123',
+        ])),
         new OA\Response(response: 404, description: 'Conversation introuvable'),
     ]
 )]
@@ -56,7 +58,6 @@ readonly class MarkConversationAsReadController
 
         return new JsonResponse([
             'operationId' => $operationId,
-            'conversationId' => $conversationId,
         ], JsonResponse::HTTP_ACCEPTED);
     }
 }

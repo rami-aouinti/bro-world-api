@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Recruit\Transport\Controller\Api\V1\Application;
 
+use App\Recruit\Application\Security\RecruitPermissions;
 use App\Recruit\Application\Service\JobApplicationListService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
@@ -17,6 +18,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[AsController]
 #[OA\Tag(name: 'Recruit Application')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
+#[IsGranted(RecruitPermissions::INTERVIEW_VIEW)]
 readonly class JobApplicationListController
 {
     public function __construct(

@@ -290,9 +290,9 @@ class CacheKeyConventionService
         return 'cache_shop_product_list_' . $this->sanitizeSegment($applicationSlug);
     }
 
-    public function crmTaskListTag(): string
+    public function crmTaskListTag(string $applicationSlug): string
     {
-        return 'cache_crm_task_list';
+        return 'cache_crm_task_list_' . $this->sanitizeSegment($applicationSlug);
     }
 
     public function crmCompanyListByApplicationTag(string $applicationSlug): string

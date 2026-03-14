@@ -49,10 +49,10 @@ readonly class TaskListService
         ]));
 
         /** @var array<string,mixed> $result */
-        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($filters, $page, $limit, $crm): array {
+        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $filters, $page, $limit, $crm): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
-                $item->tag($this->cacheKeyConventionService->crmTaskListTag());
+                $item->tag($this->cacheKeyConventionService->crmTaskListTag($applicationSlug));
             }
 
             $esIds = $this->searchIdsFromElastic($filters);

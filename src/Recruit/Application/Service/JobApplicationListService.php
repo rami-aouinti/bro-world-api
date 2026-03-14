@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Recruit\Application\Service;
 
+use App\Recruit\Application\Security\RecruitPermissions;
 use App\Recruit\Domain\Entity\Application;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Infrastructure\Repository\JobRepository;
@@ -13,6 +14,7 @@ use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 use function array_map;
 use function is_string;
@@ -21,8 +23,9 @@ use function trim;
 readonly class JobApplicationListService
 {
     public function __construct(
-        private JobRepository          $jobRepository,
+        private JobRepository $jobRepository,
         private EntityManagerInterface $entityManager,
+        private AuthorizationCheckerInterface $authorizationChecker,
     ) {
     }
 
@@ -33,6 +36,7 @@ readonly class JobApplicationListService
     {
         $job = $this->resolveJob($jobId, $jobSlug);
         $this->assertJobOwnership($job, $loggedInUser);
+        $canViewSensitiveData = $this->authorizationChecker->isGranted(RecruitPermissions::SENSITIVE_DATA_VIEW);
 
         /** @var list<Application> $applications */
         $applications = $this->entityManager
@@ -48,7 +52,7 @@ readonly class JobApplicationListService
             ->getQuery()
             ->getResult();
 
-        return array_map(static function (Application $application): array {
+        return array_map(static function (Application $application) use ($canViewSensitiveData): array {
             $applicant = $application->getApplicant();
             $applicantUser = $applicant->getUser();
 
@@ -58,16 +62,16 @@ readonly class JobApplicationListService
                 'createdAt' => $application->getCreatedAt()?->format(DATE_ATOM),
                 'applicant' => [
                     'id' => $applicant->getId(),
-                    'coverLetter' => $applicant->getCoverLetter(),
+                    'coverLetter' => $canViewSensitiveData ? $applicant->getCoverLetter() : null,
                     'user' => [
                         'id' => $applicantUser->getId(),
                         'username' => $applicantUser->getUsername(),
                         'firstName' => $applicantUser->getFirstName(),
                         'lastName' => $applicantUser->getLastName(),
-                        'email' => $applicantUser->getEmail(),
+                        'email' => $canViewSensitiveData ? $applicantUser->getEmail() : null,
                     ],
                     'resume' => [
-                        'id' => $applicant->getResume()?->getId(),
+                        'id' => $canViewSensitiveData ? $applicant->getResume()?->getId() : null,
                     ],
                 ],
             ];

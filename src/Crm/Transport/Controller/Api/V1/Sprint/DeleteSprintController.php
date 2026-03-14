@@ -45,7 +45,10 @@ final readonly class DeleteSprintController
 
         $this->entityManager->remove($sprint);
         $this->entityManager->flush();
-        $this->messageBus->dispatch(new EntityDeleted('crm_sprint', $id));
+        $this->messageBus->dispatch(new EntityDeleted('crm_sprint', $id, context: [
+            'applicationSlug' => $applicationSlug,
+            'crmId' => $crm->getId(),
+        ]));
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }

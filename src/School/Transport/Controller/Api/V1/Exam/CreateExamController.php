@@ -49,7 +49,9 @@ final readonly class CreateExamController
         )),
         responses: [
             new OA\Response(response: 201, description: 'Examen créé'),
-            new OA\Response(response: 422, description: 'Validation failed'),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/SchoolError')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/SchoolError')),
+            new OA\Response(response: 422, description: 'Validation failed', content: new OA\JsonContent(ref: '#/components/schemas/SchoolValidationError')),
         ],
     )]
     #[Route('/v1/school/applications/{applicationSlug}/exams', methods: [Request::METHOD_POST])]
