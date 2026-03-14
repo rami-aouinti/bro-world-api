@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 final class EventListServiceTest extends TestCase
 {
@@ -152,6 +153,107 @@ final class EventListServiceTest extends TestCase
         self::assertSame(73, $result['pagination']['totalPages']);
         self::assertSame(2, $result['pagination']['page']);
         self::assertSame(20, $result['pagination']['limit']);
+    }
+
+    public function testGetByUserWithTaggableCacheTagsPrivateEvents(): void
+    {
+        $user = $this->mockUser();
+        $repo = $this->createMock(EventRepositoryInterface::class);
+
+        $elastic = $this->createMock(ElasticsearchServiceInterface::class);
+        $elastic->expects(self::once())->method('search')->willReturn([
+            'hits' => [
+                'total' => [
+                    'value' => 0,
+                    'relation' => 'eq',
+                ],
+                'hits' => [],
+            ],
+        ]);
+
+        $item = $this->getMockBuilder(ItemInterface::class)->addMethods(['tag'])->getMock();
+        $item->expects(self::once())->method('expiresAfter')->with(120);
+        $item->expects(self::once())->method('tag')->with('private_events_user-id');
+
+        $cache = $this->createMock(TagAwareCacheInterface::class);
+        $cache->expects(self::once())->method('get')->willReturnCallback(static function (string $key, callable $callback) use ($item): array {
+            return $callback($item);
+        });
+
+        $cacheKeyConvention = $this->createMock(CacheKeyConventionService::class);
+        $cacheKeyConvention->expects(self::once())->method('buildPrivateEventKey')->willReturn('private_event_key');
+        $cacheKeyConvention->expects(self::once())->method('tagPrivateEvents')->with('user-id')->willReturn('private_events_user-id');
+        $cacheKeyConvention->expects(self::never())->method('tagPublicEventsByApplication');
+
+        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class));
+        $service->getByUser($user, ['title' => 'foo'], 1, 20);
+    }
+
+    public function testGetByApplicationSlugWithTaggableCacheTagsPublicEventsByApplication(): void
+    {
+        $repo = $this->createMock(EventRepositoryInterface::class);
+
+        $elastic = $this->createMock(ElasticsearchServiceInterface::class);
+        $elastic->expects(self::once())->method('search')->willReturn([
+            'hits' => [
+                'total' => [
+                    'value' => 0,
+                    'relation' => 'eq',
+                ],
+                'hits' => [],
+            ],
+        ]);
+
+        $item = $this->getMockBuilder(ItemInterface::class)->addMethods(['tag'])->getMock();
+        $item->expects(self::once())->method('expiresAfter')->with(120);
+        $item->expects(self::once())->method('tag')->with('public_events_app-bro-world');
+
+        $cache = $this->createMock(TagAwareCacheInterface::class);
+        $cache->expects(self::once())->method('get')->willReturnCallback(static function (string $key, callable $callback) use ($item): array {
+            return $callback($item);
+        });
+
+        $cacheKeyConvention = $this->createMock(CacheKeyConventionService::class);
+        $cacheKeyConvention->expects(self::never())->method('buildPrivateEventKey');
+        $cacheKeyConvention->expects(self::never())->method('tagPrivateEvents');
+        $cacheKeyConvention->expects(self::once())->method('tagPublicEventsByApplication')->with('app-bro-world')->willReturn('public_events_app-bro-world');
+
+        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class));
+        $service->getByApplicationSlug('app-bro-world', ['title' => 'foo'], 1, 20);
+    }
+
+    public function testGetByUserWithNonTaggableCacheDoesNotCallTag(): void
+    {
+        $user = $this->mockUser();
+        $repo = $this->createMock(EventRepositoryInterface::class);
+
+        $elastic = $this->createMock(ElasticsearchServiceInterface::class);
+        $elastic->expects(self::once())->method('search')->willReturn([
+            'hits' => [
+                'total' => [
+                    'value' => 0,
+                    'relation' => 'eq',
+                ],
+                'hits' => [],
+            ],
+        ]);
+
+        $item = $this->getMockBuilder(ItemInterface::class)->addMethods(['tag'])->getMock();
+        $item->expects(self::once())->method('expiresAfter')->with(120);
+        $item->expects(self::never())->method('tag');
+
+        $cache = $this->createMock(CacheInterface::class);
+        $cache->expects(self::once())->method('get')->willReturnCallback(static function (string $key, callable $callback) use ($item): array {
+            return $callback($item);
+        });
+
+        $cacheKeyConvention = $this->createMock(CacheKeyConventionService::class);
+        $cacheKeyConvention->expects(self::once())->method('buildPrivateEventKey')->willReturn('private_event_key');
+        $cacheKeyConvention->expects(self::never())->method('tagPrivateEvents');
+        $cacheKeyConvention->expects(self::never())->method('tagPublicEventsByApplication');
+
+        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class));
+        $service->getByUser($user, ['title' => 'foo'], 1, 20);
     }
 
     private function mockUser(): User
