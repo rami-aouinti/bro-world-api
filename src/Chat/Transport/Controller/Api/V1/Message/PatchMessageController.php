@@ -28,11 +28,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
         content: new OA\JsonContent(
             properties: [
                 new OA\Property(property: 'content', type: 'string', minLength: 1, example: 'Bonjour, finalement mercredi 10h ?'),
-                new OA\Property(property: 'read', type: 'boolean', example: true),
             ],
             example: [
                 'content' => 'Bonjour, finalement mercredi 10h ?',
-                'read' => true,
             ]
         )
     ),
@@ -68,7 +66,6 @@ readonly class PatchMessageController
             actorUserId: $loggedInUser->getId(),
             messageId: $messageId,
             content: $fields['content'],
-            read: $fields['read'],
         ));
 
         return new JsonResponse([
