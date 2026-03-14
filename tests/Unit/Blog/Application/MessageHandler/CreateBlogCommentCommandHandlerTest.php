@@ -14,6 +14,7 @@ use App\Blog\Domain\Enum\BlogStatus;
 use App\Blog\Infrastructure\Repository\BlogCommentRepository;
 use App\Blog\Infrastructure\Repository\BlogPostRepository;
 use App\General\Application\Service\CacheInvalidationService;
+use App\Platform\Domain\Entity\Application;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
 use PHPUnit\Framework\TestCase;
@@ -22,6 +23,46 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 final class CreateBlogCommentCommandHandlerTest extends TestCase
 {
+    public function testInvokeCreatesCommentAndInvalidatesBlogCachesForActorPostAndParentAuthors(): void
+    {
+        $commentRepository = $this->createMock(BlogCommentRepository::class);
+        $postRepository = $this->createMock(BlogPostRepository::class);
+        $userRepository = $this->createMock(UserRepository::class);
+        $notificationService = $this->createMock(BlogNotificationService::class);
+        $cacheInvalidationService = $this->createMock(CacheInvalidationService::class);
+
+        $targetPost = $this->createPost('post-target');
+        $actor = $this->createMock(User::class);
+        $parentAuthor = $this->createMock(User::class);
+        $parentAuthor->method('getId')->willReturn('parent-author-id');
+
+        $parent = $this->createMock(BlogComment::class);
+        $parent->method('getPost')->willReturn($targetPost);
+        $parent->method('getAuthor')->willReturn($parentAuthor);
+
+        $postRepository->method('find')->with('post-target')->willReturn($targetPost);
+        $userRepository->method('find')->with('actor-id')->willReturn($actor);
+        $commentRepository->method('find')->with('parent-comment')->willReturn($parent);
+
+        $commentRepository->expects(self::once())
+            ->method('save')
+            ->with(self::isInstanceOf(BlogComment::class));
+        $notificationService->expects(self::once())->method('notifyCommentCreated');
+        $cacheInvalidationService->expects(self::once())
+            ->method('invalidateBlogCaches')
+            ->with('app-slug', ['actor-id', 'owner-id', 'parent-author-id']);
+
+        $handler = new CreateBlogCommentCommandHandler(
+            $commentRepository,
+            $postRepository,
+            $userRepository,
+            $notificationService,
+            $cacheInvalidationService,
+        );
+
+        $handler(new CreateBlogCommentCommand('op', 'actor-id', 'post-target', 'content', null, 'parent-comment'));
+    }
+
     public function testInvokeRejectsParentFromAnotherPost(): void
     {
         $commentRepository = $this->createMock(BlogCommentRepository::class);
@@ -67,13 +108,18 @@ final class CreateBlogCommentCommandHandlerTest extends TestCase
         $owner = $this->createMock(User::class);
         $owner->method('getId')->willReturn('owner-id');
 
+        $application = $this->createMock(Application::class);
+        $application->method('getSlug')->willReturn('app-slug');
+
         $blog = $this->createMock(Blog::class);
         $blog->method('getCommentStatus')->willReturn(BlogStatus::OPEN);
         $blog->method('getOwner')->willReturn($owner);
+        $blog->method('getApplication')->willReturn($application);
 
         $post = $this->createMock(BlogPost::class);
         $post->method('getId')->willReturn($id);
         $post->method('getBlog')->willReturn($blog);
+        $post->method('getAuthor')->willReturn($owner);
 
         return $post;
     }
