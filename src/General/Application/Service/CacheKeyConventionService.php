@@ -176,6 +176,25 @@ class CacheKeyConventionService
      * @param array<string, mixed> $filters
      * @throws JsonException
      */
+    public function buildCrmBillingListKey(string $applicationSlug, int $page, int $limit, array $filters): string
+    {
+        return 'crm_billing_list_' . md5((string)json_encode([
+            'applicationSlug' => $applicationSlug,
+            'page' => $page,
+            'limit' => $limit,
+            'filters' => $filters,
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    public function buildCrmBillingDetailKey(string $applicationSlug, string $billingId): string
+    {
+        return 'crm_billing_detail_' . $this->sanitizeSegment($applicationSlug) . '_' . $this->sanitizeSegment($billingId);
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     * @throws JsonException
+     */
     public function buildSchoolExamListKey(string $applicationSlug, int $page, int $limit, array $filters): string
     {
         return 'school_exam_list_' . md5((string)json_encode([
@@ -298,6 +317,16 @@ class CacheKeyConventionService
     public function crmCompanyListByApplicationTag(string $applicationSlug): string
     {
         return 'cache_crm_company_list_' . $this->sanitizeSegment($applicationSlug);
+    }
+
+    public function crmBillingListTag(string $applicationSlug): string
+    {
+        return 'cache_crm_billing_list_' . $this->sanitizeSegment($applicationSlug);
+    }
+
+    public function crmBillingDetailTag(string $applicationSlug, string $billingId): string
+    {
+        return 'cache_crm_billing_detail_' . $this->sanitizeSegment($applicationSlug) . '_' . $this->sanitizeSegment($billingId);
     }
 
     public function schoolExamListTag(): string

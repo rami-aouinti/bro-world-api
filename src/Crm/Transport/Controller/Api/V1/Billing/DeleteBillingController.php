@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Crm\Transport\Controller\Api\V1\Billing;
 
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Application\Service\CrmReadCacheInvalidator;
 use App\Crm\Infrastructure\Repository\BillingRepository;
 use App\Role\Domain\Enum\Role;
 use Doctrine\ORM\EntityManagerInterface;
@@ -25,6 +26,7 @@ final readonly class DeleteBillingController
         private BillingRepository $billingRepository,
         private CrmApplicationScopeResolver $scopeResolver,
         private EntityManagerInterface $entityManager,
+        private CrmReadCacheInvalidator $cacheInvalidator,
     ) {
     }
 
@@ -38,7 +40,9 @@ final readonly class DeleteBillingController
         }
 
         $this->entityManager->remove($entity);
+        $billingId = $entity->getId();
         $this->entityManager->flush();
+        $this->cacheInvalidator->invalidateBilling($applicationSlug, $billingId);
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }

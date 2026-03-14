@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Crm\Transport\Controller\Api\V1\Billing;
 
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Application\Service\CrmReadCacheInvalidator;
 use App\Crm\Infrastructure\Repository\BillingRepository;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
@@ -30,6 +31,7 @@ final readonly class PatchBillingController
         private CompanyRepository $companyRepository,
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
+        private CrmReadCacheInvalidator $cacheInvalidator,
     ) {
     }
 
@@ -87,6 +89,8 @@ final readonly class PatchBillingController
         }
 
         $this->billingRepository->save($entity);
+
+        $this->cacheInvalidator->invalidateBilling($applicationSlug, $entity->getId());
 
         return new JsonResponse(['id' => $entity->getId()]);
     }

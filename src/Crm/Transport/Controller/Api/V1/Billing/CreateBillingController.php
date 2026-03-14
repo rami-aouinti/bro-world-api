@@ -6,6 +6,7 @@ namespace App\Crm\Transport\Controller\Api\V1\Billing;
 
 use App\Crm\Application\Message\CreateBillingCommand;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Application\Service\CrmReadCacheInvalidator;
 use App\Crm\Domain\Entity\Billing;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\Crm\Transport\Request\CreateBillingRequest;
@@ -34,6 +35,7 @@ final readonly class CreateBillingController
         private CrmApiErrorResponseFactory $errorResponseFactory,
         private ValidatorInterface $validator,
         private MessageBusInterface $messageBus,
+        private CrmReadCacheInvalidator $cacheInvalidator,
     ) {}
 
     #[Route('/v1/crm/applications/{applicationSlug}/billings', methods: [Request::METHOD_POST])]
@@ -83,6 +85,8 @@ final readonly class CreateBillingController
             applicationSlug: $applicationSlug,
             crmId: $crm->getId(),
         ));
+
+        $this->cacheInvalidator->invalidateBilling($applicationSlug, $billing->getId());
 
         return new JsonResponse(['id' => $billing->getId(), 'companyId' => $company->getId()], JsonResponse::HTTP_CREATED);
     }

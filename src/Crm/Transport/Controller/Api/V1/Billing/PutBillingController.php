@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Crm\Transport\Controller\Api\V1\Billing;
 
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Application\Service\CrmReadCacheInvalidator;
 use App\Crm\Infrastructure\Repository\BillingRepository;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\Crm\Transport\Request\CreateBillingRequest;
@@ -32,6 +33,7 @@ final readonly class PutBillingController
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
         private ValidatorInterface $validator,
+        private CrmReadCacheInvalidator $cacheInvalidator,
     ) {
     }
 
@@ -79,6 +81,8 @@ final readonly class PutBillingController
             ->setDueAt(($input->dueAt ?? '') !== '' ? new DateTimeImmutable((string) $input->dueAt) : null);
 
         $this->billingRepository->save($entity);
+
+        $this->cacheInvalidator->invalidateBilling($applicationSlug, $entity->getId());
 
         return new JsonResponse([
             'id' => $entity->getId(),
