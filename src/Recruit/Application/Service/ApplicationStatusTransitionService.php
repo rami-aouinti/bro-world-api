@@ -25,6 +25,7 @@ readonly class ApplicationStatusTransitionService
     public function __construct(
         private ApplicationDiscussionBootstrapService $applicationDiscussionBootstrapService,
         private ApplicationStatusHistoryRepository $applicationStatusHistoryRepository,
+        private RecruitNotificationService $recruitNotificationService,
     ) {
     }
 
@@ -75,6 +76,12 @@ readonly class ApplicationStatusTransitionService
             ->setComment($comment);
 
         $this->applicationStatusHistoryRepository->save($history, false);
+
+        $this->recruitNotificationService->notifyStatusUpdated($application, $currentStatus, $newStatus);
+
+        if ($newStatus === ApplicationStatus::OFFER_SENT) {
+            $this->recruitNotificationService->notifyOfferSent($application);
+        }
     }
 
     private function isAllowedTransition(ApplicationStatus $from, ApplicationStatus $to): bool
