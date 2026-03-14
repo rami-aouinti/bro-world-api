@@ -23,6 +23,7 @@ use Ramsey\Uuid\UuidInterface;
 #[ORM\Index(name: 'idx_chat_message_created_at', columns: ['created_at'])]
 #[ORM\Index(name: 'idx_chat_message_sender_id', columns: ['sender_id'])]
 #[ORM\Index(name: 'idx_chat_message_conversation_created_deleted', columns: ['conversation_id', 'created_at', 'deleted_at'])]
+#[ORM\Index(name: 'idx_chat_message_conversation_deleted_created', columns: ['conversation_id', 'deleted_at', 'created_at'])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class ChatMessage implements EntityInterface
 {
