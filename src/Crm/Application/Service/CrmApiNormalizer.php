@@ -109,6 +109,21 @@ final class CrmApiNormalizer
      */
     public function normalizeTaskRequestProjection(array $item): array
     {
+        $assignees = [];
+        foreach ((array)($item['assignees'] ?? []) as $assignee) {
+            if (!is_array($assignee)) {
+                continue;
+            }
+
+            $assignees[] = [
+                'id' => $assignee['id'] ?? null,
+                'username' => $assignee['username'] ?? null,
+                'firstName' => $assignee['firstName'] ?? null,
+                'lastName' => $assignee['lastName'] ?? null,
+                'photo' => $assignee['photo'] ?? null,
+            ];
+        }
+
         return [
             'id' => (string)($item['id'] ?? ''),
             'taskId' => $item['taskId'] ?? null,
@@ -116,7 +131,7 @@ final class CrmApiNormalizer
             'status' => (string)($item['status'] ?? ''),
             'requestedAt' => $this->normalizeDateValue($item['requestedAt'] ?? null),
             'resolvedAt' => $this->normalizeDateValue($item['resolvedAt'] ?? null),
-            'assignees' => [],
+            'assignees' => $assignees,
         ];
     }
 

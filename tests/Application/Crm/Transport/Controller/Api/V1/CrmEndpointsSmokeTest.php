@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Application\Crm\Transport\Controller\Api\V1;
 
+use App\Crm\Infrastructure\Repository\TaskRequestRepository;
 use App\General\Domain\Utils\JSON;
 use App\Tests\TestCase\WebTestCase;
+use App\User\Infrastructure\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\HttpFoundation\Response;
@@ -259,6 +262,72 @@ final class CrmEndpointsSmokeTest extends WebTestCase
     public function testTaskRequestDeleteErrorCase(): void
     {
         $this->assertDeleteNotFound('task-requests');
+    }
+
+    #[TestDox('GET /task-requests includes assignees projection fields for each assignee.')]
+    public function testTaskRequestListIncludesAssigneesProjection(): void
+    {
+        static::bootKernel();
+
+        $container = static::getContainer();
+        $entityManager = $container->get(EntityManagerInterface::class);
+        $taskRequestRepository = $container->get(TaskRequestRepository::class);
+        $userRepository = $container->get(UserRepository::class);
+
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('GET', sprintf('%s/v1/crm/applications/%s/task-requests?limit=1', self::API_URL_PREFIX, self::APPLICATION_SLUG));
+
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+        $initialPayload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        $taskRequestId = (string)($initialPayload['items'][0]['id'] ?? '');
+        self::assertNotSame('', $taskRequestId);
+
+        $taskRequest = $taskRequestRepository->find($taskRequestId);
+        self::assertNotNull($taskRequest);
+
+        $johnRoot = $userRepository->findOneBy(['username' => 'john-root']);
+        $alice = $userRepository->findOneBy(['username' => 'alice']);
+        self::assertNotNull($johnRoot);
+        self::assertNotNull($alice);
+
+        $taskRequest->addAssignee($johnRoot);
+        $taskRequest->addAssignee($alice);
+        $entityManager->persist($taskRequest);
+        $entityManager->flush();
+
+        $client->request('GET', sprintf('%s/v1/crm/applications/%s/task-requests?limit=100', self::API_URL_PREFIX, self::APPLICATION_SLUG));
+
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+
+        $item = null;
+        foreach ((array)($payload['items'] ?? []) as $candidate) {
+            if (($candidate['id'] ?? null) === $taskRequest->getId()) {
+                $item = $candidate;
+                break;
+            }
+        }
+
+        self::assertIsArray($item);
+        self::assertArrayHasKey('assignees', $item);
+        self::assertCount(2, $item['assignees']);
+
+        $assigneesByUsername = [];
+        foreach ($item['assignees'] as $assignee) {
+            self::assertArrayHasKey('id', $assignee);
+            self::assertArrayHasKey('username', $assignee);
+            self::assertArrayHasKey('firstName', $assignee);
+            self::assertArrayHasKey('lastName', $assignee);
+            self::assertArrayHasKey('photo', $assignee);
+            $assigneesByUsername[$assignee['username']] = $assignee;
+        }
+
+        self::assertArrayHasKey('john-root', $assigneesByUsername);
+        self::assertArrayHasKey('alice', $assigneesByUsername);
+        self::assertSame($johnRoot->getId(), $assigneesByUsername['john-root']['id']);
+        self::assertSame($alice->getId(), $assigneesByUsername['alice']['id']);
+        self::assertSame($johnRoot->getFirstName(), $assigneesByUsername['john-root']['firstName']);
+        self::assertSame($alice->getLastName(), $assigneesByUsername['alice']['lastName']);
     }
 
     #[TestDox('GET /dashboard returns 200 and expected keys.')]

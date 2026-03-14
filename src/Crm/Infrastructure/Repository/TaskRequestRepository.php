@@ -116,7 +116,49 @@ class TaskRequestRepository extends BaseRepository
             $qb->andWhere('taskRequest.status = :status')->setParameter('status', $status);
         }
 
-        return $qb->getQuery()->getArrayResult();
+        $items = $qb->getQuery()->getArrayResult();
+        if ($items === []) {
+            return [];
+        }
+
+        /** @var list<string> $taskRequestIds */
+        $taskRequestIds = array_values(array_filter(array_map(static fn (array $item): string => (string)($item['id'] ?? ''), $items)));
+        if ($taskRequestIds === []) {
+            return $items;
+        }
+
+        $assigneeRows = $this->createQueryBuilder('taskRequest')
+            ->select('taskRequest.id AS taskRequestId, assignee.id, assignee.username, assignee.firstName, assignee.lastName, assignee.photo')
+            ->leftJoin('taskRequest.assignees', 'assignee')
+            ->andWhere('taskRequest.id IN (:taskRequestIds)')
+            ->andWhere('assignee.id IS NOT NULL')
+            ->setParameter('taskRequestIds', $taskRequestIds)
+            ->getQuery()
+            ->getArrayResult();
+
+        /** @var array<string,list<array<string,mixed>>> $assigneesByTaskRequest */
+        $assigneesByTaskRequest = [];
+        foreach ($assigneeRows as $assigneeRow) {
+            $taskRequestId = (string)($assigneeRow['taskRequestId'] ?? '');
+            if ($taskRequestId === '') {
+                continue;
+            }
+
+            $assigneesByTaskRequest[$taskRequestId][] = [
+                'id' => $assigneeRow['id'] ?? null,
+                'username' => $assigneeRow['username'] ?? null,
+                'firstName' => $assigneeRow['firstName'] ?? null,
+                'lastName' => $assigneeRow['lastName'] ?? null,
+                'photo' => $assigneeRow['photo'] ?? null,
+            ];
+        }
+
+        foreach ($items as $index => $item) {
+            $taskRequestId = (string)($item['id'] ?? '');
+            $items[$index]['assignees'] = $assigneesByTaskRequest[$taskRequestId] ?? [];
+        }
+
+        return $items;
     }
 
     /**
