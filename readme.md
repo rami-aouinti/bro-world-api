@@ -348,12 +348,14 @@ Notes: Please see more commands in Makefile
 * [Postman](docs/postman.md)
 * [Redis GUI](docs/rdm.md)
 * [Messenger component](docs/messenger.md)
+* [Chat Definition of Done](docs/chat_definition_of_done.md)
 
 ## Working on your project
 1. For new feature development, fork `develop` branch into a new branch with one of the two patterns:
     * `feature/{ticketNo}`
 2. Commit often, and write descriptive commit messages, so it's easier to follow steps taken when reviewing.
 3. Push this branch to the repo and create pull request into `develop` to get feedback, with the format `feature/{ticketNo}` - "Short descriptive title of Jira task".
+   * For Chat scope PRs, use `.github/PULL_REQUEST_TEMPLATE/chat.md`.
 4. Iterate as needed.
 5. Make sure that "All checks have passed" on CircleCI(or another one in case you are not using CircleCI) and status is green.
 6. When PR is approved, it will be squashed & merged, into `develop` and later merged into `release/{No}` for deployment.

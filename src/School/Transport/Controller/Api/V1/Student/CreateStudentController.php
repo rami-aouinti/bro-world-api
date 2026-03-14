@@ -30,7 +30,29 @@ final readonly class CreateStudentController
     }
 
     #[Route('/v1/school/applications/{applicationSlug}/students', methods: [Request::METHOD_POST])]
+    #[OA\Post(
+        summary: 'Créer un étudiant',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name', 'classId'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', example: 'Alice Martin'),
+                    new OA\Property(property: 'classId', type: 'string', format: 'uuid', example: '7600e750-f92f-4f9f-883a-26404b538f66'),
+                ],
+            ),
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Étudiant créé.', content: new OA\JsonContent(example: ['id' => '4cfada53-2cf2-49a7-a4fb-4a9682c3a0c0'])),
+            new OA\Response(response: 403, description: 'Accès refusé.'),
+            new OA\Response(response: 404, description: 'Application introuvable.'),
+            new OA\Response(response: 422, description: 'Erreur de validation.'),
+        ],
+    )]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/SchoolError'))]
+    #[OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/SchoolError'))]
+    #[OA\Response(response: 422, description: 'Validation failed', content: new OA\JsonContent(ref: '#/components/schemas/SchoolValidationError'))]
     public function __invoke(string $applicationSlug, ?User $loggedInUser, Request $request): JsonResponse
     {
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);

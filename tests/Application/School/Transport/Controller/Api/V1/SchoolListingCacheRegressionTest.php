@@ -16,7 +16,7 @@ final class SchoolListingCacheRegressionTest extends WebTestCase
     {
         $client = $this->getTestClient('john-root', 'password-root');
 
-        $endpoint = self::API_URL_PREFIX . '/v1/school/exams?page=1&limit=10&title=Examen&q=Examen';
+        $endpoint = self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams?page=1&limit=10&title=Examen&q=Examen';
 
         $client->request('GET', $endpoint);
         self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());

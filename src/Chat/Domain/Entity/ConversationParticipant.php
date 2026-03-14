@@ -21,6 +21,7 @@ use Ramsey\Uuid\UuidInterface;
 #[ORM\UniqueConstraint(name: 'uq_conversation_participant_conversation_user', columns: ['conversation_id', 'user_id'])]
 #[ORM\Index(name: 'idx_conversation_participant_conversation_id', columns: ['conversation_id'])]
 #[ORM\Index(name: 'idx_conversation_participant_user_id', columns: ['user_id'])]
+#[ORM\Index(name: 'idx_chat_conversation_participant_user_conversation', columns: ['user_id', 'conversation_id'])]
 #[ORM\Index(name: 'idx_conversation_participant_conversation_user_last_read', columns: ['conversation_id', 'user_id', 'last_read_message_at'])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class ConversationParticipant implements EntityInterface

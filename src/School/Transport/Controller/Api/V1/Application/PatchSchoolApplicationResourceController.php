@@ -36,6 +36,25 @@ final readonly class PatchSchoolApplicationResourceController
     #[Route('/v1/school/applications/{applicationSlug}/{resource}/{id}', methods: [Request::METHOD_PATCH], requirements: [
         'resource' => 'classes|students|teachers|exams|grades',
     ])]
+    #[OA\Patch(
+        summary: 'Mettre à jour partiellement une ressource school',
+        parameters: [
+            new OA\Parameter(name: 'resource', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['classes', 'students', 'teachers', 'exams', 'grades'])),
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                example: ['name' => 'Terminale S1', 'status' => 'PUBLISHED'],
+            ),
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Ressource mise à jour.', content: new OA\JsonContent(example: ['id' => '7600e750-f92f-4f9f-883a-26404b538f66', 'name' => 'Terminale S1'])),
+            new OA\Response(response: 403, description: 'Accès refusé.'),
+            new OA\Response(response: 404, description: 'Ressource introuvable dans ce scope application.'),
+            new OA\Response(response: 422, description: 'Payload invalide.'),
+        ],
+    )]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $resource, string $id, Request $request, ?User $loggedInUser): JsonResponse
     {

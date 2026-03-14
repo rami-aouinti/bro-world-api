@@ -46,10 +46,15 @@ class Application implements EntityInterface
     #[ORM\OneToMany(targetEntity: Interview::class, mappedBy: 'application', cascade: ['remove'], orphanRemoval: true)]
     private Collection|ArrayCollection $interviews;
 
+    /** @var Collection<int, Offer>|ArrayCollection<int, Offer> */
+    #[ORM\OneToMany(targetEntity: Offer::class, mappedBy: 'application', cascade: ['remove'], orphanRemoval: true)]
+    private Collection|ArrayCollection $offers;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
         $this->interviews = new ArrayCollection();
+        $this->offers = new ArrayCollection();
     }
 
     #[Override]
@@ -98,5 +103,13 @@ class Application implements EntityInterface
     public function getInterviews(): Collection|ArrayCollection
     {
         return $this->interviews;
+    }
+
+    /**
+     * @return Collection<int, Offer>|ArrayCollection<int, Offer>
+     */
+    public function getOffers(): Collection|ArrayCollection
+    {
+        return $this->offers;
     }
 }

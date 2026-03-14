@@ -20,6 +20,9 @@ final class SchoolCrudValidationPaginationTest extends WebTestCase
             'name' => '',
         ]));
         self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $client->getResponse()->getStatusCode());
+        $classValidationPayload = JSON::decode((string)$client->getResponse()->getContent(), true);
+        self::assertSame('SCHOOL_VALIDATION_FAILED', $classValidationPayload['code']);
+        self::assertNotEmpty($classValidationPayload['details']);
 
         $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes', [], [], [], JSON::encode([
             'name' => 'Classe API Test',
@@ -48,7 +51,7 @@ final class SchoolCrudValidationPaginationTest extends WebTestCase
         $teachersPayload = JSON::decode((string)$client->getResponse()->getContent(), true);
         $teacherId = $teachersPayload['items'][0]['id'];
 
-        $client->request('POST', self::API_URL_PREFIX . '/v1/school/exams', [], [], [], JSON::encode([
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams', [], [], [], JSON::encode([
             'title' => '',
             'classId' => $createdClassId,
             'teacherId' => $teacherId,
@@ -57,8 +60,11 @@ final class SchoolCrudValidationPaginationTest extends WebTestCase
             'term' => 'invalid',
         ]));
         self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $client->getResponse()->getStatusCode());
+        $examValidationPayload = JSON::decode((string)$client->getResponse()->getContent(), true);
+        self::assertSame('SCHOOL_VALIDATION_FAILED', $examValidationPayload['code']);
+        self::assertNotEmpty($examValidationPayload['details']);
 
-        $client->request('POST', self::API_URL_PREFIX . '/v1/school/exams', [], [], [], JSON::encode([
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams', [], [], [], JSON::encode([
             'title' => 'Exam CRUD API Test',
             'classId' => $createdClassId,
             'teacherId' => $teacherId,
@@ -79,10 +85,10 @@ final class SchoolCrudValidationPaginationTest extends WebTestCase
         ]));
         self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
-        $client->request('DELETE', self::API_URL_PREFIX . '/v1/school/exams/' . $createdExamId);
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams/' . $createdExamId);
         self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
 
-        $client->request('DELETE', self::API_URL_PREFIX . '/v1/school/classes/' . $createdClassId);
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes/' . $createdClassId);
         self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
     }
 }

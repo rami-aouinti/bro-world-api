@@ -399,3 +399,159 @@ Retourne:
 - `byContractType`
 - `byWorkMode`
 - `byExperienceLevel`
+
+---
+
+## 6) Fixtures Recruit étendues (tests manuels)
+
+Les fixtures Recruit incluent désormais des scénarios dédiés pour le parcours candidature:
+
+- **Multi-statuts de candidatures**: `WAITING`, `SCREENING`, `INTERVIEW_PLANNED`, `INTERVIEW_DONE`, `OFFER_SENT`, `HIRED`, `REJECTED`.
+- **Interviews planifiés**: `planned`, `done`, `canceled` (incluant un cas **no-show**).
+- **Feedbacks RH/tech**: via l'historique de statut (`comment`).
+- **Offres**: cas avec candidature en `OFFER_SENT` + commentaire d'offre.
+- **Cas extrêmes**:
+  - **fort volume**: lot de candidatures `stress-volume-*` sur une même offre,
+  - **no-show**: interview annulé avec note explicite,
+  - **doublons**: IDs d'interviewers dupliqués dans une interview de test.
+
+---
+
+## 7) Reset + seed local
+
+Script local ajouté:
+
+```bash
+bin/reset-seed-local.sh
+```
+
+Exécution en `dev` (par défaut):
+
+```bash
+bin/reset-seed-local.sh
+```
+
+Exécution dans un autre environnement:
+
+```bash
+APP_ENV=test bin/reset-seed-local.sh
+```
+
+Le script exécute successivement:
+1. `doctrine:database:drop --if-exists --force`
+2. `doctrine:database:create`
+3. `doctrine:schema:update --force --complete`
+4. `doctrine:fixtures:load -n`
+
+---
+
+## 8) Parcours de test manuel bout en bout (E2E)
+
+> Exemple avec utilisateur recruteur `john-root` et application slug `recruit-talent-core`.
+
+### Étape 0 — Réinitialiser les données
+
+```bash
+bin/reset-seed-local.sh
+```
+
+### Étape 1 — Obtenir un JWT
+
+```bash
+curl -X POST "http://localhost/api/login_check" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"john-root","password":"password-root"}'
+```
+
+Conserver le token dans `JWT_TOKEN`.
+
+### Étape 2 — Lister les jobs privés
+
+```bash
+curl -X GET "http://localhost/api/v1/recruit/private/recruit-talent-core/jobs?page=1&limit=20" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer ${JWT_TOKEN}"
+```
+
+Vérifier qu'au moins un job est présent et récupérer un `jobId`.
+
+### Étape 3 — Vérifier les candidatures multi-statuts
+
+```bash
+curl -X GET "http://localhost/api/v1/recruit/applications/recruit-talent-core/private/job-applications?jobId={jobId}" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer ${JWT_TOKEN}"
+```
+
+Vérifier la présence des statuts attendus (`WAITING`, `SCREENING`, `INTERVIEW_*`, `OFFER_SENT`, `HIRED`, `REJECTED`).
+
+### Étape 4 — Contrôler les interviews (planned/done/canceled)
+
+Choisir un `applicationId` depuis la liste précédente, puis:
+
+```bash
+curl -X GET "http://localhost/api/v1/recruit/private/applications/{applicationId}/interviews" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer ${JWT_TOKEN}"
+```
+
+Vérifier:
+- un interview `planned`,
+- un interview `done`,
+- un interview `canceled` (cas no-show).
+
+### Étape 5 — Vérifier feedback et offre via historique de statut
+
+Choisir une `applicationId` en `OFFER_SENT`:
+
+```bash
+curl -X GET "http://localhost/api/v1/recruit/applications/recruit-talent-core/private/applications/{applicationId}/status-history" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer ${JWT_TOKEN}"
+```
+
+Vérifier la présence de `comment` (feedback/offre).
+
+### Étape 6 — Vérifier le cas fort volume
+
+Toujours sur la liste des candidatures (étape 3), vérifier qu'un nombre significatif d'entrées `stress-volume-*` est présent pour tester pagination/performance.
+
+### Étape 7 — Vérifier le comportement anti-doublon applicatif
+
+Tenter de créer deux fois la même candidature (même applicant/job) et valider que la seconde requête est rejetée (conflit applicatif / duplication bloquée).
+## 6) Matrice des permissions métier (RBAC recrutement)
+
+Rôles métier introduits:
+- `ROLE_RECRUITER`
+- `ROLE_HIRING_MANAGER`
+- `ROLE_INTERVIEWER`
+
+Permissions fonctionnelles:
+- `RECRUIT_INTERVIEW_MANAGE`
+- `RECRUIT_INTERVIEW_VIEW`
+- `RECRUIT_APPLICATION_STATUS_TRANSITION`
+- `RECRUIT_APPLICATION_STATUS_HISTORY_VIEW`
+- `RECRUIT_OFFER_MANAGE`
+- `RECRUIT_SENSITIVE_DATA_VIEW`
+
+### Matrice d'accès
+
+| Endpoint clé | Permission requise | RECRUITER | HIRING_MANAGER | INTERVIEWER |
+|---|---|---:|---:|---:|
+| `POST/PATCH/DELETE /v1/recruit/private/interviews/...` | `RECRUIT_INTERVIEW_MANAGE` | ✅ | ✅ | ❌ |
+| `GET /v1/recruit/private/applications/{id}/interviews` | `RECRUIT_INTERVIEW_VIEW` | ✅ | ✅ | ✅ |
+| `PATCH /v1/recruit/applications/{slug}/private/applications/{id}/status` | `RECRUIT_APPLICATION_STATUS_TRANSITION` | ✅ | ✅ | ❌ |
+| `GET /v1/recruit/applications/{slug}/private/applications/{id}/status-history` | `RECRUIT_APPLICATION_STATUS_HISTORY_VIEW` | ✅ | ✅ | ✅ |
+| `POST/PATCH/DELETE /v1/recruit/applications/{slug}/jobs/...` (offers) | `RECRUIT_OFFER_MANAGE` | ✅ | ✅ | ❌ |
+| Lecture de données sensibles (`CV`, `notes`, `feedback/comment`) | `RECRUIT_SENSITIVE_DATA_VIEW` | ✅ | ✅ | ❌ |
+
+### Règles de confidentialité appliquées
+
+- Les champs sensibles sont masqués (`null`) lorsque l'utilisateur n'a pas `RECRUIT_SENSITIVE_DATA_VIEW`.
+- Sont considérés sensibles dans le module Recruit:
+  - le CV (référence de resume),
+  - les notes internes d'entretien,
+  - les commentaires d'historique de statut (feedback interne),
+  - les données personnelles non nécessaires (`email`, `coverLetter`).
+
+> `ROLE_ADMIN` et `ROLE_ROOT` gardent un accès complet (override) via le voter Recruit.

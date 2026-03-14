@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Recruit\Transport\Controller\Api\V1\Interview;
 
+use App\Recruit\Application\Security\RecruitPermissions;
 use App\Recruit\Application\Service\InterviewService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
@@ -17,6 +18,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[AsController]
 #[OA\Tag(name: 'Recruit Interview')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
+#[IsGranted(RecruitPermissions::INTERVIEW_MANAGE)]
 readonly class InterviewPatchController
 {
     public function __construct(private InterviewService $interviewService)
@@ -24,6 +26,30 @@ readonly class InterviewPatchController
     }
 
     #[Route(path: '/v1/recruit/private/interviews/{interviewId}', methods: [Request::METHOD_PATCH])]
+    #[OA\Patch(
+        summary: 'Met à jour un entretien.',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'scheduledAt', type: 'string', format: 'date-time'),
+                    new OA\Property(property: 'durationMinutes', type: 'integer', minimum: 1),
+                    new OA\Property(property: 'status', type: 'string', enum: ['planned', 'done', 'cancelled']),
+                    new OA\Property(property: 'mode', type: 'string', enum: ['visio', 'phone', 'onsite']),
+                    new OA\Property(property: 'locationOrUrl', type: 'string', nullable: true),
+                    new OA\Property(property: 'interviewerIds', type: 'array', items: new OA\Items(type: 'string')),
+                    new OA\Property(property: 'notes', type: 'string', nullable: true),
+                ],
+            ),
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Entretien mis à jour.'),
+            new OA\Response(response: 400, description: 'Payload invalide.'),
+            new OA\Response(response: 403, description: 'Accès interdit.'),
+            new OA\Response(response: 404, description: 'Entretien introuvable.'),
+        ],
+    )]
+    #[OA\Parameter(name: 'interviewId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     public function __invoke(string $interviewId, Request $request, User $loggedInUser): JsonResponse
     {
         /** @var array<string,mixed> $payload */

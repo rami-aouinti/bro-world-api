@@ -9,11 +9,13 @@ use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\Crm\Infrastructure\Repository\CrmRepository;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
 use App\Crm\Infrastructure\Repository\TaskRepository;
+use App\General\Application\Message\EntityCreated;
 use App\General\Domain\Utils\JSON;
 use App\Tests\TestCase\WebTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 
 final class CrmControllerTest extends WebTestCase
 {
@@ -157,6 +159,116 @@ final class CrmControllerTest extends WebTestCase
         self::assertSame([], $payload['errors'] ?? null);
     }
 
+
+    #[TestDox('CreateCompanyByApplicationController publishes EntityCreated with applicationSlug and crmId context.')]
+    public function testCreateCompanyPublishesMessageContext(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        /** @var InMemoryTransport $transport */
+        $transport = static::getContainer()->get('messenger.transport.async_priority_high');
+        $transport->reset();
+
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/companies', self::API_URL_PREFIX, self::PRIMARY_APPLICATION_SLUG),
+            content: JSON::encode([
+                'name' => 'Context Company ' . uniqid('', true),
+                'contactEmail' => 'context.company@example.com',
+            ])
+        );
+
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+
+        $message = $this->getLastCreatedMessage($transport);
+        self::assertSame(self::PRIMARY_APPLICATION_SLUG, $message->context['applicationSlug'] ?? null);
+        self::assertSame($this->getCrmIdByApplicationSlug(self::PRIMARY_APPLICATION_SLUG), $message->context['crmId'] ?? null);
+    }
+
+    #[TestDox('CreateProjectController publishes EntityCreated with applicationSlug and crmId context.')]
+    public function testCreateProjectPublishesMessageContext(): void
+    {
+        $companyId = $this->createCompany();
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        /** @var InMemoryTransport $transport */
+        $transport = static::getContainer()->get('messenger.transport.async_priority_high');
+        $transport->reset();
+
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/projects', self::API_URL_PREFIX, self::PRIMARY_APPLICATION_SLUG),
+            content: JSON::encode([
+                'name' => 'Context Project ' . uniqid('', true),
+                'companyId' => $companyId,
+            ])
+        );
+
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+
+        $message = $this->getLastCreatedMessage($transport);
+        self::assertSame(self::PRIMARY_APPLICATION_SLUG, $message->context['applicationSlug'] ?? null);
+        self::assertSame($this->getCrmIdByApplicationSlug(self::PRIMARY_APPLICATION_SLUG), $message->context['crmId'] ?? null);
+    }
+
+    #[TestDox('CreateTaskController publishes EntityCreated with applicationSlug and crmId context.')]
+    public function testCreateTaskPublishesMessageContext(): void
+    {
+        $companyId = $this->createCompany();
+        $projectId = $this->createProject($companyId);
+        $sprintId = $this->createSprint($projectId);
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        /** @var InMemoryTransport $transport */
+        $transport = static::getContainer()->get('messenger.transport.async_priority_high');
+        $transport->reset();
+
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/tasks', self::API_URL_PREFIX, self::PRIMARY_APPLICATION_SLUG),
+            content: JSON::encode([
+                'title' => 'Context Task ' . uniqid('', true),
+                'projectId' => $projectId,
+                'sprintId' => $sprintId,
+            ])
+        );
+
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+
+        $message = $this->getLastCreatedMessage($transport);
+        self::assertSame(self::PRIMARY_APPLICATION_SLUG, $message->context['applicationSlug'] ?? null);
+        self::assertSame($this->getCrmIdByApplicationSlug(self::PRIMARY_APPLICATION_SLUG), $message->context['crmId'] ?? null);
+    }
+
+    #[TestDox('CreateTaskRequestController publishes EntityCreated with applicationSlug and crmId context.')]
+    public function testCreateTaskRequestPublishesMessageContext(): void
+    {
+        $companyId = $this->createCompany();
+        $projectId = $this->createProject($companyId);
+        $sprintId = $this->createSprint($projectId);
+        $taskId = $this->createTask($projectId, $sprintId);
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        /** @var InMemoryTransport $transport */
+        $transport = static::getContainer()->get('messenger.transport.async_priority_high');
+        $transport->reset();
+
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/task-requests', self::API_URL_PREFIX, self::PRIMARY_APPLICATION_SLUG),
+            content: JSON::encode([
+                'title' => 'Context Task Request ' . uniqid('', true),
+                'taskId' => $taskId,
+            ])
+        );
+
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+
+        $message = $this->getLastCreatedMessage($transport);
+        self::assertSame(self::PRIMARY_APPLICATION_SLUG, $message->context['applicationSlug'] ?? null);
+        self::assertSame($this->getCrmIdByApplicationSlug(self::PRIMARY_APPLICATION_SLUG), $message->context['crmId'] ?? null);
+    }
+
     #[TestDox('Delete endpoints reject IDs from another CRM application scope.')]
     #[DataProvider('crossScopeDeleteProvider')]
     public function testDeleteRejectsForeignScopeIds(string $resource, string $foreignIdKey): void
@@ -249,6 +361,49 @@ final class CrmControllerTest extends WebTestCase
     }
 
 
+
+
+    private function createTask(string $projectId, string $sprintId): string
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/tasks', self::API_URL_PREFIX, self::PRIMARY_APPLICATION_SLUG),
+            content: JSON::encode([
+                'title' => 'Cross Scope Task ' . uniqid('', true),
+                'projectId' => $projectId,
+                'sprintId' => $sprintId,
+            ])
+        );
+
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+
+        return (string)$payload['id'];
+    }
+
+    private function getCrmIdByApplicationSlug(string $applicationSlug): string
+    {
+        static::bootKernel();
+
+        $crmRepository = static::getContainer()->get(CrmRepository::class);
+        $crm = $crmRepository->findOneByApplicationSlug($applicationSlug);
+
+        self::assertNotNull($crm);
+
+        return $crm->getId();
+    }
+
+    private function getLastCreatedMessage(InMemoryTransport $transport): EntityCreated
+    {
+        $envelopes = $transport->getSent();
+        self::assertNotEmpty($envelopes);
+
+        $message = $envelopes[array_key_last($envelopes)]->getMessage();
+        self::assertInstanceOf(EntityCreated::class, $message);
+
+        return $message;
+    }
 
     private function createSprint(string $projectId): string
     {

@@ -30,7 +30,28 @@ final readonly class CreateClassByApplicationController
     }
 
     #[Route('/v1/school/applications/{applicationSlug}/classes', methods: [Request::METHOD_POST])]
+    #[OA\Post(
+        summary: 'Créer une classe dans une application',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', example: 'Terminale S'),
+                ],
+            ),
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Classe créée.', content: new OA\JsonContent(example: ['id' => '7600e750-f92f-4f9f-883a-26404b538f66', 'schoolId' => 'b7c23d65-11e0-4f26-8ad7-3f58c48f1290', 'applicationSlug' => 'school-crm'])),
+            new OA\Response(response: 403, description: 'Accès refusé.'),
+            new OA\Response(response: 404, description: 'Application introuvable.'),
+            new OA\Response(response: 422, description: 'Erreur de validation.'),
+        ],
+    )]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/SchoolError'))]
+    #[OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/SchoolError'))]
+    #[OA\Response(response: 422, description: 'Validation failed', content: new OA\JsonContent(ref: '#/components/schemas/SchoolValidationError'))]
     public function __invoke(string $applicationSlug, Request $request, ?User $loggedInUser): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
