@@ -30,9 +30,30 @@ final readonly class QuizReadService
 
     public function getByApplicationSlug(string $slug, ?string $level = null, ?string $category = null): array
     {
-        $cacheKey = sprintf('quiz_%s_%s_%s', $slug, (string)$level, (string)$category);
+        return $this->getQuizProjectionByApplicationSlug($slug, $level, $category, false);
+    }
 
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($slug, $level, $category): array {
+    public function getCorrectionByApplicationSlug(string $slug, ?string $level = null, ?string $category = null): array
+    {
+        return $this->getQuizProjectionByApplicationSlug($slug, $level, $category, true);
+    }
+
+    private function getQuizProjectionByApplicationSlug(
+        string $slug,
+        ?string $level,
+        ?string $category,
+        bool $includeCorrection,
+    ): array
+    {
+        $cacheKey = sprintf(
+            'quiz_%s_%s_%s_%s',
+            $slug,
+            (string)$level,
+            (string)$category,
+            $includeCorrection ? 'with_correction' : 'public',
+        );
+
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($slug, $level, $category, $includeCorrection): array {
             $item->expiresAfter(self::QUIZ_CACHE_TTL);
             $quiz = $this->quizRepository->findOneByApplicationSlugWithConfiguration($slug);
 
@@ -62,12 +83,22 @@ final readonly class QuizReadService
                     'position' => $q->getPosition(),
                     'points' => $q->getPoints(),
                     'explanation' => $q->getExplanation(),
-                    'answers' => array_map(static fn ($a): array => [
-                        'id' => $a->getId(),
-                        'label' => $a->getLabel(),
-                        'correct' => $a->isCorrect(),
-                        'position' => $a->getPosition(),
-                    ], $q->getAnswers()->toArray()),
+                    'answers' => array_map(
+                        static function ($a) use ($includeCorrection): array {
+                            $answer = [
+                                'id' => $a->getId(),
+                                'label' => $a->getLabel(),
+                                'position' => $a->getPosition(),
+                            ];
+
+                            if ($includeCorrection) {
+                                $answer['correct'] = $a->isCorrect();
+                            }
+
+                            return $answer;
+                        },
+                        $q->getAnswers()->toArray()
+                    ),
                 ], $questions),
             ];
         });

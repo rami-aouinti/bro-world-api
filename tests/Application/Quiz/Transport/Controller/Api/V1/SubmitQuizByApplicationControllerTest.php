@@ -67,6 +67,34 @@ final class SubmitQuizByApplicationControllerTest extends WebTestCase
         self::assertSame(count($questions), (int)$responseData['correctAnswers']);
     }
 
+    #[TestDox('GET quiz by application does not expose answers correction data.')]
+    public function testGetQuizByApplicationDoesNotExposeAnswerCorrection(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $quiz = $this->getAnyPublishedQuiz($entityManager);
+
+        $client = $this->getTestClient('john-user', 'password-user');
+        $client->request('GET', $this->baseUrl . '/' . $quiz->getApplication()->getSlug());
+
+        $response = $client->getResponse();
+        $content = $response->getContent();
+
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:\n" . $response);
+
+        $responseData = JSON::decode($content, true);
+        self::assertIsArray($responseData['questions'] ?? null);
+
+        foreach ($responseData['questions'] as $question) {
+            self::assertIsArray($question['answers'] ?? null);
+
+            foreach ($question['answers'] as $answer) {
+                self::assertIsArray($answer);
+                self::assertArrayNotHasKey('correct', $answer);
+            }
+        }
+    }
+
     #[TestDox('Submitting invalid quiz payload returns 422.')]
     public function testSubmitQuizWithInvalidPayloadReturnsValidationError(): void
     {
