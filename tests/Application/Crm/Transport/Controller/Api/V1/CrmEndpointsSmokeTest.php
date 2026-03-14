@@ -41,6 +41,54 @@ final class CrmEndpointsSmokeTest extends WebTestCase
         $client->request('GET', sprintf('%s/v1/crm/applications/not-found-slug/%s', self::API_URL_PREFIX, $resource));
 
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertArrayHasKey('message', $payload);
+        self::assertSame([], $payload['errors'] ?? null);
+    }
+
+    #[TestDox('POST create endpoints return 400 for invalid JSON payload.')]
+    #[DataProvider('createEndpointsProvider')]
+    public function testCreateEndpointsInvalidJson(string $resource): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/%s', self::API_URL_PREFIX, self::APPLICATION_SLUG, $resource),
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: '{"invalid":'
+        );
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertSame('Invalid JSON payload.', $payload['message'] ?? null);
+        self::assertSame([], $payload['errors'] ?? null);
+    }
+
+    #[TestDox('POST date-based endpoints return 400 for invalid date format.')]
+    #[DataProvider('invalidDateProvider')]
+    public function testCreateEndpointsInvalidDate(string $resource, string $titleOrNameField, string $dateField): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $payload = [$titleOrNameField => 'Invalid date payload'];
+        if ($resource === 'sprints') {
+            $companyId = $this->createCompany();
+            $payload['projectId'] = $this->createProject($companyId);
+        }
+
+        $payload[$dateField] = '2024-01-01';
+
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/%s', self::API_URL_PREFIX, self::APPLICATION_SLUG, $resource),
+            content: JSON::encode($payload)
+        );
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
+        $decoded = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertSame(sprintf('Invalid date format for "%s".', $dateField), $decoded['message'] ?? null);
+        self::assertSame([], $decoded['errors'] ?? null);
     }
 
     #[TestDox('POST /companies returns 201 and then DELETE /companies/{id} returns 204.')]
@@ -89,6 +137,9 @@ final class CrmEndpointsSmokeTest extends WebTestCase
         );
 
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertArrayHasKey('message', $payload);
+        self::assertSame([], $payload['errors'] ?? null);
     }
 
     #[TestDox('DELETE /projects/{id} returns 404 for unknown entity.')]
@@ -123,6 +174,9 @@ final class CrmEndpointsSmokeTest extends WebTestCase
         );
 
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertArrayHasKey('message', $payload);
+        self::assertSame([], $payload['errors'] ?? null);
     }
 
     #[TestDox('DELETE /sprints/{id} returns 404 for unknown entity.')]
@@ -157,6 +211,9 @@ final class CrmEndpointsSmokeTest extends WebTestCase
         );
 
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertArrayHasKey('message', $payload);
+        self::assertSame([], $payload['errors'] ?? null);
     }
 
     #[TestDox('DELETE /tasks/{id} returns 404 for unknown entity.')]
@@ -193,6 +250,9 @@ final class CrmEndpointsSmokeTest extends WebTestCase
         );
 
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertArrayHasKey('message', $payload);
+        self::assertSame([], $payload['errors'] ?? null);
     }
 
     #[TestDox('DELETE /task-requests/{id} returns 404 for unknown entity.')]
@@ -223,6 +283,36 @@ final class CrmEndpointsSmokeTest extends WebTestCase
         $client->request('GET', self::API_URL_PREFIX . '/v1/crm/applications/not-found-slug/dashboard');
 
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertArrayHasKey('message', $payload);
+        self::assertSame([], $payload['errors'] ?? null);
+    }
+
+    /**
+     * @return array<int, array{string}>
+     */
+    public static function createEndpointsProvider(): array
+    {
+        return [
+            ['companies'],
+            ['projects'],
+            ['sprints'],
+            ['tasks'],
+            ['task-requests'],
+        ];
+    }
+
+    /**
+     * @return array<int, array{string,string,string}>
+     */
+    public static function invalidDateProvider(): array
+    {
+        return [
+            ['projects', 'name', 'startedAt'],
+            ['sprints', 'name', 'startDate'],
+            ['tasks', 'title', 'dueAt'],
+            ['task-requests', 'title', 'resolvedAt'],
+        ];
     }
 
     /**
@@ -343,6 +433,9 @@ final class CrmEndpointsSmokeTest extends WebTestCase
         $client->request('DELETE', sprintf('%s/v1/crm/applications/%s/%s/%s', self::API_URL_PREFIX, self::APPLICATION_SLUG, $resource, self::UNKNOWN_UUID));
 
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertArrayHasKey('message', $payload);
+        self::assertSame([], $payload['errors'] ?? null);
     }
 
     /**

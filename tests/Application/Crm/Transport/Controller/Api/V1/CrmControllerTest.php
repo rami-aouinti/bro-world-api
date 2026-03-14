@@ -36,6 +36,9 @@ final class CrmControllerTest extends WebTestCase
         );
 
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertArrayHasKey('message', $payload);
+        self::assertSame([], $payload['errors'] ?? null);
     }
 
     #[TestDox('CreateSprintController rejects projectId from another CRM application scope.')]
@@ -54,6 +57,9 @@ final class CrmControllerTest extends WebTestCase
         );
 
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertArrayHasKey('message', $payload);
+        self::assertSame([], $payload['errors'] ?? null);
     }
 
     #[TestDox('CreateTaskController rejects projectId from another CRM application scope.')]
@@ -72,6 +78,9 @@ final class CrmControllerTest extends WebTestCase
         );
 
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertArrayHasKey('message', $payload);
+        self::assertSame([], $payload['errors'] ?? null);
     }
 
     #[TestDox('CreateTaskController rejects sprintId from another CRM application scope.')]
@@ -93,6 +102,9 @@ final class CrmControllerTest extends WebTestCase
         );
 
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertArrayHasKey('message', $payload);
+        self::assertSame([], $payload['errors'] ?? null);
     }
 
     #[TestDox('CreateTaskRequestController rejects taskId from another CRM application scope.')]
@@ -111,6 +123,38 @@ final class CrmControllerTest extends WebTestCase
         );
 
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertArrayHasKey('message', $payload);
+        self::assertSame([], $payload['errors'] ?? null);
+    }
+
+
+
+    #[TestDox('CreateTaskController returns 422 for sprint/project mismatch in same CRM scope.')]
+    public function testCreateTaskRejectsSprintProjectMismatch(): void
+    {
+        $companyId = $this->createCompany();
+        $projectId = $this->createProject($companyId);
+
+        $otherCompanyId = $this->createCompany();
+        $otherProjectId = $this->createProject($otherCompanyId);
+        $sprintId = $this->createSprint($otherProjectId);
+
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/tasks', self::API_URL_PREFIX, self::PRIMARY_APPLICATION_SLUG),
+            content: JSON::encode([
+                'title' => 'Task with mismatched sprint/project',
+                'projectId' => $projectId,
+                'sprintId' => $sprintId,
+            ])
+        );
+
+        self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertSame('Provided "sprintId" does not belong to the provided "projectId".', $payload['message'] ?? null);
+        self::assertSame([], $payload['errors'] ?? null);
     }
 
     #[TestDox('Delete endpoints reject IDs from another CRM application scope.')]
@@ -126,6 +170,9 @@ final class CrmControllerTest extends WebTestCase
         );
 
         self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertArrayHasKey('message', $payload);
+        self::assertSame([], $payload['errors'] ?? null);
     }
 
     /**
@@ -192,6 +239,26 @@ final class CrmControllerTest extends WebTestCase
             content: JSON::encode([
                 'name' => 'Cross Scope Company ' . uniqid('', true),
                 'contactEmail' => 'cross.scope.company@example.com',
+            ])
+        );
+
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+
+        return (string)$payload['id'];
+    }
+
+
+
+    private function createSprint(string $projectId): string
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/sprints', self::API_URL_PREFIX, self::PRIMARY_APPLICATION_SLUG),
+            content: JSON::encode([
+                'name' => 'Cross Scope Sprint ' . uniqid('', true),
+                'projectId' => $projectId,
             ])
         );
 

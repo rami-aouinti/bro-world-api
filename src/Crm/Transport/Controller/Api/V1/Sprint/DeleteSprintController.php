@@ -7,6 +7,7 @@ namespace App\Crm\Transport\Controller\Api\V1\Sprint;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Domain\Entity\Sprint;
 use App\Crm\Infrastructure\Repository\SprintRepository;
+use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\General\Application\Message\EntityDeleted;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
@@ -26,6 +27,7 @@ final readonly class DeleteSprintController
     public function __construct(
         private SprintRepository $sprintRepository,
         private CrmApplicationScopeResolver $scopeResolver,
+        private CrmApiErrorResponseFactory $errorResponseFactory,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -38,7 +40,7 @@ final readonly class DeleteSprintController
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
         $sprint = $this->sprintRepository->findOneScopedById($id, $crm->getId());
         if (!$sprint instanceof Sprint) {
-            return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
+            return $this->errorResponseFactory->notFoundReference('sprintId');
         }
 
         $this->entityManager->remove($sprint);

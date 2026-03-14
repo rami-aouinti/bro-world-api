@@ -7,6 +7,7 @@ namespace App\Crm\Transport\Controller\Api\V1\Company;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Domain\Entity\Company;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
+use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\General\Application\Message\EntityDeleted;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
@@ -26,6 +27,7 @@ final readonly class DeleteCompanyController
     public function __construct(
         private CompanyRepository $companyRepository,
         private CrmApplicationScopeResolver $scopeResolver,
+        private CrmApiErrorResponseFactory $errorResponseFactory,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -38,7 +40,7 @@ final readonly class DeleteCompanyController
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
         $company = $this->companyRepository->findOneScopedById($id, $crm->getId());
         if (!$company instanceof Company) {
-            return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
+            return $this->errorResponseFactory->notFoundReference('companyId');
         }
 
         $this->entityManager->remove($company);

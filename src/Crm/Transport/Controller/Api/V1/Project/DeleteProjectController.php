@@ -7,6 +7,7 @@ namespace App\Crm\Transport\Controller\Api\V1\Project;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Domain\Entity\Project;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
+use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\General\Application\Message\EntityDeleted;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
@@ -27,6 +28,7 @@ final readonly class DeleteProjectController
     public function __construct(
         private ProjectRepository $projectRepository,
         private CrmApplicationScopeResolver $scopeResolver,
+        private CrmApiErrorResponseFactory $errorResponseFactory,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -42,7 +44,7 @@ final readonly class DeleteProjectController
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
         $project = $this->projectRepository->findOneScopedById($id, $crm->getId());
         if (!$project instanceof Project) {
-            return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
+            return $this->errorResponseFactory->notFoundReference('projectId');
         }
 
         $this->entityManager->remove($project);

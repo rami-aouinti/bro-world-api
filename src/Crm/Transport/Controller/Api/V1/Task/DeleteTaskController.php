@@ -7,6 +7,7 @@ namespace App\Crm\Transport\Controller\Api\V1\Task;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Infrastructure\Repository\TaskRepository;
+use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\General\Application\Message\EntityDeleted;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
@@ -26,6 +27,7 @@ final readonly class DeleteTaskController
     public function __construct(
         private TaskRepository $taskRepository,
         private CrmApplicationScopeResolver $scopeResolver,
+        private CrmApiErrorResponseFactory $errorResponseFactory,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -38,7 +40,7 @@ final readonly class DeleteTaskController
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
         $task = $this->taskRepository->findOneScopedById($id, $crm->getId());
         if (!$task instanceof Task) {
-            return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
+            return $this->errorResponseFactory->notFoundReference('taskId');
         }
 
         $this->entityManager->remove($task);
