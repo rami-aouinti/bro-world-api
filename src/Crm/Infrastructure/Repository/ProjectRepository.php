@@ -79,7 +79,7 @@ class ProjectRepository extends BaseRepository
             ->select('project.id, project.name, project.status, IDENTITY(project.company) AS companyId')
             ->leftJoin('project.company', 'company')
             ->andWhere('company.crm = :crmId')
-            ->setParameter('crmId', $crmId)
+            ->setParameter('crmId', $crmId, UuidBinaryOrderedTimeType::NAME)
             ->orderBy('project.createdAt', 'DESC')
             ->setMaxResults($limit)
             ->setFirstResult($offset);
