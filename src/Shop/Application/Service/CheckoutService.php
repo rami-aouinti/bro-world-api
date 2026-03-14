@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shop\Application\Service;
 
+use App\Shop\Application\Monitoring\ShopMonitoringService;
 use App\Shop\Application\Message\CheckoutCommand;
 use App\Shop\Domain\Entity\Cart;
 use App\Shop\Domain\Entity\Order;
@@ -33,6 +34,7 @@ final readonly class CheckoutService
         private OrderItemRepository $orderItemRepository,
         private ShopRepository $shopRepository,
         private UserRepository $userRepository,
+        private ShopMonitoringService $monitoringService,
     ) {
     }
 
@@ -48,6 +50,20 @@ final readonly class CheckoutService
         }
 
         if ($shop->getApplication()?->getSlug() !== $command->applicationSlug) {
+            $this->monitoringService->logStructured(
+                event: 'shop.checkout.scope_access_denied',
+                message: 'Checkout rejected due to scope access refusal.',
+                context: [
+                    'applicationSlug' => $command->applicationSlug,
+                    'shopId' => $shop->getId(),
+                    'shopApplicationSlug' => $shop->getApplication()?->getSlug(),
+                    'userId' => $command->userId,
+                ],
+            );
+            $this->monitoringService->incrementCounter('shop.checkout.failures_total', [
+                'reason' => 'scope_access_denied',
+            ]);
+
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Shop does not belong to the requested application scope.');
         }
 
@@ -84,6 +100,23 @@ final readonly class CheckoutService
             }
 
             if ($product->getStock() < $cartItem->getQuantity()) {
+                $this->monitoringService->logStructured(
+                    event: 'shop.checkout.insufficient_stock',
+                    message: 'Checkout rejected due to insufficient stock.',
+                    context: [
+                        'applicationSlug' => $command->applicationSlug,
+                        'shopId' => $shop->getId(),
+                        'userId' => $command->userId,
+                        'productId' => $product->getId(),
+                        'sku' => $product->getSku(),
+                        'requestedQuantity' => $cartItem->getQuantity(),
+                        'availableStock' => $product->getStock(),
+                    ],
+                );
+                $this->monitoringService->incrementCounter('shop.checkout.failures_total', [
+                    'reason' => 'insufficient_stock',
+                ]);
+
                 throw new HttpException(JsonResponse::HTTP_CONFLICT, sprintf('Insufficient stock for SKU %s.', $product->getSku()));
             }
 

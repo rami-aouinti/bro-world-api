@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shop\Application\Service;
 
+use App\Shop\Application\Monitoring\ShopMonitoringService;
 use App\Shop\Domain\Entity\Order;
 use App\Shop\Domain\Entity\PaymentTransaction;
 use App\Shop\Domain\Enum\OrderStatus;
@@ -30,6 +31,7 @@ final readonly class PaymentService
         private PaymentProviderInterface $paymentProvider,
         private Security $security,
         private string $environment,
+        private ShopMonitoringService $monitoringService,
     ) {
     }
 
@@ -106,6 +108,24 @@ final readonly class PaymentService
 
         $this->applyOrderStateFromPayment($order, $transaction->getStatus());
 
+        if ($transaction->getStatus() === PaymentStatus::FAILED) {
+            $this->monitoringService->logStructured(
+                event: 'shop.payment.confirm_failed',
+                message: 'Payment confirmation failed.',
+                context: [
+                    'applicationSlug' => $applicationSlug,
+                    'orderId' => $order->getId(),
+                    'providerReference' => $providerReference,
+                    'provider' => $transaction->getProvider(),
+                ],
+                level: 'error',
+            );
+            $this->monitoringService->incrementCounter('shop.payment_confirm.failures_total', [
+                'reason' => 'provider_failed',
+                'provider' => $transaction->getProvider(),
+            ]);
+        }
+
         $this->orderRepository->save($order, false);
         $this->paymentTransactionRepository->save($transaction, true);
 
@@ -123,11 +143,34 @@ final readonly class PaymentService
     {
         $normalizedSignature = is_string($signature) ? trim($signature) : '';
         if ($this->environment === 'prod' && $normalizedSignature === '') {
+            $this->monitoringService->logStructured(
+                event: 'shop.webhook.invalid',
+                message: 'Webhook rejected because signature header is missing in production.',
+                context: [
+                    'environment' => $this->environment,
+                    'reason' => 'missing_signature',
+                ],
+            );
+            $this->monitoringService->incrementCounter('shop.webhook.invalid_total', [
+                'reason' => 'missing_signature',
+            ]);
+
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Webhook signature is required in production.');
         }
 
         $verifiedPayload = $this->paymentProvider->verifyWebhook($payload, $normalizedSignature !== '' ? $normalizedSignature : null);
         if ($verifiedPayload === null) {
+            $this->monitoringService->logStructured(
+                event: 'shop.webhook.invalid',
+                message: 'Webhook rejected because signature or payload is invalid.',
+                context: [
+                    'reason' => 'invalid_signature_or_payload',
+                ],
+            );
+            $this->monitoringService->incrementCounter('shop.webhook.invalid_total', [
+                'reason' => 'invalid_signature_or_payload',
+            ]);
+
             throw new HttpException(JsonResponse::HTTP_UNAUTHORIZED, 'Invalid webhook signature or payload.');
         }
 
@@ -136,6 +179,19 @@ final readonly class PaymentService
                 'webhookIdempotenceKey' => $verifiedPayload['webhookKey'],
             ]) instanceof PaymentTransaction
         ) {
+            $this->monitoringService->logStructured(
+                event: 'shop.webhook.replayed',
+                message: 'Webhook replay detected and rejected.',
+                context: [
+                    'provider' => (string)$verifiedPayload['provider'],
+                    'providerReference' => (string)$verifiedPayload['providerReference'],
+                    'webhookKey' => (string)$verifiedPayload['webhookKey'],
+                ],
+            );
+            $this->monitoringService->incrementCounter('shop.webhook.replayed_total', [
+                'provider' => (string)$verifiedPayload['provider'],
+            ]);
+
             return null;
         }
 
@@ -168,6 +224,20 @@ final readonly class PaymentService
     {
         $orderApplicationSlug = $order->getShop()?->getApplication()?->getSlug();
         if ($orderApplicationSlug !== trim($applicationSlug)) {
+            $this->monitoringService->logStructured(
+                event: 'shop.payment.scope_access_denied',
+                message: 'Payment access rejected due to scope access refusal.',
+                context: [
+                    'applicationSlug' => trim($applicationSlug),
+                    'orderId' => $order->getId(),
+                    'orderApplicationSlug' => $orderApplicationSlug,
+                    'shopId' => $order->getShop()?->getId(),
+                ],
+            );
+            $this->monitoringService->incrementCounter('shop.payment_confirm.failures_total', [
+                'reason' => 'scope_access_denied',
+            ]);
+
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'This order does not belong to the requested application scope.');
         }
 
