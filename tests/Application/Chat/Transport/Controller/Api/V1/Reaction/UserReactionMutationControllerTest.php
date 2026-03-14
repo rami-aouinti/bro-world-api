@@ -18,6 +18,38 @@ final class UserReactionMutationControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
+    #[TestDox('Reaction create returns 201 on first identical POST and 200 on second')]
+    public function testCreateReactionReturnsCreatedThenOkOnDuplicatePost(): void
+    {
+        $messageId = LoadRecruitChatCalendarScenarioData::getUuidByKey('message-john-root-scenario-from-john-root');
+
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('POST', $this->baseUrl . '/messages/' . $messageId . '/reactions', [], [], [], JSON::encode([
+            'reaction' => 'like',
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
+
+        $firstContent = $client->getResponse()->getContent();
+        self::assertNotFalse($firstContent);
+        $firstPayload = JSON::decode($firstContent, true);
+        $firstReactionId = $firstPayload['id'] ?? null;
+        self::assertIsString($firstReactionId);
+
+        $client->request('POST', $this->baseUrl . '/messages/' . $messageId . '/reactions', [], [], [], JSON::encode([
+            'reaction' => 'like',
+        ]));
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $secondContent = $client->getResponse()->getContent();
+        self::assertNotFalse($secondContent);
+        $secondPayload = JSON::decode($secondContent, true);
+        self::assertSame($firstReactionId, $secondPayload['id'] ?? null);
+    }
+
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Reaction create/patch/delete nominal + validation + ownership authorization')]
     public function testReactionEndpoints(): void
     {

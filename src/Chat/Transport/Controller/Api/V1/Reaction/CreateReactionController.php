@@ -24,11 +24,27 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Chat Conversation')]
-#[OA\Post(path: '/v1/chat/private/messages/{messageId}/reactions', operationId: 'chat_reaction_create', summary: 'Créer une réaction', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['reaction'], properties: [new OA\Property(property: 'reaction', type: 'string', enum: ChatReactionType::VALUES, example: 'like')], example: [
-    'reaction' => 'like',
-])), tags: ['Chat Message Reaction'], parameters: [new OA\Parameter(name: 'messageId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], responses: [new OA\Response(response: 201, description: 'Réaction créée', content: new OA\JsonContent(example: [
-    'id' => '8f210e56-6550-4b61-b7f3-8994f5f6dc41',
-])), new OA\Response(response: 400, description: 'Payload invalide'), new OA\Response(response: 404, description: 'Message introuvable')])]
+#[OA\Post(
+    path: '/v1/chat/private/messages/{messageId}/reactions',
+    operationId: 'chat_reaction_create',
+    summary: 'Créer une réaction',
+    description: 'Retourne 201 lorsqu\'une nouvelle réaction est créée. Retourne 200 lorsque la même réaction existe déjà pour cet utilisateur et ce message.',
+    requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['reaction'], properties: [new OA\Property(property: 'reaction', type: 'string', enum: ChatReactionType::VALUES, example: 'like')], example: [
+        'reaction' => 'like',
+    ])),
+    tags: ['Chat Message Reaction'],
+    parameters: [new OA\Parameter(name: 'messageId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))],
+    responses: [
+        new OA\Response(response: 200, description: 'Réaction déjà existante', content: new OA\JsonContent(example: [
+            'id' => '3f2f9366-c280-4dd7-ad5f-c3ba7a87d4c2',
+        ])),
+        new OA\Response(response: 201, description: 'Nouvelle réaction créée', content: new OA\JsonContent(example: [
+            'id' => '8f210e56-6550-4b61-b7f3-8994f5f6dc41',
+        ])),
+        new OA\Response(response: 400, description: 'Payload invalide'),
+        new OA\Response(response: 404, description: 'Message introuvable'),
+    ]
+)]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 readonly class CreateReactionController
 {
