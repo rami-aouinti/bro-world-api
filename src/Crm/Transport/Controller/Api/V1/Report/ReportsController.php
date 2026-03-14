@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace App\Crm\Transport\Controller\Api\V1;
+namespace App\Crm\Transport\Controller\Api\V1\Report;
 
-use App\Crm\Application\Security\CrmPermissions;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Application\Service\CrmReportService;
 use App\Role\Domain\Enum\Role;
