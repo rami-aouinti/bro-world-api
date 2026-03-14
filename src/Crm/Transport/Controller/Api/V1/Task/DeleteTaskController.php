@@ -45,7 +45,10 @@ final readonly class DeleteTaskController
 
         $this->entityManager->remove($task);
         $this->entityManager->flush();
-        $this->messageBus->dispatch(new EntityDeleted('crm_task', $id));
+        $this->messageBus->dispatch(new EntityDeleted('crm_task', $id, context: [
+            'applicationSlug' => $applicationSlug,
+            'crmId' => $crm->getId(),
+        ]));
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }

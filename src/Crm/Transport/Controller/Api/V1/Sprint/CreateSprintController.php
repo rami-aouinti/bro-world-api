@@ -92,7 +92,10 @@ final readonly class CreateSprintController
 
         $this->entityManager->persist($sprint);
         $this->entityManager->flush();
-        $this->messageBus->dispatch(new EntityCreated('crm_sprint', $sprint->getId()));
+        $this->messageBus->dispatch(new EntityCreated('crm_sprint', $sprint->getId(), context: [
+            'applicationSlug' => $applicationSlug,
+            'crmId' => $crm->getId(),
+        ]));
 
         return new JsonResponse([
             'id' => $sprint->getId(),
