@@ -16,7 +16,6 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 use function is_string;
 use function round;
-use function sprintf;
 
 final readonly class QuizReadService
 {
@@ -27,6 +26,7 @@ final readonly class QuizReadService
         private QuizRepository $quizRepository,
         private QuizQuestionRepository $quizQuestionRepository,
         private CacheInterface $cache,
+        private QuizCacheService $quizCacheService,
     ) {
     }
 
@@ -47,13 +47,7 @@ final readonly class QuizReadService
         bool $includeCorrection,
     ): array
     {
-        $cacheKey = sprintf(
-            'quiz_%s_%s_%s_%s',
-            $slug,
-            (string)$level,
-            (string)$category,
-            $includeCorrection ? 'with_correction' : 'public',
-        );
+        $cacheKey = $this->quizCacheService->buildQuizReadKey($slug, $level, $category, $includeCorrection);
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($slug, $level, $category, $includeCorrection): array {
             $item->expiresAfter(self::QUIZ_CACHE_TTL);
@@ -112,7 +106,7 @@ final readonly class QuizReadService
 
     public function getStatsByApplicationSlug(string $slug): array
     {
-        $cacheKey = sprintf('quiz_stats_%s', $slug);
+        $cacheKey = $this->quizCacheService->buildQuizStatsKey($slug);
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($slug): array {
             $item->expiresAfter(self::QUIZ_STATS_CACHE_TTL);

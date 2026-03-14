@@ -10,6 +10,7 @@ use App\Configuration\Infrastructure\Repository\ConfigurationRepository;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Infrastructure\Repository\ApplicationRepository;
 use App\Quiz\Application\Message\CreateQuizQuestionCommand;
+use App\Quiz\Application\Service\QuizCacheService;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Quiz\Domain\Entity\QuizAnswer;
 use App\Quiz\Domain\Entity\QuizQuestion;
@@ -29,6 +30,7 @@ final readonly class CreateQuizQuestionCommandHandler
         private QuizQuestionRepository $questionRepository,
         private ApplicationRepository $applicationRepository,
         private ConfigurationRepository $configurationRepository,
+        private QuizCacheService $quizCacheService,
     ) {
     }
 
@@ -85,5 +87,6 @@ final readonly class CreateQuizQuestionCommandHandler
         }
 
         $this->questionRepository->save($question);
+        $this->quizCacheService->invalidateByApplicationSlug($command->applicationSlug);
     }
 }
