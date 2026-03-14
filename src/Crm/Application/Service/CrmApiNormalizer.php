@@ -47,6 +47,7 @@ final class CrmApiNormalizer
             'dueAt' => $this->normalizeDate($task->getDueAt()),
             'estimatedHours' => $task->getEstimatedHours(),
             'updatedAt' => $this->normalizeDate($task->getUpdatedAt()),
+            'attachments' => $task->getAttachments(),
             'assignees' => $assignees,
             'children' => $children,
         ];
@@ -73,6 +74,7 @@ final class CrmApiNormalizer
             'status' => $taskRequest->getStatus()->value,
             'requestedAt' => $this->normalizeDate($taskRequest->getRequestedAt()),
             'resolvedAt' => $this->normalizeDate($taskRequest->getResolvedAt()),
+            'attachments' => $taskRequest->getAttachments(),
             'assignees' => $assignees,
         ];
     }

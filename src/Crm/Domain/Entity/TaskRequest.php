@@ -53,6 +53,10 @@ class TaskRequest implements EntityInterface
     #[ORM\Column(name: 'resolved_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $resolvedAt = null;
 
+    /** @var list<array<string,mixed>> */
+    #[ORM\Column(name: 'attachments', type: Types::JSON)]
+    private array $attachments = [];
+
     /** @var Collection<int, User>|ArrayCollection<int, User> */
     #[ORM\ManyToMany(targetEntity: User::class)]
     #[ORM\JoinTable(name: 'crm_task_request_assignee')]
@@ -141,6 +145,28 @@ class TaskRequest implements EntityInterface
     public function setResolvedAt(?DateTimeImmutable $resolvedAt): self
     {
         $this->resolvedAt = $resolvedAt;
+
+        return $this;
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function getAttachments(): array
+    {
+        return $this->attachments;
+    }
+
+    /** @param list<array<string,mixed>> $attachments */
+    public function setAttachments(array $attachments): self
+    {
+        $this->attachments = $attachments;
+
+        return $this;
+    }
+
+    /** @param array<string,mixed> $attachment */
+    public function addAttachment(array $attachment): self
+    {
+        $this->attachments[] = $attachment;
 
         return $this;
     }
