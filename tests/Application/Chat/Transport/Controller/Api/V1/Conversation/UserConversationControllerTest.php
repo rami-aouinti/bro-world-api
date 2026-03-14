@@ -102,6 +102,69 @@ final class UserConversationControllerTest extends WebTestCase
         self::assertSame(1, $pagedPayload['pagination']['totalItems']);
     }
 
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('GET private conversations message filter ignores deleted messages for user listing')]
+    public function testListByUserMessageFilterIgnoresDeletedMessages(): void
+    {
+        $this->createConversationWithDeletedKeywordMessage('deleted-only-filter-token-user');
+
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('GET', $this->baseUrl . '/conversations?message=deleted-only-filter-token-user');
+
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $content = $client->getResponse()->getContent();
+        self::assertNotFalse($content);
+        $payload = JSON::decode($content, true);
+
+        self::assertCount(0, $payload['items']);
+        self::assertSame(0, $payload['pagination']['totalItems']);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('GET application chat conversations message filter ignores deleted messages for chat listing')]
+    public function testListByChatIdMessageFilterIgnoresDeletedMessages(): void
+    {
+        $chatId = $this->createConversationWithDeletedKeywordMessage('deleted-only-filter-token-chat');
+
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/chat/crm-pipeline-pro/chats/' . $chatId . '/conversations?message=deleted-only-filter-token-chat');
+
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $content = $client->getResponse()->getContent();
+        self::assertNotFalse($content);
+        $payload = JSON::decode($content, true);
+
+        self::assertCount(0, $payload['items']);
+        self::assertSame(0, $payload['pagination']['totalItems']);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('GET application private chat conversations message filter ignores deleted messages for chat and user listing')]
+    public function testListByChatIdAndUserMessageFilterIgnoresDeletedMessages(): void
+    {
+        $chatId = $this->createConversationWithDeletedKeywordMessage('deleted-only-filter-token-chat-user');
+
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/chat/crm-pipeline-pro/private/chats/' . $chatId . '/conversations?message=deleted-only-filter-token-chat-user');
+
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $content = $client->getResponse()->getContent();
+        self::assertNotFalse($content);
+        $payload = JSON::decode($content, true);
+
+        self::assertCount(0, $payload['items']);
+        self::assertSame(0, $payload['pagination']['totalItems']);
+    }
+
     private function createActiveAndArchivedConversationsForJohnRoot(): void
     {
         /** @var EntityManagerInterface $entityManager */
@@ -156,6 +219,48 @@ final class UserConversationControllerTest extends WebTestCase
 
         $conversation->addMessage($message);
         $conversation->setLastMessageAt(new DateTimeImmutable('now'));
+    }
+
+    private function createConversationWithDeletedKeywordMessage(string $keyword): string
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+
+        /** @var Conversation|null $seedConversation */
+        $seedConversation = $entityManager->getRepository(Conversation::class)->find(
+            LoadRecruitChatCalendarScenarioData::getUuidByKey('conversation-john-root-scenario')
+        );
+
+        self::assertInstanceOf(Conversation::class, $seedConversation);
+
+        $chat = $seedConversation->getChat();
+        $johnRoot = $this->getUserReference($entityManager, 'john-root');
+        $johnAdmin = $this->getUserReference($entityManager, 'john-admin');
+
+        $conversation = (new Conversation())
+            ->setChat($chat);
+
+        $this->addParticipant($conversation, $johnRoot, $johnAdmin);
+
+        $deletedMessage = (new ChatMessage())
+            ->setConversation($conversation)
+            ->setSender($johnRoot)
+            ->setContent('contains ' . $keyword)
+            ->setDeletedAt(new DateTimeImmutable('now'));
+
+        $visibleMessage = (new ChatMessage())
+            ->setConversation($conversation)
+            ->setSender($johnAdmin)
+            ->setContent('message without keyword');
+
+        $conversation->addMessage($deletedMessage);
+        $conversation->addMessage($visibleMessage);
+        $conversation->setLastMessageAt($visibleMessage->getCreatedAt());
+
+        $entityManager->persist($conversation);
+        $entityManager->flush();
+
+        return $chat->getId();
     }
 
     private function getUserReference(EntityManagerInterface $entityManager, string $key): User
