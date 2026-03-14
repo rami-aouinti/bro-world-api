@@ -101,6 +101,7 @@ final readonly class CreateTaskController
                 content: new OA\JsonContent(
                     examples: [
                         'validationFailed' => new OA\Examples(
+                            example: 'validationFailed',
                             summary: 'Validation DTO',
                             value: [
                                 'message' => 'Validation failed.',
@@ -114,6 +115,7 @@ final readonly class CreateTaskController
                             ],
                         ),
                         'outOfScopeSprint' => new OA\Examples(
+                            example: 'outOfScopeSprint',
                             summary: 'Sprint hors projet',
                             value: [
                                 'message' => 'Provided "sprintId" does not belong to the provided "projectId".',
