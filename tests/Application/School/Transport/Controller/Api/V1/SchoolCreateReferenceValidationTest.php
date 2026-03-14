@@ -19,7 +19,7 @@ final class SchoolCreateReferenceValidationTest extends WebTestCase
     {
         $client = $this->getTestClient('john-root', 'password-root');
 
-        $client->request('POST', self::API_URL_PREFIX . '/v1/school/classes', [], [], [], JSON::encode([
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes', [], [], [], JSON::encode([
             'name' => 'Classe invalide',
             'schoolId' => self::UNKNOWN_UUID,
         ]));
