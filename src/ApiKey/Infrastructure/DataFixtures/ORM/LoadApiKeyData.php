@@ -35,6 +35,9 @@ final class LoadApiKeyData extends Fixture implements OrderedFixtureInterface
         '-user' => '30000000-0000-1000-8000-000000000004',
         '-admin' => '30000000-0000-1000-8000-000000000005',
         '-root' => '30000000-0000-1000-8000-000000000006',
+        '-recruiter' => '30000000-0000-1000-8000-000000000007',
+        '-hiring_manager' => '30000000-0000-1000-8000-000000000008',
+        '-interviewer' => '30000000-0000-1000-8000-000000000009',
     ];
 
     public function __construct(

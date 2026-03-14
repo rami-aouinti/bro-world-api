@@ -67,7 +67,13 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
             coverLetter: 'Profil polyvalent pour postes techniques orientés SaaS B2B.'
         );
 
-        foreach ([$johnRootApplicant, $johnAdminApplicant, $johnUserApplicant, $johnApiApplicant, $johnLoggedApplicant] as $entity) {
+        $aliceApplicant = $this->createApplicantWithResume(
+            owner: $this->getReference('User-alice', User::class),
+            key: 'alice',
+            coverLetter: 'Candidate orientée coordination d\'entretiens et expérience candidat.'
+        );
+
+        foreach ([$johnRootApplicant, $johnAdminApplicant, $johnUserApplicant, $johnApiApplicant, $johnLoggedApplicant, $aliceApplicant] as $entity) {
             $manager->persist($entity->getResume());
             $manager->persist($entity);
         }
@@ -128,9 +134,9 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
         );
 
         $noShowApplication = $this->createApplication(
-            applicant: $johnUserApplicant,
+            applicant: $aliceApplicant,
             job: $jobOwnedByOtherUser,
-            reference: 'Recruit-Application-john-user-on-other-owner-no-show',
+            reference: 'Recruit-Application-alice-on-other-owner-no-show',
             status: ApplicationStatus::INTERVIEW_PLANNED
         );
 
@@ -144,7 +150,7 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
             application: $this->getReference('Recruit-Application-john-user-on-other-owner-interview-planned-done', Application::class),
             scheduleModifier: '+2 day 10:00',
             interviewerIds: ['john-root', 'john-admin'],
-            mode: InterviewMode::VIDEO,
+            mode: InterviewMode::VISIO,
             status: InterviewStatus::PLANNED,
             notes: 'Panel technique planifié. Préparer un exercice API.'
         ));
@@ -153,7 +159,7 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
             application: $this->getReference('Recruit-Application-john-api-incoming-root-interview-done', Application::class),
             scheduleModifier: '-1 day 14:00',
             interviewerIds: ['john-root'],
-            mode: InterviewMode::ONSITE,
+            mode: InterviewMode::ON_SITE,
             status: InterviewStatus::DONE,
             notes: 'Très bon feedback technique, communication claire.'
         ));
@@ -162,7 +168,7 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
             application: $noShowApplication,
             scheduleModifier: '+1 day 09:30',
             interviewerIds: ['john-root', 'john-admin', 'john-root'],
-            mode: InterviewMode::VIDEO,
+            mode: InterviewMode::VISIO,
             status: InterviewStatus::CANCELED,
             notes: 'No-show candidat : absence sans prévenir 15 min après l\'horaire.'
         ));
@@ -272,7 +278,7 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
             ->setScheduledAt((new \DateTimeImmutable($scheduleModifier)))
             ->setDurationMinutes(60)
             ->setMode($mode)
-            ->setLocationOrUrl($mode === InterviewMode::VIDEO ? 'https://meet.local/recruit-interview' : 'HQ Stuttgart')
+            ->setLocationOrUrl($mode === InterviewMode::VISIO ? 'https://meet.local/recruit-interview' : 'HQ Stuttgart')
             ->setInterviewerIds($interviewerIds)
             ->setStatus($status)
             ->setNotes($notes);
