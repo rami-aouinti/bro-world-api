@@ -7,6 +7,7 @@ namespace App\Crm\Application\Security\Voter;
 use App\Crm\Application\Security\CrmPermissions;
 use App\Role\Domain\Enum\Role;
 use App\User\Domain\Entity\User;
+use App\User\Domain\Entity\UserGroup;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
@@ -14,13 +15,37 @@ use function in_array;
 
 final class CrmPermissionVoter extends Voter
 {
+    /**
+     * @var array<string, array<int, Role>>
+     */
+    private const array PERMISSION_MATRIX = [
+        CrmPermissions::VIEW => [
+            Role::CRM_OWNER,
+            Role::CRM_ADMIN,
+            Role::CRM_MANAGER,
+            Role::CRM_SALES,
+            Role::CRM_SUPPORT,
+            Role::CRM_MARKETING,
+            Role::CRM_VIEWER,
+        ],
+        CrmPermissions::EDIT => [
+            Role::CRM_OWNER,
+            Role::CRM_ADMIN,
+            Role::CRM_MANAGER,
+            Role::CRM_SALES,
+            Role::CRM_SUPPORT,
+            Role::CRM_MARKETING,
+        ],
+        CrmPermissions::MANAGE => [
+            Role::CRM_OWNER,
+            Role::CRM_ADMIN,
+            Role::CRM_MANAGER,
+        ],
+    ];
+
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return in_array($attribute, [
-            CrmPermissions::VIEW,
-            CrmPermissions::EDIT,
-            CrmPermissions::MANAGE,
-        ], true);
+        return isset(self::PERMISSION_MATRIX[$attribute]);
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
@@ -30,36 +55,15 @@ final class CrmPermissionVoter extends Voter
             return false;
         }
 
-        $roles = $user->getRoles();
+        $roles = $user->getUserGroups()->map(
+            static fn (UserGroup $userGroup): string => $userGroup->getRole()->getId(),
+        )->toArray();
+
         if (in_array(Role::ROOT->value, $roles, true)) {
             return true;
         }
 
-        return match ($attribute) {
-            CrmPermissions::VIEW => $this->hasAnyRole($roles, [
-                Role::CRM_OWNER,
-                Role::CRM_ADMIN,
-                Role::CRM_MANAGER,
-                Role::CRM_SALES,
-                Role::CRM_SUPPORT,
-                Role::CRM_MARKETING,
-                Role::CRM_VIEWER,
-            ]),
-            CrmPermissions::EDIT => $this->hasAnyRole($roles, [
-                Role::CRM_OWNER,
-                Role::CRM_ADMIN,
-                Role::CRM_MANAGER,
-                Role::CRM_SALES,
-                Role::CRM_SUPPORT,
-                Role::CRM_MARKETING,
-            ]),
-            CrmPermissions::MANAGE => $this->hasAnyRole($roles, [
-                Role::CRM_OWNER,
-                Role::CRM_ADMIN,
-                Role::CRM_MANAGER,
-            ]),
-            default => false,
-        };
+        return $this->hasAnyRole($roles, self::PERMISSION_MATRIX[$attribute] ?? []);
     }
 
     /**

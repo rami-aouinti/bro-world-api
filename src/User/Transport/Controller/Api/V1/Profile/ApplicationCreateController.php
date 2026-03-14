@@ -12,9 +12,12 @@ use App\Platform\Application\Resource\PluginResource;
 use App\Platform\Application\Service\ApplicationPluginProvisioningService;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Entity\ApplicationPlugin;
+use App\Platform\Domain\Enum\PlatformKey;
 use App\Platform\Domain\Enum\PlatformStatus;
 use App\Platform\Domain\Enum\PluginKey;
+use App\Role\Domain\Enum\Role;
 use App\User\Domain\Entity\User;
+use App\User\Domain\Entity\UserGroup;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use OpenApi\Attributes\JsonContent;
@@ -197,6 +200,8 @@ class ApplicationCreateController
             $application->addApplicationPlugin($applicationPlugin);
         }
 
+        $this->grantCrmOwnerRoleIfNeeded($loggedInUser, $platform->getPlatformKey());
+
         $this->entityManager->persist($application);
         $this->applicationPluginProvisioningService->provision($application, array_values($detectedPluginKeys));
         $this->entityManager->flush();
@@ -211,6 +216,30 @@ class ApplicationCreateController
             'status' => $application->getStatus()->value,
             'private' => $application->isPrivate(),
         ], JsonResponse::HTTP_CREATED);
+    }
+
+
+    private function grantCrmOwnerRoleIfNeeded(User $loggedInUser, PlatformKey $platformKey): void
+    {
+        if ($platformKey !== PlatformKey::CRM) {
+            return;
+        }
+
+        foreach ($loggedInUser->getUserGroups() as $userGroup) {
+            if ($userGroup->getRole()->getId() === Role::CRM_OWNER->value) {
+                return;
+            }
+        }
+
+        $crmOwnerGroup = $this->entityManager->getRepository(UserGroup::class)->findOneBy([
+            'role' => Role::CRM_OWNER->value,
+        ]);
+
+        if (!$crmOwnerGroup instanceof UserGroup) {
+            throw new HttpException(JsonResponse::HTTP_INTERNAL_SERVER_ERROR, 'CRM owner group is not configured.');
+        }
+
+        $loggedInUser->addUserGroup($crmOwnerGroup);
     }
 
     /**

@@ -18,6 +18,7 @@ use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PluginKey;
 use App\Quiz\Infrastructure\Repository\QuizQuestionRepository;
 use App\Quiz\Infrastructure\Repository\QuizRepository;
+use App\Role\Domain\Enum\Role;
 use App\Recruit\Domain\Entity\Recruit;
 use App\School\Domain\Entity\School;
 use App\Shop\Domain\Entity\Shop;
@@ -169,6 +170,8 @@ class ApplicationCreateControllerTest extends WebTestCase
         self::assertCount(1, $entityManager->getRepository(Crm::class)->findBy([
             'application' => $crmApplication,
         ]));
+
+        self::assertContains(Role::CRM_OWNER->value, $crmApplication->getUser()->getRoles());
         self::assertCount(1, $entityManager->getRepository(Shop::class)->findBy([
             'application' => $shopApplication,
         ]));
@@ -178,6 +181,13 @@ class ApplicationCreateControllerTest extends WebTestCase
         self::assertCount(1, $entityManager->getRepository(Recruit::class)->findBy([
             'application' => $recruitApplication,
         ]));
+
+        $crmOwnerGroups = array_filter(
+            $crmApplication->getUser()->getUserGroups()->toArray(),
+            static fn ($userGroup): bool => $userGroup->getRole()->getId() === Role::CRM_OWNER->value,
+        );
+
+        self::assertCount(1, $crmOwnerGroups);
 
         $crmApplication->setDescription('CRM app updated');
         $shopApplication->setDescription('Shop app updated');
@@ -188,6 +198,8 @@ class ApplicationCreateControllerTest extends WebTestCase
         self::assertCount(1, $entityManager->getRepository(Crm::class)->findBy([
             'application' => $crmApplication,
         ]));
+
+        self::assertContains(Role::CRM_OWNER->value, $crmApplication->getUser()->getRoles());
         self::assertCount(1, $entityManager->getRepository(Shop::class)->findBy([
             'application' => $shopApplication,
         ]));
@@ -197,6 +209,13 @@ class ApplicationCreateControllerTest extends WebTestCase
         self::assertCount(1, $entityManager->getRepository(Recruit::class)->findBy([
             'application' => $recruitApplication,
         ]));
+
+        $crmOwnerGroups = array_filter(
+            $crmApplication->getUser()->getUserGroups()->toArray(),
+            static fn ($userGroup): bool => $userGroup->getRole()->getId() === Role::CRM_OWNER->value,
+        );
+
+        self::assertCount(1, $crmOwnerGroups);
     }
 
     /**
