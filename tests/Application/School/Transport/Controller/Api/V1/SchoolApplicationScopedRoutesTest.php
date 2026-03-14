@@ -7,6 +7,7 @@ namespace App\Tests\Application\School\Transport\Controller\Api\V1;
 use App\General\Domain\Utils\JSON;
 use App\Tests\TestCase\WebTestCase;
 use PHPUnit\Framework\Attributes\TestDox;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\HttpFoundation\Response;
 
 final class SchoolApplicationScopedRoutesTest extends WebTestCase
@@ -228,5 +229,63 @@ final class SchoolApplicationScopedRoutesTest extends WebTestCase
         }
 
         self::assertStringContainsString('Forbidden application scope access.', (string)$forbiddenClient->getResponse()->getContent());
+    }
+
+    #[TestDox('School scoped POST endpoints reject references coming from another school application.')]
+    public function testScopedPostRoutesRejectForeignApplicationReferencesWithNotFound(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $campusClassId = $this->firstResourceId($client, '/v1/school/applications/school-campus-core/classes');
+
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-course-flow/students', [], [], [], JSON::encode([
+            'name' => 'Eleve cross app',
+            'classId' => $campusClassId,
+        ]));
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        self::assertSame('classId not found', $this->responsePayload($client)['message']);
+
+        $courseTeacherId = $this->firstResourceId($client, '/v1/school/applications/school-course-flow/teachers');
+
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-course-flow/exams', [], [], [], JSON::encode([
+            'title' => 'Examen cross app',
+            'classId' => $campusClassId,
+            'teacherId' => $courseTeacherId,
+            'type' => 'QUIZ',
+            'status' => 'DRAFT',
+            'term' => 'TERM_1',
+        ]));
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        self::assertSame('classId not found', $this->responsePayload($client)['message']);
+
+        $campusStudentId = $this->firstResourceId($client, '/v1/school/applications/school-campus-core/students');
+        $campusExamId = $this->firstResourceId($client, '/v1/school/applications/school-campus-core/exams');
+
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-course-flow/grades', [], [], [], JSON::encode([
+            'score' => 16.0,
+            'studentId' => $campusStudentId,
+            'examId' => $campusExamId,
+        ]));
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        self::assertSame('studentId not found', $this->responsePayload($client)['message']);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function responsePayload(KernelBrowser $client): array
+    {
+        return JSON::decode((string)$client->getResponse()->getContent(), true);
+    }
+
+    private function firstResourceId(KernelBrowser $client, string $path): string
+    {
+        $client->request('GET', self::API_URL_PREFIX . $path);
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        /** @var array{items: array<int, array{id: string}>} $payload */
+        $payload = JSON::decode((string)$client->getResponse()->getContent(), true);
+
+        return $payload['items'][0]['id'];
     }
 }
