@@ -106,7 +106,7 @@ final readonly class CreateTaskRequestController
 
         $this->entityManager->persist($taskRequest);
         $this->entityManager->flush();
-        $this->messageBus->dispatch(new EntityCreated('crm_task_request', $taskRequest->getId()));
+        $this->messageBus->dispatch(new EntityCreated('crm_task_request', $taskRequest->getId(), context: ['applicationSlug' => $applicationSlug]));
 
         return new JsonResponse([
             'id' => $taskRequest->getId(),

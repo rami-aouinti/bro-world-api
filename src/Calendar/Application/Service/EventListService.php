@@ -8,6 +8,7 @@ use App\Calendar\Domain\Entity\Event;
 use App\Calendar\Domain\Repository\Interfaces\EventRepositoryInterface;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
+use App\General\Domain\Service\Interfaces\MetricsCounterInterface;
 use App\User\Domain\Entity\User;
 use JsonException;
 use Psr\Cache\InvalidArgumentException;
@@ -23,6 +24,7 @@ use function array_map;
 final readonly class EventListService
 {
     private const int ELASTIC_IDS_LIMIT = 1000;
+    private const string ELASTIC_FALLBACK_COUNT_METRIC = "calendar.elastic_fallback.count";
 
     public function __construct(
         private EventRepositoryInterface $eventRepository,
@@ -30,6 +32,7 @@ final readonly class EventListService
         private ElasticsearchServiceInterface $elasticsearchService,
         private CacheKeyConventionService $cacheKeyConventionService,
         private LoggerInterface $logger,
+        private MetricsCounterInterface $metricsCounter,
     ) {
     }
 
@@ -219,6 +222,8 @@ final readonly class EventListService
 
             $totalHits = $this->extractTotalHits($response);
             if ($totalHits !== null && $totalHits > self::ELASTIC_IDS_LIMIT) {
+                $this->incrementElasticFallbackCounter('too_many_hits');
+
                 return null;
             }
 
@@ -231,6 +236,8 @@ final readonly class EventListService
 
             return array_values(array_unique($ids));
         } catch (Throwable $exception) {
+            $this->incrementElasticFallbackCounter('exception');
+
             $this->logger->warning('Unable to search event ids from Elasticsearch, fallback to repository filters.', [
                 'filterTypes' => array_values(array_keys(array_filter($filters, static fn (string $value): bool => $value !== ''))),
                 'exceptionClass' => $exception::class,
@@ -240,6 +247,13 @@ final readonly class EventListService
 
             return null;
         }
+    }
+
+    private function incrementElasticFallbackCounter(string $reason): void
+    {
+        $this->metricsCounter->increment(self::ELASTIC_FALLBACK_COUNT_METRIC, [
+            'reason' => $reason,
+        ]);
     }
 
     /**

@@ -167,10 +167,102 @@ final class ConversationListServiceTest extends TestCase
         $result = $service->getByUser($connectedUser, [], 1, 20);
 
         self::assertArrayNotHasKey('messages', $result['items'][0]);
+        self::assertArrayHasKey('lastMessage', $result['items'][0]);
         self::assertSame('message-id', $result['items'][0]['lastMessage']['id']);
+        self::assertSame(str_repeat('hello', 56), $result['items'][0]['lastMessage']['content']);
         self::assertSame(280, mb_strlen($result['items'][0]['lastMessage']['content']));
         self::assertSame('sender-id', $result['items'][0]['lastMessage']['sender']['id']);
         self::assertSame('2024-01-01T12:00:00+00:00', $result['items'][0]['lastMessage']['createdAt']);
+        self::assertSame(1, $result['items'][0]['unreadMessagesCount']);
+    }
+
+
+    public function testGetByUserUnreadCountUsesConnectedParticipantReadPointerInMultiParticipantConversation(): void
+    {
+        $connectedUser = $this->mockUser();
+
+        $otherUserOne = $this->createMock(User::class);
+        $otherUserOne->method('getId')->willReturn('user-2');
+        $otherUserOne->method('getFirstName')->willReturn('Alice');
+        $otherUserOne->method('getLastName')->willReturn('Two');
+        $otherUserOne->method('getPhoto')->willReturn(null);
+
+        $otherUserTwo = $this->createMock(User::class);
+        $otherUserTwo->method('getId')->willReturn('user-3');
+        $otherUserTwo->method('getFirstName')->willReturn('Bob');
+        $otherUserTwo->method('getLastName')->willReturn('Three');
+        $otherUserTwo->method('getPhoto')->willReturn(null);
+
+        $connectedParticipant = $this->createMock(ConversationParticipant::class);
+        $connectedParticipant->method('getUser')->willReturn($connectedUser);
+        $connectedParticipant->method('getId')->willReturn('participant-connected');
+        $connectedParticipant->method('getLastReadMessageAt')->willReturn(new \DateTimeImmutable('2024-01-01T11:00:00+00:00'));
+
+        $participantWithNewerPointer = $this->createMock(ConversationParticipant::class);
+        $participantWithNewerPointer->method('getUser')->willReturn($otherUserOne);
+        $participantWithNewerPointer->method('getId')->willReturn('participant-other-1');
+        $participantWithNewerPointer->method('getLastReadMessageAt')->willReturn(new \DateTimeImmutable('2024-01-01T13:00:00+00:00'));
+
+        $participantWithOlderPointer = $this->createMock(ConversationParticipant::class);
+        $participantWithOlderPointer->method('getUser')->willReturn($otherUserTwo);
+        $participantWithOlderPointer->method('getId')->willReturn('participant-other-2');
+        $participantWithOlderPointer->method('getLastReadMessageAt')->willReturn(new \DateTimeImmutable('2024-01-01T09:00:00+00:00'));
+
+        $messageBeforePointer = $this->createMock(ChatMessage::class);
+        $messageBeforePointer->method('getId')->willReturn('message-1');
+        $messageBeforePointer->method('getContent')->willReturn('before pointer');
+        $messageBeforePointer->method('getSender')->willReturn($otherUserOne);
+        $messageBeforePointer->method('getDeletedAt')->willReturn(null);
+        $messageBeforePointer->method('getCreatedAt')->willReturn(new \DateTimeImmutable('2024-01-01T10:00:00+00:00'));
+
+        $messageAfterPointer = $this->createMock(ChatMessage::class);
+        $messageAfterPointer->method('getId')->willReturn('message-2');
+        $messageAfterPointer->method('getContent')->willReturn('after pointer');
+        $messageAfterPointer->method('getSender')->willReturn($otherUserTwo);
+        $messageAfterPointer->method('getDeletedAt')->willReturn(null);
+        $messageAfterPointer->method('getCreatedAt')->willReturn(new \DateTimeImmutable('2024-01-01T12:00:00+00:00'));
+
+        $messageFromConnectedUser = $this->createMock(ChatMessage::class);
+        $messageFromConnectedUser->method('getId')->willReturn('message-3');
+        $messageFromConnectedUser->method('getContent')->willReturn('own message');
+        $messageFromConnectedUser->method('getSender')->willReturn($connectedUser);
+        $messageFromConnectedUser->method('getDeletedAt')->willReturn(null);
+        $messageFromConnectedUser->method('getCreatedAt')->willReturn(new \DateTimeImmutable('2024-01-01T12:30:00+00:00'));
+
+        $conversation = $this->createMock(Conversation::class);
+        $conversation->method('getId')->willReturn('conversation-id');
+        $conversation->method('getChat')->willReturn(null);
+        $conversation->method('getType')->willReturn(ConversationType::GROUP);
+        $conversation->method('getTitle')->willReturn('Group Conversation');
+        $conversation->method('getParticipants')->willReturn(new ArrayCollection([$connectedParticipant, $participantWithNewerPointer, $participantWithOlderPointer]));
+        $conversation->method('getMessages')->willReturn(new ArrayCollection([$messageBeforePointer, $messageAfterPointer, $messageFromConnectedUser]));
+        $conversation->method('getLastMessageAt')->willReturn(new \DateTimeImmutable('2024-01-01T12:30:00+00:00'));
+        $conversation->method('getArchivedAt')->willReturn(null);
+        $conversation->method('getCreatedAt')->willReturn(new \DateTimeImmutable('2024-01-01T00:00:00+00:00'));
+
+        $repo = $this->createMock(ConversationRepositoryInterface::class);
+        $repo->expects(self::once())->method('findByUser')->willReturn([$conversation]);
+        $repo->expects(self::once())->method('countByUser')->willReturn(1);
+
+        $elastic = $this->createMock(ElasticsearchServiceInterface::class);
+        $elastic->expects(self::never())->method('search');
+
+        $cacheKeyConventionService = $this->createMock(CacheKeyConventionService::class);
+        $cacheKeyConventionService->expects(self::once())
+            ->method('buildPrivateConversationKey')
+            ->willReturn('cache-key');
+
+        $item = $this->createMock(ItemInterface::class);
+        $item->expects(self::once())->method('expiresAfter')->with(120);
+
+        $cache = $this->createMock(CacheInterface::class);
+        $cache->expects(self::once())->method('get')->willReturnCallback(static function (string $key, callable $callback) use ($item): array {
+            return $callback($item);
+        });
+
+        $service = new ConversationListService($repo, $cache, $elastic, $cacheKeyConventionService);
+        $result = $service->getByUser($connectedUser, [], 1, 20);
+
         self::assertSame(1, $result['items'][0]['unreadMessagesCount']);
     }
 

@@ -20,6 +20,9 @@ final class SchoolCrudValidationPaginationTest extends WebTestCase
             'name' => '',
         ]));
         self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $client->getResponse()->getStatusCode());
+        $classValidationPayload = JSON::decode((string)$client->getResponse()->getContent(), true);
+        self::assertSame('SCHOOL_VALIDATION_FAILED', $classValidationPayload['code']);
+        self::assertNotEmpty($classValidationPayload['details']);
 
         $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes', [], [], [], JSON::encode([
             'name' => 'Classe API Test',
@@ -57,6 +60,9 @@ final class SchoolCrudValidationPaginationTest extends WebTestCase
             'term' => 'invalid',
         ]));
         self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $client->getResponse()->getStatusCode());
+        $examValidationPayload = JSON::decode((string)$client->getResponse()->getContent(), true);
+        self::assertSame('SCHOOL_VALIDATION_FAILED', $examValidationPayload['code']);
+        self::assertNotEmpty($examValidationPayload['details']);
 
         $client->request('POST', self::API_URL_PREFIX . '/v1/school/exams', [], [], [], JSON::encode([
             'title' => 'Exam CRUD API Test',

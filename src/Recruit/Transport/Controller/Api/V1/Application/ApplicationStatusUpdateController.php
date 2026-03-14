@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Recruit\Transport\Controller\Api\V1\Application;
 
+use App\Recruit\Application\Security\RecruitPermissions;
 use App\Recruit\Application\Service\ApplicationStatusTransitionService;
 use App\Recruit\Infrastructure\Repository\ApplicationRepository;
 use App\User\Domain\Entity\User;
@@ -24,6 +25,7 @@ use function is_string;
 #[AsController]
 #[OA\Tag(name: 'Recruit Application')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
+#[IsGranted(RecruitPermissions::APPLICATION_STATUS_TRANSITION)]
 readonly class ApplicationStatusUpdateController
 {
     public function __construct(

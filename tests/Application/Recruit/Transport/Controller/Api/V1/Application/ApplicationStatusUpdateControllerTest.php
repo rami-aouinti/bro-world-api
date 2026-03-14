@@ -101,6 +101,23 @@ class ApplicationStatusUpdateControllerTest extends WebTestCase
         self::assertCount(2, $participants);
     }
 
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('Status transition endpoint is forbidden for ROLE_USER.')]
+    public function testThatStatusTransitionEndpointIsForbiddenForRegularRole(): void
+    {
+        [$recruitApplication] = $this->prepareApplicationForScreeningTransition();
+
+        $client = $this->getTestClient('john-user', 'password-user');
+        $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/private/applications/' . $recruitApplication->getId() . '/status', content: JSON::encode([
+            'status' => ApplicationStatus::SCREENING->value,
+        ]));
+
+        self::assertSame(Response::HTTP_FORBIDDEN, $client->getResponse()->getStatusCode());
+    }
+
     /**
      * @throws Throwable
      */

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Recruit\Transport\Controller\Api\V1\Job;
 
 use App\General\Application\Message\EntityCreated;
+use App\Recruit\Application\Security\RecruitPermissions;
 use App\Recruit\Application\Service\ApplicationJobAccessService;
 use App\Recruit\Application\Service\JobPayloadHydratorService;
 use App\Recruit\Domain\Entity\Job;
@@ -29,6 +30,7 @@ use function trim;
 #[AsController]
 #[OA\Tag(name: 'Recruit Job')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
+#[IsGranted(RecruitPermissions::OFFER_MANAGE)]
 readonly class JobCreateFromApplicationController
 {
     public function __construct(

@@ -51,15 +51,22 @@ class CacheInvalidationService
         ]));
     }
 
-    public function invalidateCrmTaskListCaches(): void
+    public function invalidateCrmTaskListCaches(?string $applicationSlug = null): void
     {
+        if ($applicationSlug === null || $applicationSlug === '') {
+            return;
+        }
+
         if ($this->cache instanceof TagAwareCacheInterface) {
-            $this->cache->invalidateTags([$this->cacheKeyConventionService->crmTaskListTag()]);
+            $this->cache->invalidateTags([$this->cacheKeyConventionService->crmTaskListTag($applicationSlug)]);
         }
 
         $this->cache->delete($this->cacheKeyConventionService->buildCrmTaskListKey(1, 20, [
             'q' => '',
             'title' => '',
+            'status' => '',
+            'priority' => '',
+            'applicationSlug' => $applicationSlug,
         ]));
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Recruit\Transport\Controller\Api\V1\Job;
 
 use App\General\Application\Message\EntityPatched;
+use App\Recruit\Application\Security\RecruitPermissions;
 use App\Recruit\Application\Service\ApplicationJobAccessService;
 use App\Recruit\Application\Service\JobPayloadHydratorService;
 use App\Recruit\Infrastructure\Repository\JobRepository;
@@ -21,6 +22,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[AsController]
 #[OA\Tag(name: 'Recruit Job')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
+#[IsGranted(RecruitPermissions::OFFER_MANAGE)]
 readonly class JobPatchFromApplicationController
 {
     public function __construct(

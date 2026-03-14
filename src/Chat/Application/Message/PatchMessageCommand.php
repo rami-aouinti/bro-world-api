@@ -13,7 +13,6 @@ final readonly class PatchMessageCommand implements MessageHighInterface
         public string $actorUserId,
         public string $messageId,
         public ?string $content,
-        public ?bool $read,
     ) {
     }
 }
