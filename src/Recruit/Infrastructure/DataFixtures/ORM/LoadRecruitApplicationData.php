@@ -75,15 +75,15 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
         $this->createApplication(
             applicant: $johnUserApplicant,
             job: $jobIncomingForRoot,
-            reference: 'Recruit-Application-john-user-incoming-root-in-progress',
-            status: ApplicationStatus::IN_PROGRESS
+            reference: 'Recruit-Application-john-user-incoming-root-screening',
+            status: ApplicationStatus::SCREENING
         );
 
         $this->createApplication(
             applicant: $johnApiApplicant,
             job: $jobIncomingForRoot,
-            reference: 'Recruit-Application-john-api-incoming-root-interview',
-            status: ApplicationStatus::INTERVIEW
+            reference: 'Recruit-Application-john-api-incoming-root-interview-done',
+            status: ApplicationStatus::INTERVIEW_DONE
         );
 
         $this->createApplication(
@@ -96,22 +96,22 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
         $this->createApplication(
             applicant: $johnAdminApplicant,
             job: $jobOwnedByOtherUser,
-            reference: 'Recruit-Application-john-admin-on-other-owner-discussion',
-            status: ApplicationStatus::DISCUSSION
+            reference: 'Recruit-Application-john-admin-on-other-owner-screening',
+            status: ApplicationStatus::SCREENING
         );
 
         $this->createApplication(
             applicant: $johnUserApplicant,
             job: $jobOwnedByOtherUser,
-            reference: 'Recruit-Application-john-user-on-other-owner-invite-to-interview',
-            status: ApplicationStatus::INVITE_TO_INTERVIEW
+            reference: 'Recruit-Application-john-user-on-other-owner-interview-planned-done',
+            status: ApplicationStatus::INTERVIEW_PLANNED
         );
 
         $this->createApplication(
             applicant: $johnApiApplicant,
             job: $jobOwnedByOtherUser,
-            reference: 'Recruit-Application-john-api-on-other-owner-accepted',
-            status: ApplicationStatus::ACCEPTED
+            reference: 'Recruit-Application-john-api-on-other-owner-hired',
+            status: ApplicationStatus::HIRED
         );
 
         $this->createApplication(

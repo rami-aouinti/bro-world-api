@@ -7,10 +7,10 @@ namespace App\Recruit\Domain\Enum;
 enum ApplicationStatus: string
 {
     case WAITING = 'WAITING';
-    case IN_PROGRESS = 'IN_PROGRESS';
-    case DISCUSSION = 'DISCUSSION';
-    case INVITE_TO_INTERVIEW = 'INVITE_TO_INTERVIEW';
-    case INTERVIEW = 'INTERVIEW';
-    case ACCEPTED = 'ACCEPTED';
+    case SCREENING = 'SCREENING';
+    case INTERVIEW_PLANNED = 'INTERVIEW_PLANNED';
+    case INTERVIEW_DONE = 'INTERVIEW_DONE';
+    case OFFER_SENT = 'OFFER_SENT';
+    case HIRED = 'HIRED';
     case REJECTED = 'REJECTED';
 }

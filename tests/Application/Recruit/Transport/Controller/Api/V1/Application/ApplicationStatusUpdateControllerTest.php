@@ -23,14 +23,14 @@ class ApplicationStatusUpdateControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that transition to DISCUSSION creates conversation and participants for owner and applicant.')]
-    public function testThatTransitionToDiscussionCreatesConversation(): void
+    #[TestDox('Test that transition to SCREENING creates conversation and participants for owner and applicant.')]
+    public function testThatTransitionToScreeningCreatesConversation(): void
     {
-        [$recruitApplication, $platformApplication] = $this->prepareApplicationForDiscussionTransition();
+        [$recruitApplication, $platformApplication] = $this->prepareApplicationForScreeningTransition();
 
         $client = $this->getTestClient('john-root', 'password-root');
         $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/private/applications/' . $recruitApplication->getId() . '/status', content: JSON::encode([
-            'status' => ApplicationStatus::DISCUSSION->value,
+            'status' => ApplicationStatus::SCREENING->value,
         ]));
 
         $response = $client->getResponse();
@@ -63,21 +63,21 @@ class ApplicationStatusUpdateControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that repeated transition to DISCUSSION is idempotent and does not duplicate conversation or participants.')]
-    public function testThatSecondTransitionToDiscussionDoesNotDuplicateConversation(): void
+    #[TestDox('Test that repeated transition to SCREENING is idempotent and does not duplicate conversation or participants.')]
+    public function testThatSecondTransitionToScreeningDoesNotDuplicateConversation(): void
     {
-        [$recruitApplication, $platformApplication] = $this->prepareApplicationForDiscussionTransition();
+        [$recruitApplication, $platformApplication] = $this->prepareApplicationForScreeningTransition();
 
         $client = $this->getTestClient('john-root', 'password-root');
         $url = self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/private/applications/' . $recruitApplication->getId() . '/status';
 
         $client->request('PATCH', $url, content: JSON::encode([
-            'status' => ApplicationStatus::DISCUSSION->value,
+            'status' => ApplicationStatus::SCREENING->value,
         ]));
         self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         $client->request('PATCH', $url, content: JSON::encode([
-            'status' => ApplicationStatus::DISCUSSION->value,
+            'status' => ApplicationStatus::SCREENING->value,
         ]));
         self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
@@ -102,9 +102,43 @@ class ApplicationStatusUpdateControllerTest extends WebTestCase
     }
 
     /**
+     * @throws Throwable
+     */
+    #[TestDox('Test that GET status-history returns status transitions with author and comment.')]
+    public function testThatStatusHistoryEndpointReturnsTransitionEvents(): void
+    {
+        [$recruitApplication] = $this->prepareApplicationForScreeningTransition();
+
+        $client = $this->getTestClient('john-root', 'password-root');
+        $baseUrl = self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/private/applications/' . $recruitApplication->getId();
+
+        $client->request('PATCH', $baseUrl . '/status', content: JSON::encode([
+            'status' => ApplicationStatus::SCREENING->value,
+            'comment' => 'Premier tri RH',
+        ]));
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $client->request('GET', $baseUrl . '/status-history');
+        $response = $client->getResponse();
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:\n" . $response);
+
+        /** @var array<int, array<string, mixed>> $payload */
+        $payload = JSON::decode($response->getContent() ?: '[]');
+
+        self::assertNotEmpty($payload);
+        $lastEvent = $payload[array_key_last($payload)];
+
+        self::assertSame(ApplicationStatus::WAITING->value, $lastEvent['fromStatus']);
+        self::assertSame(ApplicationStatus::SCREENING->value, $lastEvent['toStatus']);
+        self::assertSame('Premier tri RH', $lastEvent['comment']);
+        self::assertNotEmpty($lastEvent['authorId']);
+        self::assertNotEmpty($lastEvent['createdAt']);
+    }
+
+    /**
      * @return array{0: RecruitApplication, 1: PlatformApplication}
      */
-    private function prepareApplicationForDiscussionTransition(): array
+    private function prepareApplicationForScreeningTransition(): array
     {
         self::bootKernel();
         /** @var EntityManagerInterface $entityManager */
@@ -116,7 +150,7 @@ class ApplicationStatusUpdateControllerTest extends WebTestCase
         self::assertInstanceOf(User::class, $owner);
 
         $recruitApplication = $entityManager->getRepository(RecruitApplication::class)->findOneBy([
-            'status' => ApplicationStatus::IN_PROGRESS,
+            'status' => ApplicationStatus::WAITING,
         ]);
         self::assertInstanceOf(RecruitApplication::class, $recruitApplication);
         self::assertSame($owner->getId(), $recruitApplication->getJob()->getOwner()?->getId());
@@ -153,7 +187,7 @@ class ApplicationStatusUpdateControllerTest extends WebTestCase
             $entityManager->flush();
         }
 
-        $recruitApplication->setStatus(ApplicationStatus::IN_PROGRESS);
+        $recruitApplication->setStatus(ApplicationStatus::WAITING);
         $entityManager->flush();
 
         return [$recruitApplication, $platformApplication];

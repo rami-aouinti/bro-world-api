@@ -19,6 +19,8 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+use function is_string;
+
 #[AsController]
 #[OA\Tag(name: 'Recruit Application')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
@@ -43,7 +45,8 @@ readonly class ApplicationStatusUpdateController
             content: new OA\JsonContent(
                 required: ['status'],
                 properties: [
-                    new OA\Property(property: 'status', type: 'string', enum: ['WAITING', 'IN_PROGRESS', 'DISCUSSION', 'INVITE_TO_INTERVIEW', 'INTERVIEW', 'ACCEPTED', 'REJECTED']),
+                    new OA\Property(property: 'status', type: 'string', enum: ['WAITING', 'SCREENING', 'INTERVIEW_PLANNED', 'INTERVIEW_DONE', 'OFFER_SENT', 'HIRED', 'REJECTED']),
+                    new OA\Property(property: 'comment', type: 'string', nullable: true),
                 ],
             ),
         ),
@@ -68,7 +71,8 @@ readonly class ApplicationStatusUpdateController
 
         /** @var array<string, mixed> $payload */
         $payload = $request->toArray();
-        $this->applicationStatusTransitionService->applyStatusTransition($application, $payload['status'] ?? null);
+        $comment = is_string($payload['comment'] ?? null) ? $payload['comment'] : null;
+        $this->applicationStatusTransitionService->applyStatusTransition($application, $payload['status'] ?? null, $loggedInUser, $comment);
 
         $this->applicationRepository->save($application);
 

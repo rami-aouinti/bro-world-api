@@ -40,10 +40,10 @@ class ApplicationRepository extends BaseRepository implements ApplicationReposit
             ->setParameter('job', $job)
             ->setParameter('statuses', [
                 ApplicationStatus::WAITING,
-                ApplicationStatus::IN_PROGRESS,
-                ApplicationStatus::DISCUSSION,
-                ApplicationStatus::INVITE_TO_INTERVIEW,
-                ApplicationStatus::INTERVIEW,
+                ApplicationStatus::SCREENING,
+                ApplicationStatus::INTERVIEW_PLANNED,
+                ApplicationStatus::INTERVIEW_DONE,
+                ApplicationStatus::OFFER_SENT,
             ])
             ->setMaxResults(1)
             ->getQuery()
