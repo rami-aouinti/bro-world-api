@@ -104,6 +104,18 @@ class PrivateInterviewControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
     }
 
+    /** @throws Throwable */
+    #[TestDox('Interview endpoints are forbidden for ROLE_USER.')]
+    public function testInterviewListIsForbiddenForRegularUserRole(): void
+    {
+        [$applicationId] = $this->createDedicatedInterview('john-root');
+
+        $client = $this->getTestClient('john-user', 'password-user');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/private/applications/' . $applicationId . '/interviews');
+
+        self::assertSame(Response::HTTP_FORBIDDEN, $client->getResponse()->getStatusCode());
+    }
+
     /**
      * @return array{0: string, 1?: string}
      */

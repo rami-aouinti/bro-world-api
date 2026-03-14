@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Recruit\Transport\Controller\Api\V1\Application;
 
+use App\Recruit\Application\Security\RecruitPermissions;
 use App\Recruit\Domain\Entity\ApplicationStatusHistory;
 use App\Recruit\Infrastructure\Repository\ApplicationRepository;
 use App\Recruit\Infrastructure\Repository\ApplicationStatusHistoryRepository;
@@ -15,17 +16,20 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Recruit Application')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
+#[IsGranted(RecruitPermissions::APPLICATION_STATUS_HISTORY_VIEW)]
 readonly class ApplicationStatusHistoryListController
 {
     public function __construct(
         private ApplicationRepository $applicationRepository,
         private ApplicationStatusHistoryRepository $applicationStatusHistoryRepository,
+        private AuthorizationCheckerInterface $authorizationChecker,
     ) {
     }
 
@@ -45,6 +49,7 @@ readonly class ApplicationStatusHistoryListController
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You are not allowed to view the status history for this application.');
         }
 
+        $canViewSensitiveData = $this->authorizationChecker->isGranted(RecruitPermissions::SENSITIVE_DATA_VIEW);
         $historyEntries = $this->applicationStatusHistoryRepository->findBy([
             'application' => $application,
         ], [
@@ -52,12 +57,12 @@ readonly class ApplicationStatusHistoryListController
         ]);
 
         return new JsonResponse(array_map(
-            static fn (ApplicationStatusHistory $history): array => [
+            fn (ApplicationStatusHistory $history): array => [
                 'id' => $history->getId(),
                 'fromStatus' => $history->getFromStatus()->value,
                 'toStatus' => $history->getToStatus()->value,
-                'authorId' => $history->getAuthor()->getId(),
-                'comment' => $history->getComment(),
+                'authorId' => $canViewSensitiveData ? $history->getAuthor()->getId() : null,
+                'comment' => $canViewSensitiveData ? $history->getComment() : null,
                 'createdAt' => $history->getCreatedAt()?->format(DATE_ATOM),
             ],
             $historyEntries,
