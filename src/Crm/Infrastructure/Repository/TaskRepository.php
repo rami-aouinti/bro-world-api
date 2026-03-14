@@ -71,4 +71,26 @@ class TaskRepository extends BaseRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /**
+     * @return list<Entity>
+     */
+    public function findScopedBySprint(string $crmId, string $sprintId): array
+    {
+        /** @var list<Entity> $items */
+        $items = $this->createQueryBuilder('task')
+            ->leftJoin('task.project', 'project')
+            ->leftJoin('project.company', 'company')
+            ->leftJoin('task.sprint', 'sprint')
+            ->andWhere('company.crm = :crmId')
+            ->andWhere('sprint.id = :sprintId')
+            ->setParameter('crmId', $crmId, UuidBinaryOrderedTimeType::NAME)
+            ->setParameter('sprintId', $sprintId, UuidBinaryOrderedTimeType::NAME)
+            ->orderBy('task.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        return $items;
+    }
+
 }

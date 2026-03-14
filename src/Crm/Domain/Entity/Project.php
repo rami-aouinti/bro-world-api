@@ -6,6 +6,7 @@ namespace App\Crm\Domain\Entity;
 
 use App\Crm\Domain\Enum\ProjectStatus;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
+use App\User\Domain\Entity\User;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
 use DateTimeImmutable;
@@ -63,11 +64,19 @@ class Project implements EntityInterface
     #[ORM\OneToMany(targetEntity: Sprint::class, mappedBy: 'project')]
     private Collection|ArrayCollection $sprints;
 
+    /** @var Collection<int, User>|ArrayCollection<int, User> */
+    #[ORM\ManyToMany(targetEntity: User::class)]
+    #[ORM\JoinTable(name: 'crm_project_assignee')]
+    #[ORM\JoinColumn(name: 'project_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'user_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    private Collection|ArrayCollection $assignees;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
         $this->tasks = new ArrayCollection();
         $this->sprints = new ArrayCollection();
+        $this->assignees = new ArrayCollection();
     }
 
     #[Override]
@@ -175,4 +184,31 @@ class Project implements EntityInterface
     {
         return $this->sprints;
     }
+
+    /**
+     * @return Collection<int, User>|ArrayCollection<int, User>
+     */
+    public function getAssignees(): Collection|ArrayCollection
+    {
+        return $this->assignees;
+    }
+
+    public function addAssignee(User $user): self
+    {
+        if (!$this->assignees->contains($user)) {
+            $this->assignees->add($user);
+        }
+
+        return $this;
+    }
+
+    public function removeAssignee(User $user): self
+    {
+        if ($this->assignees->contains($user)) {
+            $this->assignees->removeElement($user);
+        }
+
+        return $this;
+    }
+
 }

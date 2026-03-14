@@ -162,6 +162,15 @@ class TaskRequest implements EntityInterface
         return $this;
     }
 
+    public function removeAssignee(User $user): self
+    {
+        if ($this->assignees->contains($user)) {
+            $this->assignees->removeElement($user);
+        }
+
+        return $this;
+    }
+
     public function toArray(): array
     {
         return [
