@@ -6,6 +6,7 @@ namespace App\Crm\Transport\Controller\Api\V1;
 
 use App\Crm\Application\Service\CompanyApplicationListService;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Role\Domain\Enum\Role;
 use JsonException;
 use OpenApi\Attributes as OA;
 use Psr\Cache\InvalidArgumentException;
