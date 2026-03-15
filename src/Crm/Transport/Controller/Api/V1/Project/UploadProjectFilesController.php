@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\Project;
 
-use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Application\Service\CrmAttachmentUploaderService;
 use App\Crm\Domain\Entity\Project;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
-use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\Role\Domain\Enum\Role;
 use DateTimeImmutable;
 use Doctrine\ORM\Exception\ORMException;
@@ -28,8 +26,6 @@ final readonly class UploadProjectFilesController
 {
     public function __construct(
         private ProjectRepository $projectRepository,
-        private CrmApplicationScopeResolver $scopeResolver,
-        private CrmApiErrorResponseFactory $errorResponseFactory,
         private CrmAttachmentUploaderService $attachmentUploaderService,
     ) {
     }
@@ -39,15 +35,9 @@ final readonly class UploadProjectFilesController
      * @throws RandomException
      * @throws ORMException
      */
-    #[Route('/v1/crm/applications/{applicationSlug}/projects/{id}/files', methods: [Request::METHOD_POST])]
-    public function __invoke(string $applicationSlug, string $id, Request $request): JsonResponse
+    #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/files', methods: [Request::METHOD_POST])]
+    public function __invoke(string $applicationSlug, Project $project, Request $request): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
-        $project = $this->projectRepository->findOneScopedById($id, $crm->getId());
-        if (!$project instanceof Project) {
-            return $this->errorResponseFactory->notFoundReference('projectId');
-        }
-
         $uploadedFiles = $this->attachmentUploaderService->upload(
             $request,
             $this->attachmentUploaderService->extractFiles($request),
