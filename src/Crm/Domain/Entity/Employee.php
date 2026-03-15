@@ -7,6 +7,7 @@ namespace App\Crm\Domain\Entity;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use App\User\Domain\Entity\User;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
@@ -29,6 +30,10 @@ class Employee implements EntityInterface
     #[ORM\ManyToOne(targetEntity: Crm::class, inversedBy: 'employees')]
     #[ORM\JoinColumn(name: 'crm_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Crm $crm = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?User $user = null;
 
     #[ORM\Column(name: 'first_name', type: Types::STRING, length: 120)]
     private string $firstName = '';
@@ -73,6 +78,24 @@ class Employee implements EntityInterface
 
         return $this;
     }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
+
+        return $this;
+    }
+
+    public function getUserId(): ?string
+    {
+        return $this->user?->getId();
+    }
+
     public function getFirstName(): string
     {
         return $this->firstName;

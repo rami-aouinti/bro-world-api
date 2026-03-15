@@ -20,6 +20,7 @@ use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\Crm\Domain\Enum\TaskStatus;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PlatformKey;
+use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
@@ -109,6 +110,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         $faker->seed(self::FAKER_SEED);
 
         $profile = self::VOLUME_PROFILES[$this->resolveVolume()] ?? self::VOLUME_PROFILES[self::DEFAULT_VOLUME];
+        $crmUsers = $this->getCrmUsers($manager);
 
         foreach ($this->getApplicationsByPlatform(PlatformKey::CRM) as $application) {
             $crm = $this->findOrCreateCrm($manager, $application);
@@ -121,7 +123,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                 $this->generateContacts($manager, $faker, $crm, $company, $profile['contactsPerCompany']);
 
                 // Employees
-                $this->generateEmployees($manager, $faker, $crm, $profile['employeesPerCompany']);
+                $this->generateEmployees($manager, $faker, $crm, $profile['employeesPerCompany'], $crmUsers);
 
                 // Projects
                 $projects = $this->generateProjects(
@@ -244,8 +246,13 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         }
     }
 
-    private function generateEmployees(ObjectManager $manager, Generator $faker, Crm $crm, int $count): void
+    /**
+     * @param array<int, User> $crmUsers
+     */
+    private function generateEmployees(ObjectManager $manager, Generator $faker, Crm $crm, int $count, array $crmUsers): void
     {
+        $crmUserCount = count($crmUsers);
+
         for ($index = 0; $index < $count; $index++) {
             $employee = (new Employee())
                 ->setCrm($crm)
@@ -254,6 +261,10 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                 ->setEmail($faker->companyEmail())
                 ->setPositionName($faker->jobTitle())
                 ->setRoleName($faker->randomElement(['sales', 'support', 'manager', 'finance']));
+
+            if ($crmUserCount > 0) {
+                $employee->setUser($crmUsers[$index % $crmUserCount]);
+            }
 
             $manager->persist($employee);
         }
@@ -438,6 +449,25 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
             'content' => $faker->paragraphs(3, true),
             'createdAt' => DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-4 months', 'now'))->format(DATE_ATOM),
         ];
+    }
+
+    /**
+     * @return array<int, User>
+     */
+    private function getCrmUsers(ObjectManager $manager): array
+    {
+        /** @var array<int, User> $users */
+        $users = $manager->getRepository(User::class)->createQueryBuilder('u')
+            ->select('DISTINCT u')
+            ->innerJoin('u.userGroups', 'ug')
+            ->innerJoin('ug.role', 'r')
+            ->where('r.id LIKE :crmPrefix')
+            ->setParameter('crmPrefix', 'ROLE_CRM_%')
+            ->orderBy('u.username', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $users;
     }
 
     private function resolveVolume(): string

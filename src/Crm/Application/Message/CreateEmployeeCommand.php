@@ -16,6 +16,7 @@ final readonly class CreateEmployeeCommand implements MessageHighInterface
         public ?string $email,
         public ?string $positionName,
         public ?string $roleName,
+        public ?string $userId,
         public string $applicationSlug,
     ) {
     }

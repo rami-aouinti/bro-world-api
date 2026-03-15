@@ -69,6 +69,7 @@ final readonly class CreateEmployeeController
             email: $employee->getEmail(),
             positionName: $employee->getPositionName(),
             roleName: $employee->getRoleName(),
+            userId: $input->userId,
             applicationSlug: $applicationSlug,
         ));
 

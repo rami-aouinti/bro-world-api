@@ -26,6 +26,9 @@ final class CreateEmployeeRequest
     #[Assert\Length(max: 120)]
     public ?string $roleName = null;
 
+    #[Assert\Uuid]
+    public ?string $userId = null;
+
     public static function fromArray(array $payload): self
     {
         $r = new self();
@@ -34,6 +37,7 @@ final class CreateEmployeeRequest
         $r->email = isset($payload['email']) ? (string)$payload['email'] : null;
         $r->positionName = isset($payload['positionName']) ? (string)$payload['positionName'] : null;
         $r->roleName = isset($payload['roleName']) ? (string)$payload['roleName'] : null;
+        $r->userId = isset($payload['userId']) ? (string)$payload['userId'] : null;
 
         return $r;
     }

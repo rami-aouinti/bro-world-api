@@ -9,6 +9,7 @@ use App\Crm\Domain\Entity\Employee;
 use App\Crm\Infrastructure\Repository\CrmRepository;
 use App\Crm\Infrastructure\Repository\EmployeeRepository;
 use App\General\Application\Message\EntityCreated;
+use App\User\Domain\Repository\Interfaces\UserRepositoryInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -18,6 +19,7 @@ final readonly class CreateEmployeeCommandHandler
     public function __construct(
         private CrmRepository $crmRepository,
         private EmployeeRepository $employeeRepository,
+        private UserRepositoryInterface $userRepository,
         private MessageBusInterface $messageBus,
     ) {
     }
@@ -29,6 +31,8 @@ final readonly class CreateEmployeeCommandHandler
             return;
         }
 
+        $user = $command->userId !== null ? $this->userRepository->find($command->userId) : null;
+
         $employee = (new Employee())
             ->setId($command->id)
             ->setCrm($crm)
@@ -36,7 +40,8 @@ final readonly class CreateEmployeeCommandHandler
             ->setLastName($command->lastName)
             ->setEmail($command->email)
             ->setPositionName($command->positionName)
-            ->setRoleName($command->roleName);
+            ->setRoleName($command->roleName)
+            ->setUser($user);
 
         $this->employeeRepository->save($employee);
 
