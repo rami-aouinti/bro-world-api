@@ -6,6 +6,7 @@ namespace App\Crm\Transport\Controller\Api\V1\Project;
 
 use App\Crm\Application\Security\CrmPermissions;
 use App\Crm\Domain\Entity\Project;
+use App\Role\Domain\Enum\Role;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,7 +16,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
-#[IsGranted(CrmPermissions::VIEW)]
+#[IsGranted(Role::CRM_MANAGER->value)]
 final readonly class GetProjectController
 {
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}', methods: [Request::METHOD_GET])]
