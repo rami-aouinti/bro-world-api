@@ -396,6 +396,34 @@ final class CrmControllerTest extends WebTestCase
         self::assertNull($employeeRepository->find($payload['id']));
     }
 
+    #[TestDox('ListEmployeesController returns a paginated employee list scoped by CRM application.')]
+    public function testListEmployeesReturnsPaginatedList(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request(
+            'GET',
+            sprintf('%s/v1/crm/applications/%s/employees?page=1&limit=5', self::API_URL_PREFIX, self::PRIMARY_APPLICATION_SLUG)
+        );
+
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+
+        self::assertArrayHasKey('items', $payload);
+        self::assertArrayHasKey('pagination', $payload);
+        self::assertSame(1, $payload['pagination']['page'] ?? null);
+        self::assertSame(5, $payload['pagination']['limit'] ?? null);
+        self::assertIsInt($payload['pagination']['totalItems'] ?? null);
+        self::assertIsInt($payload['pagination']['totalPages'] ?? null);
+
+        if (($payload['items'][0] ?? null) !== null) {
+            self::assertArrayHasKey('id', $payload['items'][0]);
+            self::assertArrayHasKey('firstName', $payload['items'][0]);
+            self::assertArrayHasKey('lastName', $payload['items'][0]);
+            self::assertArrayHasKey('email', $payload['items'][0]);
+        }
+    }
+
     #[TestDox('Delete endpoints reject IDs from another CRM application scope.')]
     #[DataProvider('crossScopeDeleteProvider')]
     public function testDeleteRejectsForeignScopeIds(string $resource, string $foreignIdKey): void
