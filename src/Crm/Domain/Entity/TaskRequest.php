@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Crm\Domain\Entity;
 
+use App\Blog\Domain\Entity\Blog;
 use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
@@ -35,6 +36,10 @@ class TaskRequest implements EntityInterface
     #[ORM\JoinColumn(name: 'task_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     #[Assert\NotNull]
     private ?Task $task = null;
+
+    #[ORM\OneToOne(targetEntity: Blog::class, cascade: ['persist'])]
+    #[ORM\JoinColumn(name: 'blog_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?Blog $blog = null;
 
     #[ORM\Column(name: 'title', type: Types::STRING, length: 255)]
     private string $title = '';
@@ -87,6 +92,18 @@ class TaskRequest implements EntityInterface
     public function setTask(?Task $task): self
     {
         $this->task = $task;
+
+        return $this;
+    }
+
+    public function getBlog(): ?Blog
+    {
+        return $this->blog;
+    }
+
+    public function setBlog(?Blog $blog): self
+    {
+        $this->blog = $blog;
 
         return $this;
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Crm\Domain\Entity;
 
+use App\Blog\Domain\Entity\Blog;
 use App\Crm\Domain\Enum\TaskPriority;
 use App\Crm\Domain\Enum\TaskStatus;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
@@ -41,6 +42,10 @@ class Task implements EntityInterface
     #[ORM\ManyToOne(targetEntity: Sprint::class, inversedBy: 'tasks')]
     #[ORM\JoinColumn(name: 'sprint_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?Sprint $sprint = null;
+
+    #[ORM\OneToOne(targetEntity: Blog::class, cascade: ['persist'])]
+    #[ORM\JoinColumn(name: 'blog_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?Blog $blog = null;
 
     #[ORM\Column(name: 'title', type: Types::STRING, length: 255)]
     private string $title = '';
@@ -117,6 +122,18 @@ class Task implements EntityInterface
     public function setSprint(?Sprint $sprint): self
     {
         $this->sprint = $sprint;
+
+        return $this;
+    }
+
+    public function getBlog(): ?Blog
+    {
+        return $this->blog;
+    }
+
+    public function setBlog(?Blog $blog): self
+    {
+        $this->blog = $blog;
 
         return $this;
     }
