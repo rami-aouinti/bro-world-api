@@ -255,4 +255,9 @@ class Configuration implements EntityInterface
 
         return $this;
     }
+
+    public function toArray(): array
+    {
+        return $this->configurationValue;
+    }
 }

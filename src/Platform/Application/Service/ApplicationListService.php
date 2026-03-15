@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Platform\Application\Service;
 
+use App\Configuration\Domain\Entity\Configuration;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\Platform\Application\Projection\ApplicationProjection;
 use App\Platform\Domain\Entity\Application;
+use App\Platform\Domain\Entity\ApplicationPlugin;
 use App\Platform\Domain\Repository\Interfaces\ApplicationRepositoryInterface;
 use App\User\Domain\Entity\User;
+use JsonException;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -28,8 +31,10 @@ readonly class ApplicationListService
     }
 
     /**
+     * @param Request $request
      * @return array<string, mixed>
-     * @throws \JsonException
+     * @throws InvalidArgumentException
+     * @throws JsonException
      */
     public function getPublicList(Request $request): array
     {
@@ -37,8 +42,11 @@ readonly class ApplicationListService
     }
 
     /**
+     * @param Request $request
+     * @param User $loggedInUser
      * @return array<string, mixed>
-     * @throws \JsonException
+     * @throws InvalidArgumentException
+     * @throws JsonException
      */
     public function getPrivateList(Request $request, User $loggedInUser): array
     {
@@ -47,7 +55,7 @@ readonly class ApplicationListService
 
     /**
      * @return array<string, mixed>
-     * @throws \JsonException
+     * @throws JsonException
      * @throws InvalidArgumentException
      */
     private function getList(Request $request, ?User $loggedInUser): array
@@ -118,6 +126,15 @@ readonly class ApplicationListService
                     'platformName' => $application->getPlatform()?->getName(),
                     'platformKey' => $application->getPlatform()?->getPlatformKeyValue(),
                     'pluginKeys' => array_keys($pluginKeys),
+                    'plugins' => array_map(static fn (ApplicationPlugin $applicationPlugin) => [
+                        'id' => $applicationPlugin->getId(),
+                        'name' => $applicationPlugin->getPlugin()?->getName() ?? '',
+                        'configurations' => array_map(static fn (Configuration $configuration) => [
+                            'id' => $configuration->getId(),
+                            'name' => $configuration->getConfigurationKey() ?? '',
+                            'configuration' => $configuration?->getConfigurationValue(),
+                        ], $applicationPlugin?->getConfigurations()?->toArray())
+                    ], $application->getApplicationPlugins()->toArray()),
                     'author' => [
                         'id' => $application->getUser()?->getId(),
                         'firstName' => $application->getUser()?->getFirstName() ?? '',
