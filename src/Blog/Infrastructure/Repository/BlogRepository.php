@@ -24,6 +24,7 @@ class BlogRepository extends BaseRepository
     {
         $result = $this->findOneBy([
             'application' => $application,
+            'type' => BlogType::APPLICATION,
         ]);
 
         return $result instanceof Blog ? $result : null;
@@ -44,7 +45,9 @@ class BlogRepository extends BaseRepository
             ->innerJoin('blog.application', 'application')
             ->addSelect('application')
             ->where('application.slug = :applicationSlug')
+            ->andWhere('blog.type = :blogType')
             ->setParameter('applicationSlug', $applicationSlug)
+            ->setParameter('blogType', BlogType::APPLICATION)
             ->getQuery()
             ->getOneOrNullResult();
 
