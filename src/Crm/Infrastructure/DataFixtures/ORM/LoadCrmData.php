@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Crm\Infrastructure\DataFixtures\ORM;
 
+use App\Blog\Domain\Entity\Blog;
+use App\Blog\Domain\Entity\BlogComment;
+use App\Blog\Domain\Entity\BlogPost;
+use App\Blog\Domain\Enum\BlogType;
 use App\Crm\Domain\Entity\Billing;
 use App\Crm\Domain\Entity\Company;
 use App\Crm\Domain\Entity\Contact;
@@ -19,7 +23,10 @@ use App\Crm\Domain\Enum\TaskPriority;
 use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\Crm\Domain\Enum\TaskStatus;
 use App\Platform\Domain\Entity\Application;
+use App\Platform\Domain\Entity\ApplicationPlugin;
+use App\Platform\Domain\Entity\Plugin;
 use App\Platform\Domain\Enum\PlatformKey;
+use App\Platform\Domain\Enum\PluginKey;
 use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -113,6 +120,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         $crmUsers = $this->getCrmUsers($manager);
 
         foreach ($this->getApplicationsByPlatform(PlatformKey::CRM) as $application) {
+            $applicationHasBlogPlugin = $this->applicationHasBlogPlugin($manager, $application);
             $crm = $this->findOrCreateCrm($manager, $application);
 
             // Companies
@@ -146,14 +154,16 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                         $tasks = $this->generateTasks(
                             $manager,
                             $faker,
+                            $application,
                             $project,
                             $sprint,
                             $profile['tasksPerSprint'],
                             $profile['taskAttachments'],
+                            $applicationHasBlogPlugin,
                         );
 
                         // Task requests
-                        $this->generateTaskRequests($manager, $faker, $tasks, $profile['taskRequestsPerTask']);
+                        $this->generateTaskRequests($manager, $faker, $application, $tasks, $profile['taskRequestsPerTask']);
                     }
                 }
 
@@ -345,10 +355,12 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     private function generateTasks(
         ObjectManager $manager,
         Generator $faker,
+        Application $application,
         Project $project,
         Sprint $sprint,
         int $count,
         int $attachmentCount,
+        bool $applicationHasBlogPlugin,
     ): array {
         $tasks = [];
 
@@ -367,6 +379,10 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                 $task->addAttachment($this->generateAttachment($faker, '/uploads/crm/tasks/', $task->getId()));
             }
 
+            if ($applicationHasBlogPlugin) {
+                $task->setBlog($this->createBlogThreadForEntity($manager, $faker, $application, 'task', $task->getId(), $task->getTitle()));
+            }
+
             $manager->persist($task);
             $tasks[] = $task;
         }
@@ -377,8 +393,13 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     /**
      * @param array<int, Task> $tasks
      */
-    private function generateTaskRequests(ObjectManager $manager, Generator $faker, array $tasks, int $countByTask): void
-    {
+    private function generateTaskRequests(
+        ObjectManager $manager,
+        Generator $faker,
+        Application $application,
+        array $tasks,
+        int $countByTask,
+    ): void {
         foreach ($tasks as $task) {
             for ($index = 0; $index < $countByTask; $index++) {
                 $status = $faker->randomElement(TaskRequestStatus::cases());
@@ -387,6 +408,15 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                     ->setTitle($faker->sentence(6))
                     ->setDescription($faker->paragraph())
                     ->setStatus($status);
+
+                $taskRequest->setBlog($this->createBlogThreadForEntity(
+                    $manager,
+                    $faker,
+                    $application,
+                    'task-request',
+                    $taskRequest->getId(),
+                    $taskRequest->getTitle(),
+                ));
 
                 if (in_array($status, [TaskRequestStatus::APPROVED, TaskRequestStatus::DONE, TaskRequestStatus::REJECTED], true)) {
                     $taskRequest->setResolvedAt(DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-2 weeks', 'now')));
@@ -475,5 +505,78 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         $volume = strtolower((string)($_ENV['CRM_FIXTURE_VOLUME'] ?? $_SERVER['CRM_FIXTURE_VOLUME'] ?? getenv('CRM_FIXTURE_VOLUME') ?: self::DEFAULT_VOLUME));
 
         return array_key_exists($volume, self::VOLUME_PROFILES) ? $volume : self::DEFAULT_VOLUME;
+    }
+
+    private function applicationHasBlogPlugin(ObjectManager $manager, Application $application): bool
+    {
+        $blogPlugin = $this->getReference('Plugin-Knowledge-Base-Connector', Plugin::class);
+
+        if (!$blogPlugin instanceof Plugin) {
+            return false;
+        }
+
+        if ($blogPlugin->getPluginKey() !== PluginKey::BLOG) {
+            return false;
+        }
+
+        return null !== $manager->getRepository(ApplicationPlugin::class)->findOneBy([
+            'application' => $application,
+            'plugin' => $blogPlugin,
+        ]);
+    }
+
+    private function createBlogThreadForEntity(
+        ObjectManager $manager,
+        Generator $faker,
+        Application $application,
+        string $scope,
+        string $scopeId,
+        string $title,
+    ): Blog {
+        $identifier = strtolower(str_replace('-', '', $scopeId));
+        $blog = (new Blog())
+            ->setApplication($application)
+            ->setOwner($application->getUser())
+            ->setType(BlogType::APPLICATION)
+            ->setTitle(sprintf('CRM %s blog %s', ucfirst($scope), $title))
+            ->setSlug(sprintf('crm-%s-%s', $scope, substr($identifier, 0, 18)))
+            ->setDescription(sprintf('Fil de discussion CRM pour %s', $title));
+
+        $rootPost = (new BlogPost())
+            ->setBlog($blog)
+            ->setAuthor($application->getUser())
+            ->setTitle(sprintf('%s - contexte', $title))
+            ->setSlug(sprintf('post-root-%s-%s', $scope, substr($identifier, 0, 12)))
+            ->setContent($faker->paragraph(2));
+
+        $followUpPost = (new BlogPost())
+            ->setBlog($blog)
+            ->setAuthor($application->getUser())
+            ->setTitle(sprintf('%s - suivi', $title))
+            ->setSlug(sprintf('post-followup-%s-%s', $scope, substr($identifier, 0, 12)))
+            ->setContent($faker->paragraph(2));
+
+        $parentComment = (new BlogComment())
+            ->setPost($rootPost)
+            ->setAuthor($application->getUser())
+            ->setContent('Commentaire initial de validation endpoint détail.');
+        $childComment = (new BlogComment())
+            ->setPost($rootPost)
+            ->setAuthor($application->getUser())
+            ->setContent('Réponse de suivi pour valider les commentaires imbriqués.')
+            ->setParent($parentComment);
+        $subChildComment = (new BlogComment())
+            ->setPost($rootPost)
+            ->setAuthor($application->getUser())
+            ->setContent('Sous-réponse pour vérifier le 3e niveau de thread.')
+            ->setParent($childComment);
+
+        $manager->persist($rootPost);
+        $manager->persist($followUpPost);
+        $manager->persist($parentComment);
+        $manager->persist($childComment);
+        $manager->persist($subChildComment);
+
+        return $blog;
     }
 }
