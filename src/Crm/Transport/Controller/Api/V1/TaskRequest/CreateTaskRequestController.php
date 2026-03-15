@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Crm\Transport\Controller\Api\V1\TaskRequest;
 
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Application\Service\CrmTaskBlogProvisioningService;
 use App\Crm\Domain\Entity\TaskRequest;
 use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\Crm\Infrastructure\Repository\TaskRepository;
@@ -36,6 +37,7 @@ final readonly class CreateTaskRequestController
         private TaskRepository $taskRepository,
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
+        private CrmTaskBlogProvisioningService $crmTaskBlogProvisioningService,
         private ValidatorInterface $validator,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
@@ -170,6 +172,7 @@ final readonly class CreateTaskRequestController
         }
 
         $this->entityManager->persist($taskRequest);
+        $this->crmTaskBlogProvisioningService->provision($taskRequest);
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityCreated('crm_task_request', $taskRequest->getId(), context: [
             'applicationSlug' => $applicationSlug,
