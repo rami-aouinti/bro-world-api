@@ -16,7 +16,6 @@ use Throwable;
 
 use function array_filter;
 use function array_map;
-use function array_values;
 use function ceil;
 use function max;
 use function method_exists;
@@ -34,16 +33,18 @@ readonly class BillingReadService
     ) {
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     public function getList(string $applicationSlug, Request $request): array
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
         $filters = [
-            'q' => trim((string) $request->query->get('q', '')),
-            'status' => trim((string) $request->query->get('status', '')),
-            'companyId' => trim((string) $request->query->get('companyId', '')),
+            'q' => trim((string)$request->query->get('q', '')),
+            'status' => trim((string)$request->query->get('status', '')),
+            'companyId' => trim((string)$request->query->get('companyId', '')),
         ];
 
         $cacheKey = $this->cacheKeyConventionService->buildCrmBillingListKey($applicationSlug, $page, $limit, $filters);
@@ -64,7 +65,7 @@ readonly class BillingReadService
                     'page' => $page,
                     'limit' => $limit,
                     'totalItems' => $totalItems,
-                    'totalPages' => $totalItems > 0 ? (int) ceil($totalItems / $limit) : 0,
+                    'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
                 ],
                 'meta' => [
                     'filters' => array_filter($filters, static fn (string $value): bool => $value !== ''),
@@ -75,7 +76,9 @@ readonly class BillingReadService
         return $result;
     }
 
-    /** @return array<string,mixed>|null */
+    /**
+     * @return array<string,mixed>|null
+     */
     public function getDetail(string $applicationSlug, string $billingId): ?array
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
@@ -130,7 +133,11 @@ readonly class BillingReadService
             ], 0, 1);
 
             if (($response['hits']['total']['value'] ?? 0) === 0) {
-                return ['q' => '__no_match__', 'status' => $filters['status'], 'companyId' => $filters['companyId']];
+                return [
+                    'q' => '__no_match__',
+                    'status' => $filters['status'],
+                    'companyId' => $filters['companyId'],
+                ];
             }
         } catch (Throwable) {
             return $filters;
@@ -145,12 +152,12 @@ readonly class BillingReadService
     private function normalizeProjection(array $item): array
     {
         return [
-            'id' => (string) ($item['id'] ?? ''),
+            'id' => (string)($item['id'] ?? ''),
             'companyId' => $item['companyId'] ?? null,
-            'label' => (string) ($item['label'] ?? ''),
-            'amount' => isset($item['amount']) ? (float) $item['amount'] : 0.0,
-            'currency' => (string) ($item['currency'] ?? 'EUR'),
-            'status' => (string) ($item['status'] ?? 'pending'),
+            'label' => (string)($item['label'] ?? ''),
+            'amount' => isset($item['amount']) ? (float)$item['amount'] : 0.0,
+            'currency' => (string)($item['currency'] ?? 'EUR'),
+            'status' => (string)($item['status'] ?? 'pending'),
             'dueAt' => $this->normalizeDateValue($item['dueAt'] ?? null),
             'paidAt' => $this->normalizeDateValue($item['paidAt'] ?? null),
         ];

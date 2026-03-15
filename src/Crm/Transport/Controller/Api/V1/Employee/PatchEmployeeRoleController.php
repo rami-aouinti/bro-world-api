@@ -31,7 +31,8 @@ final readonly class PatchEmployeeRoleController
         private CrmApiErrorResponseFactory $errorResponseFactory,
         private ValidatorInterface $validator,
         private EntityManagerInterface $entityManager,
-    ) {}
+    ) {
+    }
 
     #[Route('/v1/crm/applications/{applicationSlug}/employees/{employeeId}/roles', methods: [Request::METHOD_PATCH])]
     public function __invoke(string $applicationSlug, string $employeeId, Request $request): JsonResponse
@@ -61,6 +62,9 @@ final readonly class PatchEmployeeRoleController
         $employee->setRoleName($input->role);
         $this->entityManager->flush();
 
-        return new JsonResponse(['id' => $employee->getId(), 'role' => $employee->getRoleName()]);
+        return new JsonResponse([
+            'id' => $employee->getId(),
+            'role' => $employee->getRoleName(),
+        ]);
     }
 }

@@ -21,7 +21,7 @@ use function is_string;
 readonly class JobPublicDetailService
 {
     public function __construct(
-        private EntityManagerInterface        $entityManager,
+        private EntityManagerInterface $entityManager,
         private ElasticsearchServiceInterface $elasticsearchService,
     ) {
     }

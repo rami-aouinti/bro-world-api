@@ -45,7 +45,7 @@ final readonly class PatchBillingController
         }
 
         try {
-            $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return $this->errorResponseFactory->invalidJson();
         }
@@ -70,16 +70,16 @@ final readonly class PatchBillingController
         }
 
         if (isset($payload['label'])) {
-            $entity->setLabel((string) $payload['label']);
+            $entity->setLabel((string)$payload['label']);
         }
         if (array_key_exists('amount', $payload)) {
-            $entity->setAmount(is_numeric($payload['amount']) ? (float) $payload['amount'] : 0.0);
+            $entity->setAmount(is_numeric($payload['amount']) ? (float)$payload['amount'] : 0.0);
         }
         if (isset($payload['currency'])) {
-            $entity->setCurrency((string) $payload['currency']);
+            $entity->setCurrency((string)$payload['currency']);
         }
         if (isset($payload['status'])) {
-            $entity->setStatus((string) $payload['status']);
+            $entity->setStatus((string)$payload['status']);
         }
         if (array_key_exists('dueAt', $payload)) {
             $entity->setDueAt($this->parseDate($payload['dueAt']));
@@ -92,7 +92,9 @@ final readonly class PatchBillingController
 
         $this->cacheInvalidator->invalidateBilling($applicationSlug, $entity->getId());
 
-        return new JsonResponse(['id' => $entity->getId()]);
+        return new JsonResponse([
+            'id' => $entity->getId(),
+        ]);
     }
 
     private function parseDate(mixed $value): ?DateTimeImmutable

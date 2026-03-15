@@ -22,7 +22,8 @@ final readonly class RemoveSprintAssigneeController
 {
     public function __construct(
         private SprintRepository $sprintRepository
-    ) {}
+    ) {
+    }
 
     /**
      * @throws OptimisticLockException

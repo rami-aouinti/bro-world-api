@@ -6,7 +6,6 @@ namespace App\Quiz\Transport\Controller\Api\V1;
 
 use App\Quiz\Application\Service\QuizReadService;
 use OpenApi\Attributes as OA;
-use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -19,12 +18,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[OA\Tag(name: 'Quiz')]
 final class GetQuizByApplicationController
 {
-    /**
-     * @param string $applicationSlug
-     * @param Request $request
-     * @param QuizReadService $quizReadService
-     * @return JsonResponse
-     */
     #[Route('/v1/quiz/applications/{applicationSlug}', methods: [Request::METHOD_GET])]
     public function __invoke(string $applicationSlug, Request $request, QuizReadService $quizReadService): JsonResponse
     {

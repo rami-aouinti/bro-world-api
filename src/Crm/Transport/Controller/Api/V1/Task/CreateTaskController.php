@@ -26,7 +26,6 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use App\Crm\Application\Security\CrmPermissions;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -85,8 +84,14 @@ final readonly class CreateTaskController
                 description: 'Invalid JSON payload or invalid date format.',
                 content: new OA\JsonContent(
                     examples: [
-                        'invalidJson' => new OA\Examples(example: 'invalidJson', summary: 'JSON invalide', value: ['message' => 'Invalid JSON payload.', 'errors' => []]),
-                        'invalidDate' => new OA\Examples(example: 'invalidDate', summary: 'Date invalide', value: ['message' => 'Invalid date format for "dueAt".', 'errors' => []]),
+                        'invalidJson' => new OA\Examples(example: 'invalidJson', summary: 'JSON invalide', value: [
+                            'message' => 'Invalid JSON payload.',
+                            'errors' => [],
+                        ]),
+                        'invalidDate' => new OA\Examples(example: 'invalidDate', summary: 'Date invalide', value: [
+                            'message' => 'Invalid date format for "dueAt".',
+                            'errors' => [],
+                        ]),
                     ],
                 ),
             ),
@@ -202,7 +207,9 @@ final readonly class CreateTaskController
 
         $this->entityManager->persist($task);
         $this->entityManager->flush();
-        $this->messageBus->dispatch(new EntityCreated('crm_task', $task->getId(), context: ['applicationSlug' => $applicationSlug]));
+        $this->messageBus->dispatch(new EntityCreated('crm_task', $task->getId(), context: [
+            'applicationSlug' => $applicationSlug,
+        ]));
 
         return new JsonResponse([
             'id' => $task->getId(),

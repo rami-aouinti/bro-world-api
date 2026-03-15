@@ -57,5 +57,4 @@ final class CacheInvalidationServiceTest extends TestCase
 
         $service->invalidateCrmTaskListCaches('crm-app-core');
     }
-
 }

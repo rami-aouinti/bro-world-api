@@ -7,7 +7,6 @@ namespace App\Tests\Application\School\Transport\Controller\Api\V1;
 use App\General\Domain\Utils\JSON;
 use App\Tests\TestCase\WebTestCase;
 use PHPUnit\Framework\Attributes\TestDox;
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\HttpFoundation\Response;
 
 final class SchoolApplicationScopedRoutesTest extends WebTestCase

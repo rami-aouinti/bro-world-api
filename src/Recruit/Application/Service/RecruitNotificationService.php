@@ -25,7 +25,9 @@ final readonly class RecruitNotificationService
     private const int IDEMPOTENCE_TTL = 86400;
     private const int DEBOUNCE_TTL = 45;
 
-    /** @var array<string, array<string, array{title: string, description: string}>> */
+    /**
+     * @var array<string, array<string, array{title: string, description: string}>>
+     */
     private const array TEMPLATES = [
         'application_received' => [
             'fr' => [
@@ -136,10 +138,12 @@ final readonly class RecruitNotificationService
         $actor = $application->getJob()->getOwner();
         $recipient = $application->getApplicant()->getUser();
 
-        if (!$actor instanceof User || !$this->shouldPublish(
-            sprintf('status_%s_%s_%s', $application->getId(), $from->value, $to->value),
-            sprintf('status_stream_%s', $application->getId()),
-        )) {
+        if (
+            !$actor instanceof User || !$this->shouldPublish(
+                sprintf('status_%s_%s_%s', $application->getId(), $from->value, $to->value),
+                sprintf('status_stream_%s', $application->getId()),
+            )
+        ) {
             return;
         }
 
@@ -177,7 +181,9 @@ final readonly class RecruitNotificationService
         );
     }
 
-    /** @return array{title: string, description: string} */
+    /**
+     * @return array{title: string, description: string}
+     */
     public function renderTemplateSnapshot(string $event, string $locale, array $variables): array
     {
         return $this->renderTemplate($event, $locale, $variables);
@@ -206,7 +212,9 @@ final readonly class RecruitNotificationService
         );
     }
 
-    /** @param array<string, string> $variables */
+    /**
+     * @param array<string, string> $variables
+     */
     private function publishTemplate(string $event, User $actor, User $recipient, array $variables, string $idempotenceKey, string $debounceKey): void
     {
         if (!$this->shouldPublish($idempotenceKey, $debounceKey)) {

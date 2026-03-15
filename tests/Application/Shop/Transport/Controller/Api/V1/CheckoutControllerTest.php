@@ -20,7 +20,11 @@ final class CheckoutControllerTest extends WebTestCase
 
         /** @var ProductRepository $productRepository */
         $productRepository = static::getContainer()->get(ProductRepository::class);
-        $product = $productRepository->findBy(['shop' => $shop], ['createdAt' => 'ASC'])[0] ?? null;
+        $product = $productRepository->findBy([
+            'shop' => $shop,
+        ], [
+            'createdAt' => 'ASC',
+        ])[0] ?? null;
         self::assertNotNull($product);
 
         $client = $this->getTestClient('john-root', 'password-root');

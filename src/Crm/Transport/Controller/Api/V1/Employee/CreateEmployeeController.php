@@ -30,7 +30,8 @@ final readonly class CreateEmployeeController
         private CrmApiErrorResponseFactory $errorResponseFactory,
         private ValidatorInterface $validator,
         private MessageBusInterface $messageBus,
-    ) {}
+    ) {
+    }
 
     #[Route('/v1/crm/applications/{applicationSlug}/employees', methods: [Request::METHOD_POST])]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
@@ -71,6 +72,8 @@ final readonly class CreateEmployeeController
             applicationSlug: $applicationSlug,
         ));
 
-        return new JsonResponse(['id' => $employee->getId()], JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $employee->getId(),
+        ], JsonResponse::HTTP_CREATED);
     }
 }

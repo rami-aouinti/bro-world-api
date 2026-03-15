@@ -186,7 +186,9 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     private function findOrCreateCrm(ObjectManager $manager, Application $application): Crm
     {
         /** @var Crm|null $crm */
-        $crm = $manager->getRepository(Crm::class)->findOneBy(['application' => $application]);
+        $crm = $manager->getRepository(Crm::class)->findOneBy([
+            'application' => $application,
+        ]);
 
         if (!$crm instanceof Crm) {
             $crm = (new Crm())->setApplication($application);
@@ -208,7 +210,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     ): array {
         $companies = [];
 
-        for ($index = 0; $index < $count; ++$index) {
+        for ($index = 0; $index < $count; $index++) {
             $company = (new Company())
                 ->setCrm($crm)
                 ->setName(sprintf('%s - %s', $application->getTitle(), $faker->company()))
@@ -226,7 +228,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 
     private function generateContacts(ObjectManager $manager, Generator $faker, Crm $crm, Company $company, int $count): void
     {
-        for ($index = 0; $index < $count; ++$index) {
+        for ($index = 0; $index < $count; $index++) {
             $contact = (new Contact())
                 ->setCrm($crm)
                 ->setCompany($company)
@@ -244,7 +246,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 
     private function generateEmployees(ObjectManager $manager, Generator $faker, Crm $crm, int $count): void
     {
-        for ($index = 0; $index < $count; ++$index) {
+        for ($index = 0; $index < $count; $index++) {
             $employee = (new Employee())
                 ->setCrm($crm)
                 ->setFirstName($faker->firstName())
@@ -272,7 +274,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     ): array {
         $projects = [];
 
-        for ($index = 0; $index < $projectCount; ++$index) {
+        for ($index = 0; $index < $projectCount; $index++) {
             $startedAt = $faker->dateTimeBetween('-3 months', '-2 weeks');
             $dueAt = $faker->dateTimeBetween($startedAt, '+4 months');
 
@@ -285,11 +287,11 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                 ->setStartedAt(DateTimeImmutable::createFromMutable($startedAt))
                 ->setDueAt(DateTimeImmutable::createFromMutable($dueAt));
 
-            for ($attachmentIndex = 0; $attachmentIndex < $attachmentCount; ++$attachmentIndex) {
+            for ($attachmentIndex = 0; $attachmentIndex < $attachmentCount; $attachmentIndex++) {
                 $project->addAttachment($this->generateAttachment($faker, '/uploads/crm/projects/', $project->getId()));
             }
 
-            for ($wikiIndex = 0; $wikiIndex < $wikiPageCount; ++$wikiIndex) {
+            for ($wikiIndex = 0; $wikiIndex < $wikiPageCount; $wikiIndex++) {
                 $project->addWikiPage($this->generateWikiPage($faker));
             }
 
@@ -307,7 +309,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     {
         $sprints = [];
 
-        for ($index = 0; $index < $count; ++$index) {
+        for ($index = 0; $index < $count; $index++) {
             $startDate = $faker->dateTimeBetween('-6 weeks', '+2 weeks');
             $endDate = $faker->dateTimeBetween($startDate, '+4 weeks');
 
@@ -339,7 +341,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     ): array {
         $tasks = [];
 
-        for ($index = 0; $index < $count; ++$index) {
+        for ($index = 0; $index < $count; $index++) {
             $task = (new Task())
                 ->setProject($project)
                 ->setSprint($sprint)
@@ -348,9 +350,9 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                 ->setStatus($faker->randomElement(TaskStatus::cases()))
                 ->setPriority($faker->randomElement(TaskPriority::cases()))
                 ->setDueAt(DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-1 week', '+2 months')))
-                ->setEstimatedHours((float) $faker->randomFloat(1, 2, 30));
+                ->setEstimatedHours((float)$faker->randomFloat(1, 2, 30));
 
-            for ($attachmentIndex = 0; $attachmentIndex < $attachmentCount; ++$attachmentIndex) {
+            for ($attachmentIndex = 0; $attachmentIndex < $attachmentCount; $attachmentIndex++) {
                 $task->addAttachment($this->generateAttachment($faker, '/uploads/crm/tasks/', $task->getId()));
             }
 
@@ -367,7 +369,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     private function generateTaskRequests(ObjectManager $manager, Generator $faker, array $tasks, int $countByTask): void
     {
         foreach ($tasks as $task) {
-            for ($index = 0; $index < $countByTask; ++$index) {
+            for ($index = 0; $index < $countByTask; $index++) {
                 $status = $faker->randomElement(TaskRequestStatus::cases());
                 $taskRequest = (new TaskRequest())
                     ->setTask($task)
@@ -386,11 +388,11 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 
     private function generateBillings(ObjectManager $manager, Generator $faker, Company $company, int $count): void
     {
-        for ($index = 0; $index < $count; ++$index) {
+        for ($index = 0; $index < $count; $index++) {
             $billing = (new Billing())
                 ->setCompany($company)
                 ->setLabel('Abonnement CRM - ' . $faker->words(2, true))
-                ->setAmount((float) $faker->randomFloat(2, 499, 12000))
+                ->setAmount((float)$faker->randomFloat(2, 499, 12000))
                 ->setCurrency($faker->randomElement(['EUR', 'USD', 'GBP']))
                 ->setStatus($faker->randomElement(['paid', 'pending', 'overdue']))
                 ->setDueAt(DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-10 days', '+40 days')));
@@ -440,7 +442,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 
     private function resolveVolume(): string
     {
-        $volume = strtolower((string) ($_ENV['CRM_FIXTURE_VOLUME'] ?? $_SERVER['CRM_FIXTURE_VOLUME'] ?? getenv('CRM_FIXTURE_VOLUME') ?: self::DEFAULT_VOLUME));
+        $volume = strtolower((string)($_ENV['CRM_FIXTURE_VOLUME'] ?? $_SERVER['CRM_FIXTURE_VOLUME'] ?? getenv('CRM_FIXTURE_VOLUME') ?: self::DEFAULT_VOLUME));
 
         return array_key_exists($volume, self::VOLUME_PROFILES) ? $volume : self::DEFAULT_VOLUME;
     }

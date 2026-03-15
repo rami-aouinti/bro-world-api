@@ -41,7 +41,9 @@ class Offer implements EntityInterface
     #[ORM\Column(name: 'contract_type', type: Types::STRING, length: 25, enumType: ContractType::class)]
     private ContractType $contractType;
 
-    #[ORM\Column(name: 'status', type: Types::STRING, length: 25, enumType: OfferStatus::class, options: ['default' => 'DRAFT'])]
+    #[ORM\Column(name: 'status', type: Types::STRING, length: 25, enumType: OfferStatus::class, options: [
+        'default' => 'DRAFT',
+    ])]
     private OfferStatus $status = OfferStatus::DRAFT;
 
     public function __construct()

@@ -29,7 +29,7 @@ use function is_string;
 readonly class ApplicationStatusUpdateController
 {
     public function __construct(
-        private ApplicationRepository              $applicationRepository,
+        private ApplicationRepository $applicationRepository,
         private ApplicationStatusTransitionService $applicationStatusTransitionService,
     ) {
     }

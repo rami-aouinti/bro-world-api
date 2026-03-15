@@ -16,8 +16,9 @@ use function str_replace;
 
 readonly class InterviewCalendarService
 {
-    public function __construct(private string $defaultTimezone)
-    {
+    public function __construct(
+        private string $defaultTimezone
+    ) {
     }
 
     public function generateInvitation(Interview $interview, string $organizerEmail, string $attendeeEmail, bool $isUpdate): string
@@ -60,6 +61,6 @@ readonly class InterviewCalendarService
         $sanitized = str_replace(["\r\n", "\r", "\n"], '\\n', $value);
         $sanitized = addcslashes($sanitized, ',;');
 
-        return (string) preg_replace('/\s+/', ' ', $sanitized);
+        return (string)preg_replace('/\s+/', ' ', $sanitized);
     }
 }

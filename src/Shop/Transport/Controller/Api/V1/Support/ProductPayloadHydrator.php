@@ -23,10 +23,7 @@ final readonly class ProductPayloadHydrator
     }
 
     /**
-     * @param Product $product
      * @param array<string,mixed> $payload
-     * @param bool $partial
-     * @return Product
      * @throws ORMException
      * @throws OptimisticLockException
      */

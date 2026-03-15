@@ -50,7 +50,7 @@ final readonly class CreateBlogPostCommandHandler
 
         if (
             $this->postRepository->findOneBy([
-            'slug' => $command->slug,
+                'slug' => $command->slug,
             ]) instanceof BlogPost
         ) {
             throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Slug already exists.');

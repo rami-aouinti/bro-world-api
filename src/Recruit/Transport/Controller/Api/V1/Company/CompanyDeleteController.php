@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Recruit\Transport\Controller\Api\V1\Company;
 
 use App\General\Transport\Rest\Controller;
+use App\General\Transport\Rest\Traits\Methods\DeleteMethod;
 use App\Recruit\Application\Resource\CompanyResource;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,7 +15,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use App\General\Transport\Rest\Traits\Methods\DeleteMethod;
 
 #[AsController]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]

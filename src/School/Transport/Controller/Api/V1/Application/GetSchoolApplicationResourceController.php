@@ -38,7 +38,10 @@ final readonly class GetSchoolApplicationResourceController
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Ressource trouvée.', content: new OA\JsonContent(example: ['id' => '4cfada53-2cf2-49a7-a4fb-4a9682c3a0c0', 'name' => 'Alice Martin'])),
+            new OA\Response(response: 200, description: 'Ressource trouvée.', content: new OA\JsonContent(example: [
+                'id' => '4cfada53-2cf2-49a7-a4fb-4a9682c3a0c0',
+                'name' => 'Alice Martin',
+            ])),
             new OA\Response(response: 403, description: 'Accès refusé.'),
             new OA\Response(response: 404, description: 'Ressource introuvable dans ce scope application.'),
         ],

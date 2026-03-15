@@ -95,7 +95,9 @@ final class RecruitNotificationServiceTest extends TestCase
 
 final class InMemoryCache implements CacheInterface
 {
-    /** @var array<string, mixed> */
+    /**
+     * @var array<string, mixed>
+     */
     private array $values = [];
 
     public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed

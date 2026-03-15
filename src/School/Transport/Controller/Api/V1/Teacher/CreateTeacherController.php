@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\School\Transport\Controller\Api\V1\Teacher;
 
-use App\School\Application\Service\SchoolApplicationScopeResolver;
 use App\School\Application\Service\CreateTeacherService;
+use App\School\Application\Service\SchoolApplicationScopeResolver;
 use App\School\Transport\Controller\Api\V1\Input\CreateTeacherInput;
 use App\School\Transport\Controller\Api\V1\Input\SchoolInputValidator;
 use App\User\Domain\Entity\User;

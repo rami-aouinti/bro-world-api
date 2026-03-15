@@ -19,8 +19,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 readonly class ApplicationDecisionSummaryController
 {
-    public function __construct(private InterviewFeedbackService $feedbackService)
-    {
+    public function __construct(
+        private InterviewFeedbackService $feedbackService
+    ) {
     }
 
     #[Route(path: '/v1/recruit/private/applications/{applicationId}/decision-summary', methods: [Request::METHOD_GET])]

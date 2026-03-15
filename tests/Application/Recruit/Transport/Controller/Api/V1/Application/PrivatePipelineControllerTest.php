@@ -93,7 +93,9 @@ class PrivatePipelineControllerTest extends WebTestCase
         /** @var EntityManagerInterface $entityManager */
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
 
-        $user = $entityManager->getRepository(User::class)->findOneBy(['username' => 'john-root']);
+        $user = $entityManager->getRepository(User::class)->findOneBy([
+            'username' => 'john-root',
+        ]);
         self::assertInstanceOf(User::class, $user);
 
         $application = $entityManager->getRepository(PlatformApplication::class)->findOneBy([
@@ -102,7 +104,9 @@ class PrivatePipelineControllerTest extends WebTestCase
         ]);
         self::assertInstanceOf(PlatformApplication::class, $application);
 
-        $recruit = $entityManager->getRepository(Recruit::class)->findOneBy(['application' => $application]);
+        $recruit = $entityManager->getRepository(Recruit::class)->findOneBy([
+            'application' => $application,
+        ]);
         self::assertInstanceOf(Recruit::class, $recruit);
 
         $tagLabel = 'pipeline-test-tag-' . substr((string)microtime(true), -6);
@@ -113,7 +117,9 @@ class PrivatePipelineControllerTest extends WebTestCase
             ->setUser($user)
             ->setCoverLetter('Manual applicant without resume');
 
-        $resumeApplicant = $entityManager->getRepository(Applicant::class)->findOneBy(['user' => $user]);
+        $resumeApplicant = $entityManager->getRepository(Applicant::class)->findOneBy([
+            'user' => $user,
+        ]);
         self::assertInstanceOf(Applicant::class, $resumeApplicant);
 
         $jobA = (new Job())
@@ -159,7 +165,9 @@ class PrivatePipelineControllerTest extends WebTestCase
         /** @var EntityManagerInterface $entityManager */
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
 
-        $user = $entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
+        $user = $entityManager->getRepository(User::class)->findOneBy([
+            'username' => $username,
+        ]);
         self::assertInstanceOf(User::class, $user);
 
         $application = $entityManager->getRepository(PlatformApplication::class)->findOneBy([

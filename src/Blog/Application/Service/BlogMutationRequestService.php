@@ -15,7 +15,6 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 use function array_filter;
 use function array_map;
-use function is_array;
 use function is_string;
 use function sprintf;
 use function trim;
@@ -28,7 +27,6 @@ final readonly class BlogMutationRequestService
     }
 
     /**
-     * @param Request $request
      * @return array<string, mixed>
      * @throws JsonException
      */

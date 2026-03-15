@@ -19,7 +19,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class GetTaskController
 {
-    public function __construct(private CrmApiNormalizer $normalizer) {}
+    public function __construct(
+        private CrmApiNormalizer $normalizer
+    ) {
+    }
 
     #[Route('/v1/crm/applications/{applicationSlug}/tasks/{task}', methods: [Request::METHOD_GET])]
     public function __invoke(string $applicationSlug, Task $task): JsonResponse

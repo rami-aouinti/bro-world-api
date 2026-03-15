@@ -22,7 +22,8 @@ final readonly class AddSprintAssigneeController
 {
     public function __construct(
         private SprintRepository $sprintRepository
-    ) {}
+    ) {
+    }
 
     /**
      * @throws OptimisticLockException

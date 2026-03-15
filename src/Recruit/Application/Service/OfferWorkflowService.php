@@ -16,8 +16,8 @@ use App\Recruit\Infrastructure\Repository\OfferStatusHistoryRepository;
 use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use ValueError;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use ValueError;
 
 use function is_numeric;
 use function is_string;
@@ -33,7 +33,9 @@ readonly class OfferWorkflowService
     ) {
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     public function create(Application $application, array $payload, User $author): Offer
     {
         if ($application->getStatus() === ApplicationStatus::HIRED || $application->getStatus() === ApplicationStatus::REJECTED) {
@@ -70,7 +72,7 @@ readonly class OfferWorkflowService
 
         $offer = (new Offer())
             ->setApplication($application)
-            ->setSalaryProposed((float) $salary)
+            ->setSalaryProposed((float)$salary)
             ->setStartDate($parsedStartDate)
             ->setContractType($parsedContractType)
             ->setStatus(OfferStatus::DRAFT);

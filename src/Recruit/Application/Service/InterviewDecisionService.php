@@ -77,13 +77,17 @@ readonly class InterviewDecisionService
         ];
     }
 
-    /** @param array<int, int|float> $values */
+    /**
+     * @param array<int, int|float> $values
+     */
     private function mean(array $values): float
     {
         return round(array_sum($values) / count($values), 2);
     }
 
-    /** @param array<int, int|float> $values */
+    /**
+     * @param array<int, int|float> $values
+     */
     private function meanAbsoluteDeviation(array $values): float
     {
         $mean = $this->mean($values);

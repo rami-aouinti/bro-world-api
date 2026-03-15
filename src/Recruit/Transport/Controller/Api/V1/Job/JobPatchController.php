@@ -7,6 +7,7 @@ namespace App\Recruit\Transport\Controller\Api\V1\Job;
 use App\General\Application\DTO\Interfaces\RestDtoInterface;
 use App\General\Application\Exception\ValidatorException;
 use App\General\Transport\Rest\Controller;
+use App\General\Transport\Rest\Traits\Methods\PatchMethod;
 use App\Recruit\Application\DTO\Job\JobPatch;
 use App\Recruit\Application\Resource\JobResource;
 use AutoMapperPlus\AutoMapperInterface;
@@ -19,10 +20,10 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 use function count;
-use App\General\Transport\Rest\Traits\Methods\PatchMethod;
 
 #[AsController]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]

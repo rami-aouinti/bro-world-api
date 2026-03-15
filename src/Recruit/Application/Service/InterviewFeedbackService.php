@@ -32,7 +32,9 @@ readonly class InterviewFeedbackService
     ) {
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     public function upsert(string $interviewId, array $payload, User $loggedInUser): InterviewFeedback
     {
         $interview = $this->interviewRepository->find($interviewId);
@@ -61,7 +63,9 @@ readonly class InterviewFeedbackService
         return $feedback;
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     public function getApplicationSummary(string $applicationId, User $loggedInUser): array
     {
         $application = $this->applicationRepository->find($applicationId);
@@ -107,7 +111,9 @@ readonly class InterviewFeedbackService
         throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Only assigned interviewers or the hiring manager can access this summary.');
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     private function extractScore(array $payload, string $field): int
     {
         if (!is_int($payload[$field] ?? null)) {
@@ -122,7 +128,9 @@ readonly class InterviewFeedbackService
         return $score;
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     private function extractRecommendation(array $payload): InterviewRecommendation
     {
         if (!is_string($payload['recommendation'] ?? null)) {
@@ -137,7 +145,9 @@ readonly class InterviewFeedbackService
         return $recommendation;
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     private function extractComment(array $payload): ?string
     {
         if (!isset($payload['comment'])) {

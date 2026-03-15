@@ -48,7 +48,7 @@ final readonly class AddProjectWikiPageController
         }
 
         try {
-            $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return $this->errorResponseFactory->invalidJson();
         }
@@ -57,8 +57,8 @@ final readonly class AddProjectWikiPageController
             return $this->errorResponseFactory->invalidJson();
         }
 
-        $title = trim((string) ($payload['title'] ?? ''));
-        $content = trim((string) ($payload['content'] ?? ''));
+        $title = trim((string)($payload['title'] ?? ''));
+        $content = trim((string)($payload['content'] ?? ''));
         if ($title === '' || $content === '') {
             return new JsonResponse([
                 'message' => 'Both "title" and "content" are required.',

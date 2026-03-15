@@ -29,9 +29,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 readonly class ApplicationCreateController
 {
     public function __construct(
-        private ApplicationRepository  $applicationRepository,
-        private ApplicantRepository    $applicantRepository,
-        private JobRepository          $jobRepository,
+        private ApplicationRepository $applicationRepository,
+        private ApplicantRepository $applicantRepository,
+        private JobRepository $jobRepository,
         private RecruitResolverService $recruitResolverService,
     ) {
     }

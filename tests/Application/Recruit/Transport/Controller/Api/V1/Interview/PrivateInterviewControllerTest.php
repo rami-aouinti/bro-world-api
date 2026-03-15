@@ -27,7 +27,9 @@ use function is_string;
 
 class PrivateInterviewControllerTest extends WebTestCase
 {
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('POST /v1/recruit/private/applications/{applicationId}/interviews creates interview for owner.')]
     public function testCreateInterview(): void
     {
@@ -54,7 +56,9 @@ class PrivateInterviewControllerTest extends WebTestCase
         self::assertSame($applicationId, $payload['applicationId']);
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('POST /v1/recruit/private/applications/{applicationId}/interviews rejects REJECTED/HIRED applications.')]
     public function testCreateInterviewRejectsClosedApplicationStatus(): void
     {
@@ -72,7 +76,9 @@ class PrivateInterviewControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('PATCH /v1/recruit/private/interviews/{interviewId} updates interview.')]
     public function testPatchInterview(): void
     {
@@ -102,7 +108,9 @@ class PrivateInterviewControllerTest extends WebTestCase
         self::assertSame(90, $payload['durationMinutes']);
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('GET /v1/recruit/private/applications/{applicationId}/interviews lists interviews.')]
     public function testListInterviews(): void
     {
@@ -133,7 +141,9 @@ class PrivateInterviewControllerTest extends WebTestCase
         ], array_keys($first), 'Snapshot mismatch for interview list item response keys.');
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('DELETE /v1/recruit/private/interviews/{interviewId} deletes interview.')]
     public function testDeleteInterview(): void
     {
@@ -145,7 +155,9 @@ class PrivateInterviewControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
     }
 
-    /** @throws Throwable */
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Interview endpoints are forbidden for ROLE_USER.')]
     public function testInterviewListIsForbiddenForRegularUserRole(): void
     {
@@ -166,7 +178,9 @@ class PrivateInterviewControllerTest extends WebTestCase
         /** @var EntityManagerInterface $entityManager */
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
 
-        $user = $entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
+        $user = $entityManager->getRepository(User::class)->findOneBy([
+            'username' => $username,
+        ]);
         self::assertInstanceOf(User::class, $user);
 
         $platformApplication = $entityManager->getRepository(PlatformApplication::class)->findOneBy([
@@ -175,7 +189,9 @@ class PrivateInterviewControllerTest extends WebTestCase
         ]);
         self::assertInstanceOf(PlatformApplication::class, $platformApplication);
 
-        $recruit = $entityManager->getRepository(Recruit::class)->findOneBy(['application' => $platformApplication]);
+        $recruit = $entityManager->getRepository(Recruit::class)->findOneBy([
+            'application' => $platformApplication,
+        ]);
         self::assertInstanceOf(Recruit::class, $recruit);
 
         $job = (new Job())
@@ -185,7 +201,9 @@ class PrivateInterviewControllerTest extends WebTestCase
             ->ensureGeneratedSlug();
         $entityManager->persist($job);
 
-        $applicant = $entityManager->getRepository(Applicant::class)->findOneBy(['user' => $user]);
+        $applicant = $entityManager->getRepository(Applicant::class)->findOneBy([
+            'user' => $user,
+        ]);
         self::assertInstanceOf(Applicant::class, $applicant);
 
         $application = (new Application())
@@ -199,7 +217,9 @@ class PrivateInterviewControllerTest extends WebTestCase
         return [$application->getId()];
     }
 
-    /** @return array{0: string, 1: string} */
+    /**
+     * @return array{0: string, 1: string}
+     */
     private function createDedicatedInterview(string $username): array
     {
         [$applicationId] = $this->createDedicatedApplicationContext($username);
@@ -226,7 +246,9 @@ class PrivateInterviewControllerTest extends WebTestCase
         return [$applicationId, $interview->getId()];
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     private function assertInterviewContract(array $payload): void
     {
         foreach (['id', 'applicationId', 'scheduledAt', 'durationMinutes', 'mode', 'locationOrUrl', 'interviewerIds', 'status', 'notes'] as $key) {
@@ -244,7 +266,9 @@ class PrivateInterviewControllerTest extends WebTestCase
         self::assertTrue($payload['notes'] === null || is_string($payload['notes']));
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     private function assertInterviewListItemContract(array $payload): void
     {
         foreach (['id', 'scheduledAt', 'durationMinutes', 'mode', 'locationOrUrl', 'interviewerIds', 'status', 'notes'] as $key) {
@@ -260,5 +284,4 @@ class PrivateInterviewControllerTest extends WebTestCase
         self::assertTrue(is_string($payload['status']));
         self::assertTrue($payload['notes'] === null || is_string($payload['notes']));
     }
-
 }

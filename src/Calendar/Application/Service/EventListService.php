@@ -24,7 +24,7 @@ use function array_map;
 final readonly class EventListService
 {
     private const int ELASTIC_IDS_LIMIT = 1000;
-    private const string ELASTIC_FALLBACK_COUNT_METRIC = "calendar.elastic_fallback.count";
+    private const string ELASTIC_FALLBACK_COUNT_METRIC = 'calendar.elastic_fallback.count';
 
     public function __construct(
         private EventRepositoryInterface $eventRepository,

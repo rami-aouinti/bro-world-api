@@ -135,7 +135,6 @@ final class BlogReadServiceTest extends TestCase
         self::assertSame('c-root', $normalized['posts'][0]['comments'][0]['id']);
     }
 
-
     public function testPrivateBlogCacheIsRefreshedAfterBlogMutationInvalidation(): void
     {
         $blogRepository = $this->createMock(BlogRepository::class);

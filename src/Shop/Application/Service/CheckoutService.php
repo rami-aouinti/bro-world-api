@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Shop\Application\Service;
 
-use App\Shop\Application\Monitoring\ShopMonitoringService;
 use App\Shop\Application\Message\CheckoutCommand;
+use App\Shop\Application\Monitoring\ShopMonitoringService;
 use App\Shop\Domain\Entity\Cart;
 use App\Shop\Domain\Entity\Order;
 use App\Shop\Domain\Entity\OrderItem;

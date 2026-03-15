@@ -47,7 +47,6 @@ class ResumePayloadService
     }
 
     /**
-     * @param Request $request
      * @return array<string, mixed>
      * @throws JsonException
      */

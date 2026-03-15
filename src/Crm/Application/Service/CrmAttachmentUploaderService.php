@@ -16,8 +16,9 @@ use function is_array;
 
 final readonly class CrmAttachmentUploaderService
 {
-    public function __construct(private MediaUploaderService $mediaUploaderService)
-    {
+    public function __construct(
+        private MediaUploaderService $mediaUploaderService
+    ) {
     }
 
     /**

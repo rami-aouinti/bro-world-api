@@ -157,4 +157,3 @@ class Company implements EntityInterface
         return $this->billings;
     }
 }
-

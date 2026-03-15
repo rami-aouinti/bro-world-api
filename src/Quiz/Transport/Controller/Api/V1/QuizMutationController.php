@@ -29,7 +29,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 use function array_values;
 use function count;
-use function is_array;
 use function is_bool;
 use function is_string;
 
@@ -48,7 +47,9 @@ final readonly class QuizMutationController
     ) {
     }
 
-    /** @throws JsonException */
+    /**
+     * @throws JsonException
+     */
     #[Route('/v1/quiz/applications/{applicationSlug}', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'Create quiz for application', tags: ['Quiz'])]
     public function createQuiz(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
@@ -71,10 +72,14 @@ final readonly class QuizMutationController
         $this->quizRepository->save($quiz);
         $this->quizCacheService->invalidateByApplicationSlug($applicationSlug);
 
-        return new JsonResponse(['id' => $quiz->getId()], JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $quiz->getId(),
+        ], JsonResponse::HTTP_CREATED);
     }
 
-    /** @throws JsonException */
+    /**
+     * @throws JsonException
+     */
     #[Route('/v1/quiz/applications/{applicationSlug}', methods: [Request::METHOD_PUT])]
     #[OA\Put(summary: 'Update quiz metadata', tags: ['Quiz'])]
     public function updateQuiz(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
@@ -91,7 +96,9 @@ final readonly class QuizMutationController
         $this->quizRepository->save($quiz);
         $this->quizCacheService->invalidateByApplicationSlug($applicationSlug);
 
-        return new JsonResponse(['id' => $quiz->getId()]);
+        return new JsonResponse([
+            'id' => $quiz->getId(),
+        ]);
     }
 
     #[Route('/v1/quiz/applications/{applicationSlug}/publish', methods: [Request::METHOD_PATCH])]
@@ -121,7 +128,9 @@ final readonly class QuizMutationController
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
 
-    /** @throws JsonException */
+    /**
+     * @throws JsonException
+     */
     #[Route('/v1/quiz/questions/{questionId}', methods: [Request::METHOD_PUT])]
     #[OA\Put(summary: 'Update quiz question', tags: ['Quiz'])]
     public function updateQuestion(string $questionId, Request $request, User $loggedInUser): JsonResponse
@@ -141,10 +150,14 @@ final readonly class QuizMutationController
         $this->questionRepository->save($question);
         $this->quizCacheService->invalidateByApplicationSlug($quiz->getApplication()->getSlug());
 
-        return new JsonResponse(['id' => $question->getId()]);
+        return new JsonResponse([
+            'id' => $question->getId(),
+        ]);
     }
 
-    /** @throws JsonException */
+    /**
+     * @throws JsonException
+     */
     #[Route('/v1/quiz/questions/{questionId}/reorder', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(summary: 'Reorder quiz question', tags: ['Quiz'])]
     public function reorderQuestion(string $questionId, Request $request, User $loggedInUser): JsonResponse
@@ -159,7 +172,10 @@ final readonly class QuizMutationController
         $this->questionRepository->save($question);
         $this->quizCacheService->invalidateByApplicationSlug($quiz->getApplication()->getSlug());
 
-        return new JsonResponse(['id' => $question->getId(), 'position' => $question->getPosition()]);
+        return new JsonResponse([
+            'id' => $question->getId(),
+            'position' => $question->getPosition(),
+        ]);
     }
 
     #[Route('/v1/quiz/questions/{questionId}', methods: [Request::METHOD_DELETE])]
@@ -176,7 +192,9 @@ final readonly class QuizMutationController
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
 
-    /** @throws JsonException */
+    /**
+     * @throws JsonException
+     */
     #[Route('/v1/quiz/answers/{answerId}', methods: [Request::METHOD_PUT])]
     #[OA\Put(summary: 'Update quiz answer', tags: ['Quiz'])]
     public function updateAnswer(string $answerId, Request $request, User $loggedInUser): JsonResponse
@@ -194,10 +212,14 @@ final readonly class QuizMutationController
         $this->answerRepository->save($answer);
         $this->quizCacheService->invalidateByApplicationSlug($quiz->getApplication()->getSlug());
 
-        return new JsonResponse(['id' => $answer->getId()]);
+        return new JsonResponse([
+            'id' => $answer->getId(),
+        ]);
     }
 
-    /** @throws JsonException */
+    /**
+     * @throws JsonException
+     */
     #[Route('/v1/quiz/answers/{answerId}/reorder', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(summary: 'Reorder quiz answer', tags: ['Quiz'])]
     public function reorderAnswer(string $answerId, Request $request, User $loggedInUser): JsonResponse
@@ -212,7 +234,10 @@ final readonly class QuizMutationController
         $this->answerRepository->save($answer);
         $this->quizCacheService->invalidateByApplicationSlug($quiz->getApplication()->getSlug());
 
-        return new JsonResponse(['id' => $answer->getId(), 'position' => $answer->getPosition()]);
+        return new JsonResponse([
+            'id' => $answer->getId(),
+            'position' => $answer->getPosition(),
+        ]);
     }
 
     #[Route('/v1/quiz/answers/{answerId}', methods: [Request::METHOD_DELETE])]
@@ -235,7 +260,9 @@ final readonly class QuizMutationController
 
     private function findApplication(string $applicationSlug): Application
     {
-        $application = $this->applicationRepository->findOneBy(['slug' => $applicationSlug]);
+        $application = $this->applicationRepository->findOneBy([
+            'slug' => $applicationSlug,
+        ]);
         if (!$application instanceof Application) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Application not found.');
         }
@@ -282,6 +309,9 @@ final readonly class QuizMutationController
         $this->quizRepository->save($quiz);
         $this->quizCacheService->invalidateByApplicationSlug($applicationSlug);
 
-        return new JsonResponse(['id' => $quiz->getId(), 'isPublished' => $quiz->isPublished()]);
+        return new JsonResponse([
+            'id' => $quiz->getId(),
+            'isPublished' => $quiz->isPublished(),
+        ]);
     }
 }

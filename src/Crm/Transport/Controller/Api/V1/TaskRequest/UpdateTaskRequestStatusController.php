@@ -63,7 +63,7 @@ final readonly class UpdateTaskRequestStatusController
         $request->attributes->set('applicationSlug', $applicationSlug);
 
         try {
-            $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return $this->errorResponseFactory->invalidJson();
         }
@@ -78,7 +78,7 @@ final readonly class UpdateTaskRequestStatusController
             return $this->errorResponseFactory->validationFailed($violations);
         }
 
-        $taskRequest->setStatus(TaskRequestStatus::from((string) $input->status));
+        $taskRequest->setStatus(TaskRequestStatus::from((string)$input->status));
         $this->taskRequestRepository->save($taskRequest);
 
         return new JsonResponse([

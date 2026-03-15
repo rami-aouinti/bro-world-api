@@ -42,7 +42,11 @@ final readonly class CreateClassByApplicationController
             ),
         ),
         responses: [
-            new OA\Response(response: 201, description: 'Classe créée.', content: new OA\JsonContent(example: ['id' => '7600e750-f92f-4f9f-883a-26404b538f66', 'schoolId' => 'b7c23d65-11e0-4f26-8ad7-3f58c48f1290', 'applicationSlug' => 'school-crm'])),
+            new OA\Response(response: 201, description: 'Classe créée.', content: new OA\JsonContent(example: [
+                'id' => '7600e750-f92f-4f9f-883a-26404b538f66',
+                'schoolId' => 'b7c23d65-11e0-4f26-8ad7-3f58c48f1290',
+                'applicationSlug' => 'school-crm',
+            ])),
         ],
     )]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]

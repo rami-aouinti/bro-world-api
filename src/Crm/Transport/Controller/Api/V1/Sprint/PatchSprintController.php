@@ -41,7 +41,7 @@ final readonly class PatchSprintController
     {
         try {
             $payload = json_decode(
-                (string) $request->getContent(),
+                (string)$request->getContent(),
                 true,
                 512,
                 JSON_THROW_ON_ERROR
@@ -49,22 +49,46 @@ final readonly class PatchSprintController
         } catch (JsonException) {
             return $this->errorResponseFactory->invalidJson();
         }
-        if (!is_array($payload)) { return $this->errorResponseFactory->invalidJson(); }
+        if (!is_array($payload)) {
+            return $this->errorResponseFactory->invalidJson();
+        }
 
-        if (isset($payload['name'])) { $sprint->setName((string) $payload['name']); }
-        if (array_key_exists('goal', $payload)) { $sprint->setGoal($payload['goal'] !== null ? (string) $payload['goal'] : null); }
-        if (isset($payload['status']) && is_string($payload['status'])) { $status = SprintStatus::tryFrom($payload['status']); if ($status) { $sprint->setStatus($status); } }
-        if (array_key_exists('startDate', $payload)) { $sprint->setStartDate($this->parseDate($payload['startDate'])); }
-        if (array_key_exists('endDate', $payload)) { $sprint->setEndDate($this->parseDate($payload['endDate'])); }
+        if (isset($payload['name'])) {
+            $sprint->setName((string)$payload['name']);
+        }
+        if (array_key_exists('goal', $payload)) {
+            $sprint->setGoal($payload['goal'] !== null ? (string)$payload['goal'] : null);
+        }
+        if (isset($payload['status']) && is_string($payload['status'])) {
+            $status = SprintStatus::tryFrom($payload['status']);
+            if ($status) {
+                $sprint->setStatus($status);
+            }
+        }
+        if (array_key_exists('startDate', $payload)) {
+            $sprint->setStartDate($this->parseDate($payload['startDate']));
+        }
+        if (array_key_exists('endDate', $payload)) {
+            $sprint->setEndDate($this->parseDate($payload['endDate']));
+        }
 
         $this->sprintRepository->save($sprint);
 
-        return new JsonResponse(['id' => $sprint->getId()]);
+        return new JsonResponse([
+            'id' => $sprint->getId(),
+        ]);
     }
 
     private function parseDate(mixed $value): ?DateTimeImmutable
     {
-        if ($value === '' || !is_string($value)) { return null; }
-        try { return new DateTimeImmutable($value); } catch (Throwable) { return null; }
+        if ($value === '' || !is_string($value)) {
+            return null;
+        }
+
+        try {
+            return new DateTimeImmutable($value);
+        } catch (Throwable) {
+            return null;
+        }
     }
 }

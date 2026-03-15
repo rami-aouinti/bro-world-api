@@ -9,10 +9,10 @@ use App\Quiz\Application\Message\CreateQuizQuestionCommand;
 use App\Quiz\Application\MessageHandler\CreateQuizQuestionCommandHandler;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Tests\TestCase\WebTestCase;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 
 final class QuizCacheInvalidationTest extends WebTestCase
@@ -45,8 +45,14 @@ final class QuizCacheInvalidationTest extends WebTestCase
             'category' => 'general',
             'points' => 2,
             'answers' => [
-                ['label' => 'Right answer', 'correct' => true],
-                ['label' => 'Wrong answer', 'correct' => false],
+                [
+                    'label' => 'Right answer',
+                    'correct' => true,
+                ],
+                [
+                    'label' => 'Wrong answer',
+                    'correct' => false,
+                ],
             ],
         ]));
 
@@ -94,8 +100,14 @@ final class QuizCacheInvalidationTest extends WebTestCase
             'category' => 'general',
             'points' => 2,
             'answers' => [
-                ['label' => 'Wrong A', 'correct' => false],
-                ['label' => 'Wrong B', 'correct' => false],
+                [
+                    'label' => 'Wrong A',
+                    'correct' => false,
+                ],
+                [
+                    'label' => 'Wrong B',
+                    'correct' => false,
+                ],
             ],
         ]));
 
@@ -132,8 +144,14 @@ final class QuizCacheInvalidationTest extends WebTestCase
             'category' => 'general',
             'points' => 2,
             'answers' => [
-                ['label' => 'Right A', 'correct' => true],
-                ['label' => 'Right B', 'correct' => true],
+                [
+                    'label' => 'Right A',
+                    'correct' => true,
+                ],
+                [
+                    'label' => 'Right B',
+                    'correct' => true,
+                ],
             ],
         ]));
 
@@ -170,8 +188,14 @@ final class QuizCacheInvalidationTest extends WebTestCase
             'category' => 'general',
             'points' => 2,
             'answers' => [
-                ['label' => '    ', 'correct' => true],
-                ['label' => 'Wrong', 'correct' => false],
+                [
+                    'label' => '    ',
+                    'correct' => true,
+                ],
+                [
+                    'label' => 'Wrong',
+                    'correct' => false,
+                ],
             ],
         ]));
 

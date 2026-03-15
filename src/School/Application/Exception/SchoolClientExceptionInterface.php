@@ -15,4 +15,3 @@ interface SchoolClientExceptionInterface extends ClientErrorInterface
      */
     public function getDetails(): array;
 }
-

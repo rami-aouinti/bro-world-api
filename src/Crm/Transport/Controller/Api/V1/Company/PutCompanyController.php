@@ -41,7 +41,7 @@ final readonly class PutCompanyController
         }
 
         try {
-            $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return $this->errorResponseFactory->invalidJson();
         }
@@ -57,7 +57,7 @@ final readonly class PutCompanyController
         }
 
         $company
-            ->setName((string) $input->name)
+            ->setName((string)$input->name)
             ->setIndustry($input->industry)
             ->setWebsite($input->website)
             ->setContactEmail($input->contactEmail)
@@ -65,6 +65,8 @@ final readonly class PutCompanyController
 
         $this->companyRepository->save($company);
 
-        return new JsonResponse(['id' => $company->getId()]);
+        return new JsonResponse([
+            'id' => $company->getId(),
+        ]);
     }
 }

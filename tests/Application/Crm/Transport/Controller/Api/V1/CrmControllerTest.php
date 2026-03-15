@@ -162,8 +162,6 @@ final class CrmControllerTest extends WebTestCase
         self::assertSame([], $payload['errors'] ?? null);
     }
 
-
-
     #[TestDox('CreateTaskController returns 422 for sprint/project mismatch in same CRM scope.')]
     public function testCreateTaskRejectsSprintProjectMismatch(): void
     {
@@ -190,7 +188,6 @@ final class CrmControllerTest extends WebTestCase
         self::assertSame('Provided "sprintId" does not belong to the provided "projectId".', $payload['message'] ?? null);
         self::assertSame([], $payload['errors'] ?? null);
     }
-
 
     #[TestDox('CreateCompanyByApplicationController publishes EntityCreated with applicationSlug and crmId context.')]
     public function testCreateCompanyPublishesMessageContext(): void
@@ -301,7 +298,7 @@ final class CrmControllerTest extends WebTestCase
         self::assertSame($this->getCrmIdByApplicationSlug(self::PRIMARY_APPLICATION_SLUG), $message->context['crmId'] ?? null);
     }
 
-    #[TestDox('CreateBillingController dispatches CreateBillingCommand and does not flush in controller.')] 
+    #[TestDox('CreateBillingController dispatches CreateBillingCommand and does not flush in controller.')]
     public function testCreateBillingDispatchesCommandWithoutImmediatePersistence(): void
     {
         $companyId = $this->createCompany();
@@ -489,9 +486,6 @@ final class CrmControllerTest extends WebTestCase
 
         return (string)$payload['id'];
     }
-
-
-
 
     private function createTask(string $projectId, string $sprintId): string
     {

@@ -33,7 +33,9 @@ final class EventListingQueryCountTest extends WebTestCase
         $smallDataset = $this->createApplicationCalendarWithEvents($entityManager, 'small', 5);
         $largeDataset = $this->createApplicationCalendarWithEvents($entityManager, 'large', 30);
 
-        $client = static::createClient(['debug' => true], $this->getJsonHeaders());
+        $client = static::createClient([
+            'debug' => true,
+        ], $this->getJsonHeaders());
 
         $smallQueryCount = $this->countSqlQueriesForListingRequest($client, $smallDataset['slug']);
         $largeQueryCount = $this->countSqlQueriesForListingRequest($client, $largeDataset['slug']);
@@ -117,7 +119,7 @@ final class EventListingQueryCountTest extends WebTestCase
 
         $baseDate = new DateTimeImmutable('2031-01-01 08:00:00');
 
-        for ($index = 0; $index < $eventCount; ++$index) {
+        for ($index = 0; $index < $eventCount; $index++) {
             $startAt = $baseDate->modify(sprintf('+%d day', $index));
             self::assertInstanceOf(DateTimeImmutable::class, $startAt);
 

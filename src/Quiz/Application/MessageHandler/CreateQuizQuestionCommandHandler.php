@@ -74,7 +74,7 @@ final readonly class CreateQuizQuestionCommandHandler
 
             $isCorrect = ($answerItem['correct'] ?? false) === true;
             if ($isCorrect) {
-                ++$correctAnswersCount;
+                $correctAnswersCount++;
             }
 
             $normalizedAnswers[] = [

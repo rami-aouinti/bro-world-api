@@ -79,6 +79,8 @@ final readonly class PutContactController
 
         $this->contactRepository->save($contact);
 
-        return new JsonResponse(['id' => $contact->getId()]);
+        return new JsonResponse([
+            'id' => $contact->getId(),
+        ]);
     }
 }

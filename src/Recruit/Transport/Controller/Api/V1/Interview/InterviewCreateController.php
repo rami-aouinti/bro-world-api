@@ -21,8 +21,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(RecruitPermissions::INTERVIEW_MANAGE)]
 readonly class InterviewCreateController
 {
-    public function __construct(private InterviewService $interviewService)
-    {
+    public function __construct(
+        private InterviewService $interviewService
+    ) {
     }
 
     #[Route(path: '/v1/recruit/private/applications/{applicationId}/interviews', methods: [Request::METHOD_POST])]
@@ -58,7 +59,9 @@ readonly class InterviewCreateController
         return new JsonResponse($this->normalize($interview), JsonResponse::HTTP_CREATED);
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     private function normalize(\App\Recruit\Domain\Entity\Interview $interview): array
     {
         return [

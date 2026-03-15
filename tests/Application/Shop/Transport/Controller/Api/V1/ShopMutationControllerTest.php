@@ -81,7 +81,6 @@ final class ShopMutationControllerTest extends WebTestCase
         self::assertSame(2345, $products[0]->getPrice());
     }
 
-
     public function testLegacyCreateProductRouteReturnsDeprecationHeaders(): void
     {
         $client = $this->getTestClient('john-user', 'password-user');

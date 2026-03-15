@@ -25,7 +25,8 @@ final readonly class DetachEmployeeRoleController
         private CrmApplicationScopeResolver $scopeResolver,
         private EmployeeRepository $employeeRepository,
         private EntityManagerInterface $entityManager,
-    ) {}
+    ) {
+    }
 
     #[Route('/v1/crm/applications/{applicationSlug}/employees/{employeeId}/roles', methods: [Request::METHOD_DELETE])]
     public function __invoke(string $applicationSlug, string $employeeId): JsonResponse
@@ -39,6 +40,9 @@ final readonly class DetachEmployeeRoleController
         $employee->setRoleName(null);
         $this->entityManager->flush();
 
-        return new JsonResponse(['id' => $employee->getId(), 'role' => $employee->getRoleName()]);
+        return new JsonResponse([
+            'id' => $employee->getId(),
+            'role' => $employee->getRoleName(),
+        ]);
     }
 }

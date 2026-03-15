@@ -26,8 +26,8 @@ readonly class PublicPlatformListController
 {
     public function __construct(
         private PublicPlatformListReadService $publicPlatformListReadService,
-        private PlatformResource              $platformResource,
-        private ResponseHandler               $responseHandler,
+        private PlatformResource $platformResource,
+        private ResponseHandler $responseHandler,
     ) {
     }
 

@@ -58,7 +58,9 @@ final class CrmEndpointsSmokeTest extends WebTestCase
         $client->request(
             'POST',
             sprintf('%s/v1/crm/applications/%s/%s', self::API_URL_PREFIX, self::APPLICATION_SLUG, $resource),
-            server: ['CONTENT_TYPE' => 'application/json'],
+            server: [
+                'CONTENT_TYPE' => 'application/json',
+            ],
             content: '{"invalid":'
         );
 
@@ -74,7 +76,9 @@ final class CrmEndpointsSmokeTest extends WebTestCase
     {
         $client = $this->getTestClient('john-root', 'password-root');
 
-        $payload = [$titleOrNameField => 'Invalid date payload'];
+        $payload = [
+            $titleOrNameField => 'Invalid date payload',
+        ];
         if ($resource === 'sprints') {
             $companyId = $this->createCompany();
             $payload['projectId'] = $this->createProject($companyId);
@@ -105,7 +109,9 @@ final class CrmEndpointsSmokeTest extends WebTestCase
     public function testCompanyCreateErrorCase(): void
     {
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('POST', sprintf('%s/v1/crm/applications/%s/companies', self::API_URL_PREFIX, self::APPLICATION_SLUG), content: JSON::encode(['name' => '']));
+        $client->request('POST', sprintf('%s/v1/crm/applications/%s/companies', self::API_URL_PREFIX, self::APPLICATION_SLUG), content: JSON::encode([
+            'name' => '',
+        ]));
 
         self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $client->getResponse()->getStatusCode());
     }
@@ -285,8 +291,12 @@ final class CrmEndpointsSmokeTest extends WebTestCase
         $taskRequest = $taskRequestRepository->find($taskRequestId);
         self::assertNotNull($taskRequest);
 
-        $johnRoot = $userRepository->findOneBy(['username' => 'john-root']);
-        $alice = $userRepository->findOneBy(['username' => 'alice']);
+        $johnRoot = $userRepository->findOneBy([
+            'username' => 'john-root',
+        ]);
+        $alice = $userRepository->findOneBy([
+            'username' => 'alice',
+        ]);
         self::assertNotNull($johnRoot);
         self::assertNotNull($alice);
 
@@ -356,7 +366,6 @@ final class CrmEndpointsSmokeTest extends WebTestCase
         self::assertArrayHasKey('message', $payload);
         self::assertSame([], $payload['errors'] ?? null);
     }
-
 
     #[TestDox('Project and sprint list payloads expose "name" instead of legacy "title".')]
     public function testProjectAndSprintListUseNameField(): void

@@ -21,8 +21,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(RecruitPermissions::INTERVIEW_MANAGE)]
 readonly class InterviewPatchController
 {
-    public function __construct(private InterviewService $interviewService)
-    {
+    public function __construct(
+        private InterviewService $interviewService
+    ) {
     }
 
     #[Route(path: '/v1/recruit/private/interviews/{interviewId}', methods: [Request::METHOD_PATCH])]

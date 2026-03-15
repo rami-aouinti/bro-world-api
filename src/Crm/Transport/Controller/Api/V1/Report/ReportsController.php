@@ -24,7 +24,8 @@ final readonly class ReportsController
     public function __construct(
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmReportService $crmReportService,
-    ) {}
+    ) {
+    }
 
     #[Route('/v1/crm/applications/{applicationSlug}/reports', methods: [Request::METHOD_GET])]
     public function __invoke(string $applicationSlug, Request $request): Response

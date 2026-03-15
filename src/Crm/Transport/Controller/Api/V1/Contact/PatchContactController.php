@@ -85,6 +85,8 @@ final readonly class PatchContactController
 
         $this->contactRepository->save($contact);
 
-        return new JsonResponse(['id' => $contact->getId()]);
+        return new JsonResponse([
+            'id' => $contact->getId(),
+        ]);
     }
 }

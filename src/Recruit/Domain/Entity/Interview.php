@@ -48,11 +48,15 @@ class Interview implements EntityInterface
     #[ORM\Column(name: 'location_or_url', type: Types::STRING, length: 255)]
     private string $locationOrUrl;
 
-    /** @var array<int, string> */
+    /**
+     * @var array<int, string>
+     */
     #[ORM\Column(name: 'interviewer_ids', type: Types::JSON)]
     private array $interviewerIds = [];
 
-    #[ORM\Column(name: 'status', type: Types::STRING, length: 25, enumType: InterviewStatus::class, options: ['default' => 'planned'])]
+    #[ORM\Column(name: 'status', type: Types::STRING, length: 25, enumType: InterviewStatus::class, options: [
+        'default' => 'planned',
+    ])]
     private InterviewStatus $status = InterviewStatus::PLANNED;
 
     #[ORM\Column(name: 'notes', type: Types::TEXT, nullable: true)]

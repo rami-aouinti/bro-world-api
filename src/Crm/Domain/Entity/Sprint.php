@@ -6,9 +6,9 @@ namespace App\Crm\Domain\Entity;
 
 use App\Crm\Domain\Enum\SprintStatus;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
-use App\User\Domain\Entity\User;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -186,5 +186,4 @@ class Sprint implements EntityInterface
 
         return $this;
     }
-
 }

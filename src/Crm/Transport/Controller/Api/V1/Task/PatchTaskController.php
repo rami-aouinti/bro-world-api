@@ -40,32 +40,62 @@ final readonly class PatchTaskController
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
 
-        try { $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);} catch (JsonException) { return $this->errorResponseFactory->invalidJson(); }
-        if (!is_array($payload)) { return $this->errorResponseFactory->invalidJson(); }
+        try {
+            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            return $this->errorResponseFactory->invalidJson();
+        }
+        if (!is_array($payload)) {
+            return $this->errorResponseFactory->invalidJson();
+        }
 
-        if (isset($payload['title'])) { $task->setTitle((string) $payload['title']); }
-        if (array_key_exists('description', $payload)) { $task->setDescription($payload['description'] !== null ? (string) $payload['description'] : null); }
-        if (isset($payload['status']) && is_string($payload['status'])) { $status = TaskStatus::tryFrom($payload['status']); if ($status) { $task->setStatus($status); } }
-        if (isset($payload['priority']) && is_string($payload['priority'])) { $priority = TaskPriority::tryFrom($payload['priority']); if ($priority) { $task->setPriority($priority); } }
-        if (array_key_exists('dueAt', $payload)) { $task->setDueAt($this->parseDate($payload['dueAt'])); }
-        if (array_key_exists('estimatedHours', $payload)) { $task->setEstimatedHours(is_numeric($payload['estimatedHours']) ? (float) $payload['estimatedHours'] : null); }
+        if (isset($payload['title'])) {
+            $task->setTitle((string)$payload['title']);
+        }
+        if (array_key_exists('description', $payload)) {
+            $task->setDescription($payload['description'] !== null ? (string)$payload['description'] : null);
+        }
+        if (isset($payload['status']) && is_string($payload['status'])) {
+            $status = TaskStatus::tryFrom($payload['status']);
+            if ($status) {
+                $task->setStatus($status);
+            }
+        }
+        if (isset($payload['priority']) && is_string($payload['priority'])) {
+            $priority = TaskPriority::tryFrom($payload['priority']);
+            if ($priority) {
+                $task->setPriority($priority);
+            }
+        }
+        if (array_key_exists('dueAt', $payload)) {
+            $task->setDueAt($this->parseDate($payload['dueAt']));
+        }
+        if (array_key_exists('estimatedHours', $payload)) {
+            $task->setEstimatedHours(is_numeric($payload['estimatedHours']) ? (float)$payload['estimatedHours'] : null);
+        }
         if (array_key_exists('sprintId', $payload)) {
             if ($payload['sprintId'] === null || $payload['sprintId'] === '') {
                 $task->setSprint(null);
             } elseif (is_string($payload['sprintId'])) {
                 $sprint = $this->sprintRepository->findOneScopedById($payload['sprintId'], $crm->getId());
-                if ($sprint !== null) { $task->setSprint($sprint); }
+                if ($sprint !== null) {
+                    $task->setSprint($sprint);
+                }
             }
         }
 
         $this->taskRepository->save($task);
 
-        return new JsonResponse(['id' => $task->getId()]);
+        return new JsonResponse([
+            'id' => $task->getId(),
+        ]);
     }
 
     private function parseDate(mixed $value): ?DateTimeImmutable
     {
-        if ($value === null || $value === '' || !is_string($value)) { return null; }
+        if ($value === null || $value === '' || !is_string($value)) {
+            return null;
+        }
         $parsed = DateTimeImmutable::createFromFormat(DateTimeInterface::ATOM, $value);
 
         return $parsed === false ? null : $parsed;

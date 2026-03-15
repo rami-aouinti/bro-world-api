@@ -6,9 +6,9 @@ namespace App\Crm\Domain\Entity;
 
 use App\Crm\Domain\Enum\ProjectStatus;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
-use App\User\Domain\Entity\User;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -56,11 +56,15 @@ class Project implements EntityInterface
     #[ORM\Column(name: 'due_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $dueAt = null;
 
-    /** @var list<array<string,mixed>> */
+    /**
+     * @var list<array<string,mixed>>
+     */
     #[ORM\Column(name: 'attachments', type: Types::JSON)]
     private array $attachments = [];
 
-    /** @var list<array<string,mixed>> */
+    /**
+     * @var list<array<string,mixed>>
+     */
     #[ORM\Column(name: 'wiki_pages', type: Types::JSON)]
     private array $wikiPages = [];
 
@@ -177,13 +181,17 @@ class Project implements EntityInterface
         return $this;
     }
 
-    /** @return list<array<string,mixed>> */
+    /**
+     * @return list<array<string,mixed>>
+     */
     public function getAttachments(): array
     {
         return $this->attachments;
     }
 
-    /** @param list<array<string,mixed>> $attachments */
+    /**
+     * @param list<array<string,mixed>> $attachments
+     */
     public function setAttachments(array $attachments): self
     {
         $this->attachments = $attachments;
@@ -191,7 +199,9 @@ class Project implements EntityInterface
         return $this;
     }
 
-    /** @param array<string,mixed> $attachment */
+    /**
+     * @param array<string,mixed> $attachment
+     */
     public function addAttachment(array $attachment): self
     {
         $this->attachments[] = $attachment;
@@ -199,13 +209,17 @@ class Project implements EntityInterface
         return $this;
     }
 
-    /** @return list<array<string,mixed>> */
+    /**
+     * @return list<array<string,mixed>>
+     */
     public function getWikiPages(): array
     {
         return $this->wikiPages;
     }
 
-    /** @param list<array<string,mixed>> $wikiPages */
+    /**
+     * @param list<array<string,mixed>> $wikiPages
+     */
     public function setWikiPages(array $wikiPages): self
     {
         $this->wikiPages = $wikiPages;
@@ -213,7 +227,9 @@ class Project implements EntityInterface
         return $this;
     }
 
-    /** @param array<string,mixed> $wikiPage */
+    /**
+     * @param array<string,mixed> $wikiPage
+     */
     public function addWikiPage(array $wikiPage): self
     {
         $this->wikiPages[] = $wikiPage;
@@ -273,5 +289,4 @@ class Project implements EntityInterface
             'status' => $this->getStatus(),
         ];
     }
-
 }

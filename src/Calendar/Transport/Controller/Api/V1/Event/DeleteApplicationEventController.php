@@ -23,7 +23,7 @@ use Throwable;
 readonly class DeleteApplicationEventController
 {
     public function __construct(
-        public MessageServiceInterface   $messageService,
+        public MessageServiceInterface $messageService,
         public EventMutationInputFactory $eventMutationInputFactory,
     ) {
     }

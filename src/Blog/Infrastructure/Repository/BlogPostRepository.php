@@ -51,7 +51,7 @@ class BlogPostRepository extends BaseRepository
         /** @var list<string> $ids */
         $ids = array_values(
             array_map(
-                static fn (array $row): string => (string) $row['id'],
+                static fn (array $row): string => (string)$row['id'],
                 $idRows
             )
         );
@@ -61,7 +61,7 @@ class BlogPostRepository extends BaseRepository
 
     public function countRootPostsByBlog(Blog $blog): int
     {
-        return (int) $this->createQueryBuilder('post')
+        return (int)$this->createQueryBuilder('post')
             ->select('COUNT(post.id)')
             ->where('post.blog = :blog')
             ->andWhere('post.parentPost IS NULL')
@@ -90,7 +90,7 @@ class BlogPostRepository extends BaseRepository
         /** @var list<string> $ids */
         $ids = array_values(
             array_map(
-                static fn (array $row): string => (string) $row['id'],
+                static fn (array $row): string => (string)$row['id'],
                 $idRows
             )
         );
@@ -100,7 +100,7 @@ class BlogPostRepository extends BaseRepository
 
     public function countPostsByAuthor(User $author): int
     {
-        return (int) $this->createQueryBuilder('post')
+        return (int)$this->createQueryBuilder('post')
             ->select('COUNT(post.id)')
             ->where('post.author = :author')
             ->setParameter('author', $author->getId(), UuidBinaryOrderedTimeType::NAME)
@@ -170,7 +170,7 @@ class BlogPostRepository extends BaseRepository
         $summary = [];
 
         foreach ($rows as $row) {
-            $parentId = (string) $row['parentId'];
+            $parentId = (string)$row['parentId'];
 
             $summary[$parentId] ??= [
                 'count' => 0,
@@ -179,7 +179,7 @@ class BlogPostRepository extends BaseRepository
 
             $summary[$parentId]['count']++;
             $summary[$parentId]['authors'][] = [
-                'id' => (string) $row['authorId'],
+                'id' => (string)$row['authorId'],
                 'username' => $row['username'],
                 'firstName' => $row['firstName'],
                 'lastName' => $row['lastName'],

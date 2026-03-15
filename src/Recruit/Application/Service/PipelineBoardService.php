@@ -100,7 +100,10 @@ readonly class PipelineBoardService
 
         $statusOrder = array_map(static fn (ApplicationStatus $status): string => $status->value, ApplicationStatus::cases());
 
-        $metricsByStatus = array_fill_keys($statusOrder, ['count' => 0, 'avgAgingDays' => 0.0]);
+        $metricsByStatus = array_fill_keys($statusOrder, [
+            'count' => 0,
+            'avgAgingDays' => 0.0,
+        ]);
         foreach ($aggregateRows as $row) {
             $status = (string)($row['status'] ?? '');
             if (!isset($metricsByStatus[$status])) {

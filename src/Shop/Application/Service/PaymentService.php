@@ -19,7 +19,6 @@ use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-use function in_array;
 use function is_string;
 use function trim;
 
@@ -76,11 +75,7 @@ final readonly class PaymentService
     }
 
     /**
-     * @param string $applicationSlug
-     * @param string $orderId
-     * @param string $providerReference
      * @param array<string, mixed> $payload
-     * @return PaymentTransaction
      * @throws ORMException
      * @throws OptimisticLockException
      */
@@ -134,8 +129,6 @@ final readonly class PaymentService
 
     /**
      * @param array<string, mixed> $payload
-     * @param string|null $signature
-     * @return PaymentTransaction|null
      * @throws ORMException
      * @throws OptimisticLockException
      */

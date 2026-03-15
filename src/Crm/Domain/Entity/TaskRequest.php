@@ -53,7 +53,9 @@ class TaskRequest implements EntityInterface
     #[ORM\Column(name: 'resolved_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $resolvedAt = null;
 
-    /** @var list<array<string,mixed>> */
+    /**
+     * @var list<array<string,mixed>>
+     */
     #[ORM\Column(name: 'attachments', type: Types::JSON)]
     private array $attachments = [];
 
@@ -149,13 +151,17 @@ class TaskRequest implements EntityInterface
         return $this;
     }
 
-    /** @return list<array<string,mixed>> */
+    /**
+     * @return list<array<string,mixed>>
+     */
     public function getAttachments(): array
     {
         return $this->attachments;
     }
 
-    /** @param list<array<string,mixed>> $attachments */
+    /**
+     * @param list<array<string,mixed>> $attachments
+     */
     public function setAttachments(array $attachments): self
     {
         $this->attachments = $attachments;
@@ -163,7 +169,9 @@ class TaskRequest implements EntityInterface
         return $this;
     }
 
-    /** @param array<string,mixed> $attachment */
+    /**
+     * @param array<string,mixed> $attachment
+     */
     public function addAttachment(array $attachment): self
     {
         $this->attachments[] = $attachment;

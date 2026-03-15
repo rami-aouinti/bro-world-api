@@ -10,8 +10,9 @@ use Psr\Log\LoggerInterface;
 
 readonly class MicrosoftCalendarProvider implements CalendarProviderInterface
 {
-    public function __construct(private LoggerInterface $logger)
-    {
+    public function __construct(
+        private LoggerInterface $logger
+    ) {
     }
 
     public function syncInterviewInvitation(Interview $interview, string $icsContent, bool $isUpdate): void

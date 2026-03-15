@@ -73,8 +73,14 @@ final readonly class CreateSprintController
                 description: 'Invalid JSON payload or invalid date format.',
                 content: new OA\JsonContent(
                     examples: [
-                        'invalidJson' => new OA\Examples(example: 'invalidJson', summary: 'JSON invalide', value: ['message' => 'Invalid JSON payload.', 'errors' => []]),
-                        'invalidDate' => new OA\Examples(example: 'invalidDate', summary: 'Date invalide', value: ['message' => 'Invalid date format for "endDate".', 'errors' => []]),
+                        'invalidJson' => new OA\Examples(example: 'invalidJson', summary: 'JSON invalide', value: [
+                            'message' => 'Invalid JSON payload.',
+                            'errors' => [],
+                        ]),
+                        'invalidDate' => new OA\Examples(example: 'invalidDate', summary: 'Date invalide', value: [
+                            'message' => 'Invalid date format for "endDate".',
+                            'errors' => [],
+                        ]),
                     ],
                 ),
             ),

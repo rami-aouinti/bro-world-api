@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\School\Transport\Controller\Api\V1\Exam;
 
-use App\School\Application\Service\SchoolApplicationScopeResolver;
 use App\School\Application\Service\CreateExamService;
+use App\School\Application\Service\SchoolApplicationScopeResolver;
 use App\School\Domain\Enum\ExamStatus;
 use App\School\Domain\Enum\ExamType;
 use App\School\Domain\Enum\Term;

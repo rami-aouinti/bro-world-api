@@ -26,7 +26,8 @@ final readonly class AddProjectAssigneeController
         private ProjectRepository $projectRepository,
         private CrmApiErrorResponseFactory $errorResponseFactory,
         private EntityManagerInterface $entityManager
-    ) {}
+    ) {
+    }
 
     /**
      * @throws OptimisticLockException
@@ -36,7 +37,9 @@ final readonly class AddProjectAssigneeController
     public function __invoke(string $applicationSlug, Project $project, string $userId): JsonResponse
     {
         $user = $this->entityManager->getRepository(User::class)->find($userId);
-        if (!$user instanceof User) { return $this->errorResponseFactory->notFoundReference('userId'); }
+        if (!$user instanceof User) {
+            return $this->errorResponseFactory->notFoundReference('userId');
+        }
 
         $project->addAssignee($user);
         $this->projectRepository->save($project);

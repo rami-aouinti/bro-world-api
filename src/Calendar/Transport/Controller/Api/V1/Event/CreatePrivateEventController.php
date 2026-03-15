@@ -52,11 +52,15 @@ use Throwable;
                 new OA\Property(
                     property: 'metadata',
                     type: 'object',
-                    additionalProperties: true)]
-        )),
+                    additionalProperties: true
+                )]
+        )
+    ),
     tags: ['Calendar Event'],
     responses: [new OA\Response(
-        response: 202, description: 'Commande acceptée'),
+        response: 202,
+        description: 'Commande acceptée'
+    ),
         new OA\Response(response: 400, description: 'Payload invalide'),
         new OA\Response(response: 422, description: 'Règle date invalide')]
 )]
@@ -64,7 +68,7 @@ use Throwable;
 readonly class CreatePrivateEventController
 {
     public function __construct(
-        public MessageServiceInterface   $messageService,
+        public MessageServiceInterface $messageService,
         public EventMutationInputFactory $eventMutationInputFactory,
     ) {
     }

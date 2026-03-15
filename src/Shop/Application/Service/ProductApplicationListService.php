@@ -28,9 +28,6 @@ readonly class ProductApplicationListService
     }
 
     /**
-     * @param Request $request
-     * @param string $applicationSlug
-     * @param Shop $shop
      * @return array<string,mixed>
      * @throws \JsonException
      * @throws InvalidArgumentException

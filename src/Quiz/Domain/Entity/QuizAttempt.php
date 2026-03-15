@@ -50,7 +50,9 @@ class QuizAttempt implements EntityInterface
     #[ORM\Column(name: 'correct_answers', type: Types::INTEGER)]
     private int $correctAnswers = 0;
 
-    /** @var Collection<int, QuizAttemptAnswer> */
+    /**
+     * @var Collection<int, QuizAttemptAnswer>
+     */
     #[ORM\OneToMany(targetEntity: QuizAttemptAnswer::class, mappedBy: 'attempt', cascade: ['remove'])]
     private Collection $answers;
 

@@ -38,7 +38,9 @@ class InterviewFeedbackRepository extends BaseRepository
         return $feedback instanceof Entity ? $feedback : null;
     }
 
-    /** @return array<int, Entity> */
+    /**
+     * @return array<int, Entity>
+     */
     public function findByInterview(Interview $interview): array
     {
         return $this->findBy([

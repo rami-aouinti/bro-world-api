@@ -22,7 +22,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class RemoveTaskAssigneeController
 {
-    public function __construct(private TaskRepository $taskRepository) {}
+    public function __construct(
+        private TaskRepository $taskRepository
+    ) {
+    }
 
     /**
      * @throws OptimisticLockException

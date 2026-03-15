@@ -218,7 +218,6 @@ class ApplicationCreateController
         ], JsonResponse::HTTP_CREATED);
     }
 
-
     private function grantCrmOwnerRoleIfNeeded(User $loggedInUser, PlatformKey $platformKey): void
     {
         if ($platformKey !== PlatformKey::CRM) {

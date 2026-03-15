@@ -27,7 +27,6 @@ readonly class ProductListService
     }
 
     /**
-     * @param Request $request
      * @return array<string, mixed>
      * @throws \JsonException
      * @throws InvalidArgumentException

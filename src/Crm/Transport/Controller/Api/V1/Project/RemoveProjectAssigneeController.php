@@ -22,7 +22,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(Role::CRM_ADMIN->value)]
 final readonly class RemoveProjectAssigneeController
 {
-    public function __construct(private ProjectRepository $projectRepository, private CrmApiErrorResponseFactory $errorResponseFactory, private EntityManagerInterface $entityManager) {}
+    public function __construct(
+        private ProjectRepository $projectRepository,
+        private CrmApiErrorResponseFactory $errorResponseFactory,
+        private EntityManagerInterface $entityManager
+    ) {
+    }
 
     /**
      * @throws OptimisticLockException
@@ -32,7 +37,9 @@ final readonly class RemoveProjectAssigneeController
     public function __invoke(string $applicationSlug, Project $project, string $userId): JsonResponse
     {
         $user = $this->entityManager->getRepository(User::class)->find($userId);
-        if (!$user instanceof User) { return $this->errorResponseFactory->notFoundReference('userId'); }
+        if (!$user instanceof User) {
+            return $this->errorResponseFactory->notFoundReference('userId');
+        }
 
         $project->removeAssignee($user);
         $this->projectRepository->save($project);

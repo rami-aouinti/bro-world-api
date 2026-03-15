@@ -22,7 +22,10 @@ class BillingRepository extends BaseRepository
     protected static string $entityName = Entity::class;
     protected static array $searchColumns = ['id'];
 
-    public function __construct(protected ManagerRegistry $managerRegistry) {}
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
+    }
 
     public function findOneScopedById(string $id, string $crmId): ?Entity
     {
@@ -73,19 +76,19 @@ class BillingRepository extends BaseRepository
             ->setMaxResults($limit)
             ->setFirstResult($offset);
 
-        $query = trim((string) ($filters['q'] ?? ''));
+        $query = trim((string)($filters['q'] ?? ''));
         if ($query !== '') {
             $qb->andWhere('LOWER(billing.label) LIKE LOWER(:q)')
                 ->setParameter('q', '%' . $query . '%');
         }
 
-        $status = trim((string) ($filters['status'] ?? ''));
+        $status = trim((string)($filters['status'] ?? ''));
         if ($status !== '') {
             $qb->andWhere('billing.status = :status')
                 ->setParameter('status', $status);
         }
 
-        $companyId = trim((string) ($filters['companyId'] ?? ''));
+        $companyId = trim((string)($filters['companyId'] ?? ''));
         if ($companyId !== '') {
             $qb->andWhere('IDENTITY(billing.company) = :companyId')
                 ->setParameter('companyId', $companyId, UuidBinaryOrderedTimeType::NAME);
@@ -105,28 +108,30 @@ class BillingRepository extends BaseRepository
             ->andWhere('IDENTITY(company.crm) = :crmId')
             ->setParameter('crmId', $crmId, UuidBinaryOrderedTimeType::NAME);
 
-        $query = trim((string) ($filters['q'] ?? ''));
+        $query = trim((string)($filters['q'] ?? ''));
         if ($query !== '') {
             $qb->andWhere('LOWER(billing.label) LIKE LOWER(:q)')
                 ->setParameter('q', '%' . $query . '%');
         }
 
-        $status = trim((string) ($filters['status'] ?? ''));
+        $status = trim((string)($filters['status'] ?? ''));
         if ($status !== '') {
             $qb->andWhere('billing.status = :status')
                 ->setParameter('status', $status);
         }
 
-        $companyId = trim((string) ($filters['companyId'] ?? ''));
+        $companyId = trim((string)($filters['companyId'] ?? ''));
         if ($companyId !== '') {
             $qb->andWhere('IDENTITY(billing.company) = :companyId')
                 ->setParameter('companyId', $companyId, UuidBinaryOrderedTimeType::NAME);
         }
 
-        return (int) $qb->getQuery()->getSingleScalarResult();
+        return (int)$qb->getQuery()->getSingleScalarResult();
     }
 
-    /** @return list<Entity> */
+    /**
+     * @return list<Entity>
+     */
     public function findByCrm(string $crmId, int $limit = 200, int $offset = 0): array
     {
         return $this->findScoped($crmId, $limit, $offset);

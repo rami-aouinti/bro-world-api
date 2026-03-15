@@ -63,7 +63,7 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
 
     public function countByUser(User $user, array $filters = [], ?array $esIds = null): int
     {
-        return (int) $this->applyListFilters($this->getConversationCountQueryBuilder(), $filters, $esIds)
+        return (int)$this->applyListFilters($this->getConversationCountQueryBuilder(), $filters, $esIds)
             ->innerJoin('conversation.participants', 'participant')
             ->andWhere('participant.user = :user')
             ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
@@ -85,7 +85,7 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
 
     public function countByChatId(string $chatId, array $filters = [], ?array $esIds = null): int
     {
-        return (int) $this->applyListFilters($this->getConversationCountQueryBuilder(), $filters, $esIds)
+        return (int)$this->applyListFilters($this->getConversationCountQueryBuilder(), $filters, $esIds)
             ->andWhere('chat.id = :chatId')
             ->setParameter('chatId', $chatId, UuidBinaryOrderedTimeType::NAME)
             ->getQuery()
@@ -106,7 +106,7 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
 
     public function countByChatIdAndUser(string $chatId, User $user, array $filters = [], ?array $esIds = null): int
     {
-        return (int) $this->applyListFilters($this->getConversationCountQueryBuilder(), $filters, $esIds)
+        return (int)$this->applyListFilters($this->getConversationCountQueryBuilder(), $filters, $esIds)
             ->innerJoin('conversation.participants', 'participant')
             ->andWhere('chat.id = :chatId')
             ->andWhere('participant.user = :user')
@@ -162,7 +162,7 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
         $rows = $qb->getQuery()->getArrayResult();
 
         return array_values(array_map(
-            static fn (array $row): string => (string) $row['id'],
+            static fn (array $row): string => (string)$row['id'],
             $rows
         ));
     }
@@ -184,7 +184,7 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
         $rows = $qb->getQuery()->getArrayResult();
 
         return array_values(array_map(
-            static fn (array $row): string => (string) $row['id'],
+            static fn (array $row): string => (string)$row['id'],
             $rows
         ));
     }
@@ -209,7 +209,7 @@ class ConversationRepository extends BaseRepository implements ConversationRepos
         $rows = $qb->getQuery()->getArrayResult();
 
         return array_values(array_map(
-            static fn (array $row): string => (string) $row['id'],
+            static fn (array $row): string => (string)$row['id'],
             $rows
         ));
     }

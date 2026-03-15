@@ -176,7 +176,6 @@ final class ConversationListServiceTest extends TestCase
         self::assertSame(1, $result['items'][0]['unreadMessagesCount']);
     }
 
-
     public function testGetByUserUnreadCountUsesConnectedParticipantReadPointerInMultiParticipantConversation(): void
     {
         $connectedUser = $this->mockUser();

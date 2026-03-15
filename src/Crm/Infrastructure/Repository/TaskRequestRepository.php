@@ -11,7 +11,6 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 
-use function array_filter;
 use function array_map;
 use function array_values;
 use function implode;
@@ -65,14 +64,14 @@ class TaskRequestRepository extends BaseRepository
 
     public function countTaskRequestsByCrm(string $crmId): int
     {
-        return (int) $this->createScopedCountQb($crmId)
+        return (int)$this->createScopedCountQb($crmId)
             ->getQuery()
             ->getSingleScalarResult();
     }
 
     public function countTaskRequestsByCrmAndStatus(string $crmId, string $status): int
     {
-        return (int) $this->createScopedCountQb($crmId)
+        return (int)$this->createScopedCountQb($crmId)
             ->andWhere('taskRequest.status = :status')
             ->setParameter('status', $status)
             ->getQuery()
@@ -103,7 +102,7 @@ class TaskRequestRepository extends BaseRepository
         $idRows = $idsQb->getQuery()->getArrayResult();
 
         $taskRequestIds = array_values(array_map(
-            static fn (array $row): string => (string) $row['id'],
+            static fn (array $row): string => (string)$row['id'],
             $idRows
         ));
 
@@ -135,7 +134,7 @@ class TaskRequestRepository extends BaseRepository
 
         $assigneesByTaskRequest = [];
         foreach ($assigneeRows as $row) {
-            $taskRequestId = (string) ($row['taskRequestId'] ?? '');
+            $taskRequestId = (string)($row['taskRequestId'] ?? '');
             if ($taskRequestId === '') {
                 continue;
             }
@@ -151,7 +150,7 @@ class TaskRequestRepository extends BaseRepository
 
         $itemsById = [];
         foreach ($items as $item) {
-            $id = (string) ($item['id'] ?? '');
+            $id = (string)($item['id'] ?? '');
             if ($id === '') {
                 continue;
             }
@@ -179,7 +178,7 @@ class TaskRequestRepository extends BaseRepository
 
         $this->applyProjectionFilters($qb, $filters);
 
-        return (int) $qb->getQuery()->getSingleScalarResult();
+        return (int)$qb->getQuery()->getSingleScalarResult();
     }
 
     private function createScopedBaseQb(string $crmId): QueryBuilder
@@ -208,13 +207,13 @@ class TaskRequestRepository extends BaseRepository
      */
     private function applyProjectionFilters(QueryBuilder $qb, array $filters): void
     {
-        $query = trim((string) ($filters['q'] ?? ''));
+        $query = trim((string)($filters['q'] ?? ''));
         if ($query !== '') {
             $qb->andWhere('LOWER(taskRequest.title) LIKE LOWER(:q)')
                 ->setParameter('q', '%' . $query . '%');
         }
 
-        $status = trim((string) ($filters['status'] ?? ''));
+        $status = trim((string)($filters['status'] ?? ''));
         if ($status !== '') {
             $qb->andWhere('taskRequest.status = :status')
                 ->setParameter('status', $status);
@@ -236,6 +235,7 @@ class TaskRequestRepository extends BaseRepository
 
         if ($ids === []) {
             $qb->andWhere('1 = 0');
+
             return;
         }
 

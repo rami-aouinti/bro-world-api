@@ -41,7 +41,23 @@ final readonly class ListClassesByApplicationController
             new OA\Parameter(name: 'q', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filtre partiel sur le nom de classe.'),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Liste des classes.', content: new OA\JsonContent(example: ['items' => [['id' => '7600e750-f92f-4f9f-883a-26404b538f66', 'name' => 'Terminale S']], 'meta' => ['pagination' => ['page' => 1, 'limit' => 20, 'totalItems' => 1, 'totalPages' => 1], 'filters' => ['q' => 'term']]])),
+            new OA\Response(response: 200, description: 'Liste des classes.', content: new OA\JsonContent(example: [
+                'items' => [[
+                    'id' => '7600e750-f92f-4f9f-883a-26404b538f66',
+                    'name' => 'Terminale S',
+                ]],
+                'meta' => [
+                    'pagination' => [
+                        'page' => 1,
+                        'limit' => 20,
+                        'totalItems' => 1,
+                        'totalPages' => 1,
+                    ],
+                    'filters' => [
+                        'q' => 'term',
+                    ],
+                ],
+            ])),
             new OA\Response(response: 403, description: 'Accès refusé.'),
             new OA\Response(response: 404, description: 'Application introuvable.'),
             new OA\Response(response: 422, description: 'Pagination ou filtres invalides.'),

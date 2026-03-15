@@ -41,7 +41,9 @@ readonly class InterviewService
     ) {
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     public function create(string $applicationId, array $payload, User $loggedInUser): Interview
     {
         $application = $this->getOwnedApplication($applicationId, $loggedInUser);
@@ -64,7 +66,9 @@ readonly class InterviewService
         return $interview;
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     public function update(string $interviewId, array $payload, User $loggedInUser): Interview
     {
         $interview = $this->interviewRepository->find($interviewId);
@@ -130,7 +134,9 @@ readonly class InterviewService
         $this->interviewRepository->remove($interview);
     }
 
-    /** @return array<int, Interview> */
+    /**
+     * @return array<int, Interview>
+     */
     public function listByApplication(string $applicationId, User $loggedInUser): array
     {
         $application = $this->getOwnedApplication($applicationId, $loggedInUser);
@@ -164,7 +170,9 @@ readonly class InterviewService
         }
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     private function extractScheduledAt(array $payload): DateTimeImmutable
     {
         if (!is_string($payload['scheduledAt'] ?? null)) {
@@ -184,7 +192,9 @@ readonly class InterviewService
         return $scheduledAt;
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     private function extractDuration(array $payload): int
     {
         if (!is_int($payload['durationMinutes'] ?? null)) {
@@ -199,7 +209,9 @@ readonly class InterviewService
         return $duration;
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     private function extractMode(array $payload): InterviewMode
     {
         if (!is_string($payload['mode'] ?? null)) {
@@ -214,7 +226,9 @@ readonly class InterviewService
         return $mode;
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     private function extractLocationOrUrl(array $payload): string
     {
         if (!is_string($payload['locationOrUrl'] ?? null) || trim($payload['locationOrUrl']) === '') {
@@ -224,7 +238,9 @@ readonly class InterviewService
         return trim($payload['locationOrUrl']);
     }
 
-    /** @param array<string,mixed> $payload @return array<int,string> */
+    /**
+     * @param array<string,mixed> $payload @return array<int,string>
+     */
     private function extractInterviewerIds(array $payload): array
     {
         if (!is_array($payload['interviewerIds'] ?? null)) {
@@ -236,7 +252,9 @@ readonly class InterviewService
         return $interviewerIds;
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     private function extractStatus(array $payload, bool $allowDoneAndCanceled): InterviewStatus
     {
         if (!is_string($payload['status'] ?? null)) {
@@ -255,7 +273,9 @@ readonly class InterviewService
         return $status;
     }
 
-    /** @param array<string,mixed> $payload */
+    /**
+     * @param array<string,mixed> $payload
+     */
     private function extractNotes(array $payload): ?string
     {
         if (!isset($payload['notes'])) {

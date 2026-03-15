@@ -47,7 +47,7 @@ final readonly class PutBillingController
         }
 
         try {
-            $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return $this->errorResponseFactory->invalidJson();
         }
@@ -62,7 +62,7 @@ final readonly class PutBillingController
             return $this->errorResponseFactory->validationFailed($violations);
         }
 
-        $companyId = (string) ($input->companyId ?? '');
+        $companyId = (string)($input->companyId ?? '');
         if ($companyId === '') {
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'companyId is required.');
         }
@@ -74,11 +74,11 @@ final readonly class PutBillingController
 
         $entity
             ->setCompany($company)
-            ->setLabel((string) $input->label)
-            ->setAmount((float) $input->amount)
+            ->setLabel((string)$input->label)
+            ->setAmount((float)$input->amount)
             ->setCurrency($input->currency ?: 'EUR')
             ->setStatus($input->status ?: 'pending')
-            ->setDueAt(($input->dueAt ?? '') !== '' ? new DateTimeImmutable((string) $input->dueAt) : null);
+            ->setDueAt(($input->dueAt ?? '') !== '' ? new DateTimeImmutable((string)$input->dueAt) : null);
 
         $this->billingRepository->save($entity);
 

@@ -64,7 +64,9 @@ class Task implements EntityInterface
     #[ORM\Column(name: 'estimated_hours', type: Types::FLOAT, nullable: true)]
     private ?float $estimatedHours = null;
 
-    /** @var list<array<string,mixed>> */
+    /**
+     * @var list<array<string,mixed>>
+     */
     #[ORM\Column(name: 'attachments', type: Types::JSON)]
     private array $attachments = [];
 
@@ -191,13 +193,17 @@ class Task implements EntityInterface
         return $this;
     }
 
-    /** @return list<array<string,mixed>> */
+    /**
+     * @return list<array<string,mixed>>
+     */
     public function getAttachments(): array
     {
         return $this->attachments;
     }
 
-    /** @param list<array<string,mixed>> $attachments */
+    /**
+     * @param list<array<string,mixed>> $attachments
+     */
     public function setAttachments(array $attachments): self
     {
         $this->attachments = $attachments;
@@ -205,7 +211,9 @@ class Task implements EntityInterface
         return $this;
     }
 
-    /** @param array<string,mixed> $attachment */
+    /**
+     * @param array<string,mixed> $attachment
+     */
     public function addAttachment(array $attachment): self
     {
         $this->attachments[] = $attachment;

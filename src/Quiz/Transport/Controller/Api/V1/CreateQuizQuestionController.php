@@ -6,9 +6,9 @@ namespace App\Quiz\Transport\Controller\Api\V1;
 
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Infrastructure\Repository\ApplicationRepository;
+use App\Quiz\Application\Message\CreateQuizQuestionCommand;
 use App\Quiz\Application\Service\QuizEditorAccessService;
 use App\Quiz\Infrastructure\Repository\QuizRepository;
-use App\Quiz\Application\Message\CreateQuizQuestionCommand;
 use App\User\Domain\Entity\User;
 use JsonException;
 use OpenApi\Attributes as OA;
@@ -36,14 +36,20 @@ final class CreateQuizQuestionController
     {
         $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
-        $application = $applicationRepository->findOneBy(['slug' => $applicationSlug]);
+        $application = $applicationRepository->findOneBy([
+            'slug' => $applicationSlug,
+        ]);
         if (!$application instanceof Application) {
-            return new JsonResponse(['message' => 'Application not found.'], JsonResponse::HTTP_NOT_FOUND);
+            return new JsonResponse([
+                'message' => 'Application not found.',
+            ], JsonResponse::HTTP_NOT_FOUND);
         }
 
         $quiz = $quizRepository->findOneByApplication($application);
         if ($quiz === null) {
-            return new JsonResponse(['message' => 'Quiz not found for application.'], JsonResponse::HTTP_NOT_FOUND);
+            return new JsonResponse([
+                'message' => 'Quiz not found for application.',
+            ], JsonResponse::HTTP_NOT_FOUND);
         }
 
         $accessService->assertCanEdit($quiz, $loggedInUser);

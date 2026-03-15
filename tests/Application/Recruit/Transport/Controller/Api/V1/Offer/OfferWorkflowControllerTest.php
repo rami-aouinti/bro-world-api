@@ -31,20 +31,20 @@ class OfferWorkflowControllerTest extends WebTestCase
             'contractType' => ContractType::CDI->value,
             'comment' => 'Création offre',
         ]));
-        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode(), (string) $client->getResponse());
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode(), (string)$client->getResponse());
 
         /** @var array<string,mixed> $created */
-        $created = JSON::decode((string) $client->getResponse()->getContent());
+        $created = JSON::decode((string)$client->getResponse()->getContent());
 
         $client->request('POST', $baseUrl . '/private/offers/' . $created['id'] . '/send', content: JSON::encode([
             'comment' => 'Envoi candidat',
         ]));
-        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode(), (string) $client->getResponse());
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode(), (string)$client->getResponse());
 
         $client->request('POST', $baseUrl . '/private/offers/' . $created['id'] . '/accept', content: JSON::encode([
             'comment' => 'Acceptée',
         ]));
-        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode(), (string) $client->getResponse());
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode(), (string)$client->getResponse());
 
         self::bootKernel();
         /** @var EntityManagerInterface $entityManager */
@@ -55,7 +55,11 @@ class OfferWorkflowControllerTest extends WebTestCase
         self::assertSame(OfferStatus::ACCEPTED, $offer->getStatus());
         self::assertSame(ApplicationStatus::HIRED, $offer->getApplication()->getStatus());
 
-        $history = $entityManager->getRepository(OfferStatusHistory::class)->findBy(['offer' => $offer], ['createdAt' => 'ASC']);
+        $history = $entityManager->getRepository(OfferStatusHistory::class)->findBy([
+            'offer' => $offer,
+        ], [
+            'createdAt' => 'ASC',
+        ]);
         self::assertCount(3, $history);
         self::assertSame('CREATED', $history[0]->getAction());
         self::assertSame('SENT', $history[1]->getAction());
@@ -76,7 +80,7 @@ class OfferWorkflowControllerTest extends WebTestCase
         ]));
         self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
         /** @var array<string,mixed> $created */
-        $created = JSON::decode((string) $client->getResponse()->getContent());
+        $created = JSON::decode((string)$client->getResponse()->getContent());
 
         $client->request('POST', $baseUrl . '/private/offers/' . $created['id'] . '/send');
         self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
@@ -108,7 +112,7 @@ class OfferWorkflowControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
 
         /** @var array<string,mixed> $created */
-        $created = JSON::decode((string) $client->getResponse()->getContent());
+        $created = JSON::decode((string)$client->getResponse()->getContent());
 
         $client->request('POST', $baseUrl . '/private/offers/' . $created['id'] . '/withdraw', content: JSON::encode([
             'comment' => 'Retrait',
@@ -122,7 +126,11 @@ class OfferWorkflowControllerTest extends WebTestCase
         self::assertInstanceOf(Offer::class, $offer);
         self::assertSame(OfferStatus::WITHDRAWN, $offer->getStatus());
 
-        $history = $entityManager->getRepository(OfferStatusHistory::class)->findBy(['offer' => $offer], ['createdAt' => 'DESC']);
+        $history = $entityManager->getRepository(OfferStatusHistory::class)->findBy([
+            'offer' => $offer,
+        ], [
+            'createdAt' => 'DESC',
+        ]);
         self::assertNotEmpty($history);
         self::assertSame('WITHDRAWN', $history[0]->getAction());
     }

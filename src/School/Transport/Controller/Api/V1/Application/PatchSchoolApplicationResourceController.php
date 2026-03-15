@@ -45,11 +45,17 @@ final readonly class PatchSchoolApplicationResourceController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                example: ['name' => 'Terminale S1', 'status' => 'PUBLISHED'],
+                example: [
+                    'name' => 'Terminale S1',
+                    'status' => 'PUBLISHED',
+                ],
             ),
         ),
         responses: [
-            new OA\Response(response: 200, description: 'Ressource mise à jour.', content: new OA\JsonContent(example: ['id' => '7600e750-f92f-4f9f-883a-26404b538f66', 'name' => 'Terminale S1'])),
+            new OA\Response(response: 200, description: 'Ressource mise à jour.', content: new OA\JsonContent(example: [
+                'id' => '7600e750-f92f-4f9f-883a-26404b538f66',
+                'name' => 'Terminale S1',
+            ])),
             new OA\Response(response: 403, description: 'Accès refusé.'),
             new OA\Response(response: 404, description: 'Ressource introuvable dans ce scope application.'),
             new OA\Response(response: 422, description: 'Payload invalide.'),

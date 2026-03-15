@@ -8,7 +8,6 @@ use App\Crm\Domain\Entity\Task;
 use App\Crm\Domain\Entity\TaskRequest;
 use App\User\Domain\Entity\User;
 use DateTimeInterface;
-use function Psl\Type\bool;
 
 final class CrmApiNormalizer
 {

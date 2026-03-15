@@ -32,7 +32,8 @@ final readonly class CreateContactController
         private CrmApiErrorResponseFactory $errorResponseFactory,
         private ValidatorInterface $validator,
         private MessageBusInterface $messageBus,
-    ) {}
+    ) {
+    }
 
     #[Route('/v1/crm/applications/{applicationSlug}/contacts', methods: [Request::METHOD_POST])]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
@@ -86,6 +87,8 @@ final readonly class CreateContactController
             applicationSlug: $applicationSlug,
         ));
 
-        return new JsonResponse(['id' => $contact->getId()], JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $contact->getId(),
+        ], JsonResponse::HTTP_CREATED);
     }
 }

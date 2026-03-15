@@ -49,8 +49,14 @@ final class QuizManagementControllerTest extends WebTestCase
             'category' => 'backend',
             'points' => 4,
             'answers' => [
-                ['label' => 'Good', 'correct' => true],
-                ['label' => 'Bad', 'correct' => false],
+                [
+                    'label' => 'Good',
+                    'correct' => true,
+                ],
+                [
+                    'label' => 'Bad',
+                    'correct' => false,
+                ],
             ],
         ]));
         self::assertSame(Response::HTTP_ACCEPTED, $ownerClient->getResponse()->getStatusCode());
@@ -59,9 +65,17 @@ final class QuizManagementControllerTest extends WebTestCase
         $quiz = $entityManager->getRepository(Quiz::class)->find($quizId);
         self::assertInstanceOf(Quiz::class, $quiz);
 
-        $question = $entityManager->getRepository(QuizQuestion::class)->findOneBy(['quiz' => $quiz], ['createdAt' => 'DESC']);
+        $question = $entityManager->getRepository(QuizQuestion::class)->findOneBy([
+            'quiz' => $quiz,
+        ], [
+            'createdAt' => 'DESC',
+        ]);
         self::assertInstanceOf(QuizQuestion::class, $question);
-        $answer = $entityManager->getRepository(QuizAnswer::class)->findOneBy(['question' => $question], ['position' => 'ASC']);
+        $answer = $entityManager->getRepository(QuizAnswer::class)->findOneBy([
+            'question' => $question,
+        ], [
+            'position' => 'ASC',
+        ]);
         self::assertInstanceOf(QuizAnswer::class, $answer);
 
         $ownerClient->request('PUT', self::API_URL_PREFIX . '/v1/quiz/questions/' . $question->getId(), content: JSON::encode([
@@ -129,7 +143,9 @@ final class QuizManagementControllerTest extends WebTestCase
     {
         self::bootKernel();
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        $quiz = $entityManager->getRepository(Quiz::class)->findOneBy(['isPublished' => true]);
+        $quiz = $entityManager->getRepository(Quiz::class)->findOneBy([
+            'isPublished' => true,
+        ]);
         self::assertInstanceOf(Quiz::class, $quiz);
 
         $userClient = $this->getTestClient('john-user', 'password-user');
@@ -162,5 +178,4 @@ final class QuizManagementControllerTest extends WebTestCase
 
         return $application;
     }
-
 }

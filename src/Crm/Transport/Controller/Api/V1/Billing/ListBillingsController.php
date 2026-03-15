@@ -18,8 +18,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class ListBillingsController
 {
-    public function __construct(private BillingReadService $billingReadService)
-    {
+    public function __construct(
+        private BillingReadService $billingReadService
+    ) {
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/billings', methods: [Request::METHOD_GET])]

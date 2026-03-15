@@ -50,19 +50,21 @@ readonly class TaskListService
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
 
         $filters = [
-            'q' => trim((string) $request->query->get('q', '')),
-            'title' => trim((string) $request->query->get('title', '')),
-            'status' => trim((string) $request->query->get('status', '')),
-            'priority' => trim((string) $request->query->get('priority', '')),
+            'q' => trim((string)$request->query->get('q', '')),
+            'title' => trim((string)$request->query->get('title', '')),
+            'status' => trim((string)$request->query->get('status', '')),
+            'priority' => trim((string)$request->query->get('priority', '')),
         ];
 
-        $applicationSlug = (string) $request->attributes->get('applicationSlug', '');
+        $applicationSlug = (string)$request->attributes->get('applicationSlug', '');
         $crm = $this->applicationScopeResolver->resolveOrFail($applicationSlug);
 
         $cacheKey = $this->cacheKeyConventionService->buildCrmTaskListKey(
             $page,
             $limit,
-            array_merge($filters, ['applicationSlug' => $applicationSlug])
+            array_merge($filters, [
+                'applicationSlug' => $applicationSlug,
+            ])
         );
 
         /** @var array<string,mixed> $result */
@@ -112,7 +114,7 @@ readonly class TaskListService
                     'page' => $page,
                     'limit' => $limit,
                     'totalItems' => $totalItems,
-                    'totalPages' => $totalItems > 0 ? (int) ceil($totalItems / $limit) : 0,
+                    'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
                 ],
                 'meta' => [
                     'module' => 'crm',
@@ -157,7 +159,7 @@ readonly class TaskListService
         $rows = $qb->getQuery()->getArrayResult();
 
         return array_values(array_map(
-            static fn (array $row): string => (string) $row['id'],
+            static fn (array $row): string => (string)$row['id'],
             $rows
         ));
     }
@@ -200,7 +202,7 @@ readonly class TaskListService
         $this->applyStandardFilters($qb, $filters);
         $this->applyBinaryUuidIdsFilter($qb, 'task.id', $esIds, 'count_task_id_');
 
-        return (int) $qb->getQuery()->getSingleScalarResult();
+        return (int)$qb->getQuery()->getSingleScalarResult();
     }
 
     /**
@@ -239,6 +241,7 @@ readonly class TaskListService
 
         if ($ids === []) {
             $qb->andWhere('1 = 0');
+
             return;
         }
 

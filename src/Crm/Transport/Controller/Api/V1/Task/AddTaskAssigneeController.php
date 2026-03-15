@@ -22,8 +22,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(Role::CRM_MANAGER->value)]
 final readonly class AddTaskAssigneeController
 {
-    public function __construct(private TaskRepository $taskRepository,
-    ) {}
+    public function __construct(
+        private TaskRepository $taskRepository,
+    ) {
+    }
 
     /**
      * @throws OptimisticLockException

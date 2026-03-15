@@ -49,10 +49,10 @@ use function trim;
 readonly class JobPublicListService
 {
     public function __construct(
-        private EntityManagerInterface        $entityManager,
-        private CacheInterface                $cache,
+        private EntityManagerInterface $entityManager,
+        private CacheInterface $cache,
         private ElasticsearchServiceInterface $elasticsearchService,
-        private CacheKeyConventionService     $cacheKeyConventionService,
+        private CacheKeyConventionService $cacheKeyConventionService,
     ) {
     }
 

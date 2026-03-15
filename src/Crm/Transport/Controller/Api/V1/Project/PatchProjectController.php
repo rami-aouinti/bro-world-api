@@ -40,7 +40,7 @@ final readonly class PatchProjectController
     public function __invoke(string $applicationSlug, Project $project, Request $request): JsonResponse
     {
         try {
-            $payload = json_decode((string) $request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return $this->errorResponseFactory->invalidJson();
         }
@@ -50,13 +50,13 @@ final readonly class PatchProjectController
         }
 
         if (isset($payload['name'])) {
-            $project->setName((string) $payload['name']);
+            $project->setName((string)$payload['name']);
         }
         if (array_key_exists('code', $payload)) {
-            $project->setCode($payload['code'] !== null ? (string) $payload['code'] : null);
+            $project->setCode($payload['code'] !== null ? (string)$payload['code'] : null);
         }
         if (array_key_exists('description', $payload)) {
-            $project->setDescription($payload['description'] !== null ? (string) $payload['description'] : null);
+            $project->setDescription($payload['description'] !== null ? (string)$payload['description'] : null);
         }
         if (isset($payload['status']) && is_string($payload['status'])) {
             $status = ProjectStatus::tryFrom($payload['status']);
@@ -73,7 +73,9 @@ final readonly class PatchProjectController
 
         $this->projectRepository->save($project);
 
-        return new JsonResponse(['id' => $project->getId()]);
+        return new JsonResponse([
+            'id' => $project->getId(),
+        ]);
     }
 
     private function parseDate(mixed $value): ?DateTimeImmutable

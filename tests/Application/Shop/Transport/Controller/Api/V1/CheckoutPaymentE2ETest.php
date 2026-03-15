@@ -180,7 +180,9 @@ final class CheckoutPaymentE2ETest extends WebTestCase
             'providerReference' => $intentPayload['providerReference'],
             'status' => PaymentStatus::SUCCEEDED->value,
             'eventId' => 'evt-e2e-valid-' . $intentPayload['id'],
-            'payload' => ['source' => 'e2e-test'],
+            'payload' => [
+                'source' => 'e2e-test',
+            ],
         ];
 
         $signature = $this->buildWebhookSignature($webhookPayload);
@@ -259,7 +261,9 @@ final class CheckoutPaymentE2ETest extends WebTestCase
             'providerReference' => $intentPayload['providerReference'],
             'status' => PaymentStatus::FAILED->value,
             'eventId' => 'evt-e2e-duplicate-' . $intentPayload['id'],
-            'payload' => ['source' => 'e2e-duplicate'],
+            'payload' => [
+                'source' => 'e2e-duplicate',
+            ],
         ];
 
         $signature = $this->buildWebhookSignature($webhookPayload);
@@ -326,7 +330,11 @@ final class CheckoutPaymentE2ETest extends WebTestCase
         $shop = $shopRepository->findOneByApplicationSlug($applicationSlug);
         self::assertNotNull($shop);
 
-        $product = $productRepository->findBy(['shop' => $shop], ['createdAt' => 'ASC'])[0] ?? null;
+        $product = $productRepository->findBy([
+            'shop' => $shop,
+        ], [
+            'createdAt' => 'ASC',
+        ])[0] ?? null;
         self::assertNotNull($product);
 
         return [$shop->getId(), $product->getId()];
@@ -394,7 +402,9 @@ final class CheckoutPaymentE2ETest extends WebTestCase
         $order = $orderRepository->findBy([
             'shop' => $shopId,
             'user' => $user,
-        ], ['createdAt' => 'DESC'])[0] ?? null;
+        ], [
+            'createdAt' => 'DESC',
+        ])[0] ?? null;
 
         self::assertInstanceOf(Order::class, $order);
 

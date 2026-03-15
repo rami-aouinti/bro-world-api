@@ -22,15 +22,12 @@ readonly class MediaUploaderService
 {
     public function __construct(
         private Filesystem $filesystem,
-        private string     $projectDir,
+        private string $projectDir,
     ) {
     }
 
     /**
-     * @param Request $request
      * @param list<UploadedFile> $files
-     * @param string $relativeDirectory
-     * @param MediaUploadValidationPolicy $validationPolicy
      * @return list<array{url: string, originalName: string, mimeType: string, size: int, extension: string}>
      * @throws RandomException
      */

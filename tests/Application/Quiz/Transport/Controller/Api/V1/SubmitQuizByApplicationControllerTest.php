@@ -111,7 +111,7 @@ final class SubmitQuizByApplicationControllerTest extends WebTestCase
                 $hasForcedWrongAnswer = true;
             } else {
                 $expectedEarnedPoints += $question->getPoints();
-                ++$expectedCorrectAnswers;
+                $expectedCorrectAnswers++;
             }
 
             $answersPayload[] = [

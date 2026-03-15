@@ -26,6 +26,7 @@ final readonly class GetSprintController
         foreach ($assignee as $key => $value) {
             $assignee[$key] = $value->toArray();
         }
+
         return new JsonResponse([
             'id' => $sprint->getId(),
             'project' => $sprint->getProject()->toArray(),

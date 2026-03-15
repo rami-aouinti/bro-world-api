@@ -20,8 +20,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 readonly class InterviewFeedbackUpsertController
 {
-    public function __construct(private InterviewFeedbackService $feedbackService)
-    {
+    public function __construct(
+        private InterviewFeedbackService $feedbackService
+    ) {
     }
 
     #[Route(path: '/v1/recruit/private/interviews/{interviewId}/feedback', methods: [Request::METHOD_POST, Request::METHOD_PUT])]
@@ -34,7 +35,9 @@ readonly class InterviewFeedbackUpsertController
         return new JsonResponse($this->normalize($feedback));
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     private function normalize(InterviewFeedback $feedback): array
     {
         return [

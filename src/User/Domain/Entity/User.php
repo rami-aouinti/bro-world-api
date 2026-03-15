@@ -428,7 +428,8 @@ class User implements EntityInterface, UserInterface, UserGroupAwareInterface
         $this->plainPassword = '';
     }
 
-    public function toArray(): array {
+    public function toArray(): array
+    {
         return [
             'username' => $this->getUsername(),
             'firstName' => $this->getFirstName(),
@@ -436,6 +437,4 @@ class User implements EntityInterface, UserInterface, UserGroupAwareInterface
             'photo' => $this->getPhoto(),
         ];
     }
-
-
 }

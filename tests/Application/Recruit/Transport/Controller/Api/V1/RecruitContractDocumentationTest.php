@@ -25,7 +25,7 @@ class RecruitContractDocumentationTest extends WebTestCase
         self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         /** @var array<string,mixed> $payload */
-        $payload = json_decode((string) $client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $payload = json_decode((string)$client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
         /** @var array<string,mixed> $paths */
         $paths = $payload['paths'] ?? [];
 

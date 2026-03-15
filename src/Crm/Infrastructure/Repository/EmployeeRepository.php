@@ -14,7 +14,10 @@ class EmployeeRepository extends BaseRepository
     protected static string $entityName = Entity::class;
     protected static array $searchColumns = ['id'];
 
-    public function __construct(protected ManagerRegistry $managerRegistry) {}
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
+    }
 
     public function findOneScopedById(string $id, string $crmId): ?Entity
     {
@@ -28,7 +31,9 @@ class EmployeeRepository extends BaseRepository
         return $entity instanceof Entity ? $entity : null;
     }
 
-    /** @return list<Entity> */
+    /**
+     * @return list<Entity>
+     */
     public function findScoped(string $crmId, int $limit = 200, int $offset = 0): array
     {
         return $this->createQueryBuilder('employee')

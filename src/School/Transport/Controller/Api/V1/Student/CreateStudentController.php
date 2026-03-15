@@ -43,7 +43,9 @@ final readonly class CreateStudentController
             ),
         ),
         responses: [
-            new OA\Response(response: 201, description: 'Étudiant créé.', content: new OA\JsonContent(example: ['id' => '4cfada53-2cf2-49a7-a4fb-4a9682c3a0c0'])),
+            new OA\Response(response: 201, description: 'Étudiant créé.', content: new OA\JsonContent(example: [
+                'id' => '4cfada53-2cf2-49a7-a4fb-4a9682c3a0c0',
+            ])),
         ],
     )]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]

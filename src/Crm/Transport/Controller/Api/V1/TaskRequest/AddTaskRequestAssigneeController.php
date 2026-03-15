@@ -23,7 +23,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class AddTaskRequestAssigneeController
 {
     public function __construct(
-        private TaskRequestRepository $taskRequestRepository) {}
+        private TaskRequestRepository $taskRequestRepository
+    ) {
+    }
 
     /**
      * @throws OptimisticLockException

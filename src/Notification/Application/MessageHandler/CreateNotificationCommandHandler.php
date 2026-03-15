@@ -16,8 +16,8 @@ use JsonException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-
 use Throwable;
+
 use function trim;
 
 #[AsMessageHandler]

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Recruit\Application\Service;
 
-use App\Recruit\Application\Service\JobStatsService;
 use App\Recruit\Application\Service\ApplicationSlaService;
+use App\Recruit\Application\Service\JobStatsService;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
 use App\Recruit\Domain\Enum\ContractType;
@@ -27,8 +27,12 @@ class JobStatsServiceTest extends TestCase
         $jobs = $this->createRepresentativeJobs();
 
         $expectedStats = $this->computeLegacyStats($jobs);
-        $expectedSlaRules = ['WAITING' => 72];
-        $expectedBreaches = ['WAITING' => 3];
+        $expectedSlaRules = [
+            'WAITING' => 72,
+        ];
+        $expectedBreaches = [
+            'WAITING' => 3,
+        ];
         $expectedStats['sla'] = [
             'rulesHours' => $expectedSlaRules,
             'breachesByStatus' => $expectedBreaches,

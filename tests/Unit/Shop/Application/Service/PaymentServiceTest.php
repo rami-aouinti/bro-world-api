@@ -24,7 +24,9 @@ final class PaymentServiceTest extends TestCase
 {
     public function testCreatePaymentIntentWithValidScope(): void
     {
-        $owner = $this->createConfiguredMock(User::class, ['getId' => 'owner-id']);
+        $owner = $this->createConfiguredMock(User::class, [
+            'getId' => 'owner-id',
+        ]);
         $order = $this->createOrder('app-shop', $owner, 4250);
 
         $orderRepository = $this->createMock(OrderRepository::class);
@@ -38,7 +40,9 @@ final class PaymentServiceTest extends TestCase
             'provider' => 'mock',
             'providerReference' => 'mock-ref-1',
             'status' => 'requires_confirmation',
-            'payload' => ['intent' => true],
+            'payload' => [
+                'intent' => true,
+            ],
         ]);
 
         $security = $this->createMock(Security::class);
@@ -56,7 +60,9 @@ final class PaymentServiceTest extends TestCase
 
     public function testCreatePaymentIntentWithInvalidScopeReturnsForbidden(): void
     {
-        $owner = $this->createConfiguredMock(User::class, ['getId' => 'owner-id']);
+        $owner = $this->createConfiguredMock(User::class, [
+            'getId' => 'owner-id',
+        ]);
         $order = $this->createOrder('app-shop', $owner, 1999);
 
         $orderRepository = $this->createMock(OrderRepository::class);
@@ -80,7 +86,9 @@ final class PaymentServiceTest extends TestCase
 
     public function testConfirmPaymentWithValidScopeMarksOrderPaid(): void
     {
-        $owner = $this->createConfiguredMock(User::class, ['getId' => 'owner-id']);
+        $owner = $this->createConfiguredMock(User::class, [
+            'getId' => 'owner-id',
+        ]);
         $order = $this->createOrder('app-shop', $owner, 9990);
 
         $transaction = (new PaymentTransaction())
@@ -104,7 +112,9 @@ final class PaymentServiceTest extends TestCase
             'provider' => 'mock',
             'providerReference' => 'mock-ref-2',
             'status' => 'succeeded',
-            'payload' => ['confirmed' => true],
+            'payload' => [
+                'confirmed' => true,
+            ],
         ]);
 
         $security = $this->createMock(Security::class);
@@ -120,7 +130,9 @@ final class PaymentServiceTest extends TestCase
 
     public function testConfirmPaymentWithInvalidScopeReturnsForbidden(): void
     {
-        $owner = $this->createConfiguredMock(User::class, ['getId' => 'owner-id']);
+        $owner = $this->createConfiguredMock(User::class, [
+            'getId' => 'owner-id',
+        ]);
         $order = $this->createOrder('app-shop', $owner, 3000);
 
         $orderRepository = $this->createMock(OrderRepository::class);
@@ -144,8 +156,12 @@ final class PaymentServiceTest extends TestCase
 
     public function testCreatePaymentIntentWithDifferentAuthenticatedUserReturnsForbidden(): void
     {
-        $owner = $this->createConfiguredMock(User::class, ['getId' => 'owner-id']);
-        $otherUser = $this->createConfiguredMock(User::class, ['getId' => 'another-id']);
+        $owner = $this->createConfiguredMock(User::class, [
+            'getId' => 'owner-id',
+        ]);
+        $otherUser = $this->createConfiguredMock(User::class, [
+            'getId' => 'another-id',
+        ]);
         $order = $this->createOrder('app-shop', $owner, 5000);
 
         $orderRepository = $this->createMock(OrderRepository::class);
@@ -177,7 +193,9 @@ final class PaymentServiceTest extends TestCase
         $service = new PaymentService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, 'prod');
 
         try {
-            $service->processWebhook(['eventId' => 'evt-prod']);
+            $service->processWebhook([
+                'eventId' => 'evt-prod',
+            ]);
             self::fail('Expected HttpException to be thrown.');
         } catch (HttpException $exception) {
             self::assertSame(JsonResponse::HTTP_BAD_REQUEST, $exception->getStatusCode());
@@ -197,7 +215,9 @@ final class PaymentServiceTest extends TestCase
         $service = new PaymentService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, 'test');
 
         try {
-            $service->processWebhook(['eventId' => 'evt-invalid'], 'sig-invalid');
+            $service->processWebhook([
+                'eventId' => 'evt-invalid',
+            ], 'sig-invalid');
             self::fail('Expected HttpException to be thrown.');
         } catch (HttpException $exception) {
             self::assertSame(JsonResponse::HTTP_UNAUTHORIZED, $exception->getStatusCode());
@@ -206,7 +226,9 @@ final class PaymentServiceTest extends TestCase
 
     public function testProcessWebhookReturnsNullOnDuplicateWebhookKey(): void
     {
-        $order = $this->createOrder('app-shop', $this->createConfiguredMock(User::class, ['getId' => 'owner-id']), 2500);
+        $order = $this->createOrder('app-shop', $this->createConfiguredMock(User::class, [
+            'getId' => 'owner-id',
+        ]), 2500);
         $transaction = (new PaymentTransaction())
             ->setOrder($order)
             ->setProvider('mock')
@@ -242,14 +264,18 @@ final class PaymentServiceTest extends TestCase
                     'providerReference' => 'mock-ref-3',
                     'status' => 'failed',
                     'webhookKey' => 'evt-1',
-                    'payload' => ['a' => 1],
+                    'payload' => [
+                        'a' => 1,
+                    ],
                 ],
                 [
                     'provider' => 'mock',
                     'providerReference' => 'mock-ref-3',
                     'status' => 'failed',
                     'webhookKey' => 'evt-duplicated',
-                    'payload' => ['a' => 1],
+                    'payload' => [
+                        'a' => 1,
+                    ],
                 ],
             );
 
@@ -257,8 +283,12 @@ final class PaymentServiceTest extends TestCase
 
         $service = new PaymentService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, 'test');
 
-        $processed = $service->processWebhook(['eventId' => 'evt-1'], 'sig-valid');
-        $ignored = $service->processWebhook(['eventId' => 'evt-duplicated'], 'sig-valid');
+        $processed = $service->processWebhook([
+            'eventId' => 'evt-1',
+        ], 'sig-valid');
+        $ignored = $service->processWebhook([
+            'eventId' => 'evt-duplicated',
+        ], 'sig-valid');
 
         self::assertInstanceOf(PaymentTransaction::class, $processed);
         self::assertNull($ignored);

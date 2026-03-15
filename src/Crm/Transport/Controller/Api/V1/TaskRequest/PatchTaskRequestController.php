@@ -41,23 +41,46 @@ final readonly class PatchTaskRequestController
     {
         try {
             $payload = json_decode(
-            (string) $request->getContent(),
-            true, 512, JSON_THROW_ON_ERROR);} catch (JsonException) { return $this->errorResponseFactory->invalidJson(); }
-        if (!is_array($payload)) { return $this->errorResponseFactory->invalidJson(); }
+                (string)$request->getContent(),
+                true,
+                512,
+                JSON_THROW_ON_ERROR
+            );
+        } catch (JsonException) {
+            return $this->errorResponseFactory->invalidJson();
+        }
+        if (!is_array($payload)) {
+            return $this->errorResponseFactory->invalidJson();
+        }
 
-        if (isset($payload['title'])) { $taskRequest->setTitle((string) $payload['title']); }
-        if (array_key_exists('description', $payload)) { $taskRequest->setDescription($payload['description'] !== null ? (string) $payload['description'] : null); }
-        if (isset($payload['status']) && is_string($payload['status'])) { $status = TaskRequestStatus::tryFrom($payload['status']); if ($status) { $taskRequest->setStatus($status); } }
-        if (array_key_exists('resolvedAt', $payload)) { $taskRequest->setResolvedAt($this->parseDate($payload['resolvedAt'])); }
+        if (isset($payload['title'])) {
+            $taskRequest->setTitle((string)$payload['title']);
+        }
+        if (array_key_exists('description', $payload)) {
+            $taskRequest->setDescription($payload['description'] !== null ? (string)$payload['description'] : null);
+        }
+        if (isset($payload['status']) && is_string($payload['status'])) {
+            $status = TaskRequestStatus::tryFrom($payload['status']);
+            if ($status) {
+                $taskRequest->setStatus($status);
+            }
+        }
+        if (array_key_exists('resolvedAt', $payload)) {
+            $taskRequest->setResolvedAt($this->parseDate($payload['resolvedAt']));
+        }
 
         $this->taskRequestRepository->save($taskRequest);
 
-        return new JsonResponse(['id' => $taskRequest->getId()]);
+        return new JsonResponse([
+            'id' => $taskRequest->getId(),
+        ]);
     }
 
     private function parseDate(mixed $value): ?DateTimeImmutable
     {
-        if ($value === '' || !is_string($value)) { return null; }
+        if ($value === '' || !is_string($value)) {
+            return null;
+        }
         $parsed = DateTimeImmutable::createFromFormat(DateTimeInterface::ATOM, $value);
 
         return $parsed === false ? null : $parsed;

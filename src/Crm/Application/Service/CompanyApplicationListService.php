@@ -24,9 +24,6 @@ readonly class CompanyApplicationListService
     }
 
     /**
-     * @param Request $request
-     * @param string $applicationSlug
-     * @param Crm $crm
      * @return array<string,mixed>
      * @throws JsonException
      * @throws InvalidArgumentException

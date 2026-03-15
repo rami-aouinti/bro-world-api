@@ -33,7 +33,6 @@ final readonly class PatchMessageCommandHandler
                 $updated = true;
             }
 
-
             if (!$updated) {
                 return null;
             }

@@ -28,8 +28,8 @@ use function array_intersect;
 use function array_key_exists;
 use function class_implements;
 use function in_array;
-use function str_starts_with;
 use function spl_object_hash;
+use function str_starts_with;
 
 /**
  * @package App\General

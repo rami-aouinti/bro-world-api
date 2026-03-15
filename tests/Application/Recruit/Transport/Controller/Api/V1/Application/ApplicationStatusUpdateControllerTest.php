@@ -101,7 +101,6 @@ class ApplicationStatusUpdateControllerTest extends WebTestCase
         self::assertCount(2, $participants);
     }
 
-
     /**
      * @throws Throwable
      */

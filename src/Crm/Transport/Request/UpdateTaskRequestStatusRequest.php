@@ -16,7 +16,7 @@ final class UpdateTaskRequestStatusRequest
     public static function fromArray(array $payload): self
     {
         $request = new self();
-        $request->status = isset($payload['status']) ? (string) $payload['status'] : null;
+        $request->status = isset($payload['status']) ? (string)$payload['status'] : null;
 
         return $request;
     }

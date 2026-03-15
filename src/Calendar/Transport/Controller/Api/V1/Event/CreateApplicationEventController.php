@@ -43,13 +43,17 @@ use Throwable;
         new OA\Property(property: 'recurrenceEndAt', type: 'string', format: 'date-time', example: '2026-06-01T00:00:00+00:00', nullable: true),
         new OA\Property(property: 'recurrenceCount', type: 'integer', example: 4, nullable: true),
         new OA\Property(property: 'reminders', type: 'array', items: new OA\Items(type: 'object')),
-        new OA\Property(property: 'metadata', type: 'object', additionalProperties: true)])), tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world'))], responses: [new OA\Response(response: 202, description: 'Commande acceptée'),
-        new OA\Response(response: 422, description: 'Dates invalides')])]
+        new OA\Property(property: 'metadata', type: 'object', additionalProperties: true)])),
+    tags: ['Calendar Event'],
+    parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world'))],
+    responses: [new OA\Response(response: 202, description: 'Commande acceptée'),
+        new OA\Response(response: 422, description: 'Dates invalides')]
+)]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 readonly class CreateApplicationEventController
 {
     public function __construct(
-        public MessageServiceInterface   $messageService,
+        public MessageServiceInterface $messageService,
         public EventMutationInputFactory $eventMutationInputFactory,
     ) {
     }

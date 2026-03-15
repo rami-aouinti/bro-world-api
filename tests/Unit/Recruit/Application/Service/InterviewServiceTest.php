@@ -132,7 +132,9 @@ final class InterviewServiceTest extends TestCase
 
         $service = new InterviewService($applicationRepository, $interviewRepository, $notificationService);
 
-        $service->update($interview->getId(), ['notes' => 'updated'], $owner);
+        $service->update($interview->getId(), [
+            'notes' => 'updated',
+        ], $owner);
     }
 
     public function testUpdateTriggersCanceledNotificationWhenStatusSwitchesToCanceled(): void
@@ -164,7 +166,9 @@ final class InterviewServiceTest extends TestCase
 
         $service = new InterviewService($applicationRepository, $interviewRepository, $notificationService);
 
-        $service->update($interview->getId(), ['status' => 'canceled'], $owner);
+        $service->update($interview->getId(), [
+            'status' => 'canceled',
+        ], $owner);
     }
 
     private function createOwner(): User

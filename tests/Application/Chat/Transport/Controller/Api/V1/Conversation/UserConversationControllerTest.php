@@ -71,7 +71,6 @@ final class UserConversationControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
     }
 
-
     /**
      * @throws Throwable
      */
@@ -163,6 +162,32 @@ final class UserConversationControllerTest extends WebTestCase
 
         self::assertCount(0, $payload['items']);
         self::assertSame(0, $payload['pagination']['totalItems']);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('PATCH and DELETE conversation endpoints accept for participant and hide unauthorized conversation')]
+    public function testPatchDeleteAndUnauthorizedFindOrCreate(): void
+    {
+        $conversationId = LoadRecruitChatCalendarScenarioData::getUuidByKey('conversation-john-root-scenario');
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('PATCH', $this->baseUrl . '/conversations/' . $conversationId, [], [], [], JSON::encode([
+            'userId' => LoadUserData::getUuidByKey('alice'),
+        ]));
+        self::assertSame(Response::HTTP_ACCEPTED, $client->getResponse()->getStatusCode());
+
+        $client->request('DELETE', $this->baseUrl . '/conversations/' . $conversationId);
+        self::assertSame(Response::HTTP_ACCEPTED, $client->getResponse()->getStatusCode());
+
+        $otherConversationId = LoadRecruitChatCalendarScenarioData::getUuidByKey('conversation-direct-john-root-john-admin');
+        $unauthorizedClient = $this->getTestClient('john-user', 'password-user');
+        $unauthorizedClient->request('GET', $this->baseUrl . '/conversations/' . $otherConversationId);
+        self::assertSame(Response::HTTP_NOT_FOUND, $unauthorizedClient->getResponse()->getStatusCode());
+
+        $client->request('POST', $this->baseUrl . '/conversation/' . LoadUserData::getUuidByKey('john-admin') . '/user');
+        self::assertSame(Response::HTTP_ACCEPTED, $client->getResponse()->getStatusCode());
     }
 
     private function createActiveAndArchivedConversationsForJohnRoot(): void
@@ -272,31 +297,5 @@ final class UserConversationControllerTest extends WebTestCase
         self::assertNotNull($user);
 
         return $user;
-    }
-
-    /**
-     * @throws Throwable
-     */
-    #[TestDox('PATCH and DELETE conversation endpoints accept for participant and hide unauthorized conversation')]
-    public function testPatchDeleteAndUnauthorizedFindOrCreate(): void
-    {
-        $conversationId = LoadRecruitChatCalendarScenarioData::getUuidByKey('conversation-john-root-scenario');
-        $client = $this->getTestClient('john-root', 'password-root');
-
-        $client->request('PATCH', $this->baseUrl . '/conversations/' . $conversationId, [], [], [], JSON::encode([
-            'userId' => LoadUserData::getUuidByKey('alice'),
-        ]));
-        self::assertSame(Response::HTTP_ACCEPTED, $client->getResponse()->getStatusCode());
-
-        $client->request('DELETE', $this->baseUrl . '/conversations/' . $conversationId);
-        self::assertSame(Response::HTTP_ACCEPTED, $client->getResponse()->getStatusCode());
-
-        $otherConversationId = LoadRecruitChatCalendarScenarioData::getUuidByKey('conversation-direct-john-root-john-admin');
-        $unauthorizedClient = $this->getTestClient('john-user', 'password-user');
-        $unauthorizedClient->request('GET', $this->baseUrl . '/conversations/' . $otherConversationId);
-        self::assertSame(Response::HTTP_NOT_FOUND, $unauthorizedClient->getResponse()->getStatusCode());
-
-        $client->request('POST', $this->baseUrl . '/conversation/' . LoadUserData::getUuidByKey('john-admin') . '/user');
-        self::assertSame(Response::HTTP_ACCEPTED, $client->getResponse()->getStatusCode());
     }
 }

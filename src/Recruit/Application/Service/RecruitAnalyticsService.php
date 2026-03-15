@@ -217,7 +217,7 @@ readonly class RecruitAnalyticsService
         }
 
         foreach ($applications as $application) {
-            $counts[$application->getStatus()->value] += 1;
+            $counts[$application->getStatus()->value]++;
         }
 
         return $counts;
@@ -294,18 +294,24 @@ readonly class RecruitAnalyticsService
             return true;
         }
 
-        if (in_array($currentStatus, [ApplicationStatus::INTERVIEW_DONE, ApplicationStatus::OFFER_SENT, ApplicationStatus::HIRED], true)
-            && in_array(ApplicationStatus::INTERVIEW_DONE, $statuses, true)) {
+        if (
+            in_array($currentStatus, [ApplicationStatus::INTERVIEW_DONE, ApplicationStatus::OFFER_SENT, ApplicationStatus::HIRED], true)
+            && in_array(ApplicationStatus::INTERVIEW_DONE, $statuses, true)
+        ) {
             return true;
         }
 
-        if (in_array($currentStatus, [ApplicationStatus::INTERVIEW_PLANNED, ApplicationStatus::INTERVIEW_DONE, ApplicationStatus::OFFER_SENT, ApplicationStatus::HIRED], true)
-            && in_array(ApplicationStatus::INTERVIEW_PLANNED, $statuses, true)) {
+        if (
+            in_array($currentStatus, [ApplicationStatus::INTERVIEW_PLANNED, ApplicationStatus::INTERVIEW_DONE, ApplicationStatus::OFFER_SENT, ApplicationStatus::HIRED], true)
+            && in_array(ApplicationStatus::INTERVIEW_PLANNED, $statuses, true)
+        ) {
             return true;
         }
 
-        if (in_array($currentStatus, [ApplicationStatus::OFFER_SENT, ApplicationStatus::HIRED], true)
-            && in_array(ApplicationStatus::OFFER_SENT, $statuses, true)) {
+        if (
+            in_array($currentStatus, [ApplicationStatus::OFFER_SENT, ApplicationStatus::HIRED], true)
+            && in_array(ApplicationStatus::OFFER_SENT, $statuses, true)
+        ) {
             return true;
         }
 
@@ -438,7 +444,7 @@ readonly class RecruitAnalyticsService
                 'cause' => $cause,
                 'count' => 0,
             ];
-            $counts[$normalized]['count'] += 1;
+            $counts[$normalized]['count']++;
         }
 
         return array_values($counts);

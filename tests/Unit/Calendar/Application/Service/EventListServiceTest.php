@@ -105,7 +105,9 @@ final class EventListServiceTest extends TestCase
         $metricsCounter = $this->createMock(MetricsCounterInterface::class);
         $metricsCounter->expects(self::once())
             ->method('increment')
-            ->with('calendar.elastic_fallback.count', ['reason' => 'exception'], 1);
+            ->with('calendar.elastic_fallback.count', [
+                'reason' => 'exception',
+            ], 1);
 
         $cacheKeyConvention = $this->cacheKeyConventionService($user);
         $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class), $metricsCounter);
@@ -151,7 +153,9 @@ final class EventListServiceTest extends TestCase
         $metricsCounter = $this->createMock(MetricsCounterInterface::class);
         $metricsCounter->expects(self::once())
             ->method('increment')
-            ->with('calendar.elastic_fallback.count', ['reason' => 'too_many_hits'], 1);
+            ->with('calendar.elastic_fallback.count', [
+                'reason' => 'too_many_hits',
+            ], 1);
 
         $cacheKeyConvention = $this->cacheKeyConventionService($user);
         $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class), $metricsCounter);
@@ -197,7 +201,9 @@ final class EventListServiceTest extends TestCase
         $cacheKeyConvention->expects(self::never())->method('tagPublicEventsByApplication');
 
         $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class), $this->createMock(MetricsCounterInterface::class));
-        $service->getByUser($user, ['title' => 'foo'], 1, 20);
+        $service->getByUser($user, [
+            'title' => 'foo',
+        ], 1, 20);
     }
 
     public function testGetByApplicationSlugWithTaggableCacheTagsPublicEventsByApplication(): void
@@ -230,7 +236,9 @@ final class EventListServiceTest extends TestCase
         $cacheKeyConvention->expects(self::once())->method('tagPublicEventsByApplication')->with('app-bro-world')->willReturn('public_events_app-bro-world');
 
         $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class), $this->createMock(MetricsCounterInterface::class));
-        $service->getByApplicationSlug('app-bro-world', ['title' => 'foo'], 1, 20);
+        $service->getByApplicationSlug('app-bro-world', [
+            'title' => 'foo',
+        ], 1, 20);
     }
 
     public function testGetByUserWithNonTaggableCacheDoesNotCallTag(): void
@@ -264,7 +272,9 @@ final class EventListServiceTest extends TestCase
         $cacheKeyConvention->expects(self::never())->method('tagPublicEventsByApplication');
 
         $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class), $this->createMock(MetricsCounterInterface::class));
-        $service->getByUser($user, ['title' => 'foo'], 1, 20);
+        $service->getByUser($user, [
+            'title' => 'foo',
+        ], 1, 20);
     }
 
     private function mockUser(): User

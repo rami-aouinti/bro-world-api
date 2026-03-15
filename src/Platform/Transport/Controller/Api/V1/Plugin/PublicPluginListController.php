@@ -24,7 +24,7 @@ use Throwable;
 readonly class PublicPluginListController
 {
     public function __construct(
-        private PluginResource  $pluginResource,
+        private PluginResource $pluginResource,
         private ResponseHandler $responseHandler,
     ) {
     }

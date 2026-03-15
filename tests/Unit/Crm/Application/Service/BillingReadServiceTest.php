@@ -30,17 +30,32 @@ final class BillingReadServiceTest extends TestCase
         $crm->method('getId')->willReturn('crm-1');
         $scopeResolver->method('resolveOrFail')->with('app')->willReturn($crm);
 
-        $filters = ['q' => 'invoice', 'status' => '', 'companyId' => ''];
+        $filters = [
+            'q' => 'invoice',
+            'status' => '',
+            'companyId' => '',
+        ];
 
         $elasticsearch->expects(self::exactly(2))->method('search')->willThrowException(new \RuntimeException('es down'));
 
         $billingRepository->expects(self::once())->method('findScopedProjection')->with('crm-1', 20, 0, $filters)->willReturn([
-            ['id' => 'b-1', 'label' => 'Invoice #1', 'amount' => 10.0, 'currency' => 'EUR', 'status' => 'pending', 'companyId' => 'c-1', 'dueAt' => null, 'paidAt' => null],
+            [
+                'id' => 'b-1',
+                'label' => 'Invoice #1',
+                'amount' => 10.0,
+                'currency' => 'EUR',
+                'status' => 'pending',
+                'companyId' => 'c-1',
+                'dueAt' => null,
+                'paidAt' => null,
+            ],
         ]);
         $billingRepository->expects(self::once())->method('countScopedByCrm')->with('crm-1', $filters)->willReturn(1);
 
         $service = new BillingReadService($billingRepository, $scopeResolver, $cache, $keys, $elasticsearch);
-        $request = new \Symfony\Component\HttpFoundation\Request(['q' => 'invoice']);
+        $request = new \Symfony\Component\HttpFoundation\Request([
+            'q' => 'invoice',
+        ]);
 
         $first = $service->getList('app', $request);
         $second = $service->getList('app', $request);

@@ -132,7 +132,7 @@ final class CreateBlogPostReactionCommandHandlerTest extends TestCase
             ->method('save')
             ->with(self::callback(static fn (BlogReaction $reaction): bool => $reaction instanceof BlogReaction))
             ->willReturnCallback(function () use (&$saveCalls, $reactionRepository): BlogReactionRepository {
-                ++$saveCalls;
+                $saveCalls++;
 
                 if ($saveCalls === 1) {
                     throw $this->createUniqueConstraintViolationException();

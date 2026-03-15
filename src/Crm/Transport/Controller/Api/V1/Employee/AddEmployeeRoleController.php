@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\Employee;
 
-use App\Crm\Application\Security\CrmPermissions;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Infrastructure\Repository\EmployeeRepository;
 use App\Crm\Transport\Request\AssignEmployeeRoleRequest;
@@ -32,7 +31,8 @@ final readonly class AddEmployeeRoleController
         private CrmApiErrorResponseFactory $errorResponseFactory,
         private ValidatorInterface $validator,
         private EntityManagerInterface $entityManager,
-    ) {}
+    ) {
+    }
 
     #[Route('/v1/crm/applications/{applicationSlug}/employees/{employeeId}/roles', methods: [Request::METHOD_POST])]
     public function __invoke(string $applicationSlug, string $employeeId, Request $request): JsonResponse
@@ -62,6 +62,9 @@ final readonly class AddEmployeeRoleController
         $employee->setRoleName($input->role);
         $this->entityManager->flush();
 
-        return new JsonResponse(['id' => $employee->getId(), 'role' => $employee->getRoleName()]);
+        return new JsonResponse([
+            'id' => $employee->getId(),
+            'role' => $employee->getRoleName(),
+        ]);
     }
 }

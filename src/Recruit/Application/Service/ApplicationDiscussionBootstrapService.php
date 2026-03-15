@@ -13,8 +13,8 @@ use DomainException;
 final readonly class ApplicationDiscussionBootstrapService
 {
     public function __construct(
-        private ChatRepositoryInterface               $chatRepository,
-        private ConversationCreatorService            $conversationCreatorService,
+        private ChatRepositoryInterface $chatRepository,
+        private ConversationCreatorService $conversationCreatorService,
         private ConversationParticipantCreatorService $conversationParticipantCreatorService,
     ) {
     }

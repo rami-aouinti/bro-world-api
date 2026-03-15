@@ -15,7 +15,7 @@ readonly class ApplicationJobAccessService
 {
     public function __construct(
         private RecruitResolverService $recruitResolverService,
-        private JobRepository          $jobRepository,
+        private JobRepository $jobRepository,
     ) {
     }
 

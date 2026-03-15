@@ -42,13 +42,40 @@ final readonly class QuizReadService
         return $this->getQuizProjectionByApplicationSlug($slug, $level, $category, true);
     }
 
+    public function getStatsByApplicationSlug(string $slug): array
+    {
+        $cacheKey = $this->quizCacheService->buildQuizStatsKey($slug);
+
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($slug): array {
+            $item->expiresAfter(self::QUIZ_STATS_CACHE_TTL);
+            $quiz = $this->quizRepository->findOneByApplicationSlugWithConfiguration($slug);
+            if ($quiz === null) {
+                return [];
+            }
+
+            $stats = $this->quizQuestionRepository->getQuizStats($quiz);
+            $attemptStats = $this->quizAttemptRepository->getStatsByQuiz($quiz);
+
+            return [
+                'questionCount' => $stats['questionCount'],
+                'answerCount' => $stats['answerCount'],
+                'averageAnswersPerQuestion' => $stats['questionCount'] > 0
+                    ? round($stats['answerCount'] / $stats['questionCount'], 2)
+                    : 0.0,
+                'totalPoints' => $stats['totalPoints'],
+                'attemptCount' => $attemptStats['attemptCount'],
+                'averageScore' => $attemptStats['averageScore'] !== null ? round((float)$attemptStats['averageScore'], 2) : null,
+                'passRate' => $attemptStats['attemptCount'] > 0 ? round(($attemptStats['passedCount'] / $attemptStats['attemptCount']) * 100, 2) : 0.0,
+            ];
+        });
+    }
+
     private function getQuizProjectionByApplicationSlug(
         string $slug,
         ?string $level,
         ?string $category,
         bool $includeCorrection,
-    ): array
-    {
+    ): array {
         $cacheKey = $this->quizCacheService->buildQuizReadKey($slug, $level, $category, $includeCorrection);
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($slug, $level, $category, $includeCorrection): array {
@@ -102,34 +129,6 @@ final readonly class QuizReadService
                         $q->getAnswers()->toArray()
                     ),
                 ], $questions),
-            ];
-        });
-    }
-
-    public function getStatsByApplicationSlug(string $slug): array
-    {
-        $cacheKey = $this->quizCacheService->buildQuizStatsKey($slug);
-
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($slug): array {
-            $item->expiresAfter(self::QUIZ_STATS_CACHE_TTL);
-            $quiz = $this->quizRepository->findOneByApplicationSlugWithConfiguration($slug);
-            if ($quiz === null) {
-                return [];
-            }
-
-            $stats = $this->quizQuestionRepository->getQuizStats($quiz);
-            $attemptStats = $this->quizAttemptRepository->getStatsByQuiz($quiz);
-
-            return [
-                'questionCount' => $stats['questionCount'],
-                'answerCount' => $stats['answerCount'],
-                'averageAnswersPerQuestion' => $stats['questionCount'] > 0
-                    ? round($stats['answerCount'] / $stats['questionCount'], 2)
-                    : 0.0,
-                'totalPoints' => $stats['totalPoints'],
-                'attemptCount' => $attemptStats['attemptCount'],
-                'averageScore' => $attemptStats['averageScore'] !== null ? round((float)$attemptStats['averageScore'], 2) : null,
-                'passRate' => $attemptStats['attemptCount'] > 0 ? round(($attemptStats['passedCount'] / $attemptStats['attemptCount']) * 100, 2) : 0.0,
             ];
         });
     }

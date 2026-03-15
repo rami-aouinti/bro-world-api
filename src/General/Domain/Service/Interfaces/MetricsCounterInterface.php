@@ -11,4 +11,3 @@ interface MetricsCounterInterface
      */
     public function increment(string $name, array $labels = [], int $value = 1): void;
 }
-

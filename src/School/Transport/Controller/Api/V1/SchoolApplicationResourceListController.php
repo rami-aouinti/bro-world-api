@@ -48,11 +48,22 @@ final readonly class SchoolApplicationResourceListController
                 content: new OA\JsonContent(
                     example: [
                         'items' => [
-                            ['id' => '4cfada53-2cf2-49a7-a4fb-4a9682c3a0c0', 'name' => 'Alice Martin', 'classId' => '7600e750-f92f-4f9f-883a-26404b538f66'],
+                            [
+                                'id' => '4cfada53-2cf2-49a7-a4fb-4a9682c3a0c0',
+                                'name' => 'Alice Martin',
+                                'classId' => '7600e750-f92f-4f9f-883a-26404b538f66',
+                            ],
                         ],
                         'meta' => [
-                            'pagination' => ['page' => 1, 'limit' => 20, 'totalItems' => 1, 'totalPages' => 1],
-                            'filters' => ['q' => 'alice'],
+                            'pagination' => [
+                                'page' => 1,
+                                'limit' => 20,
+                                'totalItems' => 1,
+                                'totalPages' => 1,
+                            ],
+                            'filters' => [
+                                'q' => 'alice',
+                            ],
                             'applicationSlug' => 'school-crm',
                         ],
                     ],

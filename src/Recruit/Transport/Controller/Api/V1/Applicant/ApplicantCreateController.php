@@ -30,7 +30,7 @@ readonly class ApplicantCreateController
 {
     public function __construct(
         private ApplicantRepository $applicantRepository,
-        private ResumeRepository    $resumeRepository,
+        private ResumeRepository $resumeRepository,
     ) {
     }
 

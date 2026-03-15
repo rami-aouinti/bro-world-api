@@ -18,8 +18,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-use function is_string;
-
 #[AsController]
 #[OA\Tag(name: 'Recruit Offer')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
@@ -55,7 +53,9 @@ readonly class OfferCreateController
         return new JsonResponse($this->normalize($offer), JsonResponse::HTTP_CREATED);
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     private function normalize(\App\Recruit\Domain\Entity\Offer $offer): array
     {
         return [

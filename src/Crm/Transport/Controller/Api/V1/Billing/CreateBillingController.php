@@ -36,7 +36,8 @@ final readonly class CreateBillingController
         private ValidatorInterface $validator,
         private MessageBusInterface $messageBus,
         private CrmReadCacheInvalidator $cacheInvalidator,
-    ) {}
+    ) {
+    }
 
     #[Route('/v1/crm/applications/{applicationSlug}/billings', methods: [Request::METHOD_POST])]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
@@ -88,6 +89,9 @@ final readonly class CreateBillingController
 
         $this->cacheInvalidator->invalidateBilling($applicationSlug, $billing->getId());
 
-        return new JsonResponse(['id' => $billing->getId(), 'companyId' => $company->getId()], JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $billing->getId(),
+            'companyId' => $company->getId(),
+        ], JsonResponse::HTTP_CREATED);
     }
 }
