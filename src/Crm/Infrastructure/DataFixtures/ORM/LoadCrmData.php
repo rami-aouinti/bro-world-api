@@ -278,7 +278,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 
             $project = (new Project())
                 ->setCompany($company)
-                ->setName(sprintf('%s - %s', $application->getTitle(), $faker->bs()))
+                ->setName(sprintf('%s - %s', $application->getTitle(), ucfirst($faker->words(3, true))))
                 ->setCode(sprintf('PRJ-%d-%02d', $companyIndex + 1, $index + 1))
                 ->setDescription($faker->paragraph(2))
                 ->setStatus($faker->randomElement(ProjectStatus::cases()))
