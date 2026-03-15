@@ -11,7 +11,10 @@ use App\Crm\Infrastructure\Repository\ProjectRepository;
 use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\Role\Domain\Enum\Role;
 use DateTimeImmutable;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use OpenApi\Attributes as OA;
+use Random\RandomException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -31,6 +34,11 @@ final readonly class UploadProjectFilesController
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws RandomException
+     * @throws ORMException
+     */
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{id}/files', methods: [Request::METHOD_POST])]
     public function __invoke(string $applicationSlug, string $id, Request $request): JsonResponse
     {

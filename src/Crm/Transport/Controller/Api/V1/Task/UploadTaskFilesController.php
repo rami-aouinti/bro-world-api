@@ -13,6 +13,7 @@ use DateTimeImmutable;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use OpenApi\Attributes as OA;
+use Random\RandomException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -34,6 +35,7 @@ final readonly class UploadTaskFilesController
     /**
      * @throws OptimisticLockException
      * @throws ORMException
+     * @throws RandomException
      */
     #[Route('/v1/crm/applications/{applicationSlug}/tasks/{task}/files', methods: [Request::METHOD_POST])]
     public function __invoke(string $applicationSlug, Task $task, Request $request): JsonResponse

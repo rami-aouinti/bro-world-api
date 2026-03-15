@@ -6,6 +6,7 @@ namespace App\Crm\Application\Service;
 
 use App\Media\Application\Service\MediaUploaderService;
 use App\Media\Application\Service\MediaUploadValidationPolicy;
+use Random\RandomException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -48,6 +49,7 @@ final readonly class CrmAttachmentUploaderService
     /**
      * @param list<UploadedFile> $files
      * @return list<array{url:string,originalName:string,mimeType:string,size:int,extension:string}>
+     * @throws RandomException
      */
     public function upload(Request $request, array $files, string $relativeDirectory): array
     {
