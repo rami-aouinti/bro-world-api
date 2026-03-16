@@ -7,6 +7,8 @@ namespace App\Crm\Application\Service;
 use App\Crm\Infrastructure\Repository\EmployeeRepository;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
+use JsonException;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -33,6 +35,10 @@ readonly class EmployeeReadService
     ) {
     }
 
+    /**
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     */
     public function getList(string $applicationSlug, Request $request): array
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);

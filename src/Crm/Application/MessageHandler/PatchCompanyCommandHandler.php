@@ -9,6 +9,8 @@ use App\Crm\Application\Message\PatchCompanyCommand;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Application\Service\CrmReadCacheInvalidator;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler]
@@ -21,6 +23,10 @@ final readonly class PatchCompanyCommandHandler
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function __invoke(PatchCompanyCommand $command): void
     {
         $crm = $this->scopeResolver->resolveOrFail($command->applicationSlug);

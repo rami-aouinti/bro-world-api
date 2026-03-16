@@ -11,7 +11,10 @@ use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\Crm\Infrastructure\Repository\ContactRepository;
 use App\Crm\Infrastructure\Repository\CrmRepository;
 use App\General\Application\Message\EntityCreated;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 #[AsMessageHandler]
@@ -26,6 +29,11 @@ final readonly class CreateContactCommandHandler
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     * @throws ExceptionInterface
+     */
     public function __invoke(CreateContactCommand $command): void
     {
         $crm = $this->crmRepository->find($command->crmId);
@@ -33,7 +41,7 @@ final readonly class CreateContactCommandHandler
             return;
         }
 
-        $contact = (new Contact())
+        $contact = new Contact()
             ->setId($command->id)
             ->setCrm($crm)
             ->setFirstName($command->firstName)

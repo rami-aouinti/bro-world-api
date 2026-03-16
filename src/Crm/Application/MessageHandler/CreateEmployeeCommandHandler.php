@@ -11,7 +11,10 @@ use App\Crm\Infrastructure\Repository\CrmRepository;
 use App\Crm\Infrastructure\Repository\EmployeeRepository;
 use App\General\Application\Message\EntityCreated;
 use App\User\Domain\Repository\Interfaces\UserRepositoryInterface;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 #[AsMessageHandler]
@@ -26,6 +29,11 @@ final readonly class CreateEmployeeCommandHandler
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     * @throws ExceptionInterface
+     */
     public function __invoke(CreateEmployeeCommand $command): void
     {
         $crm = $this->crmRepository->find($command->crmId);
@@ -35,7 +43,7 @@ final readonly class CreateEmployeeCommandHandler
 
         $user = $command->userId !== null ? $this->userRepository->find($command->userId) : null;
 
-        $employee = (new Employee())
+        $employee = new Employee()
             ->setId($command->id)
             ->setCrm($crm)
             ->setFirstName($command->firstName)

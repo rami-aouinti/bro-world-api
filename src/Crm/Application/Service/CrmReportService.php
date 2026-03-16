@@ -18,6 +18,10 @@ use App\Crm\Infrastructure\Repository\EmployeeRepository;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
 use App\Crm\Infrastructure\Repository\TaskRepository;
 
+use DateMalformedStringException;
+use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
 use function fputcsv;
 
 final readonly class CrmReportService
@@ -32,6 +36,9 @@ final readonly class CrmReportService
     ) {
     }
 
+    /**
+     * @throws DateMalformedStringException
+     */
     public function build(Crm $crm): CrmReportDto
     {
         $companies = $this->companyRepository->findScoped($crm->getId(), 100, 0);
@@ -86,7 +93,7 @@ final readonly class CrmReportService
             metadata: new CrmReportMetadataDto(
                 period: 'rolling-30d',
                 timezone: 'UTC',
-                generatedAt: (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format(\DateTimeInterface::ATOM),
+                generatedAt: new DateTimeImmutable('now', new DateTimeZone('UTC'))->format(DateTimeInterface::ATOM),
                 version: 'v1',
             ),
             kpis: new CrmReportKpisDto(
@@ -111,7 +118,7 @@ final readonly class CrmReportService
     public function toCsv(CrmReportDto $report): string
     {
         $reportData = $report->toArray();
-        $h = fopen('php://temp', 'r+');
+        $h = fopen('php://temp', 'rb+');
         if ($h === false) {
             return '';
         }

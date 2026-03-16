@@ -25,8 +25,7 @@ final readonly class CreateCompanyCommandHandler
     {
         $crm = $this->scopeResolver->resolveOrFail($command->applicationSlug);
 
-        $company = (new Company())
-            ->setId($command->id)
+        $company = new Company()
             ->setCrm($crm)
             ->setName($command->name)
             ->setIndustry($command->industry)

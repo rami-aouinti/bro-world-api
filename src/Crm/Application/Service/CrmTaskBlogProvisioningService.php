@@ -48,7 +48,7 @@ final readonly class CrmTaskBlogProvisioningService
 
         $blogType = $subject instanceof TaskRequest ? BlogType::TASK_REQUEST : BlogType::TASK;
 
-        $blog = (new Blog())
+        $blog = new Blog()
             ->setApplication($application)
             ->setOwner($owner)
             ->setType($blogType)

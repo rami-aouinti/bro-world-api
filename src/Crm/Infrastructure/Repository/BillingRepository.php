@@ -136,9 +136,4 @@ class BillingRepository extends BaseRepository
     {
         return $this->findScoped($crmId, $limit, $offset);
     }
-
-    public function countByCrm(string $crmId): int
-    {
-        return $this->countScopedByCrm($crmId);
-    }
 }

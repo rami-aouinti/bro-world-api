@@ -53,7 +53,7 @@ readonly class BillingReadService
 
         $cacheKey = $this->cacheKeyConventionService->buildCrmBillingListKey($applicationSlug, $page, $limit, $filters);
 
-        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $crm, $page, $limit, $filters): array {
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $crm, $page, $limit, $filters): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->crmBillingListTag($applicationSlug));
@@ -76,12 +76,13 @@ readonly class BillingReadService
                 ],
             ];
         });
-
-        return $result;
     }
 
     /**
+     * @param string $applicationSlug
+     * @param string $billingId
      * @return array<string,mixed>|null
+     * @throws InvalidArgumentException
      */
     public function getDetail(string $applicationSlug, string $billingId): ?array
     {

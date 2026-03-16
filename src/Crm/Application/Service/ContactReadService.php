@@ -7,6 +7,8 @@ namespace App\Crm\Application\Service;
 use App\Crm\Infrastructure\Repository\ContactRepository;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
+use JsonException;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -32,7 +34,11 @@ readonly class ContactReadService
     }
 
     /**
+     * @param string $applicationSlug
+     * @param Request $request
      * @return array<string,mixed>
+     * @throws JsonException
+     * @throws InvalidArgumentException
      */
     public function list(string $applicationSlug, Request $request): array
     {
@@ -71,7 +77,10 @@ readonly class ContactReadService
     }
 
     /**
+     * @param string $applicationSlug
+     * @param string $contactId
      * @return array<string,mixed>|null
+     * @throws InvalidArgumentException
      */
     public function getDetail(string $applicationSlug, string $contactId): ?array
     {

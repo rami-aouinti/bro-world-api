@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Crm\Application\Service;
 
 use App\General\Application\Service\CacheKeyConventionService;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
@@ -16,6 +17,9 @@ readonly class CrmReadCacheInvalidator
     ) {
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function invalidateBilling(string $applicationSlug, string $billingId): void
     {
         $this->invalidateTags([
@@ -24,6 +28,9 @@ readonly class CrmReadCacheInvalidator
         ]);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function invalidateCompany(string $applicationSlug, ?string $companyId = null): void
     {
         $tags = [$this->cacheKeyConventionService->crmCompanyListByApplicationTag($applicationSlug)];
@@ -34,6 +41,9 @@ readonly class CrmReadCacheInvalidator
         $this->invalidateTags($tags);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function invalidateContact(string $applicationSlug, string $contactId): void
     {
         $this->invalidateTags([
@@ -42,6 +52,9 @@ readonly class CrmReadCacheInvalidator
         ]);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function invalidateProject(string $applicationSlug, string $projectId): void
     {
         $this->invalidateTags([
@@ -50,6 +63,9 @@ readonly class CrmReadCacheInvalidator
         ]);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function invalidateEmployee(string $applicationSlug, string $employeeId): void
     {
         $this->invalidateTags([
@@ -58,6 +74,9 @@ readonly class CrmReadCacheInvalidator
         ]);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function invalidateTaskRequest(string $applicationSlug, string $taskRequestId): void
     {
         $this->invalidateTags([
@@ -66,6 +85,9 @@ readonly class CrmReadCacheInvalidator
         ]);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function invalidateTask(string $applicationSlug, ?string $taskId = null): void
     {
         $tags = [$this->cacheKeyConventionService->crmTaskListTag($applicationSlug)];
@@ -76,6 +98,9 @@ readonly class CrmReadCacheInvalidator
         $this->invalidateTags($tags);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function invalidateSprint(string $applicationSlug, ?string $sprintId = null): void
     {
         $tags = [$this->cacheKeyConventionService->crmSprintListTag($applicationSlug)];
@@ -88,6 +113,7 @@ readonly class CrmReadCacheInvalidator
 
     /**
      * @param list<string> $tags
+     * @throws InvalidArgumentException
      */
     private function invalidateTags(array $tags): void
     {

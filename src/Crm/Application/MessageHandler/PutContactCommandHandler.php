@@ -10,6 +10,8 @@ use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Application\Service\CrmReadCacheInvalidator;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\Crm\Infrastructure\Repository\ContactRepository;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler]
@@ -23,6 +25,10 @@ final readonly class PutContactCommandHandler
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function __invoke(PutContactCommand $command): void
     {
         $crm = $this->scopeResolver->resolveOrFail($command->applicationSlug);

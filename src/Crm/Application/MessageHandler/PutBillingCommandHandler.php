@@ -9,6 +9,10 @@ use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Application\Service\CrmReadCacheInvalidator;
 use App\Crm\Infrastructure\Repository\BillingRepository;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
+use DateMalformedStringException;
+use DateTimeImmutable;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -24,6 +28,11 @@ final readonly class PutBillingCommandHandler
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws DateMalformedStringException
+     * @throws ORMException
+     */
     public function __invoke(PutBillingCommand $command): void
     {
         $crm = $this->scopeResolver->resolveOrFail($command->applicationSlug);
@@ -43,7 +52,7 @@ final readonly class PutBillingCommandHandler
             ->setAmount($command->amount)
             ->setCurrency($command->currency)
             ->setStatus($command->status)
-            ->setDueAt($command->dueAt !== null ? new \DateTimeImmutable($command->dueAt) : null);
+            ->setDueAt($command->dueAt !== null ? new DateTimeImmutable($command->dueAt) : null);
 
         $this->billingRepository->save($billing);
         $this->cacheInvalidator->invalidateBilling($command->applicationSlug, $billing->getId());

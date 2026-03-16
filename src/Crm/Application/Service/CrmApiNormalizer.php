@@ -9,10 +9,10 @@ use App\Crm\Domain\Entity\TaskRequest;
 use App\User\Domain\Entity\User;
 use DateTimeInterface;
 
-final class CrmApiNormalizer
+final readonly class CrmApiNormalizer
 {
     public function __construct(
-        private readonly CrmBlogNormalizer $crmBlogNormalizer,
+        private CrmBlogNormalizer $crmBlogNormalizer,
     ) {
     }
 

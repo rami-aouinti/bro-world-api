@@ -11,6 +11,8 @@ use App\Crm\Infrastructure\Repository\BillingRepository;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
 use DateTimeImmutable;
 use DateTimeInterface;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -26,6 +28,10 @@ final readonly class PatchBillingCommandHandler
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function __invoke(PatchBillingCommand $command): void
     {
         $crm = $this->scopeResolver->resolveOrFail($command->applicationSlug);
@@ -76,7 +82,7 @@ final readonly class PatchBillingCommandHandler
 
     private function parseDate(mixed $value): ?DateTimeImmutable
     {
-        if ($value === null || $value === '' || !is_string($value)) {
+        if ($value === '' || !is_string($value)) {
             return null;
         }
 

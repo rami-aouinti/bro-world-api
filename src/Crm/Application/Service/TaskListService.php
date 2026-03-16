@@ -11,6 +11,8 @@ use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\QueryBuilder;
+use JsonException;
+use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Ramsey\Uuid\Uuid;
@@ -49,8 +51,10 @@ readonly class TaskListService
     }
 
     /**
+     * @param Request $request
      * @return array<string,mixed>
-     * @throws \JsonException
+     * @throws JsonException
+     * @throws InvalidArgumentException
      */
     public function getList(Request $request): array
     {
