@@ -19,6 +19,7 @@ use Override;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Validator\Constraints as Assert;
+use Throwable;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'crm_task_request')]
@@ -71,6 +72,9 @@ class TaskRequest implements EntityInterface
     #[ORM\InverseJoinColumn(name: 'user_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     private Collection|ArrayCollection $assignees;
 
+    /**
+     * @throws Throwable
+     */
     public function __construct()
     {
         $this->id = $this->createUuid();

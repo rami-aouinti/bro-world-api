@@ -13,6 +13,7 @@ use Override;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Ramsey\Uuid\Uuid as RamseyUuid;
 use Ramsey\Uuid\UuidInterface;
+use Throwable;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'crm_contact')]
@@ -57,6 +58,9 @@ class Contact implements EntityInterface
     ])]
     private int $score = 0;
 
+    /**
+     * @throws Throwable
+     */
     public function __construct()
     {
         $this->id = $this->createUuid();

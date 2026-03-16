@@ -15,6 +15,7 @@ use Override;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Validator\Constraints as Assert;
+use Throwable;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'crm_company')]
@@ -56,6 +57,9 @@ class Company implements EntityInterface
     #[ORM\OneToMany(targetEntity: Billing::class, mappedBy: 'company')]
     private Collection|ArrayCollection $billings;
 
+    /**
+     * @throws Throwable
+     */
     public function __construct()
     {
         $this->id = $this->createUuid();

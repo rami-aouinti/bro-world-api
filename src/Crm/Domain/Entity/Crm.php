@@ -29,7 +29,7 @@ class Crm implements EntityInterface
     private UuidInterface $id;
 
     #[ORM\OneToOne(targetEntity: PlatformApplication::class)]
-    #[ORM\JoinColumn(name: 'application_id', referencedColumnName: 'id', nullable: false, unique: true, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'application_id', referencedColumnName: 'id', unique: true, nullable: false, onDelete: 'CASCADE')]
     private ?PlatformApplication $application = null;
 
     /** @var Collection<int, Company>|ArrayCollection<int, Company> */

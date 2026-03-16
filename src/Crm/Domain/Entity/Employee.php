@@ -14,6 +14,7 @@ use Override;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Ramsey\Uuid\Uuid as RamseyUuid;
 use Ramsey\Uuid\UuidInterface;
+use Throwable;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'crm_employee')]
@@ -50,6 +51,9 @@ class Employee implements EntityInterface
     #[ORM\Column(name: 'role_name', type: Types::STRING, length: 120, nullable: true)]
     private ?string $roleName = null;
 
+    /**
+     * @throws Throwable
+     */
     public function __construct()
     {
         $this->id = $this->createUuid();

@@ -14,6 +14,7 @@ use Override;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Ramsey\Uuid\Uuid as RamseyUuid;
 use Ramsey\Uuid\UuidInterface;
+use Throwable;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'crm_billing')]
@@ -53,6 +54,9 @@ class Billing implements EntityInterface
     #[ORM\Column(name: 'paid_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $paidAt = null;
 
+    /**
+     * @throws Throwable
+     */
     public function __construct()
     {
         $this->id = $this->createUuid();
