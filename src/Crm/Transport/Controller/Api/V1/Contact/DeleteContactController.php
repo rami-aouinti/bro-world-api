@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\Contact;
 
-use App\Crm\Application\Service\CrmApplicationScopeResolver;
-use App\Crm\Infrastructure\Repository\ContactRepository;
+use App\Crm\Application\Exception\CrmReferenceNotFoundException;
+use App\Crm\Application\Message\DeleteContactCommand;
 use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\Role\Domain\Enum\Role;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -21,8 +22,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class DeleteContactController
 {
     public function __construct(
-        private CrmApplicationScopeResolver $scopeResolver,
-        private ContactRepository $contactRepository,
+        private MessageBusInterface $messageBus,
         private CrmApiErrorResponseFactory $errorResponseFactory,
     ) {
     }
@@ -30,13 +30,14 @@ final readonly class DeleteContactController
     #[Route('/v1/crm/applications/{applicationSlug}/contacts/{id}', methods: [Request::METHOD_DELETE])]
     public function __invoke(string $applicationSlug, string $id): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
-        $contact = $this->contactRepository->findOneScopedById($id, $crm->getId());
-        if ($contact === null) {
-            return $this->errorResponseFactory->notFoundReference('contactId');
+        try {
+            $this->messageBus->dispatch(new DeleteContactCommand(
+                applicationSlug: $applicationSlug,
+                contactId: $id,
+            ));
+        } catch (CrmReferenceNotFoundException $exception) {
+            return $this->errorResponseFactory->notFoundReference($exception->field);
         }
-
-        $this->contactRepository->remove($contact);
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }
