@@ -20,6 +20,8 @@ readonly class CompanyApplicationListService
         private CompanyRepository $companyRepository,
         private CacheInterface $cache,
         private CacheKeyConventionService $cacheKeyConventionService,
+        private CrmListRequestHelper $listRequestHelper,
+        private CrmListResponseFactory $listResponseFactory,
     ) {
     }
 
@@ -28,38 +30,24 @@ readonly class CompanyApplicationListService
      * @throws JsonException
      * @throws InvalidArgumentException
      */
-    public function getList(Request $request, string $applicationSlug, Crm $crm): array
+    public function list(Request $request, string $applicationSlug, Crm $crm): array
     {
-        $page = max(1, $request->query->getInt('page', 1));
-        $limit = max(1, min(100, $request->query->getInt('limit', 20)));
-        $filters = [
-            'q' => trim((string)$request->query->get('q', '')),
-        ];
-        $cacheKey = $this->cacheKeyConventionService->buildCrmCompanyApplicationListKey($applicationSlug, $page, $limit, $filters);
+        $queryOptions = $this->listRequestHelper->fromRequest($request, ['q']);
+        $cacheKey = $this->cacheKeyConventionService->buildCrmCompanyApplicationListKey($applicationSlug, $queryOptions->page, $queryOptions->limit, $queryOptions->filters);
 
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $crm, $filters, $page, $limit): array {
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $crm, $queryOptions): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->crmCompanyListByApplicationTag($applicationSlug));
             }
 
-            $items = $this->companyRepository->findScopedProjection($crm->getId(), $limit, ($page - 1) * $limit, $filters);
-            $totalItems = $this->companyRepository->countScopedByCrm($crm->getId(), $filters);
+            $items = $this->companyRepository->findScopedProjection($crm->getId(), $queryOptions->limit, $queryOptions->offset(), $queryOptions->filters);
+            $totalItems = $this->companyRepository->countScopedByCrm($crm->getId(), $queryOptions->filters);
 
-            return [
-                'items' => $items,
-                'pagination' => [
-                    'page' => $page,
-                    'limit' => $limit,
-                    'totalItems' => $totalItems,
-                    'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
-                ],
-                'meta' => [
-                    'applicationSlug' => $applicationSlug,
-                    'crmId' => $crm->getId(),
-                    'filters' => array_filter($filters),
-                ],
-            ];
+            return $this->listResponseFactory->create($queryOptions, $totalItems, $items, [
+                'applicationSlug' => $applicationSlug,
+                'crmId' => $crm->getId(),
+            ]);
         });
     }
 }

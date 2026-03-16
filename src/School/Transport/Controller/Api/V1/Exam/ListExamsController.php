@@ -33,6 +33,6 @@ final readonly class ListExamsController
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
         $request->attributes->set('applicationSlug', $applicationSlug);
 
-        return new JsonResponse($this->examListService->getList($request, $school->getId()));
+        return new JsonResponse($this->examListService->list($request, $school->getId()));
     }
 }

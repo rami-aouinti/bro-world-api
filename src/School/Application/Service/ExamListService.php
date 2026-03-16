@@ -7,7 +7,6 @@ namespace App\School\Application\Service;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\School\Application\Projection\SchoolExamProjection;
-use App\School\Application\Serializer\SchoolApiResponseSerializer;
 use App\School\Application\Serializer\SchoolViewMapper;
 use App\School\Infrastructure\Repository\ExamRepository;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,29 +23,25 @@ readonly class ExamListService
         private ElasticsearchServiceInterface $elasticsearchService,
         private CacheKeyConventionService $cacheKeyConventionService,
         private SchoolViewMapper $viewMapper,
-        private SchoolApiResponseSerializer $responseSerializer,
+        private SchoolListRequestHelper $listRequestHelper,
+        private SchoolListResponseFactory $listResponseFactory,
     ) {
     }
 
     /**
      * @return array<string,mixed>
      */
-    public function getList(Request $request, string $schoolId): array
+    public function list(Request $request, string $schoolId): array
     {
-        $page = max(1, $request->query->getInt('page', 1));
-        $limit = max(1, min(100, $request->query->getInt('limit', 20)));
-        $filters = [
-            'q' => trim((string)$request->query->get('q', '')),
-            'title' => trim((string)$request->query->get('title', '')),
-        ];
+        $queryOptions = $this->listRequestHelper->fromRequest($request, ['q', 'title']);
         $applicationSlug = (string)$request->attributes->get('applicationSlug', 'default');
-        $cacheKey = $this->cacheKeyConventionService->buildSchoolExamListKey($applicationSlug, $page, $limit, [
-            ...$filters,
+        $cacheKey = $this->cacheKeyConventionService->buildSchoolExamListKey($applicationSlug, $queryOptions->page, $queryOptions->limit, [
+            ...$queryOptions->filters,
             'schoolId' => $schoolId,
         ]);
 
         /** @var array<string,mixed> $result */
-        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($filters, $page, $limit, $schoolId, $applicationSlug): array {
+        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($queryOptions, $schoolId, $applicationSlug): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag([
@@ -55,23 +50,18 @@ readonly class ExamListService
                 ]);
             }
 
-            $esIds = $this->searchIdsFromElastic($filters);
+            $esIds = $this->searchIdsFromElastic($queryOptions->filters);
             if ($esIds === []) {
-                return $this->responseSerializer->list([], [
-                    'page' => $page,
-                    'limit' => $limit,
-                    'totalItems' => 0,
-                    'totalPages' => 0,
-                ]);
+                return $this->listResponseFactory->create($queryOptions, 0, []);
             }
 
             $qb = $this->examRepository->createQueryBuilder('exam')->leftJoin('exam.schoolClass', 'class')->leftJoin('exam.teacher', 'teacher')
                 ->innerJoin('class.school', 'school')
                 ->andWhere('school.id = :schoolId')
                 ->setParameter('schoolId', $schoolId)
-                ->setFirstResult(($page - 1) * $limit)->setMaxResults($limit)->orderBy('exam.createdAt', 'DESC');
-            if ($filters['title'] !== '') {
-                $qb->andWhere('LOWER(exam.title) LIKE LOWER(:title)')->setParameter('title', '%' . $filters['title'] . '%');
+                ->setFirstResult($queryOptions->offset())->setMaxResults($queryOptions->limit)->orderBy('exam.createdAt', 'DESC');
+            if ($queryOptions->filters['title'] !== '') {
+                $qb->andWhere('LOWER(exam.title) LIKE LOWER(:title)')->setParameter('title', '%' . $queryOptions->filters['title'] . '%');
             }
             if ($esIds !== null) {
                 $qb->andWhere('exam.id IN (:ids)')->setParameter('ids', $esIds);
@@ -84,8 +74,8 @@ readonly class ExamListService
                 ->innerJoin('class.school', 'school')
                 ->andWhere('school.id = :schoolId')
                 ->setParameter('schoolId', $schoolId);
-            if ($filters['title'] !== '') {
-                $countQb->andWhere('LOWER(exam.title) LIKE LOWER(:title)')->setParameter('title', '%' . $filters['title'] . '%');
+            if ($queryOptions->filters['title'] !== '') {
+                $countQb->andWhere('LOWER(exam.title) LIKE LOWER(:title)')->setParameter('title', '%' . $queryOptions->filters['title'] . '%');
             }
             if ($esIds !== null) {
                 $countQb->andWhere('exam.id IN (:ids)')->setParameter('ids', $esIds);
@@ -93,21 +83,15 @@ readonly class ExamListService
 
             $totalItems = (int)$countQb->getQuery()->getSingleScalarResult();
 
-            return $this->responseSerializer->list(
+            return $this->listResponseFactory->create(
+                $queryOptions,
+                $totalItems,
                 $items,
-                [
-                    'page' => $page,
-                    'limit' => $limit,
-                    'totalItems' => $totalItems,
-                    'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
-                ],
                 [
                     'module' => 'school',
                 ],
             );
         });
-
-        $result['meta']['filters'] = array_filter($filters, static fn (string $value): bool => $value !== '');
 
         return $result;
     }

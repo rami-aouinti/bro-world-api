@@ -26,6 +26,6 @@ final readonly class ListContactsController
     #[Route('/v1/crm/applications/{applicationSlug}/contacts', methods: [Request::METHOD_GET])]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
-        return new JsonResponse($this->contactReadService->getList($applicationSlug, $request));
+        return new JsonResponse($this->contactReadService->list($applicationSlug, $request));
     }
 }

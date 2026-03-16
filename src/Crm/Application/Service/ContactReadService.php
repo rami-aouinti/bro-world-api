@@ -7,7 +7,6 @@ namespace App\Crm\Application\Service;
 use App\Crm\Infrastructure\Repository\ContactRepository;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
-use JsonException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -16,11 +15,8 @@ use Throwable;
 
 use function array_filter;
 use function array_map;
-use function ceil;
-use function max;
+use function array_values;
 use function method_exists;
-use function min;
-use function trim;
 
 readonly class ContactReadService
 {
@@ -30,20 +26,21 @@ readonly class ContactReadService
         private CacheInterface $cache,
         private CacheKeyConventionService $cacheKeyConventionService,
         private ElasticsearchServiceInterface $elasticsearchService,
+        private CrmListRequestHelper $listRequestHelper,
+        private CrmListResponseFactory $listResponseFactory,
     ) {
     }
 
     /** @return array<string,mixed> */
-    public function getList(string $applicationSlug, Request $request): array
+    public function list(string $applicationSlug, Request $request): array
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
-        $page = max(1, $request->query->getInt('page', 1));
-        $limit = max(1, min(100, $request->query->getInt('limit', 20)));
-        $filters = ['q' => trim((string)$request->query->get('q', ''))];
+        $queryOptions = $this->listRequestHelper->fromRequest($request, ['q']);
+        $filters = $queryOptions->filters;
 
-        $cacheKey = $this->cacheKeyConventionService->buildCrmContactListKey($applicationSlug, $page, $limit, $filters);
+        $cacheKey = $this->cacheKeyConventionService->buildCrmContactListKey($applicationSlug, $queryOptions->page, $queryOptions->limit, $filters);
 
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $crm, $page, $limit, $filters): array {
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $crm, $queryOptions, $filters): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->crmContactListTag($applicationSlug));
@@ -51,10 +48,10 @@ readonly class ContactReadService
 
             $esIds = $this->searchIdsFromElastic($filters['q']);
             if ($esIds === []) {
-                return $this->emptyList($page, $limit, $filters);
+                return $this->listResponseFactory->create($queryOptions, 0, []);
             }
 
-            $items = $this->contactRepository->findScopedProjection($crm->getId(), $limit, ($page - 1) * $limit, [
+            $items = $this->contactRepository->findScopedProjection($crm->getId(), $queryOptions->limit, $queryOptions->offset(), [
                 'q' => $esIds === null ? $filters['q'] : '',
                 'ids' => $esIds,
             ]);
@@ -63,18 +60,11 @@ readonly class ContactReadService
                 'ids' => $esIds,
             ]);
 
-            return [
-                'items' => array_map(fn (array $item): array => $this->normalizeProjection($item), $items),
-                'pagination' => [
-                    'page' => $page,
-                    'limit' => $limit,
-                    'totalItems' => $totalItems,
-                    'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
-                ],
-                'meta' => [
-                    'filters' => array_filter($filters, static fn (string $value): bool => $value !== ''),
-                ],
-            ];
+            return $this->listResponseFactory->create(
+                $queryOptions,
+                $totalItems,
+                array_map(fn (array $row): array => $this->normalizeProjection($row), $items),
+            );
         });
     }
 
@@ -131,6 +121,7 @@ readonly class ContactReadService
             ], 0, 500);
 
             $hits = $response['hits']['hits'] ?? [];
+
             return array_values(array_filter(array_map(static fn (array $hit): ?string => $hit['_source']['id'] ?? $hit['_id'] ?? null, $hits)));
         } catch (Throwable) {
             return null;
@@ -150,16 +141,6 @@ readonly class ContactReadService
             'jobTitle' => (string)($item['jobTitle'] ?? ''),
             'city' => (string)($item['city'] ?? ''),
             'score' => isset($item['score']) ? (int)$item['score'] : null,
-        ];
-    }
-
-    /** @param array{q:string} $filters */
-    private function emptyList(int $page, int $limit, array $filters): array
-    {
-        return [
-            'items' => [],
-            'pagination' => ['page' => $page, 'limit' => $limit, 'totalItems' => 0, 'totalPages' => 0],
-            'meta' => ['filters' => array_filter($filters, static fn (string $value): bool => $value !== '')],
         ];
     }
 }

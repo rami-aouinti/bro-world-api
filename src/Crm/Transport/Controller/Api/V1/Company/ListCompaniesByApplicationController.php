@@ -39,6 +39,6 @@ final readonly class ListCompaniesByApplicationController
         $request->attributes->set('applicationSlug', $applicationSlug);
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
 
-        return new JsonResponse($this->companyApplicationListService->getList($request, $applicationSlug, $crm));
+        return new JsonResponse($this->companyApplicationListService->list($request, $applicationSlug, $crm));
     }
 }

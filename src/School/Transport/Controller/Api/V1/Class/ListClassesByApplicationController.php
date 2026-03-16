@@ -69,6 +69,6 @@ final readonly class ListClassesByApplicationController
         $request->attributes->set('applicationSlug', $applicationSlug);
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
 
-        return new JsonResponse($this->classApplicationListService->getList($request, $applicationSlug, $school));
+        return new JsonResponse($this->classApplicationListService->list($request, $applicationSlug, $school));
     }
 }
