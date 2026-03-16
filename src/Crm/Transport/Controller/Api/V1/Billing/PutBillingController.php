@@ -11,8 +11,6 @@ use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\Crm\Transport\Request\CreateBillingRequest;
 use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\Role\Domain\Enum\Role;
-use DateTimeImmutable;
-use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,7 +18,7 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Crm\Transport\Request\CrmRequestHandler;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
@@ -32,7 +30,7 @@ final readonly class PutBillingController
         private CompanyRepository $companyRepository,
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
-        private ValidatorInterface $validator,
+        private CrmRequestHandler $crmRequestHandler,
         private CrmReadCacheInvalidator $cacheInvalidator,
     ) {
     }
@@ -46,20 +44,14 @@ final readonly class PutBillingController
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Billing not found for this CRM scope.');
         }
 
-        try {
-            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException) {
-            return $this->errorResponseFactory->invalidJson();
+        $payload = $this->crmRequestHandler->decodeJson($request);
+        if ($payload instanceof JsonResponse) {
+            return $payload;
         }
 
-        if (!is_array($payload)) {
-            return $this->errorResponseFactory->invalidJson();
-        }
-
-        $input = CreateBillingRequest::fromArray($payload);
-        $violations = $this->validator->validate($input);
-        if ($violations->count() > 0) {
-            return $this->errorResponseFactory->validationFailed($violations);
+        $input = $this->crmRequestHandler->mapAndValidate($payload, CreateBillingRequest::class);
+        if ($input instanceof JsonResponse) {
+            return $input;
         }
 
         $companyId = (string)($input->companyId ?? '');
@@ -72,13 +64,18 @@ final readonly class PutBillingController
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Company not found for this CRM scope.');
         }
 
+        $dueAt = $this->crmRequestHandler->parseNullableIso8601($input->dueAt, 'dueAt');
+        if ($dueAt instanceof JsonResponse) {
+            return $dueAt;
+        }
+
         $entity
             ->setCompany($company)
             ->setLabel((string)$input->label)
             ->setAmount((float)$input->amount)
             ->setCurrency($input->currency ?: 'EUR')
             ->setStatus($input->status ?: 'pending')
-            ->setDueAt(($input->dueAt ?? '') !== '' ? new DateTimeImmutable((string)$input->dueAt) : null);
+            ->setDueAt($dueAt);
 
         $this->billingRepository->save($entity);
 

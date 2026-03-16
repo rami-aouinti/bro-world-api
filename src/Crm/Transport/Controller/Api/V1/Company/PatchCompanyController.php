@@ -9,14 +9,13 @@ use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\Crm\Transport\Request\UpdateCompanyRequest;
 use App\Role\Domain\Enum\Role;
-use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Crm\Transport\Request\CrmRequestHandler;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
@@ -27,7 +26,7 @@ final readonly class PatchCompanyController
         private CompanyRepository $companyRepository,
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
-        private ValidatorInterface $validator,
+        private CrmRequestHandler $crmRequestHandler,
     ) {
     }
 
@@ -40,20 +39,14 @@ final readonly class PatchCompanyController
             return $this->errorResponseFactory->notFoundReference('companyId');
         }
 
-        try {
-            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException) {
-            return $this->errorResponseFactory->invalidJson();
+        $payload = $this->crmRequestHandler->decodeJson($request);
+        if ($payload instanceof JsonResponse) {
+            return $payload;
         }
 
-        if (!is_array($payload)) {
-            return $this->errorResponseFactory->invalidJson();
-        }
-
-        $input = UpdateCompanyRequest::fromPatchArray($payload);
-        $violations = $this->validator->validate($input);
-        if ($violations->count() > 0) {
-            return $this->errorResponseFactory->validationFailed($violations);
+        $input = $this->crmRequestHandler->mapAndValidate($payload, UpdateCompanyRequest::class, mapperMethod: 'fromPatchArray');
+        if ($input instanceof JsonResponse) {
+            return $input;
         }
 
         if ($input->hasName) {

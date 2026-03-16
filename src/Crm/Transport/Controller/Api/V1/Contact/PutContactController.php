@@ -10,14 +10,13 @@ use App\Crm\Infrastructure\Repository\ContactRepository;
 use App\Crm\Transport\Request\CreateContactRequest;
 use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\Role\Domain\Enum\Role;
-use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Crm\Transport\Request\CrmRequestHandler;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
@@ -29,7 +28,7 @@ final readonly class PutContactController
         private ContactRepository $contactRepository,
         private CompanyRepository $companyRepository,
         private CrmApiErrorResponseFactory $errorResponseFactory,
-        private ValidatorInterface $validator,
+        private CrmRequestHandler $crmRequestHandler,
     ) {
     }
 
@@ -42,20 +41,14 @@ final readonly class PutContactController
             return $this->errorResponseFactory->notFoundReference('contactId');
         }
 
-        try {
-            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException) {
-            return $this->errorResponseFactory->invalidJson();
+        $payload = $this->crmRequestHandler->decodeJson($request);
+        if ($payload instanceof JsonResponse) {
+            return $payload;
         }
 
-        if (!is_array($payload)) {
-            return $this->errorResponseFactory->invalidJson();
-        }
-
-        $input = CreateContactRequest::fromArray($payload);
-        $violations = $this->validator->validate($input);
-        if ($violations->count() > 0) {
-            return $this->errorResponseFactory->validationFailed($violations);
+        $input = $this->crmRequestHandler->mapAndValidate($payload, CreateContactRequest::class);
+        if ($input instanceof JsonResponse) {
+            return $input;
         }
 
         $contact

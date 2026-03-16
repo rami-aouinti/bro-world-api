@@ -14,10 +14,7 @@ use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\General\Application\Message\EntityCreated;
 use App\Role\Domain\Enum\Role;
 use App\User\Domain\Entity\User;
-use DateTimeImmutable;
-use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
-use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,7 +23,8 @@ use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Crm\Transport\Request\CrmDateParser;
+use App\Crm\Transport\Request\CrmRequestHandler;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
@@ -38,7 +36,8 @@ final readonly class CreateTaskRequestController
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
         private CrmTaskBlogProvisioningService $crmTaskBlogProvisioningService,
-        private ValidatorInterface $validator,
+        private CrmRequestHandler $crmRequestHandler,
+        private CrmDateParser $crmDateParser,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -124,23 +123,17 @@ final readonly class CreateTaskRequestController
         $request->attributes->set('applicationSlug', $applicationSlug);
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
 
-        try {
-            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException) {
-            return $this->errorResponseFactory->invalidJson();
+        $payload = $this->crmRequestHandler->decodeJson($request);
+        if ($payload instanceof JsonResponse) {
+            return $payload;
         }
 
-        if (!is_array($payload)) {
-            return $this->errorResponseFactory->invalidJson();
+        $input = $this->crmRequestHandler->mapAndValidate($payload, CreateTaskRequestEntryRequest::class);
+        if ($input instanceof JsonResponse) {
+            return $input;
         }
 
-        $input = CreateTaskRequestEntryRequest::fromArray($payload);
-        $violations = $this->validator->validate($input);
-        if ($violations->count() > 0) {
-            return $this->errorResponseFactory->validationFailed($violations);
-        }
-
-        $resolvedAt = $this->parseDate($input->resolvedAt, 'resolvedAt');
+        $resolvedAt = $this->crmDateParser->parseNullableIso8601($input->resolvedAt, 'resolvedAt');
         if ($resolvedAt instanceof JsonResponse) {
             return $resolvedAt;
         }
@@ -183,17 +176,4 @@ final readonly class CreateTaskRequestController
         ], JsonResponse::HTTP_CREATED);
     }
 
-    private function parseDate(?string $value, string $field): DateTimeImmutable|JsonResponse|null
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $date = DateTimeImmutable::createFromFormat(DateTimeInterface::ATOM, $value);
-        if ($date === false) {
-            return $this->errorResponseFactory->invalidDate($field);
-        }
-
-        return $date;
-    }
 }
