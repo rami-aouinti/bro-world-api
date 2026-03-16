@@ -21,23 +21,7 @@ final class CrmApiNormalizer
      */
     public function normalizeTask(Task $task): array
     {
-        $assignees = [];
-        foreach ($task->getAssignees() as $assignee) {
-            if (!$assignee instanceof User) {
-                continue;
-            }
-
-            $assignees[] = $this->normalizeAssignee($assignee);
-        }
-
-        $children = [];
-        foreach ($task->getTaskRequests() as $taskRequest) {
-            if (!$taskRequest instanceof TaskRequest) {
-                continue;
-            }
-
-            $children[] = $this->normalizeTaskRequest($taskRequest);
-        }
+        $assignees = $this->mapUserAssignees($task->getAssignees());
 
         return [
             'id' => $task->getId(),
@@ -52,15 +36,7 @@ final class CrmApiNormalizer
             'estimatedHours' => $task->getEstimatedHours(),
             'updatedAt' => $this->normalizeDate($task->getUpdatedAt()),
             'attachments' => $task->getAttachments(),
-            'assignees' => array_map(
-                static fn ($assignee) => [
-                    'id' => $assignee->getId(),
-                    'email' => $assignee->getEmail(),
-                    'firstName' => $assignee->getFirstName(),
-                    'lastName' => $assignee->getLastName(),
-                    'photo' => $assignee->getPhoto(),
-                ],
-                $task->getAssignees()->toArray()),
+            'assignees' => $assignees,
             'children' => array_map(
                 static fn (TaskRequest $taskRequest) => [
                     'id' => $taskRequest->getId(),
@@ -78,14 +54,7 @@ final class CrmApiNormalizer
      */
     public function normalizeTaskRequest(TaskRequest $taskRequest): array
     {
-        $assignees = [];
-        foreach ($taskRequest->getAssignees() as $assignee) {
-            if (!$assignee instanceof User) {
-                continue;
-            }
-
-            $assignees[] = $this->normalizeAssignee($assignee);
-        }
+        $assignees = $this->mapUserAssignees($taskRequest->getAssignees());
 
         return [
             'id' => $taskRequest->getId(),
@@ -95,15 +64,7 @@ final class CrmApiNormalizer
             'requestedAt' => $this->normalizeDate($taskRequest->getRequestedAt()),
             'resolvedAt' => $this->normalizeDate($taskRequest->getResolvedAt()),
             'attachments' => $taskRequest->getAttachments(),
-            'assignees' => array_map(
-                static fn ($assignee) => [
-                    'id' => $assignee->getId(),
-                    'email' => $assignee->getEmail(),
-                    'firstName' => $assignee->getFirstName(),
-                    'lastName' => $assignee->getLastName(),
-                    'photo' => $assignee->getPhoto(),
-                ],
-                $taskRequest->getAssignees()->toArray()),
+            'assignees' => $assignees,
             'blog' => $this->crmBlogNormalizer->normalizeBlog($taskRequest->getBlog()),
         ];
     }
@@ -116,7 +77,7 @@ final class CrmApiNormalizer
         return [
             'id' => (string)($item['id'] ?? ''),
             'name' => (string)($item['name'] ?? ''),
-            'status' => (bool)($item['status'] ?? ''),
+            'status' => (string)($item['status'] ?? ''),
             'startDate' => $this->normalizeDateValue($item['startDate'] ?? null),
             'endDate' => $this->normalizeDateValue($item['endDate'] ?? null),
         ];
@@ -130,7 +91,7 @@ final class CrmApiNormalizer
         return [
             'id' => (string)($item['id'] ?? ''),
             'name' => (string)($item['name'] ?? ''),
-            'status' => (bool)($item['status'] ?? ''),
+            'status' => (string)($item['status'] ?? ''),
         ];
     }
 
@@ -139,29 +100,14 @@ final class CrmApiNormalizer
      */
     public function normalizeTaskRequestProjection(array $item): array
     {
-        $assignees = [];
-        foreach ((array)($item['assignees'] ?? []) as $assignee) {
-            if (!is_array($assignee)) {
-                continue;
-            }
-
-            $assignees[] = [
-                'id' => $assignee['id'] ?? null,
-                'username' => $assignee['username'] ?? null,
-                'firstName' => $assignee['firstName'] ?? null,
-                'lastName' => $assignee['lastName'] ?? null,
-                'photo' => $assignee['photo'] ?? null,
-            ];
-        }
-
         return [
             'id' => (string)($item['id'] ?? ''),
             'taskId' => $item['taskId'] ?? null,
             'title' => (string)($item['title'] ?? ''),
-            'status' => (bool)($item['status'] ?? ''),
+            'status' => (string)($item['status'] ?? ''),
             'requestedAt' => $this->normalizeDateValue($item['requestedAt'] ?? null),
             'resolvedAt' => $this->normalizeDateValue($item['resolvedAt'] ?? null),
-            'assignees' => $assignees,
+            'assignees' => $this->mapTaskRequestAssigneesProjection((array)($item['assignees'] ?? [])),
         ];
     }
 
@@ -177,6 +123,50 @@ final class CrmApiNormalizer
             'lastName' => $user->getLastName(),
             'photo' => $user->getPhoto(),
         ];
+    }
+
+    /**
+     * @param iterable<mixed> $assignees
+     * @return array<int,array<string,mixed>>
+     */
+    private function mapUserAssignees(iterable $assignees): array
+    {
+        $normalizedAssignees = [];
+
+        foreach ($assignees as $assignee) {
+            if (!$assignee instanceof User) {
+                continue;
+            }
+
+            $normalizedAssignees[] = $this->normalizeAssignee($assignee);
+        }
+
+        return $normalizedAssignees;
+    }
+
+    /**
+     * @param array<int,mixed> $assignees
+     * @return array<int,array<string,mixed>>
+     */
+    private function mapTaskRequestAssigneesProjection(array $assignees): array
+    {
+        $normalizedAssignees = [];
+
+        foreach ($assignees as $assignee) {
+            if (!is_array($assignee)) {
+                continue;
+            }
+
+            $normalizedAssignees[] = [
+                'id' => $assignee['id'] ?? null,
+                'username' => $assignee['username'] ?? $assignee['email'] ?? null,
+                'firstName' => $assignee['firstName'] ?? null,
+                'lastName' => $assignee['lastName'] ?? null,
+                'photo' => $assignee['photo'] ?? null,
+            ];
+        }
+
+        return $normalizedAssignees;
     }
 
     private function normalizeDate(?DateTimeInterface $date): ?string
