@@ -154,4 +154,49 @@ final class CrmReportServiceTest extends TestCase
         self::assertStringContainsString('CRM REPORT\\nPipeline: 123.45\\nDeals: 3', $pdf);
         self::assertStringContainsString('%%EOF', $pdf);
     }
+
+    public function testBuildClampsNpsAndProvidesFallbackActionWhenNoCountsTrigger(): void
+    {
+        $companyRepository = $this->createMock(CompanyRepository::class);
+        $contactRepository = $this->createMock(ContactRepository::class);
+        $employeeRepository = $this->createMock(EmployeeRepository::class);
+        $billingRepository = $this->createMock(BillingRepository::class);
+        $projectRepository = $this->createMock(ProjectRepository::class);
+        $taskRepository = $this->createMock(TaskRepository::class);
+
+        $crm = $this->createMock(Crm::class);
+        $crm->method('getId')->willReturn('crm-clamp');
+
+        $companyRepository->method('findScoped')->willReturn([]);
+        $employeeRepository->method('findScoped')->willReturn([]);
+        $billingRepository->method('findByCrm')->willReturn([]);
+        $projectRepository->method('findScoped')->willReturn([]);
+        $projectRepository->method('countProjectsByCrm')->willReturn(0);
+        $taskRepository->method('countTasksByCrm')->willReturn(0);
+
+        $contact = $this->createMock(Contact::class);
+        $contact->method('getId')->willReturn('contact-high-score');
+        $contact->method('getFirstName')->willReturn('Alice');
+        $contact->method('getLastName')->willReturn('High');
+        $contact->method('getEmail')->willReturn('alice.high@example.test');
+        $contact->method('getJobTitle')->willReturn('Head of CRM');
+        $contact->method('getCity')->willReturn('Paris');
+        $contact->method('getScore')->willReturn(999);
+        $contactRepository->method('findScoped')->willReturn([$contact]);
+
+        $service = new CrmReportService(
+            $companyRepository,
+            $contactRepository,
+            $employeeRepository,
+            $billingRepository,
+            $projectRepository,
+            $taskRepository,
+        );
+
+        $report = $service->build($crm)->toArray();
+
+        self::assertSame(100, $report['kpis']['npsClients']);
+        self::assertCount(1, $report['recommendedActions']);
+        self::assertSame('Maintenir la cadence de suivi CRM', $report['recommendedActions'][0]['title']);
+    }
 }
