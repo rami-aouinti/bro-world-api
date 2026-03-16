@@ -11,7 +11,6 @@ use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\General\Application\Message\EntityCreated;
 use App\Role\Domain\Enum\Role;
 use Doctrine\ORM\EntityManagerInterface;
-use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,7 +19,7 @@ use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Crm\Transport\Request\CrmRequestHandler;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
@@ -30,7 +29,7 @@ final readonly class CreateCompanyByApplicationController
     public function __construct(
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
-        private ValidatorInterface $validator,
+        private CrmRequestHandler $crmRequestHandler,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -110,20 +109,14 @@ final readonly class CreateCompanyByApplicationController
         $request->attributes->set('applicationSlug', $applicationSlug);
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
 
-        try {
-            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException) {
-            return $this->errorResponseFactory->invalidJson();
+        $payload = $this->crmRequestHandler->decodeJson($request);
+        if ($payload instanceof JsonResponse) {
+            return $payload;
         }
 
-        if (!is_array($payload)) {
-            return $this->errorResponseFactory->invalidJson();
-        }
-
-        $input = CreateCompanyRequest::fromArray($payload);
-        $violations = $this->validator->validate($input);
-        if ($violations->count() > 0) {
-            return $this->errorResponseFactory->validationFailed($violations);
+        $input = $this->crmRequestHandler->mapAndValidate($payload, CreateCompanyRequest::class);
+        if ($input instanceof JsonResponse) {
+            return $input;
         }
 
         $company = new Company()
