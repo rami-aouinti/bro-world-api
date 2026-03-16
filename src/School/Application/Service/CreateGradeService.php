@@ -6,20 +6,15 @@ namespace App\School\Application\Service;
 
 use App\General\Application\Message\EntityCreated;
 use App\School\Application\Exception\SchoolRelationException;
-use App\School\Domain\Entity\Exam;
 use App\School\Domain\Entity\Grade;
 use App\School\Domain\Entity\School;
-use App\School\Domain\Entity\Student;
-use App\School\Infrastructure\Repository\ExamRepository;
-use App\School\Infrastructure\Repository\StudentRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 final readonly class CreateGradeService
 {
     public function __construct(
-        private StudentRepository $studentRepository,
-        private ExamRepository $examRepository,
+        private SchoolReferenceResolver $referenceResolver,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -27,23 +22,8 @@ final readonly class CreateGradeService
 
     public function create(School $school, float $score, ?string $studentId, ?string $examId): Grade
     {
-        if (!is_string($studentId)) {
-            throw SchoolRelationException::unprocessable('studentId is required');
-        }
-
-        if (!is_string($examId)) {
-            throw SchoolRelationException::unprocessable('examId is required');
-        }
-
-        $student = $this->studentRepository->find($studentId);
-        if (!$student instanceof Student || $student->getSchoolClass()?->getSchool()?->getId() !== $school->getId()) {
-            throw SchoolRelationException::notFound('studentId');
-        }
-
-        $exam = $this->examRepository->find($examId);
-        if (!$exam instanceof Exam || $exam->getSchoolClass()?->getSchool()?->getId() !== $school->getId()) {
-            throw SchoolRelationException::notFound('examId');
-        }
+        $student = $this->referenceResolver->resolveStudentInSchool($school, $studentId);
+        $exam = $this->referenceResolver->resolveExamInSchool($school, $examId);
 
         if ($student->getSchoolClass()?->getId() !== $exam->getSchoolClass()?->getId()) {
             throw SchoolRelationException::unprocessable('studentId and examId must belong to the same class');

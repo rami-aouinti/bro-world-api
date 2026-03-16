@@ -4,25 +4,20 @@ declare(strict_types=1);
 
 namespace App\School\Application\Service;
 
-use App\School\Domain\Entity\SchoolClass;
-use App\School\Domain\Entity\Teacher;
-use App\School\Infrastructure\Repository\SchoolClassRepository;
+use App\School\Domain\Entity\School;
 use App\School\Infrastructure\Repository\TeacherRepository;
-use Ramsey\Uuid\Uuid;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 final readonly class ClassTeacherAssignmentService
 {
     public function __construct(
-        private SchoolClassRepository $classRepository,
+        private SchoolReferenceResolver $referenceResolver,
         private TeacherRepository $teacherRepository,
     ) {
     }
 
-    public function assign(string $classId, string $teacherId): void
+    public function assign(School $school, string $classId, string $teacherId): void
     {
-        [$class, $teacher] = $this->resolve($classId, $teacherId);
+        [$class, $teacher] = $this->resolve($school, $classId, $teacherId);
 
         if (!$teacher->getClasses()->contains($class)) {
             $teacher->getClasses()->add($class);
@@ -30,9 +25,9 @@ final readonly class ClassTeacherAssignmentService
         }
     }
 
-    public function unassign(string $classId, string $teacherId): void
+    public function unassign(School $school, string $classId, string $teacherId): void
     {
-        [$class, $teacher] = $this->resolve($classId, $teacherId);
+        [$class, $teacher] = $this->resolve($school, $classId, $teacherId);
 
         if ($teacher->getClasses()->contains($class)) {
             $teacher->getClasses()->removeElement($class);
@@ -41,24 +36,16 @@ final readonly class ClassTeacherAssignmentService
     }
 
     /**
-     * @return array{0:SchoolClass,1:Teacher}
+     * @return array{0:\App\School\Domain\Entity\SchoolClass,1:\App\School\Domain\Entity\Teacher}
      */
-    private function resolve(string $classId, string $teacherId): array
+    private function resolve(School $school, string $classId, string $teacherId): array
     {
-        if (!Uuid::isValid($classId) || !Uuid::isValid($teacherId)) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Invalid identifier format.');
-        }
+        $this->referenceResolver->assertValidIdentifier($classId, 'classId');
+        $this->referenceResolver->assertValidIdentifier($teacherId, 'teacherId');
 
-        $class = $this->classRepository->find($classId);
-        if (!$class instanceof SchoolClass) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Class not found.');
-        }
-
-        $teacher = $this->teacherRepository->find($teacherId);
-        if (!$teacher instanceof Teacher) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Teacher not found.');
-        }
-
-        return [$class, $teacher];
+        return [
+            $this->referenceResolver->resolveClassInSchool($school, $classId),
+            $this->referenceResolver->resolveTeacherInSchool($school, $teacherId),
+        ];
     }
 }

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\School\Transport\Controller\Api\V1\Class;
 
 use App\School\Application\Service\ClassTeacherAssignmentService;
+use App\School\Application\Service\SchoolApplicationScopeResolver;
+use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,14 +21,16 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class UnassignClassTeacherController
 {
     public function __construct(
-        private ClassTeacherAssignmentService $assignmentService
+        private ClassTeacherAssignmentService $assignmentService,
+        private SchoolApplicationScopeResolver $scopeResolver,
     ) {
     }
     #[Route('/v1/school/applications/{applicationSlug}/classes/{id}/teachers/{teacherId}', methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, string $id, string $teacherId): JsonResponse
+    public function __invoke(string $applicationSlug, string $id, string $teacherId, ?User $loggedInUser): JsonResponse
     {
-        $this->assignmentService->unassign($id, $teacherId);
+        $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
+        $this->assignmentService->unassign($school, $id, $teacherId);
 
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }

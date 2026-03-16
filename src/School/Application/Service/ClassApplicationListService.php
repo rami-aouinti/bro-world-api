@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\School\Application\Service;
 
 use App\General\Application\Service\CacheKeyConventionService;
-use App\School\Application\Serializer\SchoolApiResponseSerializer;
 use App\School\Application\Serializer\SchoolViewMapper;
 use App\School\Domain\Entity\School;
 use App\School\Infrastructure\Repository\SchoolClassRepository;
@@ -22,7 +21,8 @@ readonly class ClassApplicationListService
         private CacheInterface $cache,
         private CacheKeyConventionService $cacheKeyConventionService,
         private SchoolViewMapper $viewMapper,
-        private SchoolApiResponseSerializer $responseSerializer,
+        private SchoolListRequestHelper $listRequestHelper,
+        private SchoolListResponseFactory $listResponseFactory,
     ) {
     }
 
@@ -31,16 +31,12 @@ readonly class ClassApplicationListService
      * @throws \JsonException
      * @throws InvalidArgumentException
      */
-    public function getList(Request $request, string $applicationSlug, School $school): array
+    public function list(Request $request, string $applicationSlug, School $school): array
     {
-        $page = max(1, $request->query->getInt('page', 1));
-        $limit = max(1, min(100, $request->query->getInt('limit', 20)));
-        $filters = [
-            'q' => trim((string)$request->query->get('q', '')),
-        ];
-        $cacheKey = $this->cacheKeyConventionService->buildSchoolClassApplicationListKey($applicationSlug, $page, $limit, $filters);
+        $queryOptions = $this->listRequestHelper->fromRequest($request, ['q']);
+        $cacheKey = $this->cacheKeyConventionService->buildSchoolClassApplicationListKey($applicationSlug, $queryOptions->page, $queryOptions->limit, $queryOptions->filters);
 
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $school, $filters, $page, $limit): array {
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $school, $queryOptions): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->schoolClassListByApplicationTag($applicationSlug));
@@ -49,33 +45,28 @@ readonly class ClassApplicationListService
             $qb = $this->classRepository->createQueryBuilder('class')
                 ->andWhere('class.school = :school')->setParameter('school', $school)
                 ->orderBy('class.createdAt', 'DESC')
-                ->setFirstResult(($page - 1) * $limit)
-                ->setMaxResults($limit);
-            if ($filters['q'] !== '') {
-                $qb->andWhere('LOWER(class.name) LIKE LOWER(:q)')->setParameter('q', '%' . $filters['q'] . '%');
+                ->setFirstResult($queryOptions->offset())
+                ->setMaxResults($queryOptions->limit);
+            if ($queryOptions->filters['q'] !== '') {
+                $qb->andWhere('LOWER(class.name) LIKE LOWER(:q)')->setParameter('q', '%' . $queryOptions->filters['q'] . '%');
             }
 
             $items = $this->viewMapper->mapClassCollection($qb->getQuery()->getResult());
 
             $countQb = $this->classRepository->createQueryBuilder('class')->select('COUNT(class.id)')
                 ->andWhere('class.school = :school')->setParameter('school', $school);
-            if ($filters['q'] !== '') {
-                $countQb->andWhere('LOWER(class.name) LIKE LOWER(:q)')->setParameter('q', '%' . $filters['q'] . '%');
+            if ($queryOptions->filters['q'] !== '') {
+                $countQb->andWhere('LOWER(class.name) LIKE LOWER(:q)')->setParameter('q', '%' . $queryOptions->filters['q'] . '%');
             }
             $totalItems = (int)$countQb->getQuery()->getSingleScalarResult();
 
-            return $this->responseSerializer->list(
+            return $this->listResponseFactory->create(
+                $queryOptions,
+                $totalItems,
                 $items,
-                [
-                    'page' => $page,
-                    'limit' => $limit,
-                    'totalItems' => $totalItems,
-                    'totalPages' => $totalItems > 0 ? (int)ceil($totalItems / $limit) : 0,
-                ],
                 [
                     'applicationSlug' => $applicationSlug,
                     'schoolId' => $school->getId(),
-                    'filters' => array_filter($filters),
                 ],
             );
         });
