@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace App\Crm\Application\Service;
 
+use App\Crm\Application\Dto\Report\CrmRecommendedActionDto;
+use App\Crm\Application\Dto\Report\CrmReportContactDto;
+use App\Crm\Application\Dto\Report\CrmReportCountsDto;
+use App\Crm\Application\Dto\Report\CrmReportDto;
+use App\Crm\Application\Dto\Report\CrmReportKpisDto;
+use App\Crm\Application\Dto\Report\CrmReportMetadataDto;
 use App\Crm\Domain\Entity\Crm;
 use App\Crm\Infrastructure\Repository\BillingRepository;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
@@ -26,83 +32,97 @@ final readonly class CrmReportService
     ) {
     }
 
-    /**
-     * @return array<string,mixed>
-     */
-    public function build(Crm $crm): array
+    public function build(Crm $crm): CrmReportDto
     {
         $companies = $this->companyRepository->findScoped($crm->getId(), 100, 0);
         $contacts = $this->contactRepository->findScoped($crm->getId(), 200, 0);
         $employees = $this->employeeRepository->findScoped($crm->getId(), 200, 0);
         $billings = $this->billingRepository->findByCrm($crm->getId(), 200, 0);
+        $projects = $this->projectRepository->findScoped($crm->getId(), 200, 0);
 
         $totalBilling = 0.0;
         foreach ($billings as $billing) {
             $totalBilling += $billing->getAmount();
         }
 
-        return [
-            'kpis' => [
-                'pipeline' => round($totalBilling, 2),
-                'dealsWon' => $this->projectRepository->countProjectsByCrm($crm->getId()),
-                'cycleDays' => 23,
-                'npsClients' => 68,
-            ],
-            'counts' => [
-                'companies' => count($companies),
-                'contacts' => count($contacts),
-                'employees' => count($employees),
-                'billings' => count($billings),
-                'tasks' => $this->taskRepository->countTasksByCrm($crm->getId()),
-            ],
-            'contacts' => array_map(static fn ($c) => [
-                'id' => $c->getId(),
-                'name' => trim($c->getFirstName() . ' ' . $c->getLastName()),
-                'email' => $c->getEmail(),
-                'jobTitle' => $c->getJobTitle(),
-                'city' => $c->getCity(),
-                'score' => $c->getScore(),
-            ], $contacts),
-            'recommendedActions' => [
-                [
-                    'priority' => 'P0',
-                    'title' => 'Automatiser séquences email',
-                    'owner' => 'RevOps',
-                    'etaDays' => 5,
-                ],
-                [
-                    'priority' => 'P1',
-                    'title' => 'Rapports forecast avancés',
-                    'owner' => 'Finance',
-                    'etaDays' => 8,
-                ],
-                [
-                    'priority' => 'P1',
-                    'title' => 'Vue 360 contacts',
-                    'owner' => 'Sales',
-                    'etaDays' => 6,
-                ],
-            ],
-        ];
+        $averageContactScore = 0.0;
+        if ($contacts !== []) {
+            $scoreSum = 0;
+            foreach ($contacts as $contact) {
+                $scoreSum += $contact->getScore();
+            }
+            $averageContactScore = $scoreSum / count($contacts);
+        }
+
+        $cycleDays = 0;
+        if ($projects !== []) {
+            $totalCycleDays = 0;
+            $projectCount = 0;
+            foreach ($projects as $project) {
+                $startedAt = $project->getStartedAt();
+                $dueAt = $project->getDueAt();
+                if ($startedAt === null || $dueAt === null) {
+                    continue;
+                }
+                $days = (int)$startedAt->diff($dueAt)->format('%a');
+                $totalCycleDays += $days;
+                ++$projectCount;
+            }
+
+            if ($projectCount > 0) {
+                $cycleDays = (int)round($totalCycleDays / $projectCount);
+            }
+        }
+
+        $counts = new CrmReportCountsDto(
+            companies: count($companies),
+            contacts: count($contacts),
+            employees: count($employees),
+            billings: count($billings),
+            tasks: $this->taskRepository->countTasksByCrm($crm->getId()),
+        );
+
+        return new CrmReportDto(
+            metadata: new CrmReportMetadataDto(
+                period: 'rolling-30d',
+                timezone: 'UTC',
+                generatedAt: (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format(\DateTimeInterface::ATOM),
+                version: 'v1',
+            ),
+            kpis: new CrmReportKpisDto(
+                pipeline: round($totalBilling, 2),
+                dealsWon: $this->projectRepository->countProjectsByCrm($crm->getId()),
+                cycleDays: $cycleDays,
+                npsClients: (int)round(max(0.0, min(100.0, $averageContactScore))),
+            ),
+            counts: $counts,
+            contacts: array_map(static fn ($c) => new CrmReportContactDto(
+                id: $c->getId(),
+                name: trim($c->getFirstName() . ' ' . $c->getLastName()),
+                email: $c->getEmail(),
+                jobTitle: $c->getJobTitle(),
+                city: $c->getCity(),
+                score: $c->getScore(),
+            ), $contacts),
+            recommendedActions: $this->buildRecommendedActions($counts),
+        );
     }
 
-    /**
-     * @param array<string,mixed> $report
-     */
-    public function toCsv(array $report): string
+    public function toCsv(CrmReportDto $report): string
     {
+        $reportData = $report->toArray();
         $h = fopen('php://temp', 'r+');
         if ($h === false) {
             return '';
         }
         fputcsv($h, ['section', 'metric', 'value']);
-        foreach (($report['kpis'] ?? []) as $metric => $value) {
+        foreach (($reportData['kpis'] ?? []) as $metric => $value) {
             fputcsv($h, ['kpis', (string)$metric, (string)$value]);
         }
-        foreach (($report['counts'] ?? []) as $metric => $value) {
+        foreach (($reportData['counts'] ?? []) as $metric => $value) {
             fputcsv($h, ['counts', (string)$metric, (string)$value]);
         }
-        foreach (($report['contacts'] ?? []) as $contact) {
+        foreach (($reportData['contacts'] ?? []) as $contact) {
             fputcsv($h, ['contact', (string)($contact['name'] ?? ''), (string)($contact['score'] ?? 0)]);
         }
         rewind($h);
@@ -111,14 +131,25 @@ final readonly class CrmReportService
     }
 
     /**
-     * @param array<string,mixed> $report
+     * @return list<CrmRecommendedActionDto>
      */
-    public function toPdf(array $report): string
+    private function buildRecommendedActions(CrmReportCountsDto $counts): array
     {
-        $text = 'CRM REPORT\nPipeline: ' . ($report['kpis']['pipeline'] ?? 0) . '\nDeals: ' . ($report['kpis']['dealsWon'] ?? 0);
-        $stream = 'BT /F1 18 Tf 40 760 Td (' . str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $text) . ') Tj ET';
-        $len = strlen($stream);
+        $actions = [];
+        if ($counts->tasks > 50) {
+            $actions[] = new CrmRecommendedActionDto('P0', 'Réduire le backlog des tâches', 'Delivery', 7);
+        }
+        if ($counts->contacts > 0 && $counts->companies > 0 && ($counts->contacts / max($counts->companies, 1)) < 2.0) {
+            $actions[] = new CrmRecommendedActionDto('P1', 'Enrichir les contacts par entreprise', 'Sales', 10);
+        }
+        if ($counts->billings > 0) {
+            $actions[] = new CrmRecommendedActionDto('P1', 'Suivre les factures en retard', 'Finance', 5);
+        }
 
-        return "%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj\n4 0 obj << /Length {$len} >> stream\n{$stream}\nendstream endobj\n5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\nxref\n0 6\n0000000000 65535 f \n0000000010 00000 n \n0000000060 00000 n \n0000000117 00000 n \n0000000243 00000 n \n0000000365 00000 n \ntrailer << /Size 6 /Root 1 0 R >>\nstartxref\n435\n%%EOF";
+        if ($actions === []) {
+            $actions[] = new CrmRecommendedActionDto('P2', 'Maintenir la cadence de suivi CRM', 'RevOps', 14);
+        }
+
+        return $actions;
     }
 }

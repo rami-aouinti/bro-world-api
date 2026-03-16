@@ -6,6 +6,7 @@ namespace App\Crm\Transport\Controller\Api\V1\Report;
 
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Application\Service\CrmReportService;
+use App\Crm\Application\Service\Report\CrmReportPdfExporter;
 use App\Role\Domain\Enum\Role;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\HeaderUtils;
@@ -24,6 +25,7 @@ final readonly class ReportsController
     public function __construct(
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmReportService $crmReportService,
+        private CrmReportPdfExporter $pdfExporter,
     ) {
     }
 
@@ -42,12 +44,19 @@ final readonly class ReportsController
         }
 
         if ($format === 'pdf') {
-            return new Response($this->crmReportService->toPdf($report), 200, [
+            return new Response($this->pdfExporter->export($report), 200, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, sprintf('crm-report-%s.pdf', $applicationSlug)),
             ]);
         }
 
-        return new JsonResponse($report);
+        if ($format !== 'json') {
+            return new JsonResponse([
+                'message' => sprintf('Unsupported report format "%s".', $format),
+                'supportedFormats' => ['json', 'csv', 'pdf'],
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        return new JsonResponse($report->toArray());
     }
 }
