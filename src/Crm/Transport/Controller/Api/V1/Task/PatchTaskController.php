@@ -11,10 +11,9 @@ use App\Crm\Domain\Enum\TaskStatus;
 use App\Crm\Infrastructure\Repository\SprintRepository;
 use App\Crm\Infrastructure\Repository\TaskRepository;
 use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
+use App\Crm\Transport\Request\CrmDateParser;
+use App\Crm\Transport\Request\CrmRequestHandler;
 use App\Role\Domain\Enum\Role;
-use DateTimeImmutable;
-use DateTimeInterface;
-use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,6 +31,8 @@ final readonly class PatchTaskController
         private SprintRepository $sprintRepository,
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
+        private CrmRequestHandler $crmRequestHandler,
+        private CrmDateParser $crmDateParser,
     ) {
     }
 
@@ -40,20 +41,16 @@ final readonly class PatchTaskController
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
 
-        try {
-            $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException) {
-            return $this->errorResponseFactory->invalidJson();
-        }
-        if (!is_array($payload)) {
-            return $this->errorResponseFactory->invalidJson();
+        $payload = $this->crmRequestHandler->decodeJson($request);
+        if ($payload instanceof JsonResponse) {
+            return $payload;
         }
 
         if (isset($payload['title'])) {
-            $task->setTitle((string)$payload['title']);
+            $task->setTitle((string) $payload['title']);
         }
         if (array_key_exists('description', $payload)) {
-            $task->setDescription($payload['description'] !== null ? (string)$payload['description'] : null);
+            $task->setDescription($payload['description'] !== null ? (string) $payload['description'] : null);
         }
         if (isset($payload['status']) && is_string($payload['status'])) {
             $status = TaskStatus::tryFrom($payload['status']);
@@ -68,10 +65,19 @@ final readonly class PatchTaskController
             }
         }
         if (array_key_exists('dueAt', $payload)) {
-            $task->setDueAt($this->parseDate($payload['dueAt']));
+            if (!is_string($payload['dueAt']) && $payload['dueAt'] !== null) {
+                return $this->errorResponseFactory->invalidDate('dueAt');
+            }
+
+            $dueAt = $this->crmDateParser->parseNullableIso8601($payload['dueAt'], 'dueAt');
+            if ($dueAt instanceof JsonResponse) {
+                return $dueAt;
+            }
+
+            $task->setDueAt($dueAt);
         }
         if (array_key_exists('estimatedHours', $payload)) {
-            $task->setEstimatedHours(is_numeric($payload['estimatedHours']) ? (float)$payload['estimatedHours'] : null);
+            $task->setEstimatedHours(is_numeric($payload['estimatedHours']) ? (float) $payload['estimatedHours'] : null);
         }
         if (array_key_exists('sprintId', $payload)) {
             if ($payload['sprintId'] === null || $payload['sprintId'] === '') {
@@ -89,15 +95,5 @@ final readonly class PatchTaskController
         return new JsonResponse([
             'id' => $task->getId(),
         ]);
-    }
-
-    private function parseDate(mixed $value): ?DateTimeImmutable
-    {
-        if ($value === null || $value === '' || !is_string($value)) {
-            return null;
-        }
-        $parsed = DateTimeImmutable::createFromFormat(DateTimeInterface::ATOM, $value);
-
-        return $parsed === false ? null : $parsed;
     }
 }

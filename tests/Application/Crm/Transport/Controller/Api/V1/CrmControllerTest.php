@@ -424,6 +424,53 @@ final class CrmControllerTest extends WebTestCase
         }
     }
 
+
+    #[TestDox('CreateTaskController returns standardized date parsing error payload.')]
+    public function testCreateTaskInvalidDateUsesStandardizedError(): void
+    {
+        $companyId = $this->createCompany();
+        $projectId = $this->createProject($companyId);
+
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request(
+            'POST',
+            sprintf('%s/v1/crm/applications/%s/tasks', self::API_URL_PREFIX, self::PRIMARY_APPLICATION_SLUG),
+            content: JSON::encode([
+                'title' => 'Task invalid dueAt',
+                'projectId' => $projectId,
+                'dueAt' => 'invalid-date',
+            ])
+        );
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertSame('Invalid date format for "dueAt".', $payload['message'] ?? null);
+        self::assertSame([], $payload['errors'] ?? null);
+    }
+
+    #[TestDox('PatchTaskController returns standardized date parsing error payload.')]
+    public function testPatchTaskInvalidDateUsesStandardizedError(): void
+    {
+        $companyId = $this->createCompany();
+        $projectId = $this->createProject($companyId);
+        $sprintId = $this->createSprint($projectId);
+        $taskId = $this->createTask($projectId, $sprintId);
+
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request(
+            'PATCH',
+            sprintf('%s/v1/crm/applications/%s/tasks/%s', self::API_URL_PREFIX, self::PRIMARY_APPLICATION_SLUG, $taskId),
+            content: JSON::encode([
+                'dueAt' => 'still-not-a-date',
+            ])
+        );
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
+        self::assertSame('Invalid date format for "dueAt".', $payload['message'] ?? null);
+        self::assertSame([], $payload['errors'] ?? null);
+    }
+
     #[TestDox('Delete endpoints reject IDs from another CRM application scope.')]
     #[DataProvider('crossScopeDeleteProvider')]
     public function testDeleteRejectsForeignScopeIds(string $resource, string $foreignIdKey): void
