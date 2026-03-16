@@ -74,12 +74,24 @@ framework:
                     # e.g. 1 second delay, 2 seconds, 4 seconds
                     multiplier: 2
                     max_delay: 0
+            sync:
+                dsn: 'sync://'
             failed:
                 dsn: 'doctrine://default?queue_name=failed'
                 retry_strategy:
                     service: App\General\Infrastructure\Messenger\Strategy\FailedRetry
 
         routing:
+            App\Crm\Application\Message\CreateCompanyCommand: sync
+            App\Crm\Application\Message\PutCompanyCommand: sync
+            App\Crm\Application\Message\PatchCompanyCommand: sync
+            App\Crm\Application\Message\DeleteCompanyCommand: sync
+            App\Crm\Application\Message\PutBillingCommand: sync
+            App\Crm\Application\Message\PatchBillingCommand: sync
+            App\Crm\Application\Message\DeleteBillingCommand: sync
+            App\Crm\Application\Message\PutContactCommand: sync
+            App\Crm\Application\Message\PatchContactCommand: sync
+            App\Crm\Application\Message\DeleteContactCommand: sync
             App\General\Domain\Message\Interfaces\MessageHighInterface: async_priority_high
             App\General\Domain\Message\Interfaces\MessageLowInterface: async_priority_low
 

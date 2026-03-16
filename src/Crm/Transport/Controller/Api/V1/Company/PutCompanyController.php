@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\Company;
 
-use App\Crm\Application\Service\CrmApplicationScopeResolver;
-use App\Crm\Infrastructure\Repository\CompanyRepository;
+use App\Crm\Application\Exception\CrmReferenceNotFoundException;
+use App\Crm\Application\Message\PutCompanyCommand;
 use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\Crm\Transport\Request\UpdateCompanyRequest;
 use App\Role\Domain\Enum\Role;
@@ -13,6 +13,7 @@ use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Crm\Transport\Request\CrmRequestHandler;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -23,22 +24,15 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class PutCompanyController
 {
     public function __construct(
-        private CompanyRepository $companyRepository,
-        private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
         private CrmRequestHandler $crmRequestHandler,
+        private MessageBusInterface $messageBus,
     ) {
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/companies/{companyId}', methods: [Request::METHOD_PUT])]
     public function __invoke(string $applicationSlug, string $companyId, Request $request): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
-        $company = $this->companyRepository->findOneScopedById($companyId, $crm->getId());
-        if ($company === null) {
-            return $this->errorResponseFactory->notFoundReference('companyId');
-        }
-
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {
             return $payload;
@@ -49,17 +43,20 @@ final readonly class PutCompanyController
             return $input;
         }
 
-        $company
-            ->setName((string)$input->name)
-            ->setIndustry($input->industry)
-            ->setWebsite($input->website)
-            ->setContactEmail($input->contactEmail)
-            ->setPhone($input->phone);
+        try {
+            $this->messageBus->dispatch(new PutCompanyCommand(
+                applicationSlug: $applicationSlug,
+                companyId: $companyId,
+                name: (string)$input->name,
+                industry: $input->industry,
+                website: $input->website,
+                contactEmail: $input->contactEmail,
+                phone: $input->phone,
+            ));
+        } catch (CrmReferenceNotFoundException $exception) {
+            return $this->errorResponseFactory->notFoundReference($exception->field);
+        }
 
-        $this->companyRepository->save($company);
-
-        return new JsonResponse([
-            'id' => $company->getId(),
-        ]);
+        return new JsonResponse(['id' => $companyId]);
     }
 }

@@ -7,9 +7,8 @@ namespace App\Crm\Transport\Controller\Api\V1\Contact;
 use App\Crm\Application\Message\CreateContactCommand;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Domain\Entity\Contact;
-use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\Crm\Transport\Request\CreateContactRequest;
-use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
+use App\Crm\Transport\Request\CrmRequestHandler;
 use App\Role\Domain\Enum\Role;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,7 +17,6 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use App\Crm\Transport\Request\CrmRequestHandler;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
@@ -27,8 +25,6 @@ final readonly class CreateContactController
 {
     public function __construct(
         private CrmApplicationScopeResolver $scopeResolver,
-        private CompanyRepository $companyRepository,
-        private CrmApiErrorResponseFactory $errorResponseFactory,
         private CrmRequestHandler $crmRequestHandler,
         private MessageBusInterface $messageBus,
     ) {
@@ -58,13 +54,7 @@ final readonly class CreateContactController
             ->setCity($input->city)
             ->setScore($input->score ?? 0);
 
-        $companyId = null;
-        if (($input->companyId ?? '') !== '') {
-            $company = $this->companyRepository->findOneScopedById((string)$input->companyId, $crm->getId());
-            if ($company !== null) {
-                $companyId = $company->getId();
-            }
-        }
+        $companyId = ($input->companyId ?? '') !== '' ? (string)$input->companyId : null;
 
         $this->messageBus->dispatch(new CreateContactCommand(
             id: $contact->getId(),
