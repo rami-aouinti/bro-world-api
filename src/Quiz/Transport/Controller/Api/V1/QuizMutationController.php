@@ -11,7 +11,7 @@ use App\Quiz\Application\Service\QuizEditorAccessService;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Quiz\Domain\Entity\QuizAnswer;
 use App\Quiz\Domain\Entity\QuizQuestion;
-use App\Quiz\Domain\Enum\QuizCategory;
+use App\Quiz\Infrastructure\Repository\QuizCategoryRepository;
 use App\Quiz\Domain\Enum\QuizLevel;
 use App\Quiz\Infrastructure\Repository\QuizAnswerRepository;
 use App\Quiz\Infrastructure\Repository\QuizQuestionRepository;
@@ -46,6 +46,7 @@ final readonly class QuizMutationController
         private QuizQuestionRepository $questionRepository,
         private QuizAnswerRepository $answerRepository,
         private ApplicationRepository $applicationRepository,
+        private QuizCategoryRepository $quizCategoryRepository,
         private QuizEditorAccessService $accessService,
         private QuizCacheService $quizCacheService,
     ) {
@@ -240,7 +241,7 @@ final readonly class QuizMutationController
         $question
             ->setTitle((string)($payload['title'] ?? $question->getTitle()))
             ->setLevel(QuizLevel::fromString((string)($payload['level'] ?? $question->getLevel()->value)))
-            ->setCategory(QuizCategory::fromString((string)($payload['category'] ?? $question->getCategory()->value)))
+            ->setCategory($this->quizCategoryRepository->findOneBySlug((string)($payload['category'] ?? $question->getCategory()->getSlug())) ?? $question->getCategory())
             ->setPoints((int)($payload['points'] ?? $question->getPoints()))
             ->setExplanation(is_string($payload['explanation'] ?? null) ? $payload['explanation'] : $question->getExplanation());
 

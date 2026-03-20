@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Quiz\Application\Service;
 
 use App\Quiz\Domain\Entity\Quiz;
-use App\Quiz\Domain\Enum\QuizCategory;
+use App\Quiz\Domain\Entity\QuizCategory;
 use App\Quiz\Domain\Enum\QuizLevel;
 use App\Quiz\Infrastructure\Repository\QuizAttemptRepository;
+use App\Quiz\Infrastructure\Repository\QuizCategoryRepository;
 use App\Quiz\Infrastructure\Repository\QuizQuestionRepository;
 use App\Quiz\Infrastructure\Repository\QuizRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -15,8 +16,11 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
+use function array_map;
 use function is_string;
 use function round;
+use function strtolower;
+use function trim;
 
 final readonly class QuizReadService
 {
@@ -27,6 +31,7 @@ final readonly class QuizReadService
         private QuizRepository $quizRepository,
         private QuizQuestionRepository $quizQuestionRepository,
         private QuizAttemptRepository $quizAttemptRepository,
+        private QuizCategoryRepository $quizCategoryRepository,
         private CacheInterface $cache,
         private QuizCacheService $quizCacheService,
     ) {
@@ -40,6 +45,41 @@ final readonly class QuizReadService
     public function getCorrectionByApplicationSlug(string $slug, ?string $level = null, ?string $category = null): array
     {
         return $this->getQuizProjectionByApplicationSlug($slug, $level, $category, true);
+    }
+
+    /**
+     * @return list<array{slug:string,name:string,position:int}>
+     */
+    public function getGeneralCategories(): array
+    {
+        return array_map(static fn (QuizCategory $category): array => [
+            'slug' => $category->getSlug(),
+            'name' => $category->getName(),
+            'position' => $category->getPosition(),
+            'color' => $category->getColor(),
+        ], $this->quizCategoryRepository->findActiveOrdered());
+    }
+
+    /**
+     * @return list<array{value:string,color:string}>
+     */
+    public function getLevels(): array
+    {
+        return array_map(static fn (QuizLevel $level): array => ['value' => $level->value, 'color' => $level->getColor()], QuizLevel::cases());
+    }
+
+
+    /**
+     * @return list<array{userId:string,username:string,firstName:string,lastName:string,attemptCount:int,averageWeightedScore:float}>
+     */
+    public function getGeneralTopScores(int $limit = 3): array
+    {
+        $quiz = $this->quizRepository->findPublishedByApplicationSlugWithConfiguration('general');
+        if (!$quiz instanceof Quiz) {
+            return [];
+        }
+
+        return $this->quizAttemptRepository->findTopUsersByWeightedScore($quiz, $limit);
     }
 
     public function getStatsByApplicationSlug(string $slug): array
@@ -90,10 +130,15 @@ final readonly class QuizReadService
                 throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Quiz not found for this application.');
             }
 
+            $categoryEntity = null;
+            if (is_string($category)) {
+                $categoryEntity = $this->quizCategoryRepository->findOneBySlug(strtolower(trim($category)));
+            }
+
             $questions = $this->quizQuestionRepository->findByFilters(
                 $quiz,
                 is_string($level) ? QuizLevel::fromString($level) : null,
-                is_string($category) ? QuizCategory::fromString($category) : null,
+                $categoryEntity,
             );
 
             return [
@@ -108,7 +153,9 @@ final readonly class QuizReadService
                     'id' => $q->getId(),
                     'title' => $q->getTitle(),
                     'level' => $q->getLevel()->value,
-                    'category' => $q->getCategory()->value,
+                    'category' => $q->getCategory()->getSlug(),
+                    'categoryColor' => $q->getCategory()->getColor(),
+                    'levelColor' => $q->getLevel()->getColor(),
                     'position' => $q->getPosition(),
                     'points' => $q->getPoints(),
                     'explanation' => $q->getExplanation(),
