@@ -45,6 +45,8 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
                 continue;
             }
 
+            $isGeneralApplication = $application->getSlug() === 'general';
+
             $configuration = (new Configuration())
                 ->setApplication($application)
                 ->setConfigurationKey('quiz.module.configuration')
@@ -60,17 +62,25 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
             $quiz = (new Quiz())
                 ->setApplication($application)
                 ->setOwner($users[$applicationIndex % count($users)])
-                ->setTitle(sprintf('%s technical quiz', $application->getTitle()))
-                ->setDescription('Assess core application knowledge with progressive difficulty questions.')
+                ->setTitle($isGeneralApplication ? 'General user quiz' : sprintf('%s technical quiz', $application->getTitle()))
+                ->setDescription($isGeneralApplication
+                    ? 'General quiz entrypoint used by public and private endpoints.'
+                    : 'Assess core application knowledge with progressive difficulty questions.')
                 ->setPassScore(70)
                 ->setPublished(true)
                 ->setConfiguration($configuration);
             $manager->persist($quiz);
 
+            if ($isGeneralApplication) {
+                $this->addReference('Quiz-general', $quiz);
+            }
+
             for ($questionIndex = 1; $questionIndex <= 12; $questionIndex++) {
                 $question = (new QuizQuestion())
                     ->setQuiz($quiz)
-                    ->setTitle('Question fixture #' . $questionIndex . ' app #' . ($applicationIndex + 1))
+                    ->setTitle($isGeneralApplication
+                        ? 'General question fixture #' . $questionIndex
+                        : 'Question fixture #' . $questionIndex . ' app #' . ($applicationIndex + 1))
                     ->setLevel($questionIndex % 3 === 0 ? QuizLevel::HARD : ($questionIndex % 2 === 0 ? QuizLevel::MEDIUM : QuizLevel::EASY))
                     ->setCategory($questionIndex % 2 === 0 ? QuizCategory::BACKEND : QuizCategory::FRONTEND)
                     ->setPosition($questionIndex)

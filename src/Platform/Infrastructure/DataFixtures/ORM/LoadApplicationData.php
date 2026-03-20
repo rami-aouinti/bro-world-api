@@ -452,6 +452,40 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             ],
         ],
         [
+            'uuid' => '60000000-0000-1000-8000-000000000013',
+            'key' => 'general',
+            'title' => 'General',
+            'description' => 'Espace general pour les modules transverses declenches par les utilisateurs.',
+            'status' => PlatformStatus::ACTIVE,
+            'private' => false,
+            'ownerReference' => 'User-john-root',
+            'platformReference' => 'Platform-SC-School Principal',
+            'appConfigurations' => [
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000013',
+                    'key' => 'application.general.learning',
+                    'value' => [
+                        'enabled' => true,
+                    ],
+                ],
+            ],
+            'plugins' => [
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000022',
+                    'reference' => 'Plugin-Quiz-Master',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000022',
+                            'key' => 'plugin.quiz.general',
+                            'value' => [
+                                'entrypoint' => 'public-private',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+        [
             'uuid' => '60000000-0000-1000-8000-000000000012',
             'key' => 'recruit-interview-desk',
             'title' => 'Recruit Interview Desk',
@@ -516,6 +550,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
         'recruit-talent-hub' => '60000000-0000-1000-8000-000000000010',
         'recruit-hiring-pipeline' => '60000000-0000-1000-8000-000000000011',
         'recruit-interview-desk' => '60000000-0000-1000-8000-000000000012',
+        'general' => '60000000-0000-1000-8000-000000000013',
     ];
 
     /**
