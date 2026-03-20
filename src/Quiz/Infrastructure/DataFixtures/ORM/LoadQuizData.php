@@ -47,7 +47,7 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
 
             $isGeneralApplication = $application->getSlug() === 'general';
 
-            $configuration = (new Configuration())
+            $configuration = new Configuration()
                 ->setApplication($application)
                 ->setConfigurationKey('quiz.module.configuration')
                 ->setConfigurationValue([
@@ -59,7 +59,7 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
                 ->setPrivate(true);
             $manager->persist($configuration);
 
-            $quiz = (new Quiz())
+            $quiz = new Quiz()
                 ->setApplication($application)
                 ->setOwner($users[$applicationIndex % count($users)])
                 ->setTitle($isGeneralApplication ? 'General user quiz' : sprintf('%s technical quiz', $application->getTitle()))
@@ -76,22 +76,22 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
             }
 
             for ($questionIndex = 1; $questionIndex <= 12; $questionIndex++) {
-                $question = (new QuizQuestion())
+                $question = new QuizQuestion()
                     ->setQuiz($quiz)
                     ->setTitle($isGeneralApplication
                         ? 'General question fixture #' . $questionIndex
                         : 'Question fixture #' . $questionIndex . ' app #' . ($applicationIndex + 1))
-                    ->setLevel($questionIndex % 3 === 0 ? QuizLevel::HARD : ($questionIndex % 2 === 0 ? QuizLevel::MEDIUM : QuizLevel::EASY))
+                    ->setLevel($questionIndex % 3 === 0 ? QuizLevel::HARD : (($questionIndex % 2 === 0) ? QuizLevel::MEDIUM : QuizLevel::EASY))
                     ->setCategory($questionIndex % 2 === 0 ? QuizCategory::BACKEND : QuizCategory::FRONTEND)
                     ->setPosition($questionIndex)
                     ->setPoints($questionIndex % 3 === 0 ? 3 : 1)
                     ->setExplanation('This explanation helps users understand the expected reasoning.');
                 $manager->persist($question);
 
-                $manager->persist((new QuizAnswer())->setQuestion($question)->setLabel('Right answer ' . $questionIndex)->setCorrect(true)->setPosition(1));
-                $manager->persist((new QuizAnswer())->setQuestion($question)->setLabel('Wrong answer A ' . $questionIndex)->setCorrect(false)->setPosition(2));
-                $manager->persist((new QuizAnswer())->setQuestion($question)->setLabel('Wrong answer B ' . $questionIndex)->setCorrect(false)->setPosition(3));
-                $manager->persist((new QuizAnswer())->setQuestion($question)->setLabel('Wrong answer C ' . $questionIndex)->setCorrect(false)->setPosition(4));
+                $manager->persist(new QuizAnswer()->setQuestion($question)->setLabel('Right answer ' . $questionIndex)->setCorrect(true)->setPosition(1));
+                $manager->persist(new QuizAnswer()->setQuestion($question)->setLabel('Wrong answer A ' . $questionIndex)->setCorrect(false)->setPosition(2));
+                $manager->persist(new QuizAnswer()->setQuestion($question)->setLabel('Wrong answer B ' . $questionIndex)->setCorrect(false)->setPosition(3));
+                $manager->persist(new QuizAnswer()->setQuestion($question)->setLabel('Wrong answer C ' . $questionIndex)->setCorrect(false)->setPosition(4));
             }
         }
 

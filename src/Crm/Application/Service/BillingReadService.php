@@ -79,8 +79,6 @@ readonly class BillingReadService
     }
 
     /**
-     * @param string $applicationSlug
-     * @param string $billingId
      * @return array<string,mixed>|null
      * @throws InvalidArgumentException
      */

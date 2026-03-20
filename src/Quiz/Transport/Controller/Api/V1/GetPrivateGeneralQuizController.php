@@ -18,7 +18,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class GetPrivateGeneralQuizController
 {
-    private const GENERAL_APPLICATION_SLUG = 'general';
+    private const string GENERAL_APPLICATION_SLUG = 'general';
 
     #[Route('/v1/private/quiz/general', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'Get general quiz (private)', tags: ['Quiz'])]

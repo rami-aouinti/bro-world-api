@@ -34,8 +34,6 @@ readonly class ContactReadService
     }
 
     /**
-     * @param string $applicationSlug
-     * @param Request $request
      * @return array<string,mixed>
      * @throws JsonException
      * @throws InvalidArgumentException
@@ -77,8 +75,6 @@ readonly class ContactReadService
     }
 
     /**
-     * @param string $applicationSlug
-     * @param string $contactId
      * @return array<string,mixed>|null
      * @throws InvalidArgumentException
      */
