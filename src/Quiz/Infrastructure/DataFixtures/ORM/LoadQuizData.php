@@ -75,9 +75,6 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
             $manager->persist($quiz);
             $this->addReference('Quiz-' . $application->getSlug(), $quiz);
 
-            if ($isGeneralApplication) {
-                $this->addReference('Quiz-general', $quiz);
-            }
 
             for ($questionIndex = 1; $questionIndex <= 12; $questionIndex++) {
                 $question = (0 !== $questionIndex % 2) ? new QuizQuestion()
