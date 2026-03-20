@@ -11,6 +11,8 @@ use App\Quiz\Infrastructure\Repository\QuizAttemptAnswerRepository;
 use App\Quiz\Infrastructure\Repository\QuizAttemptRepository;
 use App\Quiz\Infrastructure\Repository\QuizRepository;
 use App\User\Domain\Entity\User;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -35,9 +37,12 @@ final readonly class QuizSubmissionService
     }
 
     /**
-     * @param array<mixed> $payload
-     *
+     * @param string $applicationSlug
+     * @param array $payload
+     * @param User $loggedInUser
      * @return array<string, mixed>
+     * @throws ORMException
+     * @throws OptimisticLockException
      */
     public function submitByApplicationSlug(string $applicationSlug, array $payload, User $loggedInUser): array
     {
@@ -126,7 +131,7 @@ final readonly class QuizSubmissionService
 
         $score = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 100, 2) : 0.0;
 
-        $attempt = (new QuizAttempt())
+        $attempt = new QuizAttempt()
             ->setQuiz($quiz)
             ->setUser($loggedInUser)
             ->setScore($score)
@@ -151,7 +156,7 @@ final readonly class QuizSubmissionService
                 }
             }
 
-            $attemptAnswer = (new QuizAttemptAnswer())
+            $attemptAnswer = new QuizAttemptAnswer()
                 ->setAttempt($attempt)
                 ->setQuestion($question)
                 ->setSelectedAnswer($selectedAnswer)
