@@ -138,6 +138,64 @@ final class QuizManagementControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_NO_CONTENT, $ownerClient->getResponse()->getStatusCode());
     }
 
+
+    #[TestDox('General quiz endpoints for put/publish/unpublish/submit are functional.')]
+    public function testGeneralQuizSpecificEndpointsFlow(): void
+    {
+        self::bootKernel();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+
+        $generalQuiz = $entityManager->getRepository(Quiz::class)
+            ->createQueryBuilder('quiz')
+            ->innerJoin('quiz.application', 'application')
+            ->andWhere('application.slug = :slug')
+            ->setParameter('slug', 'general')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+        self::assertInstanceOf(Quiz::class, $generalQuiz);
+
+        $adminClient = $this->getTestClient('john-admin', 'password-admin');
+        $adminClient->request('PUT', self::API_URL_PREFIX . '/v1/quiz/general', content: JSON::encode([
+            'title' => 'General quiz updated from alias endpoint',
+            'description' => 'Alias endpoint update',
+            'passScore' => 65,
+        ]));
+        self::assertSame(Response::HTTP_OK, $adminClient->getResponse()->getStatusCode());
+
+        $adminClient->request('PATCH', self::API_URL_PREFIX . '/v1/quiz/general/publish');
+        self::assertSame(Response::HTTP_OK, $adminClient->getResponse()->getStatusCode());
+
+        $entityManager->clear();
+        $generalQuiz = $entityManager->getRepository(Quiz::class)->findOneBy([
+            'title' => 'General quiz updated from alias endpoint',
+        ]);
+        self::assertInstanceOf(Quiz::class, $generalQuiz);
+
+        $question = $entityManager->getRepository(QuizQuestion::class)->findOneBy([
+            'quiz' => $generalQuiz,
+        ]);
+        self::assertInstanceOf(QuizQuestion::class, $question);
+
+        $answer = $entityManager->getRepository(QuizAnswer::class)->findOneBy([
+            'question' => $question,
+            'isCorrect' => true,
+        ]);
+        self::assertInstanceOf(QuizAnswer::class, $answer);
+
+        $userClient = $this->getTestClient('john-user', 'password-user');
+        $userClient->request('POST', self::API_URL_PREFIX . '/v1/quiz/general/submit', content: JSON::encode([
+            'answers' => [[
+                'questionId' => $question->getId(),
+                'answerId' => $answer->getId(),
+            ]],
+        ]));
+        self::assertSame(Response::HTTP_OK, $userClient->getResponse()->getStatusCode());
+
+        $adminClient->request('PATCH', self::API_URL_PREFIX . '/v1/quiz/general/unpublish');
+        self::assertSame(Response::HTTP_OK, $adminClient->getResponse()->getStatusCode());
+    }
+
     #[TestDox('Non owner cannot mutate quiz content while admin can.')]
     public function testQuizMutationSecurity(): void
     {

@@ -37,6 +37,8 @@ use function is_string;
 #[OA\Tag(name: 'Quiz')]
 final readonly class QuizMutationController
 {
+    private const string GENERAL_APPLICATION_SLUG = 'general';
+
     public function __construct(
         private QuizRepository $quizRepository,
         private QuizQuestionRepository $questionRepository,
@@ -80,6 +82,16 @@ final readonly class QuizMutationController
     /**
      * @throws JsonException
      */
+    #[Route('/v1/quiz/general', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'Create quiz for general application', tags: ['Quiz'])]
+    public function createGeneralQuiz(Request $request, User $loggedInUser): JsonResponse
+    {
+        return $this->createQuiz(self::GENERAL_APPLICATION_SLUG, $request, $loggedInUser);
+    }
+
+    /**
+     * @throws JsonException
+     */
     #[Route('/v1/quiz/applications/{applicationSlug}', methods: [Request::METHOD_PUT])]
     #[OA\Put(summary: 'Update quiz metadata', tags: ['Quiz'])]
     public function updateQuiz(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
@@ -113,6 +125,37 @@ final readonly class QuizMutationController
     public function unpublishQuiz(string $applicationSlug, User $loggedInUser): JsonResponse
     {
         return $this->toggleQuizPublication($applicationSlug, $loggedInUser, false);
+    }
+
+    /**
+     * @throws JsonException
+     */
+    #[Route('/v1/quiz/general', methods: [Request::METHOD_PUT])]
+    #[OA\Put(summary: 'Update general quiz metadata', tags: ['Quiz'])]
+    public function updateGeneralQuiz(Request $request, User $loggedInUser): JsonResponse
+    {
+        return $this->updateQuiz(self::GENERAL_APPLICATION_SLUG, $request, $loggedInUser);
+    }
+
+    #[Route('/v1/quiz/general/publish', methods: [Request::METHOD_PATCH])]
+    #[OA\Patch(summary: 'Publish general quiz', tags: ['Quiz'])]
+    public function publishGeneralQuiz(User $loggedInUser): JsonResponse
+    {
+        return $this->toggleQuizPublication(self::GENERAL_APPLICATION_SLUG, $loggedInUser, true);
+    }
+
+    #[Route('/v1/quiz/general/unpublish', methods: [Request::METHOD_PATCH])]
+    #[OA\Patch(summary: 'Unpublish general quiz', tags: ['Quiz'])]
+    public function unpublishGeneralQuiz(User $loggedInUser): JsonResponse
+    {
+        return $this->toggleQuizPublication(self::GENERAL_APPLICATION_SLUG, $loggedInUser, false);
+    }
+
+    #[Route('/v1/quiz/general', methods: [Request::METHOD_DELETE])]
+    #[OA\Delete(summary: 'Delete general quiz', tags: ['Quiz'])]
+    public function deleteGeneralQuiz(User $loggedInUser): JsonResponse
+    {
+        return $this->deleteQuiz(self::GENERAL_APPLICATION_SLUG, $loggedInUser);
     }
 
     #[Route('/v1/quiz/applications/{applicationSlug}', methods: [Request::METHOD_DELETE])]

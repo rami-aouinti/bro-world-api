@@ -36,8 +36,9 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
         $applications = $manager->getRepository(Application::class)
             ->createQueryBuilder('application')
             ->innerJoin('application.applicationPlugins', 'applicationPlugin')
-            ->andWhere('applicationPlugin.plugin = :plugin')
+            ->andWhere('applicationPlugin.plugin = :plugin OR application.slug = :generalSlug')
             ->setParameter('plugin', $quizPlugin)
+            ->setParameter('generalSlug', 'general')
             ->orderBy('application.title', 'ASC')
             ->getQuery()
             ->getResult();
@@ -74,9 +75,6 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
             $manager->persist($quiz);
             $this->addReference('Quiz-' . $application->getSlug(), $quiz);
 
-            if ($isGeneralApplication) {
-                $this->addReference('Quiz-general', $quiz);
-            }
 
             for ($questionIndex = 1; $questionIndex <= 12; $questionIndex++) {
                 $question = (0 !== $questionIndex % 2) ? new QuizQuestion()
@@ -85,7 +83,9 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
                         ? 'General question fixture #' . $questionIndex
                         : 'Question fixture #' . $questionIndex . ' app #' . ($applicationIndex + 1))
                     ->setLevel($questionIndex % 3 === 0 ? QuizLevel::HARD : (QuizLevel::EASY))
-                    ->setCategory($questionIndex % 2 === 0 ? QuizCategory::BACKEND : QuizCategory::FRONTEND)
+                    ->setCategory($isGeneralApplication
+                        ? QuizCategory::GENERAL
+                        : ($questionIndex % 2 === 0 ? QuizCategory::BACKEND : QuizCategory::FRONTEND))
                     ->setPosition($questionIndex)
                     ->setPoints($questionIndex % 3 === 0 ? 3 : 1)
                     ->setExplanation('This explanation helps users understand the expected reasoning.') : new QuizQuestion()
@@ -94,7 +94,9 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
                         ? 'General question fixture #' . $questionIndex
                         : 'Question fixture #' . $questionIndex . ' app #' . ($applicationIndex + 1))
                     ->setLevel($questionIndex % 3 === 0 ? QuizLevel::HARD : (QuizLevel::MEDIUM))
-                    ->setCategory($questionIndex % 2 === 0 ? QuizCategory::BACKEND : QuizCategory::FRONTEND)
+                    ->setCategory($isGeneralApplication
+                        ? QuizCategory::GENERAL
+                        : ($questionIndex % 2 === 0 ? QuizCategory::BACKEND : QuizCategory::FRONTEND))
                     ->setPosition($questionIndex)
                     ->setPoints($questionIndex % 3 === 0 ? 3 : 1)
                     ->setExplanation('This explanation helps users understand the expected reasoning.');
