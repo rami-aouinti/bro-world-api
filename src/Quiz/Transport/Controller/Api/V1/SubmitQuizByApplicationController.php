@@ -20,6 +20,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[OA\Tag(name: 'Quiz')]
 final class SubmitQuizByApplicationController
 {
+    private const string GENERAL_APPLICATION_SLUG = 'general';
+
     /**
      * @throws JsonException
      */
@@ -30,5 +32,17 @@ final class SubmitQuizByApplicationController
         $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         return new JsonResponse($quizSubmissionService->submitByApplicationSlug($applicationSlug, $payload, $loggedInUser));
+    }
+
+    /**
+     * @throws JsonException
+     */
+    #[Route('/v1/quiz/general/submit', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/quiz/general/submit', tags: ['Quiz'])]
+    public function submitGeneral(Request $request, QuizSubmissionService $quizSubmissionService, User $loggedInUser): JsonResponse
+    {
+        $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        return new JsonResponse($quizSubmissionService->submitByApplicationSlug(self::GENERAL_APPLICATION_SLUG, $payload, $loggedInUser));
     }
 }
