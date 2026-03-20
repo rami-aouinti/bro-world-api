@@ -7,7 +7,7 @@ namespace App\Platform\Application\Service\PluginProvisioning;
 use App\Platform\Domain\Entity\Application;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Quiz\Domain\Entity\QuizQuestion;
-use App\Quiz\Domain\Enum\QuizCategory;
+use App\Quiz\Infrastructure\Repository\QuizCategoryRepository;
 use App\Quiz\Domain\Enum\QuizLevel;
 use App\Quiz\Infrastructure\Repository\QuizQuestionRepository;
 use App\Quiz\Infrastructure\Repository\QuizRepository;
@@ -18,6 +18,7 @@ final readonly class QuizPluginProvisioner
     public function __construct(
         private QuizRepository $quizRepository,
         private QuizQuestionRepository $quizQuestionRepository,
+        private QuizCategoryRepository $quizCategoryRepository,
         private EntityManagerInterface $entityManager,
     ) {
     }
@@ -47,7 +48,7 @@ final readonly class QuizPluginProvisioner
         $question = (new QuizQuestion())
             ->setQuiz($quiz)
             ->setTitle('What is the first step to launch this app?')
-            ->setCategory(QuizCategory::ONBOARDING)
+            ->setCategory($this->quizCategoryRepository->findOneBySlug('onboarding') ?? $this->quizCategoryRepository->findOneBySlug('general') ?? throw new \RuntimeException('Missing quiz categories fixtures.'))
             ->setLevel(QuizLevel::EASY)
             ->setPosition(1);
 

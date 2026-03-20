@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace App\Quiz\Application\Service;
 
-use App\Quiz\Domain\Enum\QuizCategory;
 use App\Quiz\Domain\Enum\QuizLevel;
+use App\Quiz\Infrastructure\Repository\QuizCategoryRepository;
 use Symfony\Contracts\Cache\CacheInterface;
 
+use function array_map;
 use function array_merge;
-use function array_values;
 use function sprintf;
 
 final readonly class QuizCacheService
 {
     public function __construct(
         private CacheInterface $cache,
+        private QuizCategoryRepository $quizCategoryRepository,
     ) {
     }
 
@@ -47,8 +48,8 @@ final readonly class QuizCacheService
      */
     private function buildKeysToInvalidate(string $applicationSlug): array
     {
-        $levels = array_merge([''], array_values(array_map(static fn (QuizLevel $level): string => $level->value, QuizLevel::cases())));
-        $categories = array_merge([''], array_values(array_map(static fn (QuizCategory $category): string => $category->value, QuizCategory::cases())));
+        $levels = array_merge([''], array_map(static fn (QuizLevel $level): string => $level->value, QuizLevel::cases()));
+        $categories = array_merge([''], array_map(static fn ($category): string => $category->getSlug(), $this->quizCategoryRepository->findActiveOrdered()));
 
         $keys = [
             $this->buildQuizStatsKey($applicationSlug),

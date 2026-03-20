@@ -7,7 +7,7 @@ namespace App\Quiz\Infrastructure\Repository;
 use App\General\Infrastructure\Repository\BaseRepository;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Quiz\Domain\Entity\QuizQuestion;
-use App\Quiz\Domain\Enum\QuizCategory;
+use App\Quiz\Domain\Entity\QuizCategory;
 use App\Quiz\Domain\Enum\QuizLevel;
 use Doctrine\Persistence\ManagerRegistry;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
@@ -15,7 +15,7 @@ use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 class QuizQuestionRepository extends BaseRepository
 {
     protected static string $entityName = QuizQuestion::class;
-    protected static array $searchColumns = ['id', 'title', 'category', 'level'];
+    protected static array $searchColumns = ['id', 'title', 'level'];
 
     public function __construct(
         protected ManagerRegistry $managerRegistry
@@ -38,7 +38,7 @@ class QuizQuestionRepository extends BaseRepository
         }
 
         if ($category instanceof QuizCategory) {
-            $queryBuilder->andWhere('question.category = :category')->setParameter('category', $category);
+            $queryBuilder->andWhere('question.category = :category')->setParameter('category', $category->getId(), UuidBinaryOrderedTimeType::NAME);
         }
 
         return $queryBuilder->getQuery()->getResult();
