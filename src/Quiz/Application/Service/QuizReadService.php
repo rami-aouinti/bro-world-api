@@ -27,8 +27,8 @@ use function trim;
 
 final readonly class QuizReadService
 {
-    private const QUIZ_CACHE_TTL = 120;
-    private const QUIZ_STATS_CACHE_TTL = 120;
+    private const int QUIZ_CACHE_TTL = 120;
+    private const int QUIZ_STATS_CACHE_TTL = 120;
 
     public function __construct(
         private QuizRepository $quizRepository,
@@ -48,41 +48,6 @@ final readonly class QuizReadService
     public function getCorrectionByApplicationSlug(string $slug, ?string $level = null, ?string $category = null, bool $randomizeQuestions = true): array
     {
         return $this->getQuizProjectionByApplicationSlug($slug, $level, $category, true, $randomizeQuestions);
-    }
-
-    /**
-     * @return list<array{slug:string,name:string,position:int}>
-     */
-    public function getGeneralCategories(): array
-    {
-        return array_map(static fn (QuizCategory $category): array => [
-            'slug' => $category->getSlug(),
-            'name' => $category->getName(),
-            'position' => $category->getPosition(),
-            'color' => $category->getColor(),
-        ], $this->quizCategoryRepository->findActiveOrdered());
-    }
-
-    /**
-     * @return list<array{value:string,color:string}>
-     */
-    public function getLevels(): array
-    {
-        return array_map(static fn (QuizLevel $level): array => ['value' => $level->value, 'color' => $level->getColor()], QuizLevel::cases());
-    }
-
-
-    /**
-     * @return list<array{userId:string,username:string,firstName:string,lastName:string,attemptCount:int,averageWeightedScore:float}>
-     */
-    public function getGeneralTopScores(int $limit = 3): array
-    {
-        $quiz = $this->quizRepository->findPublishedByApplicationSlugWithConfiguration('general');
-        if (!$quiz instanceof Quiz) {
-            return [];
-        }
-
-        return $this->quizAttemptRepository->findTopUsersByWeightedScore($quiz, $limit);
     }
 
     /**
