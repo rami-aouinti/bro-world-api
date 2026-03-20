@@ -79,12 +79,21 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
             }
 
             for ($questionIndex = 1; $questionIndex <= 12; $questionIndex++) {
-                $question = new QuizQuestion()
+                $question = (0 !== $questionIndex % 2) ? new QuizQuestion()
                     ->setQuiz($quiz)
                     ->setTitle($isGeneralApplication
                         ? 'General question fixture #' . $questionIndex
                         : 'Question fixture #' . $questionIndex . ' app #' . ($applicationIndex + 1))
-                    ->setLevel($questionIndex % 3 === 0 ? QuizLevel::HARD : (($questionIndex % 2 === 0) ? QuizLevel::MEDIUM : QuizLevel::EASY))
+                    ->setLevel($questionIndex % 3 === 0 ? QuizLevel::HARD : (QuizLevel::EASY))
+                    ->setCategory($questionIndex % 2 === 0 ? QuizCategory::BACKEND : QuizCategory::FRONTEND)
+                    ->setPosition($questionIndex)
+                    ->setPoints($questionIndex % 3 === 0 ? 3 : 1)
+                    ->setExplanation('This explanation helps users understand the expected reasoning.') : new QuizQuestion()
+                    ->setQuiz($quiz)
+                    ->setTitle($isGeneralApplication
+                        ? 'General question fixture #' . $questionIndex
+                        : 'Question fixture #' . $questionIndex . ' app #' . ($applicationIndex + 1))
+                    ->setLevel($questionIndex % 3 === 0 ? QuizLevel::HARD : (QuizLevel::MEDIUM))
                     ->setCategory($questionIndex % 2 === 0 ? QuizCategory::BACKEND : QuizCategory::FRONTEND)
                     ->setPosition($questionIndex)
                     ->setPoints($questionIndex % 3 === 0 ? 3 : 1)
@@ -92,7 +101,7 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
                 $manager->persist($question);
                 $this->addReference(sprintf('QuizQuestion-%s-%d', $application->getSlug(), $questionIndex), $question);
 
-                $correctAnswer = (new QuizAnswer())
+                $correctAnswer = new QuizAnswer()
                     ->setQuestion($question)
                     ->setLabel('Right answer ' . $questionIndex)
                     ->setCorrect(true)
@@ -100,7 +109,7 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
                 $manager->persist($correctAnswer);
                 $this->addReference(sprintf('QuizAnswer-%s-%d-correct', $application->getSlug(), $questionIndex), $correctAnswer);
 
-                $wrongAnswerA = (new QuizAnswer())
+                $wrongAnswerA = new QuizAnswer()
                     ->setQuestion($question)
                     ->setLabel('Wrong answer A ' . $questionIndex)
                     ->setCorrect(false)
@@ -108,7 +117,7 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
                 $manager->persist($wrongAnswerA);
                 $this->addReference(sprintf('QuizAnswer-%s-%d-wrong-a', $application->getSlug(), $questionIndex), $wrongAnswerA);
 
-                $wrongAnswerB = (new QuizAnswer())
+                $wrongAnswerB = new QuizAnswer()
                     ->setQuestion($question)
                     ->setLabel('Wrong answer B ' . $questionIndex)
                     ->setCorrect(false)
@@ -116,7 +125,7 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
                 $manager->persist($wrongAnswerB);
                 $this->addReference(sprintf('QuizAnswer-%s-%d-wrong-b', $application->getSlug(), $questionIndex), $wrongAnswerB);
 
-                $wrongAnswerC = (new QuizAnswer())
+                $wrongAnswerC = new QuizAnswer()
                     ->setQuestion($question)
                     ->setLabel('Wrong answer C ' . $questionIndex)
                     ->setCorrect(false)
@@ -126,7 +135,7 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
             }
 
             foreach ($users as $userIndex => $user) {
-                $attempt = (new QuizAttempt())
+                $attempt = new QuizAttempt()
                     ->setQuiz($quiz)
                     ->setUser($user)
                     ->setTotalQuestions(3)
@@ -146,7 +155,7 @@ final class LoadQuizData extends Fixture implements OrderedFixtureInterface
                         : sprintf('QuizAnswer-%s-%d-wrong-a', $application->getSlug(), $attemptQuestionIndex);
                     $selectedAnswer = $this->getReference($answerReference, QuizAnswer::class);
 
-                    $attemptAnswer = (new QuizAttemptAnswer())
+                    $attemptAnswer = new QuizAttemptAnswer()
                         ->setAttempt($attempt)
                         ->setQuestion($question)
                         ->setSelectedAnswer($selectedAnswer)
