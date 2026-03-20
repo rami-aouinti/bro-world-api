@@ -54,8 +54,9 @@ final class SubmitQuizByApplicationController
      */
     #[Route('/v1/quiz/general/submit', methods: [Request::METHOD_POST])]
     #[OA\Post(
-        description: 'Endpoint to submit answers for the general quiz. Use this payload in api/doc to test score calculation.',
         summary: 'Submit general quiz answers and compute score',
+        description: 'Endpoint to submit answers for the general quiz. Use this payload in api/doc to test score calculation.',
+        tags: ['Quiz'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -65,12 +66,12 @@ final class SubmitQuizByApplicationController
                         property: 'answers',
                         type: 'array',
                         items: new OA\Items(
+                            type: 'object',
                             required: ['questionId', 'answerId'],
                             properties: [
                                 new OA\Property(property: 'questionId', type: 'string', example: '0195d45f-01ab-7e8d-9ac5-7ef2f1925b18'),
                                 new OA\Property(property: 'answerId', type: 'string', example: '0195d460-5f6a-7f8f-84a6-0fdc9cb15ec1'),
-                            ],
-                            type: 'object'
+                            ]
                         )
                     ),
                 ],
@@ -82,7 +83,6 @@ final class SubmitQuizByApplicationController
                 ]
             )
         ),
-        tags: ['Quiz'],
         responses: [
             new OA\Response(
                 response: 200,

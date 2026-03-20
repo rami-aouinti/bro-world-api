@@ -68,6 +68,20 @@ final readonly class QuizReadService
         return array_map(static fn (QuizLevel $level): array => ['value' => $level->value, 'color' => $level->getColor()], QuizLevel::cases());
     }
 
+
+    /**
+     * @return list<array{userId:string,username:string,firstName:string,lastName:string,attemptCount:int,averageWeightedScore:float}>
+     */
+    public function getGeneralTopScores(int $limit = 3): array
+    {
+        $quiz = $this->quizRepository->findPublishedByApplicationSlugWithConfiguration('general');
+        if (!$quiz instanceof Quiz) {
+            return [];
+        }
+
+        return $this->quizAttemptRepository->findTopUsersByWeightedScore($quiz, $limit);
+    }
+
     public function getStatsByApplicationSlug(string $slug): array
     {
         $cacheKey = $this->quizCacheService->buildQuizStatsKey($slug);
