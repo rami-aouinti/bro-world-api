@@ -21,6 +21,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use function array_fill_keys;
 use function array_intersect_key;
 use function array_key_exists;
+use function array_keys;
 use function count;
 use function in_array;
 use function is_array;
@@ -90,12 +91,17 @@ final readonly class QuizSubmissionService
             array_fill_keys(array_keys($questionById), true)
         );
 
+        $evaluatedQuestionById = array_intersect_key(
+            $questionById,
+            array_fill_keys(array_keys($submittedAnswersByQuestionId), true)
+        );
+
         $totalPoints = 0;
         $earnedPoints = 0;
         $correctAnswers = 0;
         $results = [];
 
-        foreach ($questionById as $questionId => $question) {
+        foreach ($evaluatedQuestionById as $questionId => $question) {
             $questionPoints = (int)($question['points'] ?? 0);
             $totalPoints += $questionPoints;
 
@@ -138,7 +144,7 @@ final readonly class QuizSubmissionService
             ->setUser($loggedInUser)
             ->setScore($score)
             ->setPassed($score >= $quiz->getPassScore())
-            ->setTotalQuestions(count($questionById))
+            ->setTotalQuestions(count($evaluatedQuestionById))
             ->setCorrectAnswers($correctAnswers);
         $this->quizAttemptRepository->save($attempt, false);
 
@@ -176,7 +182,7 @@ final readonly class QuizSubmissionService
             'passScore' => $quiz->getPassScore(),
             'score' => $score,
             'passed' => $score >= $quiz->getPassScore(),
-            'totalQuestions' => count($questionById),
+            'totalQuestions' => count($evaluatedQuestionById),
             'answeredQuestions' => count($submittedAnswersByQuestionId),
             'correctAnswers' => $correctAnswers,
             'totalPoints' => $totalPoints,

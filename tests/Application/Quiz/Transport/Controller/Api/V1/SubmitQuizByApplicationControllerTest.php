@@ -148,6 +148,62 @@ final class SubmitQuizByApplicationControllerTest extends WebTestCase
         self::assertSame($expectedTotalPoints, (int)$responseData['totalPoints']);
     }
 
+    #[TestDox('A quiz submission score is based on submitted questions only.')]
+    public function testSubmitQuizScoresOnlySubmittedQuestions(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $quiz = $this->getAnyPublishedQuiz($entityManager);
+        $questions = $entityManager->getRepository(QuizQuestion::class)->findBy([
+            'quiz' => $quiz,
+        ], [
+            'position' => 'ASC',
+        ]);
+
+        self::assertNotEmpty($questions);
+
+        $subset = array_slice($questions, 0, 10);
+        $answersPayload = [];
+        $expectedTotalPoints = 0;
+        foreach ($subset as $question) {
+            $expectedTotalPoints += $question->getPoints();
+            $correctAnswerId = null;
+            foreach ($question->getAnswers() as $answer) {
+                if ($answer instanceof QuizAnswer && $answer->isCorrect()) {
+                    $correctAnswerId = $answer->getId();
+                    break;
+                }
+            }
+
+            self::assertNotNull($correctAnswerId);
+            $answersPayload[] = [
+                'questionId' => $question->getId(),
+                'answerId' => $correctAnswerId,
+            ];
+        }
+
+        $client = $this->getTestClient('john-user', 'password-user');
+        $client->request(
+            'POST',
+            $this->baseUrl . '/' . $quiz->getApplication()->getSlug() . '/submit',
+            content: JSON::encode([
+                'answers' => $answersPayload,
+            ])
+        );
+
+        $response = $client->getResponse();
+        $content = $response->getContent();
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:\n" . $response);
+
+        $responseData = JSON::decode($content, true);
+        self::assertSame(100.0, (float)$responseData['score']);
+        self::assertSame(count($subset), (int)$responseData['totalQuestions']);
+        self::assertSame(count($subset), (int)$responseData['answeredQuestions']);
+        self::assertSame(count($subset), (int)$responseData['correctAnswers']);
+        self::assertSame($expectedTotalPoints, (int)$responseData['totalPoints']);
+        self::assertSame($expectedTotalPoints, (int)$responseData['earnedPoints']);
+    }
+
     #[TestDox('GET quiz by application does not expose answers correction data.')]
     public function testGetQuizByApplicationDoesNotExposeAnswerCorrection(): void
     {
