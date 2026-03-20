@@ -7,7 +7,7 @@ namespace App\Quiz\Domain\Entity;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
-use App\Quiz\Domain\Enum\QuizCategory;
+use App\Quiz\Domain\Entity\QuizCategory;
 use App\Quiz\Domain\Enum\QuizLevel;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -20,7 +20,7 @@ use Ramsey\Uuid\UuidInterface;
 #[ORM\Entity]
 #[ORM\Table(name: 'quiz_question', indexes: [
     new ORM\Index(name: 'idx_quiz_question_level', columns: ['level']),
-    new ORM\Index(name: 'idx_quiz_question_category', columns: ['category']),
+    new ORM\Index(name: 'idx_quiz_question_category', columns: ['category_id']),
     new ORM\Index(name: 'idx_quiz_question_position', columns: ['position']),
 ])]
 class QuizQuestion implements EntityInterface
@@ -44,10 +44,9 @@ class QuizQuestion implements EntityInterface
     ])]
     private QuizLevel $level = QuizLevel::EASY;
 
-    #[ORM\Column(name: 'category', type: Types::STRING, length: 100, enumType: QuizCategory::class, options: [
-        'default' => QuizCategory::GENERAL->value,
-    ])]
-    private QuizCategory $category = QuizCategory::GENERAL;
+    #[ORM\ManyToOne(targetEntity: QuizCategory::class)]
+    #[ORM\JoinColumn(name: 'category_id', referencedColumnName: 'id', nullable: false, onDelete: 'RESTRICT')]
+    private QuizCategory $category;
 
     #[ORM\Column(name: 'position', type: Types::INTEGER, options: [
         'default' => 1,

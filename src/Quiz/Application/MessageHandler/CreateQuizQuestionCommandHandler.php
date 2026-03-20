@@ -14,7 +14,7 @@ use App\Quiz\Application\Service\QuizCacheService;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Quiz\Domain\Entity\QuizAnswer;
 use App\Quiz\Domain\Entity\QuizQuestion;
-use App\Quiz\Domain\Enum\QuizCategory;
+use App\Quiz\Infrastructure\Repository\QuizCategoryRepository;
 use App\Quiz\Domain\Enum\QuizLevel;
 use App\Quiz\Infrastructure\Repository\QuizQuestionRepository;
 use App\Quiz\Infrastructure\Repository\QuizRepository;
@@ -36,6 +36,7 @@ final readonly class CreateQuizQuestionCommandHandler
         private QuizQuestionRepository $questionRepository,
         private ApplicationRepository $applicationRepository,
         private ConfigurationRepository $configurationRepository,
+        private QuizCategoryRepository $quizCategoryRepository,
         private QuizCacheService $quizCacheService,
     ) {
     }
@@ -96,7 +97,7 @@ final readonly class CreateQuizQuestionCommandHandler
             ->setQuiz($quiz)
             ->setTitle($command->title)
             ->setLevel(QuizLevel::fromString($command->level))
-            ->setCategory(QuizCategory::fromString($command->category))
+            ->setCategory($this->quizCategoryRepository->findOneBySlug($command->category) ?? $this->quizCategoryRepository->findOneBySlug('general') ?? throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Quiz category not found.'))
             ->setPoints($command->points)
             ->setExplanation($command->explanation)
             ->setPosition($this->questionRepository->nextPositionForQuiz($quiz));
