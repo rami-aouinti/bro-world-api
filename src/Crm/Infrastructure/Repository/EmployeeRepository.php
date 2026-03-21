@@ -64,7 +64,7 @@ class EmployeeRepository extends BaseRepository
     public function findScopedProjection(string $crmId, int $limit, int $offset, array $filters = []): array
     {
         $qb = $this->createQueryBuilder('employee')
-            ->select('employee.id, employee.firstName, employee.lastName, employee.email, employee.userId, employee.positionName, employee.roleName, employee.createdAt, employee.updatedAt, user.photo AS photo')
+            ->select('employee.id, employee.firstName, employee.lastName, employee.email, user.id AS userId , employee.positionName, employee.roleName, employee.createdAt, employee.updatedAt, user.photo AS photo')
             ->leftJoin('employee.user', 'user')
             ->andWhere('employee.crm = :crmId')
             ->setParameter('crmId', $crmId, UuidBinaryOrderedTimeType::NAME)

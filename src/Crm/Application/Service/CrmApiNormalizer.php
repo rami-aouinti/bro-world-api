@@ -78,7 +78,7 @@ final readonly class CrmApiNormalizer
         return [
             'id' => (string)($item['id'] ?? ''),
             'name' => (string)($item['name'] ?? ''),
-            'status' => (string)($item['status'] ?? ''),
+            'status' => ($item['status'] ?? ''),
             'startDate' => $this->normalizeDateValue($item['startDate'] ?? null),
             'endDate' => $this->normalizeDateValue($item['endDate'] ?? null),
         ];
@@ -92,7 +92,7 @@ final readonly class CrmApiNormalizer
         return [
             'id' => (string)($item['id'] ?? ''),
             'name' => (string)($item['name'] ?? ''),
-            'status' => (string)($item['status'] ?? ''),
+            'status' => ($item['status'] ?? ''),
         ];
     }
 
@@ -105,7 +105,7 @@ final readonly class CrmApiNormalizer
             'id' => (string)($item['id'] ?? ''),
             'taskId' => $item['taskId'] ?? null,
             'title' => (string)($item['title'] ?? ''),
-            'status' => (string)($item['status'] ?? ''),
+            'status' => ($item['status'] ?? ''),
             'requestedAt' => $this->normalizeDateValue($item['requestedAt'] ?? null),
             'resolvedAt' => $this->normalizeDateValue($item['resolvedAt'] ?? null),
             'assignees' => $this->mapTaskRequestAssigneesProjection((array)($item['assignees'] ?? [])),

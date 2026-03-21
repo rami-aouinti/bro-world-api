@@ -267,21 +267,14 @@ readonly class TaskListService
 
             return;
         }
-
-        $binaryIds = array_values(array_unique(array_filter(array_map(
-            static fn (string $id): ?string => Uuid::isValid($id) ? Uuid::fromString($id)->getBytes() : null,
-            $ids,
-        ))));
-
-        if ($binaryIds === []) {
-            $qb->andWhere('1 = 0');
-
-            return;
+        $orX = $qb->expr()->orX();
+        foreach ($ids as $index => $id) {
+            $param = 'id_' . $index;
+            $orX->add("task.id = :$param");
+            $qb->setParameter($param, $id, UuidBinaryOrderedTimeType::NAME);
         }
 
-        $parameterName = $parameterPrefix . 'ids';
-        $qb->andWhere($field . ' IN (:' . $parameterName . ')')
-            ->setParameter($parameterName, $binaryIds, ArrayParameterType::BINARY);
+        $qb->where($orX);
     }
 
     /**

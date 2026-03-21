@@ -28,7 +28,7 @@ final readonly class GetProjectController
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}', methods: [Request::METHOD_GET])]
     public function __invoke(string $applicationSlug, Project $project): JsonResponse
     {
-        $payload = $this->projectReadService->getDetail($applicationSlug, $project->getId());
+        $payload = $this->projectReadService->getDetail($applicationSlug, $project);
         if ($payload === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Project not found for this CRM scope.');
         }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Crm\Transport\Controller\Api\V1\Company;
 
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Domain\Entity\Company;
 use App\Crm\Domain\Entity\Project;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\General\Application\Service\CacheKeyConventionService;
@@ -35,24 +36,18 @@ final readonly class GetCompanyController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/companies/{id}', methods: [Request::METHOD_GET])]
-    public function __invoke(string $applicationSlug, string $id): JsonResponse
+    #[Route('/v1/crm/applications/{applicationSlug}/companies/{company}', methods: [Request::METHOD_GET])]
+    public function __invoke(string $applicationSlug, Company $company): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
-        $cacheKey = $this->cacheKeyConventionService->buildCrmCompanyDetailKey($applicationSlug, $id);
+        $cacheKey = $this->cacheKeyConventionService->buildCrmCompanyDetailKey($applicationSlug, $company->getId());
 
-        $payload = $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $crm, $id): ?array {
+        $payload = $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $company): ?array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag([
                     $this->cacheKeyConventionService->crmCompanyListByApplicationTag($applicationSlug),
-                    $this->cacheKeyConventionService->crmCompanyDetailTag($applicationSlug, $id),
+                    $this->cacheKeyConventionService->crmCompanyDetailTag($applicationSlug, $company->getId()),
                 ]);
-            }
-
-            $company = $this->companyRepository->findOneScopedById($id, $crm->getId());
-            if ($company === null) {
-                return null;
             }
 
             return [

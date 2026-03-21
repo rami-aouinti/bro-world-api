@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Crm\Application\Service;
 
+use App\Crm\Domain\Entity\Project;
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
 use App\General\Application\Service\CacheKeyConventionService;
@@ -82,23 +83,17 @@ readonly class ProjectReadService
         });
     }
 
-    public function getDetail(string $applicationSlug, string $projectId): ?array
+    public function getDetail(string $applicationSlug, Project $project): ?array
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
-        $cacheKey = $this->cacheKeyConventionService->buildCrmProjectDetailKey($applicationSlug, $projectId);
+        $cacheKey = $this->cacheKeyConventionService->buildCrmProjectDetailKey($applicationSlug, $project->getId());
 
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $crm, $projectId): ?array {
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug,  $project): ?array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag([
                     $this->cacheKeyConventionService->crmProjectListTag($applicationSlug),
-                    $this->cacheKeyConventionService->crmProjectDetailTag($applicationSlug, $projectId),
+                    $this->cacheKeyConventionService->crmProjectDetailTag($applicationSlug, $project->getId()),
                 ]);
-            }
-
-            $project = $this->projectRepository->findOneScopedById($projectId, $crm->getId());
-            if ($project === null) {
-                return null;
             }
 
             return [
