@@ -18,6 +18,7 @@ use function is_string;
 use function sprintf;
 use function str_contains;
 use function strtolower;
+use function trim;
 
 readonly class CrmGithubService
 {
@@ -78,6 +79,83 @@ readonly class CrmGithubService
                 'defaultBranch' => is_string($defaultBranch) && $defaultBranch !== '' ? $defaultBranch : null,
             ];
         }, $configured)));
+    }
+
+    public function listAccountRepositories(Project $project, int $page = 1, int $perPage = 30, string $search = ''): array
+    {
+        $response = $this->request($project, 'GET', '/user/repos', [
+            'query' => [
+                'sort' => 'updated',
+                'direction' => 'desc',
+                'page' => $page,
+                'per_page' => $perPage,
+            ],
+        ]);
+
+        $items = array_values(array_filter(array_map(static function (array $repository): ?array {
+            $fullName = $repository['full_name'] ?? null;
+            if (!is_string($fullName) || $fullName === '') {
+                return null;
+            }
+
+            return [
+                'name' => (string)($repository['name'] ?? ''),
+                'fullName' => $fullName,
+                'private' => (bool)($repository['private'] ?? false),
+                'defaultBranch' => isset($repository['default_branch']) && is_string($repository['default_branch']) && $repository['default_branch'] !== ''
+                    ? $repository['default_branch']
+                    : null,
+                'htmlUrl' => (string)($repository['html_url'] ?? ''),
+                'owner' => (string)($repository['owner']['login'] ?? ''),
+            ];
+        }, $response)));
+
+        if ($search !== '') {
+            $normalizedSearch = strtolower($search);
+            $items = array_values(array_filter($items, static fn (array $item): bool => str_contains(strtolower((string)$item['name']), $normalizedSearch)
+                || str_contains(strtolower((string)$item['fullName']), $normalizedSearch)));
+        }
+
+        return [
+            'items' => $items,
+            'pagination' => [
+                'page' => $page,
+                'limit' => $perPage,
+                'totalItems' => count($items),
+                'totalPages' => 1,
+            ],
+        ];
+    }
+
+    /**
+     * @return array{fullName:string,defaultBranch:string|null}
+     */
+    public function attachRepository(Project $project, string $fullName): array
+    {
+        $normalizedFullName = trim($fullName);
+        if ($normalizedFullName === '') {
+            throw new RuntimeException('Repository full name cannot be empty.');
+        }
+
+        $repository = $this->request($project, 'GET', sprintf('/repos/%s', $normalizedFullName));
+        $normalizedRepository = [
+            'fullName' => (string)($repository['full_name'] ?? $normalizedFullName),
+            'defaultBranch' => isset($repository['default_branch']) && is_string($repository['default_branch']) && $repository['default_branch'] !== ''
+                ? $repository['default_branch']
+                : null,
+        ];
+
+        $repositories = $this->listRepositories($project);
+        foreach ($repositories as $configuredRepository) {
+            if (strtolower($configuredRepository['fullName']) === strtolower($normalizedRepository['fullName'])) {
+                return $configuredRepository;
+            }
+        }
+
+        $repositories[] = $normalizedRepository;
+        $project->setGithubRepositories($repositories);
+
+        return $normalizedRepository;
     }
 
     public function listBranches(Project $project, string $repoFullName, int $page = 1, int $perPage = 30, string $search = ''): array
