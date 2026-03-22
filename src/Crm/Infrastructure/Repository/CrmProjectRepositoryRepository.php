@@ -43,4 +43,14 @@ class CrmProjectRepositoryRepository extends BaseRepository
 
         return $entity instanceof Entity ? $entity : null;
     }
+
+    public function findOneByProviderAndFullName(string $provider, string $fullName): ?Entity
+    {
+        $entity = $this->findOneBy([
+            'provider' => trim($provider),
+            'fullName' => trim($fullName),
+        ]);
+
+        return $entity instanceof Entity ? $entity : null;
+    }
 }
