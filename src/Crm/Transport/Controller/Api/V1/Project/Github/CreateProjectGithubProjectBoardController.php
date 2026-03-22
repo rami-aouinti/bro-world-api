@@ -38,7 +38,7 @@ final readonly class CreateProjectGithubProjectBoardController
             content: new OA\JsonContent(
                 required: ['owner', 'title'],
                 properties: [
-                    new OA\Property(property: 'owner', type: 'string', description: 'GitHub owner node id', example: 'O_kgDOBfke3Q'),
+                    new OA\Property(property: 'owner', description: 'GitHub owner node id', type: 'string', example: 'O_kgDOBfke3Q'),
                     new OA\Property(property: 'title', type: 'string', example: 'CRM Project Board'),
                 ],
             ),

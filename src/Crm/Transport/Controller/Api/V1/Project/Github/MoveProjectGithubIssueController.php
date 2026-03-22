@@ -39,7 +39,7 @@ final readonly class MoveProjectGithubIssueController
             required: false,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'afterItemId', type: 'string', nullable: true, example: 'PVTI_lADO...'),
+                    new OA\Property(property: 'afterItemId', type: 'string', example: 'PVTI_lADO...', nullable: true),
                 ],
             ),
         ),

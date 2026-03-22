@@ -39,7 +39,7 @@ final readonly class CreateProjectGithubRepositoryController
                 required: ['name'],
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'crm-sync-service'),
-                    new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Repository provisionné depuis CRM.'),
+                    new OA\Property(property: 'description', type: 'string', example: 'Repository provisionné depuis CRM.', nullable: true),
                     new OA\Property(property: 'private', type: 'boolean', example: true),
                 ],
             ),

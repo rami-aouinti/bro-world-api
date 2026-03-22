@@ -28,8 +28,8 @@ final readonly class GithubWebhookController
      */
     #[Route('/v1/crm/github/webhook', methods: [Request::METHOD_POST])]
     #[OA\Post(
-        summary: 'Public GitHub webhook endpoint with HMAC signature validation + idempotence guard.',
         description: 'Use this endpoint as GitHub webhook URL. In /api/doc, click "Try it out", set required headers and paste the raw GitHub payload JSON.',
+        summary: 'Public GitHub webhook endpoint with HMAC signature validation + idempotence guard.',
         security: [],
         requestBody: new OA\RequestBody(
             required: true,

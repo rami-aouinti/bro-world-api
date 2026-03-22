@@ -40,7 +40,7 @@ final readonly class CreateProjectGithubIssueController
                 properties: [
                     new OA\Property(property: 'repository', type: 'string', example: 'rami-aouinti/bro-world-api'),
                     new OA\Property(property: 'title', type: 'string', example: 'Créer endpoint de synchronisation webhook'),
-                    new OA\Property(property: 'body', type: 'string', nullable: true, example: 'Description détaillée générée depuis CRM.'),
+                    new OA\Property(property: 'body', type: 'string', example: 'Description détaillée générée depuis CRM.', nullable: true),
                 ],
             ),
         ),
