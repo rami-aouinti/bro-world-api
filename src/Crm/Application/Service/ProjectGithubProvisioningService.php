@@ -19,6 +19,8 @@ use function trim;
 
 final readonly class ProjectGithubProvisioningService
 {
+    private const string DEFAULT_REPOSITORY_OWNER = 'rami-aouinti';
+
     public function __construct(private CrmGithubService $crmGithubService)
     {
     }
@@ -32,7 +34,13 @@ final readonly class ProjectGithubProvisioningService
         $normalizedRepositoryName = $this->normalizeRepositoryName($repositoryName);
 
         try {
-            $repository = $this->crmGithubService->createRepository($project, $normalizedRepositoryName, $project->getDescription(), true);
+            $repository = $this->crmGithubService->createRepository(
+                $project,
+                $normalizedRepositoryName,
+                $project->getDescription(),
+                true,
+                self::DEFAULT_REPOSITORY_OWNER,
+            );
             $provisionedRepository = $repository;
 
             $board = $this->crmGithubService->createProjectBoard($project, (string)($repository['owner']['node_id'] ?? ''), $project->getName());

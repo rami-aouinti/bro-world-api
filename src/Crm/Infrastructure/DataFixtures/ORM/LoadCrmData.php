@@ -315,11 +315,11 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                 ->setGithubToken('ghp_john_root_fake_token')
                 ->setGithubRepositories([
                     [
-                        'fullName' => sprintf('john-root/%s-api', $projectSlug),
+                        'fullName' => sprintf('rami-aouinti/%s-api', $projectSlug),
                         'defaultBranch' => 'main',
                     ],
                     [
-                        'fullName' => sprintf('john-root/%s-web', $projectSlug),
+                        'fullName' => sprintf('rami-aouinti/%s-web', $projectSlug),
                         'defaultBranch' => 'develop',
                     ],
                 ]);

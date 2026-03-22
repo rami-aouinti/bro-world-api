@@ -408,7 +408,7 @@ GRAPHQL, ['projectId' => $projectId, 'perPage' => $perPage, 'after' => null]);
         $this->request($project, 'DELETE', sprintf('/repos/%s', trim($repoFullName)));
     }
 
-    public function createRepository(Project $project, string $name, ?string $description = null, bool $private = true): array
+    public function createRepository(Project $project, string $name, ?string $description = null, bool $private = true, ?string $owner = null): array
     {
         $payload = [
             'name' => trim($name),
@@ -419,7 +419,10 @@ GRAPHQL, ['projectId' => $projectId, 'perPage' => $perPage, 'after' => null]);
             $payload['description'] = trim($description);
         }
 
-        return $this->request($project, 'POST', '/user/repos', ['json' => $payload]);
+        $owner = trim((string)$owner);
+        $path = $owner !== '' ? sprintf('/orgs/%s/repos', $owner) : '/user/repos';
+
+        return $this->request($project, 'POST', $path, ['json' => $payload]);
     }
 
     public function createIssue(Project $project, string $repoFullName, string $title, ?string $body = null): array
