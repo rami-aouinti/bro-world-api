@@ -238,6 +238,44 @@ class CacheKeyConventionService
      * @param array<string, mixed> $filters
      * @throws JsonException
      */
+    public function buildCrmRepositoryListKey(string $applicationSlug, int $page, int $limit, array $filters): string
+    {
+        return 'crm_repository_list_' . md5((string)json_encode([
+            'applicationSlug' => $applicationSlug,
+            'page' => $page,
+            'limit' => $limit,
+            'filters' => $filters,
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    public function buildCrmRepositoryDetailKey(string $applicationSlug, string $repositoryId): string
+    {
+        return 'crm_repository_detail_' . $this->sanitizeSegment($applicationSlug) . '_' . $this->sanitizeSegment($repositoryId);
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     * @throws JsonException
+     */
+    public function buildCrmIssueListKey(string $applicationSlug, int $page, int $limit, array $filters): string
+    {
+        return 'crm_issue_list_' . md5((string)json_encode([
+            'applicationSlug' => $applicationSlug,
+            'page' => $page,
+            'limit' => $limit,
+            'filters' => $filters,
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    public function buildCrmIssueDetailKey(string $applicationSlug, string $issueId): string
+    {
+        return 'crm_issue_detail_' . $this->sanitizeSegment($applicationSlug) . '_' . $this->sanitizeSegment($issueId);
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     * @throws JsonException
+     */
     public function buildCrmEmployeeListKey(string $applicationSlug, int $page, int $limit, array $filters): string
     {
         return 'crm_employee_list_' . md5((string)json_encode([
@@ -453,6 +491,26 @@ class CacheKeyConventionService
     public function crmTaskRequestDetailTag(string $applicationSlug, string $taskRequestId): string
     {
         return 'cache_crm_task_request_detail_' . $this->sanitizeSegment($applicationSlug) . '_' . $this->sanitizeSegment($taskRequestId);
+    }
+
+    public function crmRepositoryListTag(string $applicationSlug): string
+    {
+        return 'cache_crm_repository_list_' . $this->sanitizeSegment($applicationSlug);
+    }
+
+    public function crmRepositoryDetailTag(string $applicationSlug, string $repositoryId): string
+    {
+        return 'cache_crm_repository_detail_' . $this->sanitizeSegment($applicationSlug) . '_' . $this->sanitizeSegment($repositoryId);
+    }
+
+    public function crmIssueListTag(string $applicationSlug): string
+    {
+        return 'cache_crm_issue_list_' . $this->sanitizeSegment($applicationSlug);
+    }
+
+    public function crmIssueDetailTag(string $applicationSlug, string $issueId): string
+    {
+        return 'cache_crm_issue_detail_' . $this->sanitizeSegment($applicationSlug) . '_' . $this->sanitizeSegment($issueId);
     }
 
     public function crmTaskDetailTag(string $applicationSlug, string $taskId): string

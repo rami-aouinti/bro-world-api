@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\General\Application\MessageHandler;
 
 use App\Crm\Application\Projection\CrmTaskProjection;
+use App\Crm\Application\Projection\CrmIssueProjection;
+use App\Crm\Application\Projection\CrmRepositoryProjection;
+use App\Crm\Infrastructure\Repository\CrmGithubWebhookEventRepository;
+use App\Crm\Infrastructure\Repository\CrmProjectRepositoryRepository;
 use App\Crm\Infrastructure\Repository\TaskRepository;
 use App\General\Application\Message\EntityCreated;
 use App\General\Application\Message\EntityDeleted;
@@ -25,6 +29,7 @@ use App\Shop\Infrastructure\Repository\ProductRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 use function array_map;
+use function is_array;
 
 #[AsMessageHandler]
 final readonly class EntityProjectionHandler
@@ -37,6 +42,8 @@ final readonly class EntityProjectionHandler
     private const string CRM_PROJECT = 'crm_project';
     private const string CRM_TASK_REQUEST = 'crm_task_request';
     private const string CRM_SPRINT = 'crm_sprint';
+    private const string CRM_REPOSITORY = 'crm_repository';
+    private const string CRM_ISSUE = 'crm_issue';
     private const string SCHOOL_EXAM = 'school_exam';
     private const string SCHOOL_CLASS = 'school_class';
     private const string SCHOOL_TEACHER = 'school_teacher';
@@ -50,6 +57,8 @@ final readonly class EntityProjectionHandler
         private JobRepository $jobRepository,
         private ProductRepository $productRepository,
         private TaskRepository $taskRepository,
+        private CrmProjectRepositoryRepository $crmProjectRepositoryRepository,
+        private CrmGithubWebhookEventRepository $crmGithubWebhookEventRepository,
         private ExamRepository $examRepository,
         private CacheInvalidationService $cacheInvalidationService,
         private CriticalViewWarmer $criticalViewWarmer,
@@ -90,6 +99,18 @@ final readonly class EntityProjectionHandler
 
         if ($message->entityType === self::CRM_TASK) {
             $this->projectCrmTask($message);
+
+            return;
+        }
+
+        if ($message->entityType === self::CRM_REPOSITORY) {
+            $this->projectCrmRepository($message);
+
+            return;
+        }
+
+        if ($message->entityType === self::CRM_ISSUE) {
+            $this->projectCrmIssue($message);
 
             return;
         }
@@ -303,5 +324,83 @@ final readonly class EntityProjectionHandler
     private function projectSchoolSupportEntities(): void
     {
         $this->cacheInvalidationService->invalidateSchoolExamListCaches(null);
+    }
+
+    private function projectCrmRepository(EntityMutationMessage $message): void
+    {
+        $applicationSlug = (string)($message->context['applicationSlug'] ?? '');
+
+        if ($message instanceof EntityDeleted) {
+            $this->elasticsearchService->delete(CrmRepositoryProjection::INDEX_NAME, $message->entityId);
+            if ($applicationSlug !== '') {
+                $this->cacheInvalidationService->invalidateCrmTaskListCaches($applicationSlug);
+            }
+
+            return;
+        }
+
+        $repository = $this->crmProjectRepositoryRepository->find($message->entityId);
+        if ($repository === null) {
+            return;
+        }
+
+        $this->elasticsearchService->index(CrmRepositoryProjection::INDEX_NAME, $repository->getId(), [
+            'id' => $repository->getId(),
+            'projectId' => $repository->getProject()?->getId(),
+            'projectName' => $repository->getProject()?->getName(),
+            'provider' => $repository->getProvider(),
+            'owner' => $repository->getOwner(),
+            'name' => $repository->getName(),
+            'fullName' => $repository->getFullName(),
+            'defaultBranch' => $repository->getDefaultBranch(),
+            'isPrivate' => $repository->isPrivate(),
+            'htmlUrl' => $repository->getHtmlUrl(),
+            'externalId' => $repository->getExternalId(),
+            'syncStatus' => $repository->getSyncStatus(),
+            'lastSyncedAt' => $repository->getLastSyncedAt()?->format(DATE_ATOM),
+            'updatedAt' => $repository->getUpdatedAt()?->format(DATE_ATOM),
+        ]);
+
+        $applicationSlug = $repository->getProject()?->getCompany()?->getCrm()?->getApplication()?->getSlug() ?? $applicationSlug;
+        if ($applicationSlug !== '') {
+            $this->cacheInvalidationService->invalidateCrmTaskListCaches($applicationSlug);
+        }
+    }
+
+    private function projectCrmIssue(EntityMutationMessage $message): void
+    {
+        $applicationSlug = (string)($message->context['applicationSlug'] ?? '');
+
+        if ($message instanceof EntityDeleted) {
+            $this->elasticsearchService->delete(CrmIssueProjection::INDEX_NAME, $message->entityId);
+            if ($applicationSlug !== '') {
+                $this->cacheInvalidationService->invalidateCrmTaskListCaches($applicationSlug);
+            }
+
+            return;
+        }
+
+        $event = $this->crmGithubWebhookEventRepository->find($message->entityId);
+        if ($event === null) {
+            return;
+        }
+
+        $payload = $event->getPayload();
+        $issuePayload = isset($payload['issue']) && is_array($payload['issue']) ? $payload['issue'] : [];
+
+        $this->elasticsearchService->index(CrmIssueProjection::INDEX_NAME, $event->getId(), [
+            'id' => $event->getId(),
+            'deliveryId' => $event->getDeliveryId(),
+            'repositoryFullName' => $event->getRepositoryFullName(),
+            'eventAction' => $event->getEventAction(),
+            'issueNumber' => $issuePayload['number'] ?? null,
+            'issueTitle' => $issuePayload['title'] ?? null,
+            'issueState' => $issuePayload['state'] ?? null,
+            'updatedAt' => $event->getUpdatedAt()?->format(DATE_ATOM),
+        ]);
+
+        if ($applicationSlug !== '') {
+            $this->cacheInvalidationService->invalidateCrmTaskListCaches($applicationSlug);
+        }
     }
 }

@@ -20,6 +20,8 @@ final class ReindexAllDomainsCommand extends Command
     public function __construct(
         private readonly ReindexBlogsCommand $reindexBlogsCommand,
         private readonly ReindexCrmTasksCommand $reindexCrmTasksCommand,
+        private readonly ReindexCrmRepositoriesCommand $reindexCrmRepositoriesCommand,
+        private readonly ReindexCrmIssuesCommand $reindexCrmIssuesCommand,
         private readonly ReindexShopProductsCommand $reindexShopProductsCommand,
         private readonly ReindexPlatformsCommand $reindexPlatformsCommand,
         private readonly ReindexNotificationsCommand $reindexNotificationsCommand,
@@ -31,6 +33,8 @@ final class ReindexAllDomainsCommand extends Command
     {
         $this->reindexBlogsCommand->run($input, $output);
         $this->reindexCrmTasksCommand->run($input, $output);
+        $this->reindexCrmRepositoriesCommand->run($input, $output);
+        $this->reindexCrmIssuesCommand->run($input, $output);
         $this->reindexShopProductsCommand->run($input, $output);
         $this->reindexPlatformsCommand->run($input, $output);
         $this->reindexNotificationsCommand->run($input, $output);

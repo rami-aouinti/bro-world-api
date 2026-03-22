@@ -68,6 +68,10 @@ final readonly class GithubWebhookReceivedHandler
             $applicationSlug = $project?->getCompany()?->getCrm()?->getApplication()?->getSlug();
             if ($applicationSlug !== null && $applicationSlug !== '') {
                 $this->crmReadCacheInvalidator->invalidateProjectCaches($applicationSlug, $project?->getId());
+                $this->crmReadCacheInvalidator->invalidateRepository($applicationSlug, $repository->getId());
+                if ($message->eventName === 'issues') {
+                    $this->crmReadCacheInvalidator->invalidateIssue($applicationSlug, $webhookEvent->getId());
+                }
             }
         }
 

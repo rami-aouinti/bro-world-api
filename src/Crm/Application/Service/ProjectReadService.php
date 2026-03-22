@@ -19,6 +19,7 @@ use function array_filter;
 use function array_map;
 use function array_values;
 use function ceil;
+use function is_array;
 use function max;
 use function method_exists;
 use function min;
@@ -145,7 +146,10 @@ readonly class ProjectReadService
                 '_source' => ['id'],
             ], 0, 500);
 
-            $hits = $response['hits']['hits'] ?? [];
+            $hits = $response['hits']['hits'] ?? null;
+            if (!is_array($hits)) {
+                return null;
+            }
 
             return array_values(array_filter(array_map(static fn (array $hit): ?string => $hit['_source']['id'] ?? $hit['_id'] ?? null, $hits)));
         } catch (Throwable) {

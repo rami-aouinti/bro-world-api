@@ -66,6 +66,19 @@ readonly class CrmReadCacheInvalidator
     /**
      * @throws InvalidArgumentException
      */
+    public function invalidateProjectCaches(string $applicationSlug, ?string $projectId = null): void
+    {
+        $tags = [$this->cacheKeyConventionService->crmProjectListTag($applicationSlug)];
+        if ($projectId !== null) {
+            $tags[] = $this->cacheKeyConventionService->crmProjectDetailTag($applicationSlug, $projectId);
+        }
+
+        $this->invalidateTags($tags);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
     public function invalidateEmployee(string $applicationSlug, string $employeeId): void
     {
         $this->invalidateTags([
@@ -83,6 +96,32 @@ readonly class CrmReadCacheInvalidator
             $this->cacheKeyConventionService->crmTaskRequestListTag($applicationSlug),
             $this->cacheKeyConventionService->crmTaskRequestDetailTag($applicationSlug, $taskRequestId),
         ]);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function invalidateRepository(string $applicationSlug, ?string $repositoryId = null): void
+    {
+        $tags = [$this->cacheKeyConventionService->crmRepositoryListTag($applicationSlug)];
+        if ($repositoryId !== null) {
+            $tags[] = $this->cacheKeyConventionService->crmRepositoryDetailTag($applicationSlug, $repositoryId);
+        }
+
+        $this->invalidateTags($tags);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function invalidateIssue(string $applicationSlug, ?string $issueId = null): void
+    {
+        $tags = [$this->cacheKeyConventionService->crmIssueListTag($applicationSlug)];
+        if ($issueId !== null) {
+            $tags[] = $this->cacheKeyConventionService->crmIssueDetailTag($applicationSlug, $issueId);
+        }
+
+        $this->invalidateTags($tags);
     }
 
     /**
