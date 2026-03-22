@@ -19,6 +19,7 @@ use function is_int;
 use function is_string;
 use function parse_str;
 use function preg_match;
+use function rawurlencode;
 use function sprintf;
 use function str_contains;
 use function strtolower;
@@ -198,6 +199,64 @@ readonly class CrmGithubService
         ];
     }
 
+    public function createBranch(Project $project, string $repoFullName, string $name, ?string $sourceBranch = null): array
+    {
+        $normalizedRepo = trim($repoFullName);
+        $normalizedName = trim($name);
+        if ($normalizedRepo === '' || $normalizedName === '') {
+            throw new CrmGithubApiException('Repository and branch name are required.', 422);
+        }
+
+        $repository = $this->request($project, 'GET', sprintf('/repos/%s', $normalizedRepo));
+        $baseBranch = trim((string)($sourceBranch ?? ''));
+        if ($baseBranch === '') {
+            $baseBranch = (string)($repository['default_branch'] ?? '');
+        }
+
+        if ($baseBranch === '') {
+            throw new CrmGithubApiException('Unable to resolve source branch for this repository.', 422);
+        }
+
+        $baseRef = $this->request(
+            $project,
+            'GET',
+            sprintf('/repos/%s/git/ref/heads/%s', $normalizedRepo, $this->encodeGitRefPath($baseBranch)),
+        );
+        $sha = (string)($baseRef['object']['sha'] ?? '');
+        if ($sha === '') {
+            throw new CrmGithubApiException('Unable to resolve source branch SHA.', 422);
+        }
+
+        $createdRef = $this->request($project, 'POST', sprintf('/repos/%s/git/refs', $normalizedRepo), [
+            'json' => [
+                'ref' => 'refs/heads/' . $normalizedName,
+                'sha' => $sha,
+            ],
+        ]);
+
+        return [
+            'name' => $normalizedName,
+            'sha' => (string)($createdRef['object']['sha'] ?? ''),
+            'ref' => (string)($createdRef['ref'] ?? ''),
+            'url' => (string)($createdRef['url'] ?? ''),
+        ];
+    }
+
+    public function deleteBranch(Project $project, string $repoFullName, string $name): void
+    {
+        $normalizedRepo = trim($repoFullName);
+        $normalizedName = trim($name);
+        if ($normalizedRepo === '' || $normalizedName === '') {
+            throw new CrmGithubApiException('Repository and branch name are required.', 422);
+        }
+
+        $this->request(
+            $project,
+            'DELETE',
+            sprintf('/repos/%s/git/refs/heads/%s', $normalizedRepo, $this->encodeGitRefPath($normalizedName)),
+        );
+    }
+
     public function listPullRequests(Project $project, string $repoFullName, string $state = 'open', ?string $author = null, string $search = '', int $page = 1, int $perPage = 30): array
     {
         $response = $this->requestWithMeta($project, 'GET', sprintf('/repos/%s/pulls', $repoFullName), [
@@ -316,17 +375,12 @@ readonly class CrmGithubService
     {
         $repository = $this->request($project, 'GET', sprintf('/repos/%s', $repoFullName));
         $owner = (string)($repository['owner']['login'] ?? '');
+        $ownerType = strtolower((string)($repository['owner']['type'] ?? ''));
+        $ownerField = $ownerType === 'organization' ? 'organization' : 'user';
 
-        $graphql = $this->graphql($project, <<<'GRAPHQL'
-query($owner:String!, $page:Int!, $perPage:Int!) {
-  user(login: $owner) {
-    projectsV2(first: $perPage, orderBy: {field: UPDATED_AT, direction: DESC}) {
-      nodes { id title number url closed updatedAt }
-      pageInfo { hasNextPage endCursor }
-      totalCount
-    }
-  }
-  organization(login: $owner) {
+        $graphql = $this->graphql($project, sprintf(<<<'GRAPHQL'
+query($owner:String!, $perPage:Int!) {
+  %s(login: $owner) {
     projectsV2(first: $perPage, orderBy: {field: UPDATED_AT, direction: DESC}) {
       nodes { id title number url closed updatedAt }
       pageInfo { hasNextPage endCursor }
@@ -334,9 +388,9 @@ query($owner:String!, $page:Int!, $perPage:Int!) {
     }
   }
 }
-GRAPHQL, ['owner' => $owner, 'page' => $page, 'perPage' => $perPage]);
+GRAPHQL, $ownerField), ['owner' => $owner, 'perPage' => $perPage]);
 
-        $projectBlock = $graphql['data']['user']['projectsV2'] ?? $graphql['data']['organization']['projectsV2'] ?? null;
+        $projectBlock = $graphql['data'][$ownerField]['projectsV2'] ?? null;
         $nodes = is_array($projectBlock['nodes'] ?? null) ? $projectBlock['nodes'] : [];
         $totalCount = (int)($projectBlock['totalCount'] ?? count($nodes));
 
@@ -617,5 +671,10 @@ GRAPHQL, ['projectId' => $projectId, 'itemId' => $itemId, 'afterId' => $afterIte
         }
 
         return $pages;
+    }
+
+    private function encodeGitRefPath(string $ref): string
+    {
+        return str_replace('%2F', '/', rawurlencode(trim($ref)));
     }
 }
