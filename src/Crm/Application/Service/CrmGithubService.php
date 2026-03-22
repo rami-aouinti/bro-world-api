@@ -4,21 +4,26 @@ declare(strict_types=1);
 
 namespace App\Crm\Application\Service;
 
+use App\Crm\Application\Exception\CrmGithubApiException;
 use App\Crm\Domain\Entity\Project;
-use RuntimeException;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 use function array_filter;
+use function array_key_exists;
 use function array_map;
 use function array_values;
 use function count;
 use function is_array;
+use function is_int;
 use function is_string;
+use function parse_str;
+use function preg_match;
 use function sprintf;
 use function str_contains;
 use function strtolower;
 use function trim;
+use function urldecode;
 
 readonly class CrmGithubService
 {
@@ -81,9 +86,27 @@ readonly class CrmGithubService
         }, $configured)));
     }
 
+    public function getRepository(Project $project, string $repoFullName): array
+    {
+        $repository = $this->request($project, 'GET', sprintf('/repos/%s', trim($repoFullName)));
+
+        return [
+            'id' => (int)($repository['id'] ?? 0),
+            'name' => (string)($repository['name'] ?? ''),
+            'fullName' => (string)($repository['full_name'] ?? ''),
+            'private' => (bool)($repository['private'] ?? false),
+            'defaultBranch' => isset($repository['default_branch']) && is_string($repository['default_branch']) && $repository['default_branch'] !== ''
+                ? $repository['default_branch']
+                : null,
+            'description' => isset($repository['description']) ? (string)$repository['description'] : null,
+            'owner' => (string)($repository['owner']['login'] ?? ''),
+            'htmlUrl' => (string)($repository['html_url'] ?? ''),
+        ];
+    }
+
     public function listAccountRepositories(Project $project, int $page = 1, int $perPage = 30, string $search = ''): array
     {
-        $response = $this->request($project, 'GET', '/user/repos', [
+        $response = $this->requestWithMeta($project, 'GET', '/user/repos', [
             'query' => [
                 'sort' => 'updated',
                 'direction' => 'desc',
@@ -108,7 +131,7 @@ readonly class CrmGithubService
                 'htmlUrl' => (string)($repository['html_url'] ?? ''),
                 'owner' => (string)($repository['owner']['login'] ?? ''),
             ];
-        }, $response)));
+        }, $response['data'])));
 
         if ($search !== '') {
             $normalizedSearch = strtolower($search);
@@ -118,12 +141,7 @@ readonly class CrmGithubService
 
         return [
             'items' => $items,
-            'pagination' => [
-                'page' => $page,
-                'limit' => $perPage,
-                'totalItems' => count($items),
-                'totalPages' => 1,
-            ],
+            'pagination' => $this->buildPagination($response['meta']['link'], $page, $perPage, count($items)),
         ];
     }
 
@@ -134,7 +152,7 @@ readonly class CrmGithubService
     {
         $normalizedFullName = trim($fullName);
         if ($normalizedFullName === '') {
-            throw new RuntimeException('Repository full name cannot be empty.');
+            throw new CrmGithubApiException('Repository full name cannot be empty.', 422);
         }
 
         $repository = $this->request($project, 'GET', sprintf('/repos/%s', $normalizedFullName));
@@ -160,7 +178,7 @@ readonly class CrmGithubService
 
     public function listBranches(Project $project, string $repoFullName, int $page = 1, int $perPage = 30, string $search = ''): array
     {
-        $response = $this->request($project, 'GET', sprintf('/repos/%s/branches', $repoFullName), [
+        $response = $this->requestWithMeta($project, 'GET', sprintf('/repos/%s/branches', $repoFullName), [
             'query' => ['page' => $page, 'per_page' => $perPage],
         ]);
 
@@ -168,7 +186,7 @@ readonly class CrmGithubService
             'name' => $branch['name'] ?? '',
             'protected' => (bool)($branch['protected'] ?? false),
             'sha' => $branch['commit']['sha'] ?? null,
-        ], $response);
+        ], $response['data']);
 
         if ($search !== '') {
             $items = array_values(array_filter($items, static fn (array $item): bool => str_contains(strtolower((string)$item['name']), strtolower($search))));
@@ -176,18 +194,13 @@ readonly class CrmGithubService
 
         return [
             'items' => $items,
-            'pagination' => [
-                'page' => $page,
-                'limit' => $perPage,
-                'totalItems' => count($items),
-                'totalPages' => 1,
-            ],
+            'pagination' => $this->buildPagination($response['meta']['link'], $page, $perPage, count($items)),
         ];
     }
 
     public function listPullRequests(Project $project, string $repoFullName, string $state = 'open', ?string $author = null, string $search = '', int $page = 1, int $perPage = 30): array
     {
-        $response = $this->request($project, 'GET', sprintf('/repos/%s/pulls', $repoFullName), [
+        $response = $this->requestWithMeta($project, 'GET', sprintf('/repos/%s/pulls', $repoFullName), [
             'query' => [
                 'state' => $state,
                 'page' => $page,
@@ -211,7 +224,7 @@ readonly class CrmGithubService
                 'draft' => (bool)($pull['draft'] ?? false),
                 'htmlUrl' => (string)($pull['html_url'] ?? ''),
             ];
-        }, $response)));
+        }, $response['data'])));
 
         if (is_string($author) && $author !== '') {
             $items = array_values(array_filter($items, static fn (array $item): bool => strtolower((string)$item['author']) === strtolower($author)));
@@ -223,12 +236,7 @@ readonly class CrmGithubService
 
         return [
             'items' => $items,
-            'pagination' => [
-                'page' => $page,
-                'limit' => $perPage,
-                'totalItems' => count($items),
-                'totalPages' => 1,
-            ],
+            'pagination' => $this->buildPagination($response['meta']['link'], $page, $perPage, count($items)),
         ];
     }
 
@@ -254,6 +262,211 @@ readonly class CrmGithubService
         ];
     }
 
+    public function listIssues(Project $project, string $repoFullName, string $state = 'open', int $page = 1, int $perPage = 30): array
+    {
+        $response = $this->requestWithMeta($project, 'GET', sprintf('/repos/%s/issues', $repoFullName), [
+            'query' => [
+                'state' => $state,
+                'page' => $page,
+                'per_page' => $perPage,
+            ],
+        ]);
+
+        $items = array_values(array_filter(array_map(static function (array $issue): ?array {
+            if (array_key_exists('pull_request', $issue)) {
+                return null;
+            }
+
+            return [
+                'number' => (int)($issue['number'] ?? 0),
+                'title' => (string)($issue['title'] ?? ''),
+                'state' => (string)($issue['state'] ?? ''),
+                'author' => (string)($issue['user']['login'] ?? ''),
+                'comments' => (int)($issue['comments'] ?? 0),
+                'htmlUrl' => (string)($issue['html_url'] ?? ''),
+                'createdAt' => (string)($issue['created_at'] ?? ''),
+                'updatedAt' => (string)($issue['updated_at'] ?? ''),
+            ];
+        }, $response['data'])));
+
+        return [
+            'items' => $items,
+            'pagination' => $this->buildPagination($response['meta']['link'], $page, $perPage, count($items)),
+        ];
+    }
+
+    public function getIssue(Project $project, string $repoFullName, int $number): array
+    {
+        $issue = $this->request($project, 'GET', sprintf('/repos/%s/issues/%d', $repoFullName, $number));
+
+        return [
+            'number' => (int)($issue['number'] ?? 0),
+            'title' => (string)($issue['title'] ?? ''),
+            'state' => (string)($issue['state'] ?? ''),
+            'body' => isset($issue['body']) ? (string)$issue['body'] : null,
+            'author' => (string)($issue['user']['login'] ?? ''),
+            'comments' => (int)($issue['comments'] ?? 0),
+            'htmlUrl' => (string)($issue['html_url'] ?? ''),
+            'createdAt' => (string)($issue['created_at'] ?? ''),
+            'updatedAt' => (string)($issue['updated_at'] ?? ''),
+        ];
+    }
+
+    public function listRepositoryProjects(Project $project, string $repoFullName, int $page = 1, int $perPage = 20): array
+    {
+        $repository = $this->request($project, 'GET', sprintf('/repos/%s', $repoFullName));
+        $owner = (string)($repository['owner']['login'] ?? '');
+
+        $graphql = $this->graphql($project, <<<'GRAPHQL'
+query($owner:String!, $page:Int!, $perPage:Int!) {
+  user(login: $owner) {
+    projectsV2(first: $perPage, orderBy: {field: UPDATED_AT, direction: DESC}) {
+      nodes { id title number url closed updatedAt }
+      pageInfo { hasNextPage endCursor }
+      totalCount
+    }
+  }
+  organization(login: $owner) {
+    projectsV2(first: $perPage, orderBy: {field: UPDATED_AT, direction: DESC}) {
+      nodes { id title number url closed updatedAt }
+      pageInfo { hasNextPage endCursor }
+      totalCount
+    }
+  }
+}
+GRAPHQL, ['owner' => $owner, 'page' => $page, 'perPage' => $perPage]);
+
+        $projectBlock = $graphql['data']['user']['projectsV2'] ?? $graphql['data']['organization']['projectsV2'] ?? null;
+        $nodes = is_array($projectBlock['nodes'] ?? null) ? $projectBlock['nodes'] : [];
+        $totalCount = (int)($projectBlock['totalCount'] ?? count($nodes));
+
+        return [
+            'items' => array_values(array_map(static fn (array $item): array => [
+                'id' => (string)($item['id'] ?? ''),
+                'title' => (string)($item['title'] ?? ''),
+                'number' => (int)($item['number'] ?? 0),
+                'url' => (string)($item['url'] ?? ''),
+                'closed' => (bool)($item['closed'] ?? false),
+                'updatedAt' => (string)($item['updatedAt'] ?? ''),
+            ], $nodes)),
+            'pagination' => [
+                'page' => $page,
+                'limit' => $perPage,
+                'totalItems' => $totalCount,
+                'totalPages' => (int)max(1, (int)ceil($totalCount / $perPage)),
+            ],
+        ];
+    }
+
+    public function getProjectItems(Project $project, string $projectId, int $page = 1, int $perPage = 20): array
+    {
+        $graphql = $this->graphql($project, <<<'GRAPHQL'
+query($projectId:ID!, $perPage:Int!, $after:String) {
+  node(id: $projectId) {
+    ... on ProjectV2 {
+      items(first: $perPage, after: $after) {
+        nodes {
+          id
+          content {
+            ... on Issue { id number title url state }
+          }
+        }
+        totalCount
+        pageInfo { hasNextPage endCursor }
+      }
+    }
+  }
+}
+GRAPHQL, ['projectId' => $projectId, 'perPage' => $perPage, 'after' => null]);
+
+        $itemsBlock = $graphql['data']['node']['items'] ?? [];
+        $nodes = is_array($itemsBlock['nodes'] ?? null) ? $itemsBlock['nodes'] : [];
+        $totalCount = (int)($itemsBlock['totalCount'] ?? count($nodes));
+
+        return [
+            'items' => array_values(array_map(static fn (array $item): array => [
+                'id' => (string)($item['id'] ?? ''),
+                'issue' => [
+                    'id' => (string)($item['content']['id'] ?? ''),
+                    'number' => (int)($item['content']['number'] ?? 0),
+                    'title' => (string)($item['content']['title'] ?? ''),
+                    'url' => (string)($item['content']['url'] ?? ''),
+                    'state' => (string)($item['content']['state'] ?? ''),
+                ],
+            ], $nodes)),
+            'pagination' => [
+                'page' => $page,
+                'limit' => $perPage,
+                'totalItems' => $totalCount,
+                'totalPages' => (int)max(1, (int)ceil($totalCount / $perPage)),
+            ],
+        ];
+    }
+
+    public function createRepository(Project $project, string $name, ?string $description = null, bool $private = true): array
+    {
+        $payload = [
+            'name' => trim($name),
+            'private' => $private,
+        ];
+
+        if (is_string($description) && trim($description) !== '') {
+            $payload['description'] = trim($description);
+        }
+
+        return $this->request($project, 'POST', '/user/repos', ['json' => $payload]);
+    }
+
+    public function createIssue(Project $project, string $repoFullName, string $title, ?string $body = null): array
+    {
+        $payload = ['title' => trim($title)];
+        if (is_string($body) && trim($body) !== '') {
+            $payload['body'] = trim($body);
+        }
+
+        return $this->request($project, 'POST', sprintf('/repos/%s/issues', $repoFullName), ['json' => $payload]);
+    }
+
+    public function updateIssueState(Project $project, string $repoFullName, int $number, string $state): array
+    {
+        return $this->request($project, 'PATCH', sprintf('/repos/%s/issues/%d', $repoFullName, $number), [
+            'json' => ['state' => strtolower(trim($state))],
+        ]);
+    }
+
+    public function addIssueComment(Project $project, string $repoFullName, int $number, string $body): array
+    {
+        return $this->request($project, 'POST', sprintf('/repos/%s/issues/%d/comments', $repoFullName, $number), [
+            'json' => ['body' => trim($body)],
+        ]);
+    }
+
+    public function createProjectBoard(Project $project, string $ownerLogin, string $title): array
+    {
+        $graphql = $this->graphql($project, <<<'GRAPHQL'
+mutation($owner:String!, $title:String!) {
+  createProjectV2(input:{ownerId:$owner, title:$title}) {
+    projectV2 { id title number url }
+  }
+}
+GRAPHQL, ['owner' => $ownerLogin, 'title' => $title]);
+
+        return $graphql['data']['createProjectV2']['projectV2'] ?? [];
+    }
+
+    public function moveIssueToProjectColumn(Project $project, string $projectId, string $itemId, ?string $afterItemId = null): array
+    {
+        $graphql = $this->graphql($project, <<<'GRAPHQL'
+mutation($projectId:ID!, $itemId:ID!, $afterId:ID) {
+  updateProjectV2ItemPosition(input:{projectId:$projectId, itemId:$itemId, afterId:$afterId}) {
+    items { totalCount }
+  }
+}
+GRAPHQL, ['projectId' => $projectId, 'itemId' => $itemId, 'afterId' => $afterItemId]);
+
+        return $graphql['data']['updateProjectV2ItemPosition']['items'] ?? [];
+    }
+
     public function mergePullRequest(Project $project, string $repoFullName, int $number, string $method = 'merge'): array
     {
         return $this->request($project, 'PUT', sprintf('/repos/%s/pulls/%d/merge', $repoFullName, $number), [
@@ -272,14 +485,15 @@ readonly class CrmGithubService
 
     /**
      * @param array<string,mixed> $options
-     * @return array<mixed>
+     * @return array{data:array<mixed>,meta:array<string,mixed>}
      */
-    private function request(Project $project, string $method, string $path, array $options = []): array
+    private function requestWithMeta(Project $project, string $method, string $path, array $options = []): array
     {
         $token = $project->getGithubToken();
         if (!is_string($token) || $token === '') {
-            throw new RuntimeException('GitHub token is not configured on this project.');
+            throw new CrmGithubApiException('GitHub token is not configured on this project.', 400);
         }
+
         try {
             $response = $this->httpClient->request($method, self::BASE_URL . $path, $options + [
                 'headers' => [
@@ -289,9 +503,111 @@ readonly class CrmGithubService
                 ],
             ]);
 
-            return $response->toArray(false);
+            $statusCode = $response->getStatusCode();
+            $data = $response->toArray(false);
+
+            if ($statusCode >= 400) {
+                throw $this->mapToCrmException($statusCode, is_array($data) ? $data : []);
+            }
+
+            return [
+                'data' => is_array($data) ? $data : [],
+                'meta' => [
+                    'link' => $response->getHeaders(false)['link'][0] ?? null,
+                ],
+            ];
+        } catch (CrmGithubApiException $exception) {
+            throw $exception;
         } catch (ExceptionInterface $exception) {
-            throw new RuntimeException('GitHub API request failed: ' . $exception->getMessage(), previous: $exception);
+            throw new CrmGithubApiException('Unable to reach GitHub API.', 502, previous: $exception);
         }
+    }
+
+    /**
+     * @param array<string,mixed> $options
+     * @return array<mixed>
+     */
+    private function request(Project $project, string $method, string $path, array $options = []): array
+    {
+        $response = $this->requestWithMeta($project, $method, $path, $options);
+
+        return $response['data'];
+    }
+
+    /**
+     * @param array<string,mixed> $variables
+     */
+    private function graphql(Project $project, string $query, array $variables = []): array
+    {
+        $data = $this->request($project, 'POST', '/graphql', ['json' => ['query' => $query, 'variables' => $variables]]);
+        if (is_array($data['errors'] ?? null) && $data['errors'] !== []) {
+            throw new CrmGithubApiException('GitHub project operation failed.', 422, $data['errors']);
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param array<string,mixed> $payload
+     */
+    private function mapToCrmException(int $statusCode, array $payload): CrmGithubApiException
+    {
+        $message = (string)($payload['message'] ?? 'GitHub API request failed.');
+        $errors = is_array($payload['errors'] ?? null) ? $payload['errors'] : [];
+
+        return match ($statusCode) {
+            401, 403 => new CrmGithubApiException('GitHub authentication failed for this project token.', 401, $errors),
+            404 => new CrmGithubApiException('GitHub resource not found or inaccessible.', 404, $errors),
+            422 => new CrmGithubApiException('GitHub validation failed for this request.', 422, $errors),
+            default => new CrmGithubApiException($message, 502, $errors),
+        };
+    }
+
+    private function buildPagination(?string $linkHeader, int $page, int $limit, int $itemsCount): array
+    {
+        $parsed = $this->parseLinkHeader($linkHeader);
+        $lastPage = $parsed['last'] ?? null;
+        $nextPage = $parsed['next'] ?? null;
+
+        return [
+            'page' => $page,
+            'limit' => $limit,
+            'totalItems' => $lastPage !== null ? $lastPage * $limit : $itemsCount,
+            'totalPages' => $lastPage ?? ($nextPage !== null ? $page + 1 : max(1, $page)),
+            'hasNextPage' => $nextPage !== null,
+        ];
+    }
+
+    /**
+     * @return array{next?:int,last?:int}
+     */
+    private function parseLinkHeader(?string $linkHeader): array
+    {
+        if (!is_string($linkHeader) || trim($linkHeader) === '') {
+            return [];
+        }
+
+        $pages = [];
+        foreach (explode(',', $linkHeader) as $linkPart) {
+            if (!preg_match('/<([^>]+)>;\s*rel="([a-z]+)"/i', trim($linkPart), $matches)) {
+                continue;
+            }
+
+            $url = $matches[1];
+            $rel = strtolower($matches[2]);
+
+            $query = [];
+            parse_str((string)parse_url($url, PHP_URL_QUERY), $query);
+            $page = $query['page'] ?? null;
+            if (is_string($page)) {
+                $page = (int)urldecode($page);
+            }
+
+            if (is_int($page) && $page > 0) {
+                $pages[$rel] = $page;
+            }
+        }
+
+        return $pages;
     }
 }

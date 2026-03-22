@@ -8,12 +8,12 @@ use App\Crm\Application\Service\CrmGithubService;
 use App\Crm\Domain\Entity\Project;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
 use App\Crm\Transport\Request\AddProjectGithubRepositoryRequest;
+use App\Crm\Transport\Request\CrmGithubApiErrorResponseFactory;
 use App\Crm\Transport\Request\CrmRequestHandler;
 use App\Role\Domain\Enum\Role;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use OpenApi\Attributes as OA;
-use RuntimeException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -25,10 +25,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(Role::CRM_ADMIN->value)]
 final readonly class AddProjectGithubRepositoryController
 {
+    use HandlesGithubApiExceptions;
     public function __construct(
         private CrmGithubService $crmGithubService,
         private CrmRequestHandler $crmRequestHandler,
         private ProjectRepository $projectRepository,
+        private CrmGithubApiErrorResponseFactory $errorResponseFactory,
     ) {
     }
 
@@ -136,7 +138,7 @@ final readonly class AddProjectGithubRepositoryController
             return $input;
         }
 
-        try {
+        return $this->withGithubApiErrors(function () use ($project, $input): JsonResponse {
             $repository = $this->crmGithubService->attachRepository($project, (string)$input->fullName);
             $this->projectRepository->save($project);
 
@@ -145,11 +147,6 @@ final readonly class AddProjectGithubRepositoryController
                 'repository' => $repository,
                 'repositories' => $this->crmGithubService->listRepositories($project),
             ], JsonResponse::HTTP_CREATED);
-        } catch (RuntimeException $exception) {
-            return new JsonResponse([
-                'message' => $exception->getMessage(),
-                'errors' => [],
-            ], JsonResponse::HTTP_BAD_GATEWAY);
-        }
+        }, $this->errorResponseFactory);
     }
 }
