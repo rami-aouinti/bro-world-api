@@ -8,6 +8,7 @@ use App\Crm\Application\Service\ContactReadService;
 use App\Crm\Domain\Entity\Contact;
 use App\Role\Domain\Enum\Role;
 use OpenApi\Attributes as OA;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -25,12 +26,15 @@ final readonly class GetContactController
     ) {
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     #[Route('/v1/crm/applications/{applicationSlug}/contacts/{contact}', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'contact', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
-        summary: 'Get Contact',
         description: 'Exécute l action metier Get Contact dans le perimetre de l application CRM.',
+        summary: 'Get Contact',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),

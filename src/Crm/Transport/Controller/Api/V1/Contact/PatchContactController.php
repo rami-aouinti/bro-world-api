@@ -15,6 +15,7 @@ use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -31,12 +32,15 @@ final readonly class PatchContactController
     ) {
     }
 
+    /**
+     * @throws ExceptionInterface
+     */
     #[Route('/v1/crm/applications/{applicationSlug}/contacts/{id}', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Patch(
-        summary: 'Patch Contact',
         description: 'Exécute l action metier Patch Contact dans le perimetre de l application CRM.',
+        summary: 'Patch Contact',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
@@ -94,6 +98,6 @@ final readonly class PatchContactController
             return $this->errorResponseFactory->notFoundReference($exception->field);
         }
 
-        return new JsonResponse((new EntityIdResponseDto($id))->toArray());
+        return new JsonResponse(new EntityIdResponseDto($id)->toArray());
     }
 }

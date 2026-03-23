@@ -34,8 +34,8 @@ final readonly class CreateContactController
     #[Route('/v1/crm/applications/{applicationSlug}/contacts', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
-        summary: 'Create Contact',
         description: 'Exécute l action metier Create Contact dans le perimetre de l application CRM.',
+        summary: 'Create Contact',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_CREATED, description: 'Ressource créée avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
@@ -84,6 +84,6 @@ final readonly class CreateContactController
             applicationSlug: $applicationSlug,
         ));
 
-        return new JsonResponse((new EntityIdResponseDto($contact->getId()))->toArray(), JsonResponse::HTTP_CREATED);
+        return new JsonResponse(new EntityIdResponseDto($contact->getId())->toArray(), JsonResponse::HTTP_CREATED);
     }
 }

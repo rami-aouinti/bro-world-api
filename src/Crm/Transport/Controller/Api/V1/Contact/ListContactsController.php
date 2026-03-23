@@ -6,7 +6,9 @@ namespace App\Crm\Transport\Controller\Api\V1\Contact;
 
 use App\Crm\Application\Service\ContactReadService;
 use App\Role\Domain\Enum\Role;
+use JsonException;
 use OpenApi\Attributes as OA;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -23,14 +25,18 @@ final readonly class ListContactsController
     ) {
     }
 
+    /**
+     * @throws JsonException
+     * @throws InvalidArgumentException
+     */
     #[Route('/v1/crm/applications/{applicationSlug}/contacts', methods: [Request::METHOD_GET])]
     #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Parameter(ref: '#/components/parameters/page')]
     #[OA\Parameter(ref: '#/components/parameters/limit')]
     #[OA\Parameter(ref: '#/components/parameters/q')]
     #[OA\Get(
-        summary: 'List Contacts',
         description: 'Exécute l action metier List Contacts dans le perimetre de l application CRM.',
+        summary: 'List Contacts',
         responses: [
             new OA\Response(
                 response: JsonResponse::HTTP_OK,
@@ -45,10 +51,10 @@ final readonly class ListContactsController
                 ),
             ),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
-            new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, ref: '#/components/responses/Unauthorized401'),
-            new OA\Response(response: JsonResponse::HTTP_FORBIDDEN, ref: '#/components/responses/Forbidden403'),
-            new OA\Response(response: JsonResponse::HTTP_NOT_FOUND, ref: '#/components/responses/NotFound404'),
-            new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, ref: '#/components/responses/ValidationFailed422'),
+            new OA\Response(ref: '#/components/responses/Unauthorized401', response: JsonResponse::HTTP_UNAUTHORIZED),
+            new OA\Response(ref: '#/components/responses/Forbidden403', response: JsonResponse::HTTP_FORBIDDEN),
+            new OA\Response(ref: '#/components/responses/NotFound404', response: JsonResponse::HTTP_NOT_FOUND),
+            new OA\Response(ref: '#/components/responses/ValidationFailed422', response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY),
         ],
     )]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
