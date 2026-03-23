@@ -368,6 +368,8 @@ readonly class CrmGithubService
             'htmlUrl' => (string)($issue['html_url'] ?? ''),
             'createdAt' => (string)($issue['created_at'] ?? ''),
             'updatedAt' => (string)($issue['updated_at'] ?? ''),
+            'state_reason' => isset($issue['state_reason']) ? (string)$issue['state_reason'] : null,
+            'labels' => is_array($issue['labels'] ?? null) ? $issue['labels'] : [],
         ];
     }
 

@@ -63,7 +63,11 @@ final readonly class ProvisionTaskRequestGithubIssueHandler
             ->setIssueNodeId(is_string($createdIssue['node_id'] ?? null) ? $createdIssue['node_id'] : null)
             ->setIssueUrl(is_string($createdIssue['html_url'] ?? null) ? $createdIssue['html_url'] : null)
             ->setSyncStatus('synced')
-            ->setLastSyncedAt(new DateTimeImmutable());
+            ->setLastSyncedAt(new DateTimeImmutable())
+            ->setMetadata([
+                'lastProvisionedBy' => 'crm',
+                'lastProvisionedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
+            ]);
 
         $this->entityManager->persist($githubIssue);
         $this->entityManager->flush();
