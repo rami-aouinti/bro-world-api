@@ -41,6 +41,20 @@ final readonly class PatchTaskRequestController
      * @throws ORMException
      */
     #[Route('/v1/crm/applications/{applicationSlug}/task-requests/{taskRequest}', methods: [Request::METHOD_PATCH])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'taskRequest', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+    #[OA\Patch(
+        summary: 'Patch Task Request dans le CRM',
+        description: 'Exécute l action metier Patch Task Request dans le perimetre de l application CRM.',
+        responses: [
+            new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),
+            new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
+            new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Authentification requise.'),
+            new OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Accès refusé.'),
+            new OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Ressource introuvable.'),
+            new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
+        ],
+    )]
     public function __invoke(string $applicationSlug, TaskRequest $taskRequest, Request $request): JsonResponse
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);

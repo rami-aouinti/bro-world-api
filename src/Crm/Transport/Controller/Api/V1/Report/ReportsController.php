@@ -30,6 +30,20 @@ final readonly class ReportsController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/reports', methods: [Request::METHOD_GET])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'format', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['json', 'csv', 'pdf']), description: 'Format de restitution du rapport')]
+    #[OA\Get(
+        summary: 'Exporter les rapports CRM',
+        description: 'Génère un rapport CRM en JSON, CSV ou PDF selon le format demandé.',
+        responses: [
+            new OA\Response(response: JsonResponse::HTTP_OK, description: 'Rapport généré avec succès.'),
+            new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Format de rapport non supporté ou requête invalide.'),
+            new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Authentification requise.'),
+            new OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Accès refusé.'),
+            new OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Application CRM introuvable.'),
+            new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
+        ],
+    )]
     public function __invoke(string $applicationSlug, Request $request): Response
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);

@@ -32,6 +32,21 @@ final readonly class RemoveSprintAssigneeController
      * @throws ORMException
      */
     #[Route('/v1/crm/applications/{applicationSlug}/sprints/{sprint}/assignees/{user}', methods: [Request::METHOD_DELETE])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'sprint', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+    #[OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+    #[OA\Delete(
+        summary: 'Remove Sprint Assignee dans le CRM',
+        description: 'Exécute l action metier Remove Sprint Assignee dans le perimetre de l application CRM.',
+        responses: [
+            new OA\Response(response: JsonResponse::HTTP_NO_CONTENT, description: 'Ressource supprimée avec succès.'),
+            new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
+            new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Authentification requise.'),
+            new OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Accès refusé.'),
+            new OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Ressource introuvable.'),
+            new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
+        ],
+    )]
     public function __invoke(string $applicationSlug, Sprint $sprint, User $user): JsonResponse
     {
         $sprint->removeAssignee($user);
