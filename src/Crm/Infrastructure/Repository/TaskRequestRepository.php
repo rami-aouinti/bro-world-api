@@ -111,7 +111,9 @@ class TaskRequestRepository extends BaseRepository
         }
 
         $itemsQb = $this->createQueryBuilder('taskRequest')
-            ->select('taskRequest.id, taskRequest.title, taskRequest.status, taskRequest.requestedAt, taskRequest.resolvedAt, IDENTITY(taskRequest.task) AS taskId, IDENTITY(taskRequest.repository) AS repositoryId');
+            ->select('taskRequest.id, taskRequest.title, taskRequest.status, taskRequest.requestedAt, taskRequest.resolvedAt, IDENTITY(taskRequest.task) AS taskId, IDENTITY(taskRequest.repository) AS repositoryId')
+            ->addSelect('githubIssue.provider AS githubIssueProvider, githubIssue.repositoryFullName AS githubIssueRepositoryFullName, githubIssue.issueNumber AS githubIssueIssueNumber, githubIssue.issueNodeId AS githubIssueIssueNodeId, githubIssue.issueUrl AS githubIssueIssueUrl, githubIssue.syncStatus AS githubIssueSyncStatus, githubIssue.lastSyncedAt AS githubIssueLastSyncedAt')
+            ->leftJoin('taskRequest.githubIssue', 'githubIssue');
 
         $this->applyBinaryUuidIdsFilter($itemsQb, 'taskRequest.id', $taskRequestIds, 'task_request_id_');
 

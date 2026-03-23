@@ -6,6 +6,7 @@ namespace App\Crm\Transport\Controller\Api\V1\TaskRequest;
 
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Application\Service\CrmTaskBlogProvisioningService;
+use App\Crm\Application\Message\ProvisionTaskRequestGithubIssue;
 use App\Crm\Domain\Entity\TaskRequest;
 use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\Crm\Infrastructure\Repository\CrmProjectRepositoryRepository;
@@ -178,6 +179,7 @@ final readonly class CreateTaskRequestController
         $this->entityManager->persist($taskRequest);
         $this->crmTaskBlogProvisioningService->provision($taskRequest);
         $this->entityManager->flush();
+        $this->messageBus->dispatch(new ProvisionTaskRequestGithubIssue($taskRequest->getId()));
         $this->messageBus->dispatch(new EntityCreated('crm_task_request', $taskRequest->getId(), context: [
             'applicationSlug' => $applicationSlug,
         ]));
