@@ -70,6 +70,7 @@ final readonly class CrmApiNormalizer
             'resolvedAt' => $this->normalizeDate($taskRequest->getResolvedAt()),
             'attachments' => $taskRequest->getAttachments(),
             'assignees' => $assignees,
+            'githubIssue' => $taskRequest->getGithubIssue()?->toArray(),
             'blog' => $this->crmBlogNormalizer->normalizeBlog($taskRequest->getBlog()),
         ];
     }
@@ -124,6 +125,15 @@ final readonly class CrmApiNormalizer
             'requestedAt' => $this->normalizeDateValue($item['requestedAt'] ?? null),
             'resolvedAt' => $this->normalizeDateValue($item['resolvedAt'] ?? null),
             'assignees' => $this->mapTaskRequestAssigneesProjection((array)($item['assignees'] ?? [])),
+            'githubIssue' => [
+                'provider' => $item['githubIssueProvider'] ?? null,
+                'repositoryFullName' => $item['githubIssueRepositoryFullName'] ?? null,
+                'issueNumber' => $item['githubIssueIssueNumber'] ?? null,
+                'issueNodeId' => $item['githubIssueIssueNodeId'] ?? null,
+                'issueUrl' => $item['githubIssueIssueUrl'] ?? null,
+                'syncStatus' => $item['githubIssueSyncStatus'] ?? null,
+                'lastSyncedAt' => $this->normalizeDateValue($item['githubIssueLastSyncedAt'] ?? null),
+            ],
         ];
     }
 

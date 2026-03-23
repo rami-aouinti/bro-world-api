@@ -50,6 +50,9 @@ class TaskRequest implements EntityInterface
     #[ORM\JoinColumn(name: 'blog_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?Blog $blog = null;
 
+    #[ORM\OneToOne(mappedBy: 'taskRequest', targetEntity: TaskRequestGithubIssue::class, cascade: ['persist', 'remove'])]
+    private ?TaskRequestGithubIssue $githubIssue = null;
+
     #[ORM\Column(name: 'title', type: Types::STRING, length: 255)]
     private string $title = '';
 
@@ -128,6 +131,21 @@ class TaskRequest implements EntityInterface
     public function setBlog(?Blog $blog): self
     {
         $this->blog = $blog;
+
+        return $this;
+    }
+
+    public function getGithubIssue(): ?TaskRequestGithubIssue
+    {
+        return $this->githubIssue;
+    }
+
+    public function setGithubIssue(?TaskRequestGithubIssue $githubIssue): self
+    {
+        $this->githubIssue = $githubIssue;
+        if ($githubIssue !== null && $githubIssue->getTaskRequest() !== $this) {
+            $githubIssue->setTaskRequest($this);
+        }
 
         return $this;
     }
@@ -257,6 +275,7 @@ class TaskRequest implements EntityInterface
             'requested_at' => $this->getRequestedAt(),
             'resolved_at' => $this->getResolvedAt(),
             'assignees' => $this->getAssignees()->toArray(),
+            'github_issue' => $this->getGithubIssue()?->toArray(),
         ];
     }
 }
