@@ -6,9 +6,11 @@ namespace App\Crm\Application\Service;
 
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Domain\Entity\TaskRequest;
+use App\Crm\Domain\Entity\TaskRequestGithubBranch;
 use App\User\Domain\Entity\User;
 use DateTimeInterface;
 
+use function array_map;
 use function is_array;
 use function is_string;
 
@@ -71,6 +73,7 @@ final readonly class CrmApiNormalizer
             'attachments' => $taskRequest->getAttachments(),
             'assignees' => $assignees,
             'githubIssue' => $taskRequest->getGithubIssue()?->toArray(),
+            'githubBranches' => array_map(static fn (TaskRequestGithubBranch $branch): array => $branch->toArray(), $taskRequest->getGithubBranches()->toArray()),
             'blog' => $this->crmBlogNormalizer->normalizeBlog($taskRequest->getBlog()),
         ];
     }
@@ -134,6 +137,7 @@ final readonly class CrmApiNormalizer
                 'syncStatus' => $item['githubIssueSyncStatus'] ?? null,
                 'lastSyncedAt' => $this->normalizeDateValue($item['githubIssueLastSyncedAt'] ?? null),
             ],
+            'githubBranches' => $this->normalizeTaskRequestProjectionBranches((array)($item['githubBranches'] ?? [])),
         ];
     }
 
@@ -193,6 +197,37 @@ final readonly class CrmApiNormalizer
         }
 
         return $normalizedAssignees;
+    }
+
+
+    /**
+     * @param array<int,mixed> $branches
+     * @return array<int,array<string,mixed>>
+     */
+    private function normalizeTaskRequestProjectionBranches(array $branches): array
+    {
+        $normalizedBranches = [];
+
+        foreach ($branches as $branch) {
+            if (!is_array($branch)) {
+                continue;
+            }
+
+            $normalizedBranches[] = [
+                'id' => $branch['id'] ?? null,
+                'repositoryFullName' => $branch['repositoryFullName'] ?? null,
+                'branchName' => $branch['branchName'] ?? null,
+                'branchSha' => $branch['branchSha'] ?? null,
+                'branchUrl' => $branch['branchUrl'] ?? null,
+                'issueNumber' => $branch['issueNumber'] ?? null,
+                'syncStatus' => $branch['syncStatus'] ?? null,
+                'createdAt' => $this->normalizeDateValue($branch['createdAt'] ?? null),
+                'lastSyncedAt' => $this->normalizeDateValue($branch['lastSyncedAt'] ?? null),
+                'metadata' => is_array($branch['metadata'] ?? null) ? $branch['metadata'] : [],
+            ];
+        }
+
+        return $normalizedBranches;
     }
 
     private function normalizeDate(?DateTimeInterface $date): ?string

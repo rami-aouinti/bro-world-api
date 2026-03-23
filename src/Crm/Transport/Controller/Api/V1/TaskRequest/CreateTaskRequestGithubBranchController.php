@@ -8,6 +8,7 @@ use App\Crm\Application\Exception\CrmGithubApiException;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Application\Service\CrmGithubService;
 use App\Crm\Domain\Entity\TaskRequest;
+use App\Crm\Domain\Entity\TaskRequestGithubBranch;
 use App\Crm\Infrastructure\Repository\TaskRequestRepository;
 use App\Crm\Transport\Request\CreateTaskRequestGithubBranchRequest;
 use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
@@ -105,16 +106,25 @@ final readonly class CreateTaskRequestGithubBranchController
 
             $branchUrl = $this->resolveBranchUrl($repositoryFullName, $branchName, $createdBranch);
 
-            $metadata = $githubIssue->getMetadata();
-            $metadata['branch'] = [
-                'name' => $branchName,
-                'url' => $branchUrl,
-                'sourceBranch' => $input->sourceBranch,
-                'issueNumber' => $issueNumber,
-                'taskRequestId' => $scopedTaskRequest->getId(),
-                'createdAt' => (new DateTimeImmutable())->format(DATE_ATOM),
-            ];
-            $githubIssue->setMetadata($metadata)->setLastSyncedAt(new DateTimeImmutable());
+            $syncedAt = new DateTimeImmutable();
+            $branchSha = (string)($createdBranch['object']['sha'] ?? $createdBranch['sha'] ?? '');
+
+            $githubBranch = (new TaskRequestGithubBranch())
+                ->setTaskRequest($scopedTaskRequest)
+                ->setRepositoryFullName($repositoryFullName)
+                ->setBranchName($branchName)
+                ->setBranchSha($branchSha !== '' ? $branchSha : null)
+                ->setBranchUrl($branchUrl)
+                ->setIssueNumber($issueNumber)
+                ->setSyncStatus('synced')
+                ->setLastSyncedAt($syncedAt)
+                ->setMetadata([
+                    'sourceBranch' => $input->sourceBranch,
+                    'createdBranch' => $createdBranch,
+                ]);
+
+            $scopedTaskRequest->addGithubBranch($githubBranch);
+            $githubIssue->setLastSyncedAt($syncedAt);
             $this->taskRequestRepository->save($scopedTaskRequest);
 
             if ($input->postCommentOnIssue) {

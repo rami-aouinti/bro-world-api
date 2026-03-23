@@ -186,6 +186,38 @@ class TaskRequestRepository extends BaseRepository
             ];
         }
 
+
+        $branchQb = $this->createQueryBuilder('taskRequest')
+            ->select('taskRequest.id AS taskRequestId, githubBranch.id, githubBranch.repositoryFullName, githubBranch.branchName, githubBranch.branchSha, githubBranch.branchUrl, githubBranch.issueNumber, githubBranch.syncStatus, githubBranch.createdAt, githubBranch.lastSyncedAt, githubBranch.metadata')
+            ->leftJoin('taskRequest.githubBranches', 'githubBranch')
+            ->andWhere('githubBranch.id IS NOT NULL');
+
+        $this->applyBinaryUuidIdsFilter($branchQb, 'taskRequest.id', $taskRequestIds, 'branch_task_request_id_');
+
+        /** @var list<array<string,mixed>> $branchRows */
+        $branchRows = $branchQb->getQuery()->getArrayResult();
+
+        $branchesByTaskRequest = [];
+        foreach ($branchRows as $row) {
+            $taskRequestId = (string)($row['taskRequestId'] ?? '');
+            if ($taskRequestId === '') {
+                continue;
+            }
+
+            $branchesByTaskRequest[$taskRequestId][] = [
+                'id' => $row['id'] ?? null,
+                'repositoryFullName' => $row['repositoryFullName'] ?? null,
+                'branchName' => $row['branchName'] ?? null,
+                'branchSha' => $row['branchSha'] ?? null,
+                'branchUrl' => $row['branchUrl'] ?? null,
+                'issueNumber' => $row['issueNumber'] ?? null,
+                'syncStatus' => $row['syncStatus'] ?? null,
+                'createdAt' => $row['createdAt'] ?? null,
+                'lastSyncedAt' => $row['lastSyncedAt'] ?? null,
+                'metadata' => $row['metadata'] ?? [],
+            ];
+        }
+
         $itemsById = [];
         foreach ($items as $item) {
             $id = (string)($item['id'] ?? '');
@@ -194,6 +226,7 @@ class TaskRequestRepository extends BaseRepository
             }
 
             $item['assignees'] = $assigneesByTaskRequest[$id] ?? [];
+            $item['githubBranches'] = $branchesByTaskRequest[$id] ?? [];
             $itemsById[$id] = $item;
         }
 
@@ -227,6 +260,10 @@ class TaskRequestRepository extends BaseRepository
             ->leftJoin('project.company', 'company')
             ->andWhere('IDENTITY(company.crm) = :crmId')
             ->setParameter('crmId', $crmId, UuidBinaryOrderedTimeType::NAME);
+
+        $qb->addSelect('githubIssue', 'githubBranch')
+            ->leftJoin('taskRequest.githubIssue', 'githubIssue')
+            ->leftJoin('taskRequest.githubBranches', 'githubBranch');
 
         if ($includeBlogDetails) {
             $qb->addSelect('blog', 'post', 'postComment', 'postReaction', 'commentReaction')

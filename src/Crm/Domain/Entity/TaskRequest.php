@@ -53,6 +53,10 @@ class TaskRequest implements EntityInterface
     #[ORM\OneToOne(mappedBy: 'taskRequest', targetEntity: TaskRequestGithubIssue::class, cascade: ['persist', 'remove'])]
     private ?TaskRequestGithubIssue $githubIssue = null;
 
+    /** @var Collection<int, TaskRequestGithubBranch>|ArrayCollection<int, TaskRequestGithubBranch> */
+    #[ORM\OneToMany(mappedBy: 'taskRequest', targetEntity: TaskRequestGithubBranch::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection|ArrayCollection $githubBranches;
+
     #[ORM\Column(name: 'title', type: Types::STRING, length: 255)]
     private string $title = '';
 
@@ -91,6 +95,7 @@ class TaskRequest implements EntityInterface
         $this->id = $this->createUuid();
         $this->requestedAt = new DateTimeImmutable();
         $this->assignees = new ArrayCollection();
+        $this->githubBranches = new ArrayCollection();
     }
 
     #[Override]
@@ -140,6 +145,36 @@ class TaskRequest implements EntityInterface
         return $this->githubIssue;
     }
 
+
+    /**
+     * @return Collection<int, TaskRequestGithubBranch>|ArrayCollection<int, TaskRequestGithubBranch>
+     */
+    public function getGithubBranches(): Collection|ArrayCollection
+    {
+        return $this->githubBranches;
+    }
+
+    public function addGithubBranch(TaskRequestGithubBranch $githubBranch): self
+    {
+        if (!$this->githubBranches->contains($githubBranch)) {
+            $this->githubBranches->add($githubBranch);
+        }
+
+        if ($githubBranch->getTaskRequest() !== $this) {
+            $githubBranch->setTaskRequest($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGithubBranch(TaskRequestGithubBranch $githubBranch): self
+    {
+        if ($this->githubBranches->removeElement($githubBranch) && $githubBranch->getTaskRequest() === $this) {
+            $githubBranch->setTaskRequest(null);
+        }
+
+        return $this;
+    }
     public function setGithubIssue(?TaskRequestGithubIssue $githubIssue): self
     {
         $this->githubIssue = $githubIssue;
@@ -276,6 +311,7 @@ class TaskRequest implements EntityInterface
             'resolved_at' => $this->getResolvedAt(),
             'assignees' => $this->getAssignees()->toArray(),
             'github_issue' => $this->getGithubIssue()?->toArray(),
+            'github_branches' => array_map(static fn (TaskRequestGithubBranch $branch): array => $branch->toArray(), $this->getGithubBranches()->toArray()),
         ];
     }
 }
