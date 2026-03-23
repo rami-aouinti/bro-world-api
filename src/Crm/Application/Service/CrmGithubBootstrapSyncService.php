@@ -171,11 +171,16 @@ final readonly class CrmGithubBootstrapSyncService
             $report['projects']['updated']++;
         }
 
-        $publicProject = $this->findPublicProject($crmProjects);
-        if ($publicProject === null && $createPublicProject) {
+        $publicProject = $this->resolvePublicProject($crmProjects, $applicationSlug, $report);
+        if ($report['errors'] !== []) {
+            return $report;
+        }
+
+        if ($publicProject === null) {
             $publicProject = (new Project())
                 ->setCompany($company)
                 ->setName('Public')
+                ->setCode('PUBLIC')
                 ->setStatus(ProjectStatus::ACTIVE)
                 ->setProvisioningStatus('ready')
                 ->setGithubToken($token);
@@ -191,7 +196,7 @@ final readonly class CrmGithubBootstrapSyncService
         $repositoryMapByIdentity = $this->buildRepositoryMap($crmProjects);
 
         foreach ($repositories as $repositoryPayload) {
-            $targetProject = $this->matchProjectForRepository($repositoryPayload, $projectByGithubIdentity, $publicProject, $createPublicProject);
+            $targetProject = $this->matchProjectForRepository($repositoryPayload, $projectByGithubIdentity, $publicProject);
             if (!$targetProject instanceof Project) {
                 $report['repositories']['skipped']++;
                 continue;
@@ -213,11 +218,7 @@ final readonly class CrmGithubBootstrapSyncService
                     ->setExternalId(isset($repositoryPayload['externalId']) ? (string)$repositoryPayload['externalId'] : null)
                     ->setSyncStatus('synced')
                     ->setLastSyncedAt(new DateTimeImmutable())
-                    ->setPayload([
-                        'nodeId' => (string)($repositoryPayload['nodeId'] ?? ''),
-                        'projectNodeId' => (string)($repositoryPayload['projectNodeId'] ?? ''),
-                        'projectUrl' => (string)($repositoryPayload['projectUrl'] ?? ''),
-                    ]);
+                    ->setPayload($this->buildRepositoryImportPayload($repositoryPayload, null));
 
                 if (!$dryRun) {
                     $this->entityManager->persist($entity);
@@ -241,11 +242,7 @@ final readonly class CrmGithubBootstrapSyncService
                     ->setExternalId(isset($repositoryPayload['externalId']) ? (string)$repositoryPayload['externalId'] : $existingRepository->getExternalId())
                     ->setSyncStatus('synced')
                     ->setLastSyncedAt(new DateTimeImmutable())
-                    ->setPayload([
-                        'nodeId' => (string)($repositoryPayload['nodeId'] ?? ''),
-                        'projectNodeId' => (string)($repositoryPayload['projectNodeId'] ?? ''),
-                        'projectUrl' => (string)($repositoryPayload['projectUrl'] ?? ''),
-                    ]);
+                    ->setPayload($this->buildRepositoryImportPayload($repositoryPayload, $existingRepository->getPayload()));
 
                 if (!$dryRun) {
                     $this->entityManager->persist($existingRepository);
@@ -660,15 +657,28 @@ GRAPHQL, $ownerField);
     /**
      * @param list<Project> $projects
      */
-    private function findPublicProject(array $projects): ?Project
+    private function resolvePublicProject(array $projects, string $applicationSlug, array &$report): ?Project
     {
+        $publicProject = null;
+        $publicProjectCount = 0;
+
         foreach ($projects as $project) {
             if (mb_strtolower(trim($project->getName())) === 'public') {
-                return $project;
+                $publicProjectCount++;
+                if ($publicProject === null) {
+                    $publicProject = $project;
+                }
             }
         }
 
-        return null;
+        if ($publicProjectCount > 1) {
+            $report['errors'][] = sprintf(
+                'Multiple "Public" projects detected for applicationSlug "%s". Bootstrap is aborted to avoid duplicate mappings.',
+                $applicationSlug,
+            );
+        }
+
+        return $publicProject;
     }
 
     /**
@@ -705,7 +715,6 @@ GRAPHQL, $ownerField);
         array $repositoryPayload,
         array $projectByGithubIdentity,
         ?Project $publicProject,
-        bool $createPublicProject,
     ): ?Project {
         $projectKey = $this->buildProjectIdentityKey(
             (string)($repositoryPayload['projectExternalId'] ?? ''),
@@ -730,11 +739,28 @@ GRAPHQL, $ownerField);
             }
         }
 
-        if ($createPublicProject) {
+        if ($publicProject instanceof Project) {
             return $publicProject;
         }
 
         return null;
+    }
+
+    /**
+     * @param array<string,mixed> $repositoryPayload
+     * @param array<string,mixed>|null $existingPayload
+     * @return array<string,mixed>
+     */
+    private function buildRepositoryImportPayload(array $repositoryPayload, ?array $existingPayload): array
+    {
+        $payload = is_array($existingPayload) ? $existingPayload : [];
+        $payload['nodeId'] = (string)($repositoryPayload['nodeId'] ?? '');
+        $payload['projectNodeId'] = (string)($repositoryPayload['projectNodeId'] ?? '');
+        $payload['projectUrl'] = (string)($repositoryPayload['projectUrl'] ?? '');
+        $payload['importSource'] = 'github-bootstrap';
+        $payload['importedAt'] = (new DateTimeImmutable())->format(DATE_ATOM);
+
+        return $payload;
     }
 
     /**
