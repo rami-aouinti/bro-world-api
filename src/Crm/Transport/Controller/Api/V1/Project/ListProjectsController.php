@@ -45,10 +45,10 @@ final readonly class ListProjectsController
                 ),
             ),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
-            new OA\Response(ref: '#/components/responses/Unauthorized401'),
-            new OA\Response(ref: '#/components/responses/Forbidden403'),
-            new OA\Response(ref: '#/components/responses/NotFound404'),
-            new OA\Response(ref: '#/components/responses/ValidationFailed422'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized401'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden403'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound404'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationFailed422'),
         ],
     )]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse

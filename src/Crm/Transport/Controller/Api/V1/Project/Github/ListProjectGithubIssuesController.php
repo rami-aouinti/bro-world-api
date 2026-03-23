@@ -46,7 +46,7 @@ final readonly class ListProjectGithubIssuesController
                     ],
                 ),
             ),
-            new OA\Response(ref: '#/components/responses/ValidationFailed422'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationFailed422'),
         ],
     )]
     public function __invoke(string $applicationSlug, Project $project, Request $request): JsonResponse

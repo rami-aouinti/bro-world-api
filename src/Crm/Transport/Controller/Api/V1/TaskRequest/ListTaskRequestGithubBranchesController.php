@@ -47,7 +47,7 @@ final readonly class ListTaskRequestGithubBranchesController
                     ],
                 ),
             ),
-            new OA\Response(ref: '#/components/responses/NotFound404'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound404'),
         ],
     )]
     public function __invoke(string $applicationSlug, TaskRequest $taskRequest): JsonResponse

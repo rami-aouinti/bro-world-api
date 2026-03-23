@@ -83,8 +83,8 @@ final readonly class CreateTaskRequestController
                     ],
                 ),
             ),
-            new OA\Response(ref: '#/components/responses/NotFound404'),
-            new OA\Response(ref: '#/components/responses/ValidationFailed422'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound404'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationFailed422'),
         ],
     )]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
