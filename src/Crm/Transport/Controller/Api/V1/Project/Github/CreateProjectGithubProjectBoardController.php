@@ -37,6 +37,24 @@ final readonly class CreateProjectGithubProjectBoardController
             required: true,
             content: new OA\JsonContent(
                 required: ['owner', 'title'],
+                examples: [
+                    'minimalValid' => new OA\Examples(
+                        example: 'minimalValid',
+                        summary: 'Exemple minimal valide',
+                        value: [
+                            'owner' => 'O_kgDOBfke3Q',
+                            'title' => 'CRM Project Board',
+                        ],
+                    ),
+                    'fullBusiness' => new OA\Examples(
+                        example: 'fullBusiness',
+                        summary: 'Exemple métier complet',
+                        value: [
+                            'owner' => 'O_kgDOBfke3Q',
+                            'title' => 'CRM Enterprise Delivery Board',
+                        ],
+                    ),
+                ],
                 properties: [
                     new OA\Property(property: 'owner', description: 'GitHub owner node id', type: 'string', example: 'O_kgDOBfke3Q'),
                     new OA\Property(property: 'title', type: 'string', example: 'CRM Project Board'),
@@ -44,8 +62,37 @@ final readonly class CreateProjectGithubProjectBoardController
             ),
         ),
         responses: [
-            new OA\Response(response: JsonResponse::HTTP_CREATED, description: 'Project board created.'),
-            new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'GitHub API error.'),
+            new OA\Response(
+                response: JsonResponse::HTTP_CREATED,
+                description: 'Project board created.',
+                content: new OA\JsonContent(
+                    example: [
+                        'projectId' => 'ebf77366-d60c-4ac4-b204-9f91a7f7ee12',
+                        'project' => [
+                            'nodeId' => 'PVT_kwDOBfke3c4A4zqS',
+                            'number' => 5,
+                            'title' => 'CRM Enterprise Delivery Board',
+                            'url' => 'https://github.com/orgs/acme/projects/5',
+                        ],
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY,
+                description: 'GitHub API error.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Validation failed.',
+                        'errors' => [
+                            [
+                                'propertyPath' => 'owner',
+                                'message' => 'This value should not be blank.',
+                                'code' => 'c1051bb4-d103-4f74-8988-acbcafc7fdc3',
+                            ],
+                        ],
+                    ],
+                ),
+            ),
         ],
     )]
     public function __invoke(string $applicationSlug, Project $project, Request $request): JsonResponse

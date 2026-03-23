@@ -54,6 +54,31 @@ final readonly class CreateTaskController
             required: true,
             content: new OA\JsonContent(
                 required: ['title', 'projectId'],
+                examples: [
+                    'minimalValid' => new OA\Examples(
+                        example: 'minimalValid',
+                        summary: 'Exemple minimal valide',
+                        value: [
+                            'title' => 'Créer un tunnel de qualification',
+                            'projectId' => 'ebf77366-d60c-4ac4-b204-9f91a7f7ee12',
+                        ],
+                    ),
+                    'fullBusiness' => new OA\Examples(
+                        example: 'fullBusiness',
+                        summary: 'Exemple métier complet',
+                        value: [
+                            'title' => 'Configurer le scoring des leads grands comptes',
+                            'description' => 'Appliquer les règles MQL/SQL, enrichissement CRM et automatisation du suivi commercial.',
+                            'status' => 'in_progress',
+                            'priority' => 'high',
+                            'dueAt' => '2026-03-15T17:00:00+00:00',
+                            'estimatedHours' => 12.5,
+                            'projectId' => 'ebf77366-d60c-4ac4-b204-9f91a7f7ee12',
+                            'sprintId' => '220670e1-4bc3-40da-92bb-89d5dca347a8',
+                            'assigneeIds' => ['7d3c919e-5d4e-406a-a615-ffaf6dddbd85'],
+                        ],
+                    ),
+                ],
                 properties: [
                     new OA\Property(property: 'title', type: 'string', maxLength: 255, example: 'Configurer le scoring des leads'),
                     new OA\Property(property: 'description', type: 'string', maxLength: 5000, example: 'Ajouter les règles de scoring côté back-office.', nullable: true),

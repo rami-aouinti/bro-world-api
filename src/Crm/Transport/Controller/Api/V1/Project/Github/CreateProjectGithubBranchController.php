@@ -29,12 +29,33 @@ final readonly class CreateProjectGithubBranchController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/branches/create', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Post(
         summary: 'Create a branch in a GitHub repository.',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
                 required: ['repository', 'name'],
+                examples: [
+                    'minimalValid' => new OA\Examples(
+                        example: 'minimalValid',
+                        summary: 'Exemple minimal valide',
+                        value: [
+                            'repository' => 'acme/crm-platform',
+                            'name' => 'feature/crm-validation-docs',
+                        ],
+                    ),
+                    'fullBusiness' => new OA\Examples(
+                        example: 'fullBusiness',
+                        summary: 'Exemple métier complet',
+                        value: [
+                            'repository' => 'acme/crm-platform',
+                            'name' => 'feature/enterprise-support-workflow',
+                            'sourceBranch' => 'main',
+                        ],
+                    ),
+                ],
                 properties: [
                     new OA\Property(property: 'repository', type: 'string', example: 'rami-aouinti/bro-world-api'),
                     new OA\Property(property: 'name', type: 'string', example: 'feature/crm-branch-endpoint'),
@@ -43,8 +64,37 @@ final readonly class CreateProjectGithubBranchController
             ),
         ),
         responses: [
-            new OA\Response(response: JsonResponse::HTTP_CREATED, description: 'Branch created on GitHub.'),
-            new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'GitHub API error.'),
+            new OA\Response(
+                response: JsonResponse::HTTP_CREATED,
+                description: 'Branch created on GitHub.',
+                content: new OA\JsonContent(
+                    example: [
+                        'projectId' => 'ebf77366-d60c-4ac4-b204-9f91a7f7ee12',
+                        'repository' => 'acme/crm-platform',
+                        'branch' => [
+                            'name' => 'feature/enterprise-support-workflow',
+                            'sha' => 'b87f4cab595d65f6d97fd1199f39ca6d8f1c2381',
+                            'url' => 'https://github.com/acme/crm-platform/tree/feature/enterprise-support-workflow',
+                        ],
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY,
+                description: 'GitHub API error.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Validation failed.',
+                        'errors' => [
+                            [
+                                'propertyPath' => 'name',
+                                'message' => 'This value should not be blank.',
+                                'code' => 'c1051bb4-d103-4f74-8988-acbcafc7fdc3',
+                            ],
+                        ],
+                    ],
+                ),
+            ),
         ],
     )]
     public function __invoke(string $applicationSlug, Project $project, Request $request): JsonResponse

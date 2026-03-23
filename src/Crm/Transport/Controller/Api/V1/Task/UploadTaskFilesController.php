@@ -43,13 +43,56 @@ final readonly class UploadTaskFilesController
     #[OA\Post(
         summary: 'Upload Task Files dans le CRM',
         description: 'Exécute l action metier Upload Task Files dans le perimetre de l application CRM.',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['files'],
+                    properties: [
+                        new OA\Property(
+                            property: 'files',
+                            type: 'array',
+                            items: new OA\Items(type: 'string', format: 'binary'),
+                        ),
+                    ],
+                ),
+                examples: [
+                    new OA\Examples(
+                        example: 'minimalValid',
+                        summary: 'Exemple minimal valide',
+                        value: ['files' => ['capture-ecran.png']],
+                    ),
+                    new OA\Examples(
+                        example: 'fullBusiness',
+                        summary: 'Exemple métier complet',
+                        value: ['files' => ['brief-produit.pdf', 'maquette-funnel-v4.png']],
+                    ),
+                ],
+            ),
+        ),
         responses: [
             new OA\Response(response: JsonResponse::HTTP_CREATED, description: 'Ressource créée avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
             new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Authentification requise.'),
             new OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Accès refusé.'),
             new OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Ressource introuvable.'),
-            new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
+            new OA\Response(
+                response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY,
+                description: 'Erreur de validation métier.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Validation failed.',
+                        'errors' => [
+                            [
+                                'propertyPath' => 'files',
+                                'message' => 'Please upload at least one file.',
+                                'code' => '2fa2158c-2a7f-484b-98aa-975522539ff8',
+                            ],
+                        ],
+                    ],
+                ),
+            ),
         ],
     )]
     public function __invoke(string $applicationSlug, Task $task, Request $request): JsonResponse

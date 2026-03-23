@@ -37,7 +37,31 @@ final readonly class ListTaskRequestGithubBranchesController
     #[OA\Get(
         summary: 'List GitHub branches linked to a task request.',
         responses: [
-            new OA\Response(response: JsonResponse::HTTP_OK, description: 'Task request GitHub branches list.'),
+            new OA\Response(
+                response: JsonResponse::HTTP_OK,
+                description: 'Opération exécutée avec succès.',
+                content: new OA\JsonContent(
+                    example: [
+                        'items' => [
+                            [
+                                'id' => '8f6a3550-9a07-4f69-9f75-0089f7d83e7f',
+                                'label' => 'CRM item',
+                            ],
+                        ],
+                        'pagination' => [
+                            'page' => 1,
+                            'limit' => 20,
+                            'totalItems' => 57,
+                            'totalPages' => 3,
+                        ],
+                        'meta' => [
+                            'filters' => [
+                                'search' => 'lead',
+                            ],
+                        ],
+                    ],
+                ),
+            ),
             new OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Task request not found in CRM scope.'),
         ],
     )]

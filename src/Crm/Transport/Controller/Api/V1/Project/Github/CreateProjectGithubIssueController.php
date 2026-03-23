@@ -37,6 +37,25 @@ final readonly class CreateProjectGithubIssueController
             required: true,
             content: new OA\JsonContent(
                 required: ['repository', 'title'],
+                examples: [
+                    'minimalValid' => new OA\Examples(
+                        example: 'minimalValid',
+                        summary: 'Exemple minimal valide',
+                        value: [
+                            'repository' => 'acme/crm-platform',
+                            'title' => 'Corriger la synchronisation CRM',
+                        ],
+                    ),
+                    'fullBusiness' => new OA\Examples(
+                        example: 'fullBusiness',
+                        summary: 'Exemple métier complet',
+                        value: [
+                            'repository' => 'acme/crm-platform',
+                            'title' => 'Automatiser la création des tickets support premium',
+                            'body' => "Contexte: projet CRM enterprise\\nPriorité: P1\\nSource: workflow task request.",
+                        ],
+                    ),
+                ],
                 properties: [
                     new OA\Property(property: 'repository', type: 'string', example: 'rami-aouinti/bro-world-api'),
                     new OA\Property(property: 'title', type: 'string', example: 'Créer endpoint de synchronisation webhook'),
@@ -45,9 +64,39 @@ final readonly class CreateProjectGithubIssueController
             ),
         ),
         responses: [
-            new OA\Response(response: JsonResponse::HTTP_CREATED, description: 'Issue created.'),
+            new OA\Response(
+                response: JsonResponse::HTTP_CREATED,
+                description: 'Issue created.',
+                content: new OA\JsonContent(
+                    example: [
+                        'projectId' => 'ebf77366-d60c-4ac4-b204-9f91a7f7ee12',
+                        'repository' => 'acme/crm-platform',
+                        'issue' => [
+                            'number' => 184,
+                            'title' => 'Automatiser la création des tickets support premium',
+                            'url' => 'https://github.com/acme/crm-platform/issues/184',
+                            'state' => 'open',
+                        ],
+                    ],
+                ),
+            ),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Invalid payload.'),
-            new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'GitHub API error.'),
+            new OA\Response(
+                response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY,
+                description: 'GitHub API error.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Validation failed.',
+                        'errors' => [
+                            [
+                                'propertyPath' => 'repository',
+                                'message' => 'This value should not be blank.',
+                                'code' => 'c1051bb4-d103-4f74-8988-acbcafc7fdc3',
+                            ],
+                        ],
+                    ],
+                ),
+            ),
         ],
     )]
     public function __invoke(string $applicationSlug, Project $project, Request $request): JsonResponse

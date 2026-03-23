@@ -41,12 +41,51 @@ final readonly class ListTasksController
         summary: 'List Tasks dans le CRM',
         description: 'Exécute l action metier List Tasks dans le perimetre de l application CRM.',
         responses: [
-            new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),
+            new OA\Response(
+                response: JsonResponse::HTTP_OK,
+                description: 'Opération exécutée avec succès.',
+                content: new OA\JsonContent(
+                    example: [
+                        'items' => [
+                            [
+                                'id' => '8f6a3550-9a07-4f69-9f75-0089f7d83e7f',
+                                'label' => 'CRM item',
+                            ],
+                        ],
+                        'pagination' => [
+                            'page' => 1,
+                            'limit' => 20,
+                            'totalItems' => 57,
+                            'totalPages' => 3,
+                        ],
+                        'meta' => [
+                            'filters' => [
+                                'search' => 'lead',
+                            ],
+                        ],
+                    ],
+                ),
+            ),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
             new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Authentification requise.'),
             new OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Accès refusé.'),
             new OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Ressource introuvable.'),
-            new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
+            new OA\Response(
+                response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY,
+                description: 'Erreur de validation métier.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Validation failed.',
+                        'errors' => [
+                            [
+                                'propertyPath' => 'limit',
+                                'message' => 'This value should be less than or equal to 100.',
+                                'code' => '2fa2158c-2a7f-484b-98aa-975522539ff8',
+                            ],
+                        ],
+                    ],
+                ),
+            ),
         ],
     )]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
