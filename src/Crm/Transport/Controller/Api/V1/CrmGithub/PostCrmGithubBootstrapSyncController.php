@@ -67,8 +67,59 @@ final readonly class PostCrmGithubBootstrapSyncController
             ),
         ),
         responses: [
-            new OA\Response(ref: '#/components/responses/JobAccepted202', response: JsonResponse::HTTP_ACCEPTED),
-            new OA\Response(ref: '#/components/responses/BadRequest400', response: JsonResponse::HTTP_BAD_REQUEST),
+            new OA\Response(
+                response: JsonResponse::HTTP_ACCEPTED,
+                description: 'Job queued.',
+                content: new OA\JsonContent(
+                    ref: '#/components/schemas/JobAcceptedResponse',
+                    examples: [
+                        'queued' => new OA\Examples(
+                            example: 'queued',
+                            summary: 'Job queued',
+                            value: [
+                                'jobId' => '0dfde3e4-7095-4fab-bb54-f954ff4c16bd',
+                                'status' => 'queued',
+                            ],
+                        ),
+                        'queuedDryRun' => new OA\Examples(
+                            example: 'queuedDryRun',
+                            summary: 'Dry-run queued',
+                            value: [
+                                'jobId' => '0dfde3e4-7095-4fab-bb54-f954ff4c16bd',
+                                'status' => 'queued',
+                                'summary' => [
+                                    'mode' => 'dry-run',
+                                    'owner' => 'acme-org',
+                                    'issueTarget' => 'task',
+                                    'createPublicProject' => true,
+                                    'plannedActions' => [
+                                        'Scan repositories and issues from the configured owner.',
+                                        'Map or create CRM entities from GitHub metadata.',
+                                        'No persistence changes will be committed in dry-run mode.',
+                                    ],
+                                ],
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: JsonResponse::HTTP_BAD_REQUEST,
+                description: 'Invalid payload.',
+                content: new OA\JsonContent(
+                    ref: '#/components/schemas/ErrorResponse',
+                    examples: [
+                        'invalidJson' => new OA\Examples(
+                            example: 'invalidJson',
+                            summary: 'Malformed JSON payload',
+                            value: [
+                                'message' => 'Invalid JSON payload.',
+                                'errors' => [],
+                            ],
+                        ),
+                    ],
+                ),
+            ),
             new OA\Response(
                 response: JsonResponse::HTTP_UNAUTHORIZED,
                 description: 'Token GitHub invalide ou expiré.',
@@ -91,7 +142,29 @@ final readonly class PostCrmGithubBootstrapSyncController
                     ],
                 ),
             ),
-            new OA\Response(ref: '#/components/responses/BusinessRule422', response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY),
+            new OA\Response(
+                response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY,
+                description: 'Business consistency/import error.',
+                content: new OA\JsonContent(
+                    ref: '#/components/schemas/ErrorResponse',
+                    examples: [
+                        'ownerOutOfScope' => new OA\Examples(
+                            example: 'ownerOutOfScope',
+                            summary: 'Owner inaccessible for current CRM scope',
+                            value: [
+                                'message' => 'Owner is outside current CRM scope.',
+                                'errors' => [
+                                    [
+                                        'propertyPath' => 'owner',
+                                        'message' => 'Owner is outside current CRM scope.',
+                                        'code' => 'reference.out_of_scope',
+                                    ],
+                                ],
+                            ],
+                        ),
+                    ],
+                ),
+            ),
         ],
     )]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
