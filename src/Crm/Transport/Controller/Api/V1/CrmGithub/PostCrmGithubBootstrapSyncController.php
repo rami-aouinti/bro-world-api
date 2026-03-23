@@ -38,6 +38,13 @@ final readonly class PostCrmGithubBootstrapSyncController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
         summary: 'Queue CRM GitHub bootstrap sync',
+        description: 'Synchronise les repositories et issues GitHub vers CRM selon issueTarget.'
+            . "\n\nRègles de mapping:"
+            . "\n- issueTarget=task: issue -> crm_task (title/body/state + estimation priority via labels)."
+            . "\n- issueTarget=task_request: issue -> crm_task_request + TaskRequestGithubIssue."
+            . "\n\nConversion de statut:"
+            . "\n- issue open => TaskStatus::TODO / TaskRequestStatus::PENDING."
+            . "\n- issue closed => TaskStatus::DONE et TaskRequestStatus::APPROVED, ou REJECTED si label rejected/reject/declined/crm:rejected ou state_reason=not_planned|rejected.",
         responses: [
             new OA\Response(response: JsonResponse::HTTP_ACCEPTED, description: 'Job de synchronisation planifié.'),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
