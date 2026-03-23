@@ -10,7 +10,6 @@ use App\Crm\Domain\Entity\Task;
 use App\Crm\Domain\Entity\TaskRequest;
 use App\Crm\Domain\Entity\TaskRequestGithubIssue;
 use App\Crm\Domain\Enum\ProjectStatus;
-use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\Crm\Domain\Enum\TaskStatus;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\Crm\Infrastructure\Repository\CrmRepository as CrmRootRepository;
@@ -26,10 +25,13 @@ use function array_key_exists;
 use function array_map;
 use function array_merge;
 use function array_values;
+use function array_walk;
 use function count;
+use function explode;
 use function is_array;
 use function is_int;
 use function mb_strtolower;
+use function str_contains;
 use function sprintf;
 use function strtolower;
 use function trim;
@@ -45,6 +47,7 @@ final readonly class CrmGithubBootstrapSyncService
         private TaskRequestRepository $taskRequestRepository,
         private EntityManagerInterface $entityManager,
         private HttpClientInterface $httpClient,
+        private IssueToCrmMapper $issueToCrmMapper,
     ) {
     }
 
@@ -255,12 +258,7 @@ final readonly class CrmGithubBootstrapSyncService
                 $issues = $this->listRepositoryIssues($token, (string)($repositoryPayload['fullName'] ?? ''), $state);
                 foreach ($issues as $issue) {
                     $issue['repositoryFullName'] = (string)($repositoryPayload['fullName'] ?? '');
-                    if ($issueTarget === 'task_request') {
-                        $this->importIssueAsTaskRequest($crm->getId(), $targetProject, $existingRepository, $issue, $report, $dryRun);
-                        continue;
-                    }
-
-                    $this->importIssueAsTask($crm->getId(), $targetProject, $issue, $report, $dryRun);
+                    $this->importIssueByTarget($issueTarget, $crm->getId(), $targetProject, $existingRepository, $issue, $report, $dryRun);
                 }
             }
         }
@@ -322,6 +320,28 @@ final readonly class CrmGithubBootstrapSyncService
                 ],
             ];
         }
+    }
+
+    /**
+     * @param array<string,mixed> $issue
+     * @param array<string,mixed> $report
+     */
+    private function importIssueByTarget(
+        string $issueTarget,
+        string $crmId,
+        Project $targetProject,
+        CrmRepository $repository,
+        array $issue,
+        array &$report,
+        bool $dryRun,
+    ): void {
+        if ($issueTarget === 'task_request') {
+            $this->importIssueAsTaskRequest($crmId, $targetProject, $repository, $issue, $report, $dryRun);
+
+            return;
+        }
+
+        $this->importIssueAsTask($crmId, $targetProject, $issue, $report, $dryRun);
     }
 
     /**
@@ -466,7 +486,9 @@ GRAPHQL, $ownerField);
                     'title' => (string)($issue['title'] ?? ''),
                     'body' => isset($issue['body']) ? (string)$issue['body'] : null,
                     'state' => (string)($issue['state'] ?? 'open'),
+                    'stateReason' => isset($issue['state_reason']) ? (string)$issue['state_reason'] : null,
                     'htmlUrl' => (string)($issue['html_url'] ?? ''),
+                    'labels' => $this->normalizeIssueLabels($issue['labels'] ?? []),
                 ];
             }
 
@@ -501,13 +523,14 @@ GRAPHQL, $ownerField);
         }
 
         $existing = $this->taskRequestRepository->findOneByGithubIssueMapping($repositoryFullName, $issueNumber);
+        $taskRequestMapping = $this->issueToCrmMapper->mapIssueToTaskRequest($issue);
         if ($existing instanceof TaskRequest) {
             $existing
-                ->setTitle((string)($issue['title'] ?? $existing->getTitle()))
-                ->setDescription(isset($issue['body']) ? (string)$issue['body'] : $existing->getDescription())
+                ->setTitle($taskRequestMapping['title'] !== '' ? $taskRequestMapping['title'] : $existing->getTitle())
+                ->setDescription($taskRequestMapping['description'] ?? $existing->getDescription())
                 ->setRepository($repository)
-                ->setStatus($this->mapIssueToTaskRequestStatus((string)($issue['state'] ?? 'open')))
-                ->setResolvedAt(($issue['state'] ?? 'open') === 'closed' ? new DateTimeImmutable() : null);
+                ->setStatus($taskRequestMapping['status'])
+                ->setResolvedAt($taskRequestMapping['resolvedAt']);
 
             if (!$dryRun) {
                 $this->entityManager->persist($existing);
@@ -534,10 +557,10 @@ GRAPHQL, $ownerField);
         $taskRequest = (new TaskRequest())
             ->setTask($task)
             ->setRepository($repository)
-            ->setTitle((string)($issue['title'] ?? 'GitHub issue'))
-            ->setDescription(isset($issue['body']) ? (string)$issue['body'] : null)
-            ->setStatus($this->mapIssueToTaskRequestStatus((string)($issue['state'] ?? 'open')))
-            ->setResolvedAt(($issue['state'] ?? 'open') === 'closed' ? new DateTimeImmutable() : null);
+            ->setTitle($taskRequestMapping['title'])
+            ->setDescription($taskRequestMapping['description'])
+            ->setStatus($taskRequestMapping['status'])
+            ->setResolvedAt($taskRequestMapping['resolvedAt']);
 
         $mapping = (new TaskRequestGithubIssue())
             ->setTaskRequest($taskRequest)
@@ -573,6 +596,7 @@ GRAPHQL, $ownerField);
         }
 
         $prefix = '[' . (string)($issue['repositoryFullName'] ?? '') . '#' . $issueNumber . ']';
+        $mapping = $this->issueToCrmMapper->mapIssueToTask($issue);
         $qb = $this->entityManager->createQueryBuilder()
             ->select('task')
             ->from(Task::class, 'task')
@@ -589,9 +613,10 @@ GRAPHQL, $ownerField);
         $existing = $qb->getQuery()->getOneOrNullResult();
         if ($existing instanceof Task) {
             $existing
-                ->setTitle($prefix . ' ' . (string)($issue['title'] ?? $existing->getTitle()))
-                ->setDescription(isset($issue['body']) ? (string)$issue['body'] : $existing->getDescription())
-                ->setStatus(($issue['state'] ?? 'open') === 'closed' ? TaskStatus::DONE : TaskStatus::TODO)
+                ->setTitle($prefix . ' ' . ($mapping['title'] !== '' ? $mapping['title'] : $existing->getTitle()))
+                ->setDescription($mapping['description'] ?? $existing->getDescription())
+                ->setStatus($mapping['status'])
+                ->setPriority($mapping['priority'])
                 ->setGithubIssue([
                     'provider' => 'github',
                     'repositoryFullName' => (string)($issue['repositoryFullName'] ?? ''),
@@ -612,9 +637,10 @@ GRAPHQL, $ownerField);
 
         $task = (new Task())
             ->setProject($targetProject)
-            ->setTitle($prefix . ' ' . (string)($issue['title'] ?? 'GitHub issue'))
-            ->setDescription(isset($issue['body']) ? (string)$issue['body'] : null)
-            ->setStatus(($issue['state'] ?? 'open') === 'closed' ? TaskStatus::DONE : TaskStatus::TODO)
+            ->setTitle($prefix . ' ' . $mapping['title'])
+            ->setDescription($mapping['description'])
+            ->setStatus($mapping['status'])
+            ->setPriority($mapping['priority'])
             ->setGithubIssue([
                 'provider' => 'github',
                 'repositoryFullName' => (string)($issue['repositoryFullName'] ?? ''),
@@ -629,11 +655,6 @@ GRAPHQL, $ownerField);
         }
 
         $report['issues']['created']++;
-    }
-
-    private function mapIssueToTaskRequestStatus(string $state): TaskRequestStatus
-    {
-        return strtolower($state) === 'closed' ? TaskRequestStatus::DONE : TaskRequestStatus::PENDING;
     }
 
     /**
@@ -756,6 +777,46 @@ GRAPHQL, $ownerField);
         }
 
         return null;
+    }
+
+    /**
+     * @param mixed $labels
+     * @return list<array{name:string}>
+     */
+    private function normalizeIssueLabels(mixed $labels): array
+    {
+        if (!is_array($labels)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($labels as $label) {
+            if (is_array($label)) {
+                $name = trim((string)($label['name'] ?? ''));
+                if ($name !== '') {
+                    $normalized[] = ['name' => $name];
+                }
+
+                continue;
+            }
+
+            $raw = trim((string)$label);
+            if ($raw === '') {
+                continue;
+            }
+
+            if (str_contains($raw, ',')) {
+                $parts = array_filter(array_map(static fn (string $part): string => trim($part), explode(',', $raw)));
+                array_walk($parts, static function (string $part) use (&$normalized): void {
+                    $normalized[] = ['name' => $part];
+                });
+                continue;
+            }
+
+            $normalized[] = ['name' => $raw];
+        }
+
+        return $normalized;
     }
 
     private function findAnyTaskForProject(string $crmId, Project $project): ?Task
