@@ -28,7 +28,7 @@ final readonly class GetTaskController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
-        summary: 'Get Task dans le CRM',
+        summary: 'Get Task',
         description: 'Exécute l action metier Get Task dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),

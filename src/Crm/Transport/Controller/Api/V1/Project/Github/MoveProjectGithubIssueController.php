@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm Github')]
 #[IsGranted(Role::CRM_ADMIN->value)]
 final readonly class MoveProjectGithubIssueController
 {
@@ -34,7 +34,7 @@ final readonly class MoveProjectGithubIssueController
     #[OA\Parameter(name: 'projectId', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'itemId', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
-        summary: 'Move an issue item in GitHub Project board.',
+        summary: 'Move Project GitHub Issue',
         requestBody: new OA\RequestBody(
             required: false,
             content: new OA\JsonContent(

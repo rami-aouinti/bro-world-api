@@ -31,7 +31,7 @@ final readonly class DeleteContactController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(
-        summary: 'Delete Contact dans le CRM',
+        summary: 'Delete Contact',
         description: 'Exécute l action metier Delete Contact dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_NO_CONTENT, description: 'Ressource supprimée avec succès.'),

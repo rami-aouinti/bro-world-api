@@ -43,7 +43,7 @@ final readonly class CreateSprintController
     #[Route('/v1/crm/applications/{applicationSlug}/sprints', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
-        summary: 'POST /v1/crm/applications/{applicationSlug}/sprints',
+        summary: 'Create Sprint',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(

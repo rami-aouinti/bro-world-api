@@ -35,10 +35,8 @@ final readonly class PutEmployeeController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/employees/{employeeId}', methods: [Request::METHOD_PUT])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'employeeId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Put(
-        summary: 'Put Employee dans le CRM',
+        summary: 'Replace Employee',
         description: 'Exécute l action metier Put Employee dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),
@@ -65,10 +63,6 @@ final readonly class PutEmployeeController
             type: 'object',
         ),
     )]
-    #[OA\Response(response: JsonResponse::HTTP_OK, description: 'Employee updated.')]
-    #[OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Invalid JSON payload.')]
-    #[OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Employee or user not found.')]
-    #[OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation failed.')]
     public function __invoke(string $applicationSlug, string $employeeId, Request $request): JsonResponse
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);

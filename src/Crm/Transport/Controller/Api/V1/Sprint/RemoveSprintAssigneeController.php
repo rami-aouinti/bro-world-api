@@ -36,7 +36,7 @@ final readonly class RemoveSprintAssigneeController
     #[OA\Parameter(name: 'sprint', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(
-        summary: 'Remove Sprint Assignee dans le CRM',
+        summary: 'Remove Sprint Assignee',
         description: 'Exécute l action metier Remove Sprint Assignee dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_NO_CONTENT, description: 'Ressource supprimée avec succès.'),

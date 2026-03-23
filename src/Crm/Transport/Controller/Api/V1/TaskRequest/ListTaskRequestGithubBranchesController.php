@@ -20,7 +20,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use function array_map;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm TaskRequest')]
 #[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class ListTaskRequestGithubBranchesController
 {
@@ -35,7 +35,7 @@ final readonly class ListTaskRequestGithubBranchesController
     #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Parameter(name: 'taskRequest', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'), example: 'a8f2140e-322e-49e5-94dc-dd86126fef3a')]
     #[OA\Get(
-        summary: 'List GitHub branches linked to a task request.',
+        summary: 'List Task Request GitHub Branches',
         responses: [
             new OA\Response(
                 response: JsonResponse::HTTP_OK,

@@ -39,7 +39,7 @@ final readonly class UploadProjectFilesController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Post(
-        summary: 'Upload Project Files dans le CRM',
+        summary: 'Upload Project Files',
         description: 'Exécute l action metier Upload Project Files dans le perimetre de l application CRM.',
         requestBody: new OA\RequestBody(
             required: true,

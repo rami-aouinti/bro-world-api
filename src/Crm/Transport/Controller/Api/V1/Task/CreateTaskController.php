@@ -49,7 +49,7 @@ final readonly class CreateTaskController
     #[Route('/v1/crm/applications/{applicationSlug}/tasks', methods: [Request::METHOD_POST])]
     #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Post(
-        summary: 'POST /v1/crm/applications/{applicationSlug}/tasks',
+        summary: 'Create Task',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(

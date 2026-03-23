@@ -38,7 +38,7 @@ final readonly class ListTasksController
     #[OA\Parameter(ref: '#/components/parameters/limit')]
     #[OA\Parameter(ref: '#/components/parameters/q')]
     #[OA\Get(
-        summary: 'List Tasks dans le CRM',
+        summary: 'List Tasks',
         description: 'Exécute l action metier List Tasks dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(

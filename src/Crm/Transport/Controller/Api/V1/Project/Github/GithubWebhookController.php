@@ -15,7 +15,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm Github')]
 final readonly class GithubWebhookController
 {
     public function __construct(
@@ -29,7 +29,7 @@ final readonly class GithubWebhookController
     #[Route('/v1/crm/github/webhook', methods: [Request::METHOD_POST])]
     #[OA\Post(
         description: 'Use this endpoint as GitHub webhook URL. In /api/doc, click "Try it out", set required headers and paste the raw GitHub payload JSON.',
-        summary: 'Public GitHub webhook endpoint with HMAC signature validation + idempotence guard.',
+        summary: 'Handle Project GitHub Webhook',
         security: [],
         requestBody: new OA\RequestBody(
             required: true,
@@ -46,25 +46,27 @@ final readonly class GithubWebhookController
                 ],
             ),
         ),
+        responses: [
+            new OA\Response(
+                response: JsonResponse::HTTP_ACCEPTED,
+                description: 'Webhook accepted and queued/processed.',
+                content: new OA\JsonContent(
+                    example: [
+                        'processed' => true,
+                        'eventId' => 'f53d5a41-9f56-4f2c-a9f3-f8a2fd17f12e',
+                        'deliveryId' => '7f5baf30-6402-11ef-8946-3f95d8cf7f6c',
+                        'event' => 'issues',
+                        'status' => 'processed',
+                    ],
+                ),
+            ),
+            new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Invalid payload or missing required headers.'),
+            new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Invalid HMAC signature.'),
+        ],
     )]
     #[OA\Parameter(name: 'x-github-delivery', in: 'header', required: true, schema: new OA\Schema(type: 'string'), example: '7f5baf30-6402-11ef-8946-3f95d8cf7f6c')]
     #[OA\Parameter(name: 'x-github-event', in: 'header', required: true, schema: new OA\Schema(type: 'string'), example: 'issues')]
     #[OA\Parameter(name: 'x-hub-signature-256', in: 'header', required: true, schema: new OA\Schema(type: 'string'), example: 'sha256=4f7f2e11f2f6c477f2c5f8cf227f4e5b2e02691a1f4a5e80ccfe84fc8c3fd6c2')]
-    #[OA\Response(
-        response: JsonResponse::HTTP_ACCEPTED,
-        description: 'Webhook accepted and queued/processed.',
-        content: new OA\JsonContent(
-            example: [
-                'processed' => true,
-                'eventId' => 'f53d5a41-9f56-4f2c-a9f3-f8a2fd17f12e',
-                'deliveryId' => '7f5baf30-6402-11ef-8946-3f95d8cf7f6c',
-                'event' => 'issues',
-                'status' => 'processed',
-            ],
-        ),
-    )]
-    #[OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Invalid payload or missing required headers.')]
-    #[OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Invalid HMAC signature.')]
     public function __invoke(Request $request): JsonResponse
     {
         $rawPayload = (string)$request->getContent();

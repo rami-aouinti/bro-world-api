@@ -35,7 +35,7 @@ final readonly class PutContactController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Put(
-        summary: 'Put Contact dans le CRM',
+        summary: 'Put Contact',
         description: 'Exécute l action metier Put Contact dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),

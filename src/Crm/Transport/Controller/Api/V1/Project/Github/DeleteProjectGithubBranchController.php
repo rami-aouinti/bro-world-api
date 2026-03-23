@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm Github')]
 #[IsGranted(Role::CRM_ADMIN->value)]
 final readonly class DeleteProjectGithubBranchController
 {
@@ -30,7 +30,7 @@ final readonly class DeleteProjectGithubBranchController
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/branches/delete', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(
-        summary: 'Delete a branch from a GitHub repository.',
+        summary: 'Delete Project GitHub Branch',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(

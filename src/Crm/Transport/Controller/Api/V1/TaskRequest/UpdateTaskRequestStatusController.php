@@ -27,7 +27,7 @@ use function hash;
 use function sprintf;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm TaskRequest')]
 #[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class UpdateTaskRequestStatusController
 {
@@ -48,7 +48,7 @@ final readonly class UpdateTaskRequestStatusController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Patch(
-        summary: 'Update task request status.',
+        summary: 'Update Task Request Status',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(

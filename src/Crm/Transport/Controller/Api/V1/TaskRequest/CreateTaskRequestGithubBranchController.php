@@ -34,7 +34,7 @@ use function substr;
 use function trim;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm TaskRequest')]
 #[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class CreateTaskRequestGithubBranchController
 {
@@ -51,7 +51,7 @@ final readonly class CreateTaskRequestGithubBranchController
     #[Route('/v1/crm/applications/{applicationSlug}/task-requests/{taskRequest}/github/branches', methods: [Request::METHOD_POST])]
     #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Post(
-        summary: 'Create a GitHub branch for a task request issue.',
+        summary: 'Create Task Request GitHub Branch',
         requestBody: new OA\RequestBody(
             required: false,
             content: new OA\JsonContent(

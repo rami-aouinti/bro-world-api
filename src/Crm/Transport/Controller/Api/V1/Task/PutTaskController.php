@@ -37,11 +37,15 @@ final readonly class PutTaskController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/tasks/{task}', methods: [Request::METHOD_PUT])]
-    #[OA\Put(summary: 'PUT /v1/crm/applications/{applicationSlug}/tasks/{task}')]
-    #[OA\Response(response: JsonResponse::HTTP_OK, description: 'Task replaced.')]
-    #[OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Invalid JSON payload or invalid date format.')]
-    #[OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Task or sprint not found in CRM scope.')]
-    #[OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation failed or sprint/project scope mismatch.')]
+    #[OA\Put(
+        summary: 'Replace Task',
+        responses: [
+            new OA\Response(response: JsonResponse::HTTP_OK, description: 'Task replaced.'),
+            new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Invalid JSON payload or invalid date format.'),
+            new OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Task or sprint not found in CRM scope.'),
+            new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation failed or sprint/project scope mismatch.'),
+        ],
+    )]
     public function __invoke(string $applicationSlug, string $task, Request $request): JsonResponse
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);

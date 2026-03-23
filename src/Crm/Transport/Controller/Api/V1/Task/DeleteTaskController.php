@@ -35,7 +35,7 @@ final readonly class DeleteTaskController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(
-        summary: 'Delete Task dans le CRM',
+        summary: 'Delete Task',
         description: 'Exécute l action metier Delete Task dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_NO_CONTENT, description: 'Ressource supprimée avec succès.'),

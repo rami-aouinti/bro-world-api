@@ -32,11 +32,15 @@ final readonly class PutSprintController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/sprints/{sprint}', methods: [Request::METHOD_PUT])]
-    #[OA\Put(summary: 'PUT /v1/crm/applications/{applicationSlug}/sprints/{sprint}')]
-    #[OA\Response(response: JsonResponse::HTTP_OK, description: 'Sprint replaced.')]
-    #[OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Invalid JSON payload or invalid date format.')]
-    #[OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Sprint not found in CRM scope.')]
-    #[OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation failed.')]
+    #[OA\Put(
+        summary: 'Replace Sprint',
+        responses: [
+            new OA\Response(response: JsonResponse::HTTP_OK, description: 'Sprint replaced.'),
+            new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Invalid JSON payload or invalid date format.'),
+            new OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Sprint not found in CRM scope.'),
+            new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation failed.'),
+        ],
+    )]
     public function __invoke(string $applicationSlug, string $sprint, Request $request): JsonResponse
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);

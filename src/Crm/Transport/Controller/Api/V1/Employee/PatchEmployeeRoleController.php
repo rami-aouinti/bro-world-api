@@ -38,7 +38,7 @@ final readonly class PatchEmployeeRoleController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'employeeId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Patch(
-        summary: 'Patch Employee Role dans le CRM',
+        summary: 'Patch Employee Role',
         description: 'Exécute l action metier Patch Employee Role dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),

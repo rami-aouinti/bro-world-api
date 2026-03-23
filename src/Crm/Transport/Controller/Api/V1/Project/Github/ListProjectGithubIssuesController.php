@@ -16,7 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm Github')]
 #[IsGranted(Role::CRM_MANAGER->value)]
 final readonly class ListProjectGithubIssuesController
 {
@@ -34,7 +34,7 @@ final readonly class ListProjectGithubIssuesController
     #[OA\Parameter(ref: '#/components/parameters/page')]
     #[OA\Parameter(ref: '#/components/parameters/limit')]
     #[OA\Get(
-        summary: 'List GitHub issues for a repository linked to a CRM project.',
+        summary: 'List Project GitHub Issues',
         responses: [
             new OA\Response(
                 response: JsonResponse::HTTP_OK,

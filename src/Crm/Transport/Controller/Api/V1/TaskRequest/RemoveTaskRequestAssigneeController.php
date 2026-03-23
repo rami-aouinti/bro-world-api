@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm TaskRequest')]
 #[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class RemoveTaskRequestAssigneeController
 {
@@ -36,7 +36,7 @@ final readonly class RemoveTaskRequestAssigneeController
     #[OA\Parameter(name: 'taskRequest', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(
-        summary: 'Remove Task Request Assignee dans le CRM',
+        summary: 'Remove Task Request Assignee',
         description: 'Exécute l action metier Remove Task Request Assignee dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_NO_CONTENT, description: 'Ressource supprimée avec succès.'),

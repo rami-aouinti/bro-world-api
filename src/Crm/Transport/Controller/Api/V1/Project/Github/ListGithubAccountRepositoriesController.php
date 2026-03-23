@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm Github')]
 #[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class ListGithubAccountRepositoriesController
 {
@@ -31,7 +31,7 @@ final readonly class ListGithubAccountRepositoriesController
     #[OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100), example: 20)]
     #[OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filtre de recherche libre')]
     #[OA\Get(
-        summary: 'List Github Account Repositories dans le CRM',
+        summary: 'List Github Account Repositories',
         description: 'Exécute l action metier List Github Account Repositories dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(

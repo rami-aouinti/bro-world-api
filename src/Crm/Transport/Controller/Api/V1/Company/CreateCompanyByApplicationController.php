@@ -36,7 +36,7 @@ final readonly class CreateCompanyByApplicationController
     #[Route('/v1/crm/applications/{applicationSlug}/companies', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
-        summary: 'Create Company By Application dans le CRM',
+        summary: 'Create Company By Application',
         description: 'Exécute l action metier Create Company By Application dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_CREATED, description: 'Ressource créée avec succès.'),
