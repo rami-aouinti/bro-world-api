@@ -19,8 +19,6 @@ use function trim;
 
 final readonly class ProjectGithubProvisioningService
 {
-    private const string DEFAULT_REPOSITORY_OWNER = 'rami-aouinti';
-
     public function __construct(private CrmGithubService $crmGithubService)
     {
     }
@@ -28,7 +26,7 @@ final readonly class ProjectGithubProvisioningService
     /**
      * @return array{provisioningStatus:string,githubResourceIds:array<string,mixed>}
      */
-    public function provision(Project $project, string $repositoryName): array
+    public function provision(Project $project, string $repositoryName, string $repositoryOwner): array
     {
         $provisionedRepository = null;
         $normalizedRepositoryName = $this->normalizeRepositoryName($repositoryName);
@@ -39,7 +37,7 @@ final readonly class ProjectGithubProvisioningService
                 $normalizedRepositoryName,
                 $project->getDescription(),
                 true,
-                self::DEFAULT_REPOSITORY_OWNER,
+                $repositoryOwner,
             );
             $provisionedRepository = $repository;
 
@@ -78,7 +76,7 @@ final readonly class ProjectGithubProvisioningService
                 'githubResourceIds' => $project->getGithubResourceIds(),
             ];
         } catch (CrmGithubApiException $exception) {
-            $this->rollbackProvisioning($project, $provisionedRepository);
+            $this->rollbackProvisioning($project, $provisionedRepository, $exception);
 
             return [
                 'provisioningStatus' => $project->getProvisioningStatus(),
@@ -90,7 +88,7 @@ final readonly class ProjectGithubProvisioningService
     /**
      * @param array<string,mixed>|null $provisionedRepository
      */
-    private function rollbackProvisioning(Project $project, ?array $provisionedRepository): void
+    private function rollbackProvisioning(Project $project, ?array $provisionedRepository, CrmGithubApiException $exception): void
     {
         if (is_array($provisionedRepository) && is_string($provisionedRepository['full_name'] ?? null) && $provisionedRepository['full_name'] !== '') {
             try {
@@ -102,7 +100,12 @@ final readonly class ProjectGithubProvisioningService
 
         $project->setGithubRepositories([]);
         $project->setProvisioningStatus('failed');
-        $project->setGithubResourceIds([]);
+        $project->setGithubResourceIds([
+            'provisioningError' => [
+                'code' => 'github_provisioning_failed',
+                'message' => trim($exception->getMessage()) !== '' ? $exception->getMessage() : 'Unable to provision GitHub resources for this project.',
+            ],
+        ]);
     }
 
     /**
