@@ -32,7 +32,27 @@ final readonly class GetCrmGithubSyncJobController
     #[OA\Get(
         summary: 'Get CRM GitHub sync job status',
         responses: [
-            new OA\Response(response: JsonResponse::HTTP_OK, description: 'Job status.', content: new OA\JsonContent(ref: '#/components/schemas/CrmGithubSyncJob')),
+            new OA\Response(
+                response: JsonResponse::HTTP_OK,
+                description: 'Job status.',
+                content: new OA\JsonContent(
+                    required: ['id', 'applicationSlug', 'owner', 'status', 'projectsCreated', 'reposAttached', 'issuesImported', 'errorsCount', 'errors'],
+                    properties: [
+                        new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+                        new OA\Property(property: 'applicationSlug', type: 'string', example: 'crm-pipeline-pro'),
+                        new OA\Property(property: 'owner', type: 'string', example: 'acme-org'),
+                        new OA\Property(property: 'startedAt', type: 'string', format: 'date-time', nullable: true),
+                        new OA\Property(property: 'finishedAt', type: 'string', format: 'date-time', nullable: true),
+                        new OA\Property(property: 'status', type: 'string', example: 'running'),
+                        new OA\Property(property: 'projectsCreated', type: 'integer', example: 3),
+                        new OA\Property(property: 'reposAttached', type: 'integer', example: 12),
+                        new OA\Property(property: 'issuesImported', type: 'integer', example: 54),
+                        new OA\Property(property: 'errorsCount', type: 'integer', example: 1),
+                        new OA\Property(property: 'errors', type: 'array', items: new OA\Items(type: 'object')),
+                    ],
+                    type: 'object',
+                )
+            ),
             new OA\Response(ref: '#/components/responses/NotFound404', response: JsonResponse::HTTP_NOT_FOUND),
         ],
     )]
