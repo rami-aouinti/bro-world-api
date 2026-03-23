@@ -16,6 +16,7 @@ final readonly class BootstrapCrmGithubSync implements MessageLowInterface
         public string $issueTarget,
         public bool $createPublicProject,
         public bool $dryRun,
+        public string $phase = 'full',
     ) {
     }
 }

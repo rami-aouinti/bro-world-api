@@ -61,6 +61,7 @@ final readonly class CrmGithubBootstrapSyncService
         string $issueTarget,
         bool $createPublicProject,
         bool $dryRun,
+        string $phase = 'full',
     ): array {
         $report = [
             'projects' => ['created' => 0, 'updated' => 0, 'skipped' => 0],
@@ -98,7 +99,9 @@ final readonly class CrmGithubBootstrapSyncService
             return $report;
         }
 
-        $githubProjects = $this->listOwnerProjects($token, $owner, (string)($ownerMeta['ownerType'] ?? ''));
+        $isIssueOnlyPhase = $phase === 'issues';
+
+        $githubProjects = $isIssueOnlyPhase ? [] : $this->listOwnerProjects($token, $owner, (string)($ownerMeta['ownerType'] ?? ''));
         $crmProjects = $this->projectRepository->findScoped($crm->getId(), 5000, 0);
 
         $projectByGithubIdentity = [];
@@ -176,7 +179,7 @@ final readonly class CrmGithubBootstrapSyncService
             return $report;
         }
 
-        if ($publicProject === null) {
+        if ($publicProject === null && !$isIssueOnlyPhase) {
             $publicProject = (new Project())
                 ->setCompany($company)
                 ->setName('Public')
@@ -196,7 +199,9 @@ final readonly class CrmGithubBootstrapSyncService
         $repositoryMapByIdentity = $this->buildRepositoryMap($crmProjects);
 
         foreach ($repositories as $repositoryPayload) {
-            $targetProject = $this->matchProjectForRepository($repositoryPayload, $projectByGithubIdentity, $publicProject);
+            $targetProject = $isIssueOnlyPhase
+                ? $this->resolveExistingProjectForRepository($repositoryPayload, $repositoryMapByIdentity)
+                : $this->matchProjectForRepository($repositoryPayload, $projectByGithubIdentity, $publicProject);
             if (!$targetProject instanceof Project) {
                 $report['repositories']['skipped']++;
                 continue;
@@ -205,7 +210,7 @@ final readonly class CrmGithubBootstrapSyncService
             $repoIdentity = $this->buildRepositoryIdentityKey($repositoryPayload);
             $existingRepository = $repoIdentity !== null ? ($repositoryMapByIdentity[$repoIdentity] ?? null) : null;
 
-            if (!$existingRepository instanceof CrmRepository) {
+            if (!$existingRepository instanceof CrmRepository && !$isIssueOnlyPhase) {
                 $entity = (new CrmRepository())
                     ->setProject($targetProject)
                     ->setProvider('github')
@@ -230,7 +235,7 @@ final readonly class CrmGithubBootstrapSyncService
 
                 $report['repositories']['created']++;
                 $existingRepository = $entity;
-            } else {
+            } elseif ($existingRepository instanceof CrmRepository && !$isIssueOnlyPhase) {
                 $existingRepository
                     ->setProject($targetProject)
                     ->setOwner((string)($repositoryPayload['owner'] ?? $owner))
@@ -249,6 +254,9 @@ final readonly class CrmGithubBootstrapSyncService
                 }
 
                 $report['repositories']['updated']++;
+            } elseif (!$existingRepository instanceof CrmRepository) {
+                $report['repositories']['skipped']++;
+                continue;
             }
 
             foreach (['open', 'closed'] as $state) {
@@ -744,6 +752,22 @@ GRAPHQL, $ownerField);
         }
 
         return null;
+    }
+
+    /**
+     * @param array<string,mixed> $repositoryPayload
+     * @param array<string,CrmRepository> $repositoryMapByIdentity
+     */
+    private function resolveExistingProjectForRepository(array $repositoryPayload, array $repositoryMapByIdentity): ?Project
+    {
+        $repoIdentity = $this->buildRepositoryIdentityKey($repositoryPayload);
+        if ($repoIdentity === null) {
+            return null;
+        }
+
+        $existingRepository = $repositoryMapByIdentity[$repoIdentity] ?? null;
+
+        return $existingRepository instanceof CrmRepository ? $existingRepository->getProject() : null;
     }
 
     /**
