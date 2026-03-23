@@ -45,10 +45,51 @@ final readonly class PostCrmGithubBootstrapSyncController
             . "\n\nConversion de statut:"
             . "\n- issue open => TaskStatus::TODO / TaskRequestStatus::PENDING."
             . "\n- issue closed => TaskStatus::DONE et TaskRequestStatus::APPROVED, ou REJECTED si label rejected/reject/declined/crm:rejected ou state_reason=not_planned|rejected.",
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                ref: '#/components/schemas/CrmGithubBootstrapSyncRequest',
+                examples: [
+                    'bootstrapSyncTask' => new OA\Examples(
+                        example: 'bootstrapSyncTask',
+                        summary: 'Payload exemple bootstrap sync',
+                        value: [
+                            'token' => 'ghp_xxxxxxxxx',
+                            'owner' => 'acme-org',
+                            'issueTarget' => 'task',
+                            'createPublicProject' => true,
+                            'dryRun' => false,
+                        ],
+                    ),
+                ],
+            ),
+        ),
         responses: [
-            new OA\Response(response: JsonResponse::HTTP_ACCEPTED, description: 'Job de synchronisation planifié.'),
-            new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
-            new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
+            new OA\Response(ref: '#/components/responses/JobAccepted202', response: JsonResponse::HTTP_ACCEPTED),
+            new OA\Response(ref: '#/components/responses/BadRequest400', response: JsonResponse::HTTP_BAD_REQUEST),
+            new OA\Response(
+                response: JsonResponse::HTTP_UNAUTHORIZED,
+                description: 'Token GitHub invalide ou expiré.',
+                content: new OA\JsonContent(
+                    ref: '#/components/schemas/ErrorResponse',
+                    example: [
+                        'message' => 'Bad credentials',
+                        'errors' => [],
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: JsonResponse::HTTP_FORBIDDEN,
+                description: 'Owner inaccessible avec le token fourni.',
+                content: new OA\JsonContent(
+                    ref: '#/components/schemas/ErrorResponse',
+                    example: [
+                        'message' => 'Resource not accessible by integration.',
+                        'errors' => [],
+                    ],
+                ),
+            ),
+            new OA\Response(ref: '#/components/responses/BusinessRule422', response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY),
         ],
     )]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse

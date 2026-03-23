@@ -7,11 +7,64 @@ namespace App\Crm\Transport\OpenApi;
 use OpenApi\Attributes as OA;
 
 #[OA\Schema(
+    schema: 'ErrorResponse',
+    required: ['message', 'errors'],
+    properties: [
+        new OA\Property(property: 'message', type: 'string', example: 'Validation failed.'),
+        new OA\Property(
+            property: 'errors',
+            type: 'array',
+            items: new OA\Items(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'propertyPath', type: 'string', nullable: true, example: 'issueTarget'),
+                    new OA\Property(property: 'message', type: 'string', nullable: true, example: 'This value is not valid.'),
+                    new OA\Property(property: 'code', type: 'string', nullable: true, example: 'c1051bb4-d103-4f74-8988-acbcafc7fdc3'),
+                ],
+            ),
+        ),
+    ],
+    type: 'object'
+)]
+#[OA\Schema(
     schema: 'CrmErrorResponse',
     required: ['message', 'errors'],
     properties: [
         new OA\Property(property: 'message', type: 'string', example: 'Validation failed.'),
         new OA\Property(property: 'errors', type: 'array', items: new OA\Items(type: 'object')),
+    ],
+    type: 'object'
+)]
+#[OA\Schema(
+    schema: 'JobAcceptedResponse',
+    required: ['jobId', 'status'],
+    properties: [
+        new OA\Property(property: 'jobId', type: 'string', format: 'uuid', example: '0dfde3e4-7095-4fab-bb54-f954ff4c16bd'),
+        new OA\Property(property: 'status', type: 'string', example: 'queued'),
+        new OA\Property(
+            property: 'summary',
+            nullable: true,
+            properties: [
+                new OA\Property(property: 'mode', type: 'string', example: 'dry-run'),
+                new OA\Property(property: 'owner', type: 'string', example: 'acme-org'),
+                new OA\Property(property: 'issueTarget', type: 'string', enum: ['task', 'task_request'], example: 'task'),
+                new OA\Property(property: 'createPublicProject', type: 'boolean', example: true),
+                new OA\Property(property: 'plannedActions', type: 'array', items: new OA\Items(type: 'string')),
+            ],
+            type: 'object'
+        ),
+    ],
+    type: 'object'
+)]
+#[OA\Schema(
+    schema: 'CrmGithubBootstrapSyncRequest',
+    required: ['token', 'owner'],
+    properties: [
+        new OA\Property(property: 'token', type: 'string', example: 'ghp_xxxxxxxxx'),
+        new OA\Property(property: 'owner', type: 'string', example: 'acme-org'),
+        new OA\Property(property: 'issueTarget', type: 'string', enum: ['task', 'task_request'], default: 'task'),
+        new OA\Property(property: 'createPublicProject', type: 'boolean', default: true),
+        new OA\Property(property: 'dryRun', type: 'boolean', default: false),
     ],
     type: 'object'
 )]
