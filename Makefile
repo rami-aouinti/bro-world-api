@@ -368,6 +368,9 @@ elastic-create-or-update-template: ## Creates or updates elastic templates
 contract-tests: ## Runs API contract and documentation snapshot tests
 	@make exec-bash cmd="rm -rf ./var/cache/test* && bin/console cache:warmup --env=test && ./vendor/bin/phpunit -c phpunit.xml.dist tests/Application/Controller/DocumentationSnapshotTest.php tests/Application/Recruit/Transport/Controller/Api/V1/RecruitContractDocumentationTest.php tests/Application/Recruit/Transport/Controller/Api/V1/Interview/PrivateInterviewControllerTest.php tests/Application/Recruit/Transport/Controller/Api/V1/Application/ApplicationStatusUpdateControllerTest.php"
 
+crm-swagger-qa: ## Validates CRM Swagger documentation coverage and examples
+	@make exec cmd="php bin/console qa:crm:swagger"
+
 phpunit: ## Runs PhpUnit tests
 	@make exec-bash cmd="rm -rf ./var/cache/test* && bin/console cache:warmup --env=test && ./vendor/bin/phpunit -c phpunit.xml.dist --coverage-html reports/coverage $(PHPUNIT_OPTIONS) --coverage-clover reports/clover.xml --log-junit reports/junit.xml"
 

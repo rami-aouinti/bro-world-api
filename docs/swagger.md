@@ -53,11 +53,26 @@ Cette convention s'applique à tous les endpoints des agrégats CRM:
 
 ## Contrôle de cohérence
 
-Un test automatisé vérifie la cohérence documentaire des endpoints CRM ciblés:
+Une commande QA dédiée vérifie la cohérence documentaire des endpoints CRM ciblés:
 
-- tag attendu selon l'agrégat (`Crm`, `Crm Github`, `Crm TaskRequest`)
-- présence d'une opération OpenAPI avec `summary` au format verbe + ressource
-- présence de `responses: [ ... ]` dans l'opération
+```bash
+php bin/console qa:crm:swagger
+```
+
+La commande:
+
+- liste les contrôleurs CRM contenant au moins une route `#[Route(...)]`
+- vérifie qu'une opération OpenAPI (`OA\Get|Post|Put|Patch|Delete`) existe pour chaque route CRM
+- vérifie que les endpoints avec body (`POST|PUT|PATCH`) contiennent au moins un exemple de request et de response
+- échoue si un endpoint CRM est non documenté ou incomplet
+
+Le rapport d'erreur affiche les éléments manquants avec le format:
+
+- `fichier :: [METHODS] /route`
+
+CI:
+
+- le job `documentation/swagger` exécute ce contrôle automatiquement dans la pipeline.
 
 ## Application list endpoints (filters + pagination)
 
