@@ -50,11 +50,51 @@ final readonly class CreateTaskRequestGithubBranchController
 
     #[Route('/v1/crm/applications/{applicationSlug}/task-requests/{taskRequest}/github/branches', methods: [Request::METHOD_POST])]
     #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
+    #[OA\Parameter(
+        name: 'taskRequest',
+        in: 'path',
+        required: true,
+        description: 'TaskRequest UUID. Future alias: body.taskRequestId on project/github equivalent endpoint.',
+        schema: new OA\Schema(type: 'string', format: 'uuid'),
+        example: '7cd1c6dd-a211-49f1-8ee0-b8622ff2de3d',
+    )]
     #[OA\Post(
         summary: 'Create Task Request GitHub Branch',
+        description: 'Creates a GitHub branch from a TaskRequest issue mapping.'
+            . "\n\n"
+            . 'Try-it-out prerequisites in `/api/doc`:'
+            . "\n"
+            . '- route param `applicationSlug`: slug of an app linked to CRM fixtures.'
+            . "\n"
+            . '- route param `taskRequest`: TaskRequest UUID in same application scope.'
+            . "\n"
+            . '- the task request must already be linked to a GitHub issue.'
+            . "\n"
+            . '- the linked project must have a GitHub token configured.'
+            . "\n"
+            . '- optional payload: `name`, `sourceBranch`, `postCommentOnIssue`.',
         requestBody: new OA\RequestBody(
             required: false,
             content: new OA\JsonContent(
+                examples: [
+                    'autoBranchNameFromIssue' => new OA\Examples(
+                        example: 'autoBranchNameFromIssue',
+                        summary: 'Création auto du nom de branche depuis issue',
+                        value: [
+                            'sourceBranch' => 'main',
+                            'postCommentOnIssue' => false,
+                        ],
+                    ),
+                    'explicitNameAndIssueComment' => new OA\Examples(
+                        example: 'explicitNameAndIssueComment',
+                        summary: 'Nom explicite + commentaire automatique sur issue',
+                        value: [
+                            'name' => 'feature/task-request-2142-gateway-timeout',
+                            'sourceBranch' => 'develop',
+                            'postCommentOnIssue' => true,
+                        ],
+                    ),
+                ],
                 properties: [
                     new OA\Property(property: 'name', type: 'string', nullable: true, example: 'feature/task-request-123'),
                     new OA\Property(property: 'sourceBranch', type: 'string', nullable: true, example: 'main'),
@@ -63,7 +103,119 @@ final readonly class CreateTaskRequestGithubBranchController
             ),
         ),
         responses: [
-            new OA\Response(response: JsonResponse::HTTP_CREATED, description: 'Branch created on GitHub and associated to task request.'),
+            new OA\Response(
+                response: JsonResponse::HTTP_CREATED,
+                description: 'Branch created on GitHub and associated to task request.',
+                content: new OA\JsonContent(
+                    required: ['taskRequestId', 'issueNumber', 'repositoryFullName', 'branchName', 'branchUrl', 'sha'],
+                    properties: [
+                        new OA\Property(property: 'taskRequestId', type: 'string', format: 'uuid'),
+                        new OA\Property(property: 'issueNumber', type: 'integer'),
+                        new OA\Property(property: 'repositoryFullName', type: 'string'),
+                        new OA\Property(property: 'branchName', type: 'string'),
+                        new OA\Property(property: 'branchUrl', type: 'string'),
+                        new OA\Property(property: 'sha', type: 'string', nullable: true),
+                    ],
+                    examples: [
+                        'createdFromIssueAutoName' => new OA\Examples(
+                            example: 'createdFromIssueAutoName',
+                            summary: 'Nom calculé automatiquement depuis issue',
+                            value: [
+                                'taskRequestId' => '7cd1c6dd-a211-49f1-8ee0-b8622ff2de3d',
+                                'issueNumber' => 2142,
+                                'repositoryFullName' => 'acme/crm-platform',
+                                'branchName' => 'task-request/2142-7cd1c6dd',
+                                'branchUrl' => 'https://github.com/acme/crm-platform/tree/task-request/2142-7cd1c6dd',
+                                'sha' => 'b87f4cab595d65f6d97fd1199f39ca6d8f1c2381',
+                            ],
+                        ),
+                        'createdWithExplicitNameAndComment' => new OA\Examples(
+                            example: 'createdWithExplicitNameAndComment',
+                            summary: 'Nom explicite + commentaire auto sur issue',
+                            value: [
+                                'taskRequestId' => '7cd1c6dd-a211-49f1-8ee0-b8622ff2de3d',
+                                'issueNumber' => 2142,
+                                'repositoryFullName' => 'acme/crm-platform',
+                                'branchName' => 'feature/task-request-2142-gateway-timeout',
+                                'branchUrl' => 'https://github.com/acme/crm-platform/tree/feature/task-request-2142-gateway-timeout',
+                                'sha' => '0a9bcf2f3d62ed2a6d2da0dd01d5db3916efac39',
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: JsonResponse::HTTP_BAD_REQUEST,
+                description: 'Business error: missing GitHub token on project.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'GitHub token is not configured on this project.',
+                        'errors' => [],
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: JsonResponse::HTTP_NOT_FOUND,
+                description: 'Business error: repository not found or inaccessible.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'GitHub resource not found or inaccessible.',
+                        'errors' => [],
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: JsonResponse::HTTP_CONFLICT,
+                description: 'Business error (target contract): branch already exists.',
+                content: new OA\JsonContent(
+                    example: [
+                        'message' => 'Branch already exists.',
+                        'errors' => [
+                            [
+                                'resource' => 'Reference',
+                                'field' => 'ref',
+                                'code' => 'already_exists',
+                            ],
+                        ],
+                    ],
+                ),
+            ),
+            new OA\Response(
+                response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY,
+                description: 'Business error: task request has no valid issue mapping or GitHub validation failed.',
+                content: new OA\JsonContent(
+                    examples: [
+                        'taskRequestHasNoIssueMapping' => new OA\Examples(
+                            example: 'taskRequestHasNoIssueMapping',
+                            summary: 'TaskRequest sans mapping issue',
+                            value: [
+                                'message' => 'Task request is not linked to a valid GitHub issue.',
+                                'errors' => [
+                                    [
+                                        'propertyPath' => 'taskRequest',
+                                        'message' => 'Entity is outside current CRM scope.',
+                                        'code' => 'reference.out_of_scope',
+                                    ],
+                                ],
+                            ],
+                        ),
+                        'githubValidationFailedBranchAlreadyExists' => new OA\Examples(
+                            example: 'githubValidationFailedBranchAlreadyExists',
+                            summary: 'Conflit branche existante (retour GitHub actuel)',
+                            value: [
+                                'message' => 'GitHub validation failed for this request.',
+                                'errors' => [
+                                    [
+                                        'resource' => 'Reference',
+                                        'field' => 'ref',
+                                        'code' => 'already_exists',
+                                    ],
+                                ],
+                            ],
+                        ),
+                    ],
+                ),
+            ),
             new OA\Response(ref: '#/components/responses/NotFound404'),
             new OA\Response(ref: '#/components/responses/ValidationFailed422'),
         ],
@@ -141,10 +293,12 @@ final readonly class CreateTaskRequestGithubBranchController
         }
 
         return new JsonResponse([
+            'taskRequestId' => $scopedTaskRequest->getId(),
+            'repositoryFullName' => $repositoryFullName,
             'branchName' => $branchName,
             'branchUrl' => $branchUrl,
+            'sha' => $branchSha !== '' ? $branchSha : null,
             'issueNumber' => $issueNumber,
-            'taskRequestId' => $scopedTaskRequest->getId(),
         ], JsonResponse::HTTP_CREATED);
     }
 
