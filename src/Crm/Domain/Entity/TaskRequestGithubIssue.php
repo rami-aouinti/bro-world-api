@@ -9,7 +9,11 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'crm_task_request_github_issue')]
+#[ORM\Table(
+    name: 'crm_task_request_github_issue',
+    uniqueConstraints: [new ORM\UniqueConstraint(name: 'uq_crm_task_request_gh_issue_repo_number', columns: ['provider', 'repository_full_name', 'issue_number'])],
+    indexes: [new ORM\Index(name: 'idx_crm_task_request_gh_issue_node', columns: ['issue_node_id'])]
+)]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class TaskRequestGithubIssue
 {

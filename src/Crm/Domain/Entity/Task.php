@@ -69,6 +69,10 @@ class Task implements EntityInterface
     #[ORM\Column(name: 'estimated_hours', type: Types::FLOAT, nullable: true)]
     private ?float $estimatedHours = null;
 
+    /** @var array<string,mixed>|null */
+    #[ORM\Column(name: 'github_issue', type: Types::JSON, nullable: true)]
+    private ?array $githubIssue = null;
+
     /**
      * @var list<array<string,mixed>>
      */
@@ -206,6 +210,24 @@ class Task implements EntityInterface
     public function setEstimatedHours(?float $estimatedHours): self
     {
         $this->estimatedHours = $estimatedHours;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string,mixed>|null
+     */
+    public function getGithubIssue(): ?array
+    {
+        return $this->githubIssue;
+    }
+
+    /**
+     * @param array<string,mixed>|null $githubIssue
+     */
+    public function setGithubIssue(?array $githubIssue): self
+    {
+        $this->githubIssue = $githubIssue;
 
         return $this;
     }
