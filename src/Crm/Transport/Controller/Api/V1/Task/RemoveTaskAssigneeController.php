@@ -36,8 +36,8 @@ final readonly class RemoveTaskAssigneeController
     #[OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(
-        summary: 'Remove Task Assignee',
         description: 'Exécute l action metier Remove Task Assignee dans le perimetre de l application CRM.',
+        summary: 'Remove Task Assignee',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_NO_CONTENT, description: 'Ressource supprimée avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),

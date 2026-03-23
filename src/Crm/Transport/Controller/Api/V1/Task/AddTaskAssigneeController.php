@@ -36,8 +36,8 @@ final readonly class AddTaskAssigneeController
     #[OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Put(
-        summary: 'Add Task Assignee',
         description: 'Exécute l action metier Add Task Assignee dans le perimetre de l application CRM.',
+        summary: 'Add Task Assignee',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),

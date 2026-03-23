@@ -38,8 +38,8 @@ final readonly class ListTasksController
     #[OA\Parameter(ref: '#/components/parameters/limit')]
     #[OA\Parameter(ref: '#/components/parameters/q')]
     #[OA\Get(
-        summary: 'List Tasks',
         description: 'Exécute l action metier List Tasks dans le perimetre de l application CRM.',
+        summary: 'List Tasks',
         responses: [
             new OA\Response(
                 response: JsonResponse::HTTP_OK,
@@ -54,10 +54,10 @@ final readonly class ListTasksController
                 ),
             ),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
-            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized401'),
-            new OA\Response(response: 403, ref: '#/components/responses/Forbidden403'),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFound404'),
-            new OA\Response(response: 422, ref: '#/components/responses/ValidationFailed422'),
+            new OA\Response(ref: '#/components/responses/Unauthorized401', response: 401),
+            new OA\Response(ref: '#/components/responses/Forbidden403', response: 403),
+            new OA\Response(ref: '#/components/responses/NotFound404', response: 404),
+            new OA\Response(ref: '#/components/responses/ValidationFailed422', response: 422),
         ],
     )]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse

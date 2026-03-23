@@ -14,6 +14,8 @@ use App\Crm\Infrastructure\Repository\TaskRepository;
 use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\Crm\Transport\Request\CrmRequestHandler;
 use App\Role\Domain\Enum\Role;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -36,6 +38,10 @@ final readonly class PutTaskController
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     #[Route('/v1/crm/applications/{applicationSlug}/tasks/{task}', methods: [Request::METHOD_PUT])]
     #[OA\Put(
         summary: 'Replace Task',
@@ -92,6 +98,6 @@ final readonly class PutTaskController
 
         $this->taskRepository->save($entity);
 
-        return new JsonResponse((new EntityIdResponseDto($entity->getId()))->toArray());
+        return new JsonResponse(new EntityIdResponseDto($entity->getId())->toArray());
     }
 }

@@ -53,7 +53,6 @@ final readonly class CreateTaskController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                ref: '#/components/schemas/CrmTask',
                 examples: [
                     'minimalValid' => new OA\Examples(
                         example: 'minimalValid',
@@ -79,6 +78,7 @@ final readonly class CreateTaskController
                         ],
                     ),
                 ],
+                ref: '#/components/schemas/CrmTask',
             ),
         ),
         responses: [
@@ -107,8 +107,8 @@ final readonly class CreateTaskController
                     ],
                 ),
             ),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFound404'),
-            new OA\Response(response: 422, ref: '#/components/responses/ValidationFailed422'),
+            new OA\Response(ref: '#/components/responses/NotFound404', response: 404),
+            new OA\Response(ref: '#/components/responses/ValidationFailed422', response: 422),
         ],
     )]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
@@ -146,6 +146,6 @@ final readonly class CreateTaskController
             'applicationSlug' => $applicationSlug,
         ]));
 
-        return new JsonResponse((new EntityIdResponseDto($task->getId()))->toArray(), JsonResponse::HTTP_CREATED);
+        return new JsonResponse(new EntityIdResponseDto($task->getId())->toArray(), JsonResponse::HTTP_CREATED);
     }
 }

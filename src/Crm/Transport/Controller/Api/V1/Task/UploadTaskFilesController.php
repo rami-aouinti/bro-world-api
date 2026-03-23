@@ -41,8 +41,8 @@ final readonly class UploadTaskFilesController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Post(
-        summary: 'Upload Task Files',
         description: 'Exécute l action metier Upload Task Files dans le perimetre de l application CRM.',
+        summary: 'Upload Task Files',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\MediaType(

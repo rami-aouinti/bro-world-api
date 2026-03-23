@@ -14,6 +14,8 @@ use App\Crm\Infrastructure\Repository\SprintRepository;
 use App\Crm\Infrastructure\Repository\TaskRepository;
 use App\Crm\Transport\Request\CrmRequestHandler;
 use App\Role\Domain\Enum\Role;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -34,12 +36,16 @@ final readonly class PatchTaskController
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     #[Route('/v1/crm/applications/{applicationSlug}/tasks/{task}', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Patch(
-        summary: 'Patch Task',
         description: 'Exécute l action metier Patch Task dans le perimetre de l application CRM.',
+        summary: 'Patch Task',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
@@ -105,6 +111,6 @@ final readonly class PatchTaskController
 
         $this->taskRepository->save($task);
 
-        return new JsonResponse((new EntityIdResponseDto($task->getId()))->toArray());
+        return new JsonResponse(new EntityIdResponseDto($task->getId())->toArray());
     }
 }
