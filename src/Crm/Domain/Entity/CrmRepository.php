@@ -19,7 +19,8 @@ use Throwable;
 #[ORM\Entity]
 #[ORM\Table(
     name: 'crm_repository',
-    uniqueConstraints: [new ORM\UniqueConstraint(name: 'uq_crm_repository_project_provider_full_name', columns: ['project_id', 'provider', 'full_name'])]
+    uniqueConstraints: [new ORM\UniqueConstraint(name: 'uq_crm_repository_project_provider_full_name', columns: ['project_id', 'provider', 'full_name'])],
+    indexes: [new ORM\Index(name: 'idx_crm_repository_project_provider_external', columns: ['project_id', 'provider', 'external_id'])]
 )]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class CrmRepository implements EntityInterface

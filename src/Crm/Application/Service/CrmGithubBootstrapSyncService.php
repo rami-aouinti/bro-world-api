@@ -591,7 +591,15 @@ GRAPHQL, $ownerField);
             $existing
                 ->setTitle($prefix . ' ' . (string)($issue['title'] ?? $existing->getTitle()))
                 ->setDescription(isset($issue['body']) ? (string)$issue['body'] : $existing->getDescription())
-                ->setStatus(($issue['state'] ?? 'open') === 'closed' ? TaskStatus::DONE : TaskStatus::TODO);
+                ->setStatus(($issue['state'] ?? 'open') === 'closed' ? TaskStatus::DONE : TaskStatus::TODO)
+                ->setGithubIssue([
+                    'provider' => 'github',
+                    'repositoryFullName' => (string)($issue['repositoryFullName'] ?? ''),
+                    'issueNumber' => $issueNumber,
+                    'issueNodeId' => (string)($issue['nodeId'] ?? ''),
+                    'issueUrl' => (string)($issue['htmlUrl'] ?? ''),
+                    'lastSyncedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
+                ]);
 
             if (!$dryRun) {
                 $this->entityManager->persist($existing);
@@ -606,7 +614,15 @@ GRAPHQL, $ownerField);
             ->setProject($targetProject)
             ->setTitle($prefix . ' ' . (string)($issue['title'] ?? 'GitHub issue'))
             ->setDescription(isset($issue['body']) ? (string)$issue['body'] : null)
-            ->setStatus(($issue['state'] ?? 'open') === 'closed' ? TaskStatus::DONE : TaskStatus::TODO);
+            ->setStatus(($issue['state'] ?? 'open') === 'closed' ? TaskStatus::DONE : TaskStatus::TODO)
+            ->setGithubIssue([
+                'provider' => 'github',
+                'repositoryFullName' => (string)($issue['repositoryFullName'] ?? ''),
+                'issueNumber' => $issueNumber,
+                'issueNodeId' => (string)($issue['nodeId'] ?? ''),
+                'issueUrl' => (string)($issue['htmlUrl'] ?? ''),
+                'lastSyncedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
+            ]);
 
         if (!$dryRun) {
             $this->entityManager->persist($task);
@@ -648,9 +664,8 @@ GRAPHQL, $ownerField);
                 }
 
                 $key = $this->buildRepositoryIdentityKey([
+                    'fullName' => $repository->getFullName(),
                     'externalId' => $repository->getExternalId(),
-                    'nodeId' => (string)($repository->getPayload()['nodeId'] ?? ''),
-                    'htmlUrl' => $repository->getHtmlUrl(),
                 ]);
 
                 if ($key !== null) {
@@ -706,20 +721,18 @@ GRAPHQL, $ownerField);
      */
     private function buildRepositoryIdentityKey(array $repositoryPayload): ?string
     {
+        $fullName = mb_strtolower(trim((string)($repositoryPayload['fullName'] ?? '')));
         $externalId = trim((string)($repositoryPayload['externalId'] ?? ''));
-        $nodeId = trim((string)($repositoryPayload['nodeId'] ?? ''));
-        $htmlUrl = trim((string)($repositoryPayload['htmlUrl'] ?? ''));
+        if ($fullName !== '' && $externalId !== '') {
+            return 'full_name_external:' . $fullName . ':' . $externalId;
+        }
 
         if ($externalId !== '') {
             return 'external:' . $externalId;
         }
 
-        if ($nodeId !== '') {
-            return 'node:' . $nodeId;
-        }
-
-        if ($htmlUrl !== '') {
-            return 'url:' . strtolower($htmlUrl);
+        if ($fullName !== '') {
+            return 'full_name:' . $fullName;
         }
 
         return null;
