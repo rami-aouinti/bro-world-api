@@ -39,6 +39,10 @@ class TaskRequestGithubIssue
     #[ORM\Column(name: 'last_synced_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $lastSyncedAt = null;
 
+    /** @var array<string,mixed> */
+    #[ORM\Column(name: 'metadata', type: Types::JSON)]
+    private array $metadata = [];
+
     public function getTaskRequest(): ?TaskRequest
     {
         return $this->taskRequest;
@@ -146,6 +150,24 @@ class TaskRequestGithubIssue
     /**
      * @return array<string,mixed>
      */
+    public function getMetadata(): array
+    {
+        return $this->metadata;
+    }
+
+    /**
+     * @param array<string,mixed> $metadata
+     */
+    public function setMetadata(array $metadata): self
+    {
+        $this->metadata = $metadata;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
     public function toArray(): array
     {
         return [
@@ -156,6 +178,7 @@ class TaskRequestGithubIssue
             'issueUrl' => $this->getIssueUrl(),
             'syncStatus' => $this->getSyncStatus(),
             'lastSyncedAt' => $this->getLastSyncedAt()?->format(DATE_ATOM),
+            'metadata' => $this->getMetadata(),
         ];
     }
 }

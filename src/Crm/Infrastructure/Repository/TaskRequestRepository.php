@@ -78,6 +78,42 @@ class TaskRequestRepository extends BaseRepository
             ->getSingleScalarResult();
     }
 
+    public function findOneByGithubIssueMapping(string $repositoryFullName, int $issueNumber): ?Entity
+    {
+        $entity = $this->createQueryBuilder('taskRequest')
+            ->leftJoin('taskRequest.githubIssue', 'githubIssue')
+            ->addSelect('githubIssue')
+            ->andWhere('githubIssue.repositoryFullName = :repositoryFullName')
+            ->andWhere('githubIssue.issueNumber = :issueNumber')
+            ->setParameter('repositoryFullName', trim($repositoryFullName))
+            ->setParameter('issueNumber', $issueNumber)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $entity instanceof Entity ? $entity : null;
+    }
+
+    /**
+     * @return list<Entity>
+     */
+    public function findAllWithGithubIssueMapping(): array
+    {
+        /** @var list<Entity> $entities */
+        $entities = $this->createQueryBuilder('taskRequest')
+            ->leftJoin('taskRequest.githubIssue', 'githubIssue')
+            ->addSelect('githubIssue', 'task', 'project')
+            ->leftJoin('taskRequest.task', 'task')
+            ->leftJoin('task.project', 'project')
+            ->andWhere('githubIssue.issueNumber IS NOT NULL')
+            ->andWhere('githubIssue.repositoryFullName <> :emptyName')
+            ->setParameter('emptyName', '')
+            ->getQuery()
+            ->getResult();
+
+        return $entities;
+    }
+
     /**
      * @param array{q?:string,status?:string,ids?:list<string>|null} $filters
      *

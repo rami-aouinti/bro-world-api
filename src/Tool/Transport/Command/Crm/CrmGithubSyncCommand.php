@@ -6,7 +6,10 @@ namespace App\Tool\Transport\Command\Crm;
 
 use App\Crm\Application\Exception\CrmGithubApiException;
 use App\Crm\Application\Service\CrmGithubService;
+use App\Crm\Application\Service\CrmTaskRequestGithubStatusMapper;
+use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\Crm\Infrastructure\Repository\CrmProjectRepositoryRepository;
+use App\Crm\Infrastructure\Repository\TaskRequestRepository;
 use App\General\Transport\Command\Traits\SymfonyStyleTrait;
 use DateTimeImmutable;
 use JsonException;
@@ -34,7 +37,9 @@ final class CrmGithubSyncCommand extends Command
 
     public function __construct(
         private readonly CrmProjectRepositoryRepository $crmProjectRepositoryRepository,
+        private readonly TaskRequestRepository $taskRequestRepository,
         private readonly CrmGithubService $crmGithubService,
+        private readonly CrmTaskRequestGithubStatusMapper $statusMapper,
     ) {
         parent::__construct();
     }
@@ -49,6 +54,9 @@ final class CrmGithubSyncCommand extends Command
         $scanned = 0;
         $updated = 0;
         $failed = 0;
+        $taskRequestsScanned = 0;
+        $taskRequestsUpdated = 0;
+        $taskRequestsFailed = 0;
 
         $repositories = $this->crmProjectRepositoryRepository->findBy(['provider' => 'github']);
 
@@ -107,10 +115,66 @@ final class CrmGithubSyncCommand extends Command
             }
         }
 
-        if ($input->isInteractive()) {
-            $io->success(sprintf('CRM GitHub reconciliation done. scanned=%d updated=%d failed=%d', $scanned, $updated, $failed));
+        $taskRequests = $this->taskRequestRepository->findAllWithGithubIssueMapping();
+        foreach ($taskRequests as $taskRequest) {
+            ++$taskRequestsScanned;
+            $project = $taskRequest->getTask()?->getProject();
+            $githubIssue = $taskRequest->getGithubIssue();
+            if ($project === null || $githubIssue === null) {
+                continue;
+            }
+
+            $repositoryFullName = $githubIssue->getRepositoryFullName();
+            $issueNumber = $githubIssue->getIssueNumber();
+            if ($repositoryFullName === '' || $issueNumber === null) {
+                continue;
+            }
+
+            try {
+                $issue = $this->crmGithubService->getIssue($project, $repositoryFullName, $issueNumber);
+                $status = $this->statusMapper->resolveTaskRequestStatusFromIssuePayload([
+                    'state' => (string)($issue['state'] ?? 'open'),
+                    'labels' => $issue['labels'] ?? [],
+                    'state_reason' => $issue['state_reason'] ?? null,
+                ]);
+
+                if ($taskRequest->getStatus() !== $status) {
+                    $taskRequest->setStatus($status);
+                    $taskRequest->setResolvedAt($status === TaskRequestStatus::PENDING ? null : new DateTimeImmutable());
+                    ++$taskRequestsUpdated;
+                }
+
+                $metadata = $githubIssue->getMetadata();
+                $metadata['lastSyncSource'] = 'crm:github:sync';
+                $metadata['lastSyncAt'] = (new DateTimeImmutable())->format(DATE_ATOM);
+                $githubIssue
+                    ->setIssueUrl(isset($issue['htmlUrl']) ? (string)$issue['htmlUrl'] : $githubIssue->getIssueUrl())
+                    ->setSyncStatus('synced')
+                    ->setLastSyncedAt(new DateTimeImmutable())
+                    ->setMetadata($metadata);
+
+                $this->taskRequestRepository->save($taskRequest, true);
+            } catch (CrmGithubApiException) {
+                ++$taskRequestsFailed;
+                if ($githubIssue !== null) {
+                    $githubIssue->setSyncStatus('error');
+                }
+                $this->taskRequestRepository->save($taskRequest, true);
+            }
         }
 
-        return $failed > 0 ? Command::FAILURE : Command::SUCCESS;
+        if ($input->isInteractive()) {
+            $io->success(sprintf(
+                'CRM GitHub reconciliation done. repositories(scanned=%d updated=%d failed=%d) taskRequests(scanned=%d updated=%d failed=%d)',
+                $scanned,
+                $updated,
+                $failed,
+                $taskRequestsScanned,
+                $taskRequestsUpdated,
+                $taskRequestsFailed,
+            ));
+        }
+
+        return ($failed + $taskRequestsFailed) > 0 ? Command::FAILURE : Command::SUCCESS;
     }
 }

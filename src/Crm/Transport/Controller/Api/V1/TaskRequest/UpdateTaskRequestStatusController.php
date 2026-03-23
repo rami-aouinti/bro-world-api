@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\TaskRequest;
 
+use App\Crm\Application\Service\CrmGithubService;
+use App\Crm\Application\Service\CrmTaskRequestGithubStatusMapper;
 use App\Crm\Domain\Entity\TaskRequest;
 use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\Crm\Infrastructure\Repository\TaskRequestRepository;
@@ -21,6 +23,9 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+use function hash;
+use function sprintf;
+
 #[AsController]
 #[OA\Tag(name: 'Crm')]
 #[IsGranted(Role::CRM_VIEWER->value)]
@@ -30,6 +35,8 @@ final readonly class UpdateTaskRequestStatusController
         private TaskRequestRepository $taskRequestRepository,
         private CrmApiErrorResponseFactory $errorResponseFactory,
         private ValidatorInterface $validator,
+        private CrmGithubService $crmGithubService,
+        private CrmTaskRequestGithubStatusMapper $statusMapper,
     ) {
     }
 
@@ -78,12 +85,47 @@ final readonly class UpdateTaskRequestStatusController
             return $this->errorResponseFactory->validationFailed($violations);
         }
 
-        $taskRequest->setStatus(TaskRequestStatus::from((string)$input->status));
+        $status = TaskRequestStatus::from((string)$input->status);
+        $taskRequest->setStatus($status);
+        $this->syncGithubIssueIfMapped($taskRequest, $status);
         $this->taskRequestRepository->save($taskRequest);
 
         return new JsonResponse([
             'id' => $taskRequest->getId(),
             'status' => $taskRequest->getStatus()->value,
         ]);
+    }
+
+    private function syncGithubIssueIfMapped(TaskRequest $taskRequest, TaskRequestStatus $status): void
+    {
+        $githubIssue = $taskRequest->getGithubIssue();
+        $project = $taskRequest->getTask()?->getProject();
+        $issueNumber = $githubIssue?->getIssueNumber();
+        $repositoryFullName = $githubIssue?->getRepositoryFullName();
+
+        if ($githubIssue === null || $project === null || $issueNumber === null || $repositoryFullName === '') {
+            return;
+        }
+
+        $expectedIssueState = $this->statusMapper->toGithubIssueState($status);
+        $sourceMarker = hash('sha256', sprintf('%s:%s:%s', $taskRequest->getId(), $status->value, (new \DateTimeImmutable())->format(DATE_ATOM)));
+
+        $this->crmGithubService->updateIssueState($project, $repositoryFullName, $issueNumber, $expectedIssueState);
+        $this->crmGithubService->addIssueComment(
+            $project,
+            $repositoryFullName,
+            $issueNumber,
+            sprintf('<!-- crm-source:%s --> CRM status synced: %s', $sourceMarker, $status->value),
+        );
+
+        $metadata = $githubIssue->getMetadata();
+        $metadata['pendingOutbound'] = [
+            'marker' => $sourceMarker,
+            'expectedIssueState' => $expectedIssueState,
+            'status' => $status->value,
+            'origin' => 'crm-api',
+            'createdAt' => (new \DateTimeImmutable())->format(DATE_ATOM),
+        ];
+        $githubIssue->setMetadata($metadata);
     }
 }

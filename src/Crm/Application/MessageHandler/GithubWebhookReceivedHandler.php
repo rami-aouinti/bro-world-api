@@ -5,15 +5,23 @@ declare(strict_types=1);
 namespace App\Crm\Application\MessageHandler;
 
 use App\Crm\Application\Message\GithubWebhookReceived;
+use App\Crm\Application\Service\CrmTaskRequestGithubStatusMapper;
 use App\Crm\Application\Service\CrmReadCacheInvalidator;
+use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\Crm\Infrastructure\Repository\CrmGithubWebhookEventRepository;
 use App\Crm\Infrastructure\Repository\CrmProjectRepositoryRepository;
+use App\Crm\Infrastructure\Repository\TaskRequestRepository;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use DateTimeImmutable;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
+use function array_key_exists;
+use function in_array;
 use function is_array;
 use function is_string;
+use function preg_match;
+use function strtolower;
+use function trim;
 
 #[AsMessageHandler]
 final readonly class GithubWebhookReceivedHandler
@@ -23,7 +31,9 @@ final readonly class GithubWebhookReceivedHandler
     public function __construct(
         private CrmGithubWebhookEventRepository $webhookEventRepository,
         private CrmProjectRepositoryRepository $crmProjectRepositoryRepository,
+        private TaskRequestRepository $taskRequestRepository,
         private CrmReadCacheInvalidator $crmReadCacheInvalidator,
+        private CrmTaskRequestGithubStatusMapper $statusMapper,
         private ElasticsearchServiceInterface $elasticsearchService,
     ) {
     }
@@ -69,10 +79,14 @@ final readonly class GithubWebhookReceivedHandler
             if ($applicationSlug !== null && $applicationSlug !== '') {
                 $this->crmReadCacheInvalidator->invalidateProjectCaches($applicationSlug, $project?->getId());
                 $this->crmReadCacheInvalidator->invalidateRepository($applicationSlug, $repository->getId());
-                if ($message->eventName === 'issues') {
+                if ($message->eventName === 'issues' || $message->eventName === 'issue_comment') {
                     $this->crmReadCacheInvalidator->invalidateIssue($applicationSlug, $webhookEvent->getId());
                 }
             }
+        }
+
+        if ($repository !== null && ($message->eventName === 'issues' || $message->eventName === 'issue_comment')) {
+            $this->synchronizeMappedTaskRequest($message, $repository->getFullName(), $applicationSlug);
         }
 
         $this->elasticsearchService->index(self::INDEX_NAME, $webhookEvent->getId(), [
@@ -89,5 +103,140 @@ final readonly class GithubWebhookReceivedHandler
 
         $webhookEvent->setStatus('processed')->setProcessedAt(new DateTimeImmutable());
         $this->webhookEventRepository->save($webhookEvent, true);
+    }
+
+    private function synchronizeMappedTaskRequest(GithubWebhookReceived $message, string $repositoryFullName, ?string $applicationSlug): void
+    {
+        $issuePayload = $this->extractIssuePayload($message->payload);
+        if ($issuePayload === null) {
+            return;
+        }
+
+        $issueNumber = isset($issuePayload['number']) ? (int)$issuePayload['number'] : 0;
+        if ($issueNumber <= 0) {
+            return;
+        }
+
+        $taskRequest = $this->taskRequestRepository->findOneByGithubIssueMapping($repositoryFullName, $issueNumber);
+        if ($taskRequest === null) {
+            return;
+        }
+
+        $githubIssue = $taskRequest->getGithubIssue();
+        if ($githubIssue === null) {
+            return;
+        }
+
+        $metadata = $githubIssue->getMetadata();
+        $pendingOutbound = is_array($metadata['pendingOutbound'] ?? null) ? $metadata['pendingOutbound'] : null;
+        $issueState = strtolower(trim((string)($issuePayload['state'] ?? '')));
+
+        if ($pendingOutbound !== null) {
+            $expectedIssueState = strtolower(trim((string)($pendingOutbound['expectedIssueState'] ?? '')));
+            if ($expectedIssueState !== '' && $expectedIssueState === $issueState) {
+                unset($metadata['pendingOutbound']);
+                $metadata['lastIgnoredWebhook'] = [
+                    'deliveryId' => $message->deliveryId,
+                    'event' => $message->eventName,
+                    'action' => $message->action,
+                    'ignoredAt' => (new DateTimeImmutable())->format(DATE_ATOM),
+                ];
+                $githubIssue->setMetadata($metadata)->setLastSyncedAt(new DateTimeImmutable());
+                $this->taskRequestRepository->save($taskRequest, true);
+
+                return;
+            }
+        }
+
+        if ($message->eventName === 'issue_comment' && $this->isOutboundMarkerComment($message->payload, $pendingOutbound)) {
+            $metadata['lastIgnoredWebhook'] = [
+                'deliveryId' => $message->deliveryId,
+                'event' => $message->eventName,
+                'action' => $message->action,
+                'ignoredAt' => (new DateTimeImmutable())->format(DATE_ATOM),
+            ];
+            unset($metadata['pendingOutbound']);
+            $githubIssue->setMetadata($metadata)->setLastSyncedAt(new DateTimeImmutable());
+            $this->taskRequestRepository->save($taskRequest, true);
+
+            return;
+        }
+
+        if ($message->eventName === 'issues') {
+            $allowedActions = ['opened', 'edited', 'closed', 'reopened'];
+            if (!in_array((string)$message->action, $allowedActions, true)) {
+                return;
+            }
+        }
+
+        $resolvedStatus = $this->statusMapper->resolveTaskRequestStatusFromIssuePayload($issuePayload);
+        if ($taskRequest->getStatus() !== $resolvedStatus) {
+            $taskRequest->setStatus($resolvedStatus);
+            if (in_array($resolvedStatus, [TaskRequestStatus::APPROVED, TaskRequestStatus::REJECTED], true)) {
+                $taskRequest->setResolvedAt(new DateTimeImmutable());
+            } else {
+                $taskRequest->setResolvedAt(null);
+            }
+        }
+
+        $metadata['lastInboundWebhook'] = [
+            'deliveryId' => $message->deliveryId,
+            'event' => $message->eventName,
+            'action' => $message->action,
+            'status' => $resolvedStatus->value,
+            'receivedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
+        ];
+
+        $githubIssue
+            ->setIssueNodeId(is_string($issuePayload['node_id'] ?? null) ? (string)$issuePayload['node_id'] : $githubIssue->getIssueNodeId())
+            ->setIssueUrl(is_string($issuePayload['html_url'] ?? null) ? (string)$issuePayload['html_url'] : $githubIssue->getIssueUrl())
+            ->setSyncStatus('synced')
+            ->setLastSyncedAt(new DateTimeImmutable())
+            ->setMetadata($metadata);
+
+        $this->taskRequestRepository->save($taskRequest, true);
+        if ($applicationSlug !== null && $applicationSlug !== '') {
+            $this->crmReadCacheInvalidator->invalidateTaskRequest($applicationSlug, $taskRequest->getId());
+        }
+    }
+
+    /**
+     * @param array<string,mixed> $payload
+     *
+     * @return array<string,mixed>|null
+     */
+    private function extractIssuePayload(array $payload): ?array
+    {
+        if (!is_array($payload['issue'] ?? null)) {
+            return null;
+        }
+
+        return $payload['issue'];
+    }
+
+    /**
+     * @param array<string,mixed> $payload
+     * @param array<string,mixed>|null $pendingOutbound
+     */
+    private function isOutboundMarkerComment(array $payload, ?array $pendingOutbound): bool
+    {
+        if ($pendingOutbound === null || !array_key_exists('marker', $pendingOutbound)) {
+            return false;
+        }
+
+        if (!is_array($payload['comment'] ?? null)) {
+            return false;
+        }
+
+        $commentBody = trim((string)($payload['comment']['body'] ?? ''));
+        if ($commentBody === '') {
+            return false;
+        }
+
+        if (preg_match('/crm-source:([a-zA-Z0-9._:-]+)/', $commentBody, $matches) !== 1) {
+            return false;
+        }
+
+        return trim((string)$matches[1]) === trim((string)$pendingOutbound['marker']);
     }
 }
