@@ -123,6 +123,66 @@ when@dev: &dev
                                 type: array
                                 items:
                                     type: object
+                    ErrorResponse:
+                        type: object
+                        required:
+                            - message
+                            - errors
+                        properties:
+                            message:
+                                type: string
+                                example: Validation failed.
+                            errors:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        propertyPath:
+                                            type: string
+                                            nullable: true
+                                            example: issueTarget
+                                        message:
+                                            type: string
+                                            nullable: true
+                                            example: This value is not valid.
+                                        code:
+                                            type: string
+                                            nullable: true
+                                            example: c1051bb4-d103-4f74-8988-acbcafc7fdc3
+                    JobAcceptedResponse:
+                        type: object
+                        required:
+                            - jobId
+                            - status
+                        properties:
+                            jobId:
+                                type: string
+                                format: uuid
+                                example: 0dfde3e4-7095-4fab-bb54-f954ff4c16bd
+                            status:
+                                type: string
+                                example: queued
+                            summary:
+                                type: object
+                                nullable: true
+                                properties:
+                                    mode:
+                                        type: string
+                                        example: dry-run
+                                    owner:
+                                        type: string
+                                        example: acme-org
+                                    issueTarget:
+                                        type: string
+                                        enum: [task, task_request]
+                                        example: task
+                                    createPublicProject:
+                                        type: boolean
+                                        example: true
+                                    plannedActions:
+                                        type: array
+                                        items:
+                                            type: string
                     PaginatedResponse:
                         type: object
                         required:
