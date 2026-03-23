@@ -18,6 +18,13 @@ when@dev: &dev
                 description: This is an symfony api environment example
                 version: 3.9.0
             components:
+                parameters:
+                    applicationSlug:
+                        name: applicationSlug
+                        in: path
+                        required: true
+                        schema:
+                            type: string
                 securitySchemes:
                     Bearer:
                         type: http
