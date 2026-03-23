@@ -6,11 +6,12 @@ namespace App\Crm\Transport\Controller\Api\V1\CrmGithub;
 
 use App\Crm\Application\Message\BootstrapCrmGithubSync;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Domain\Entity\CrmGithubSyncJob;
+use App\Crm\Infrastructure\Repository\CrmGithubSyncJobRepository;
 use App\Crm\Transport\Request\CrmRequestHandler;
 use App\Crm\Transport\Request\PostCrmGithubBootstrapSyncRequest;
 use App\Role\Domain\Enum\Role;
 use OpenApi\Attributes as OA;
-use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -28,6 +29,7 @@ final readonly class PostCrmGithubBootstrapSyncController
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmRequestHandler $crmRequestHandler,
         private MessageBusInterface $messageBus,
+        private CrmGithubSyncJobRepository $syncJobRepository,
     ) {
     }
 
@@ -106,7 +108,18 @@ final readonly class PostCrmGithubBootstrapSyncController
             return $input;
         }
 
-        $jobId = Uuid::uuid4()->toString();
+        $job = (new CrmGithubSyncJob())
+            ->setApplicationSlug($applicationSlug)
+            ->setOwner((string)$input->owner)
+            ->setStatus('queued')
+            ->setParameters([
+                'issueTarget' => $input->issueTarget,
+                'createPublicProject' => $input->createPublicProject,
+                'dryRun' => $input->dryRun,
+                'phase' => 'full',
+            ]);
+        $this->syncJobRepository->save($job, true);
+        $jobId = $job->getId();
 
         $this->messageBus->dispatch(new BootstrapCrmGithubSync(
             jobId: $jobId,
@@ -116,6 +129,7 @@ final readonly class PostCrmGithubBootstrapSyncController
             issueTarget: $input->issueTarget,
             createPublicProject: $input->createPublicProject,
             dryRun: $input->dryRun,
+            phase: 'full',
         ));
 
         $response = [
