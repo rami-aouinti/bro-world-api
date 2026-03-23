@@ -29,7 +29,7 @@ final readonly class ListProjectsController
     #[OA\Parameter(ref: '#/components/parameters/limit')]
     #[OA\Parameter(ref: '#/components/parameters/q')]
     #[OA\Get(
-        summary: 'List Projects dans le CRM',
+        summary: 'List Projects',
         description: 'Exécute l action metier List Projects dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(

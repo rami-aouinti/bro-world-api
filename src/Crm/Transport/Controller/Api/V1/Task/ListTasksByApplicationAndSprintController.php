@@ -36,7 +36,7 @@ final readonly class ListTasksByApplicationAndSprintController
     #[OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100), example: 20)]
     #[OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filtre de recherche libre')]
     #[OA\Get(
-        summary: 'List Tasks By Application And Sprint dans le CRM',
+        summary: 'List Tasks By Application And Sprint',
         description: 'Exécute l action metier List Tasks By Application And Sprint dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(

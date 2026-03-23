@@ -35,7 +35,7 @@ final readonly class ListBillingsController
     #[OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100), example: 20)]
     #[OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filtre de recherche libre')]
     #[OA\Get(
-        summary: 'List Billings dans le CRM',
+        summary: 'List Billings',
         description: 'Exécute l action metier List Billings dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(

@@ -26,7 +26,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use function is_array;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm TaskRequest')]
 #[IsGranted(Role::CRM_ADMIN->value)]
 final readonly class DeleteTaskRequestGithubBranchController
 {
@@ -46,7 +46,7 @@ final readonly class DeleteTaskRequestGithubBranchController
     #[OA\Parameter(name: 'branchId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'), example: '5d6c6190-c986-4c78-a08b-90eb29de6316')]
     #[OA\Parameter(name: 'deleteRemote', in: 'query', required: false, schema: new OA\Schema(type: 'boolean', default: false), example: true)]
     #[OA\Delete(
-        summary: 'Delete task request GitHub branch binding and optionally delete remote branch.',
+        summary: 'Delete Task Request GitHub Branch',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_NO_CONTENT, description: 'Local branch binding deleted.'),
             new OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Task request or branch not found in CRM scope.'),

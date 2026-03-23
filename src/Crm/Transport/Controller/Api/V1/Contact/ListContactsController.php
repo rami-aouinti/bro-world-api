@@ -29,7 +29,7 @@ final readonly class ListContactsController
     #[OA\Parameter(ref: '#/components/parameters/limit')]
     #[OA\Parameter(ref: '#/components/parameters/q')]
     #[OA\Get(
-        summary: 'List Contacts dans le CRM',
+        summary: 'List Contacts',
         description: 'Exécute l action metier List Contacts dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(

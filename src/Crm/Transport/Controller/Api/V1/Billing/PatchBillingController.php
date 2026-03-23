@@ -32,7 +32,7 @@ final readonly class PatchBillingController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'billing', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Patch(
-        summary: 'Patch Billing dans le CRM',
+        summary: 'Patch Billing',
         description: 'Exécute l action metier Patch Billing dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),

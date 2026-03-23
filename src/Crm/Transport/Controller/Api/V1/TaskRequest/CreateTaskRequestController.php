@@ -29,7 +29,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm TaskRequest')]
 #[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class CreateTaskRequestController
 {
@@ -52,7 +52,7 @@ final readonly class CreateTaskRequestController
     #[Route('/v1/crm/applications/{applicationSlug}/task-requests', methods: [Request::METHOD_POST])]
     #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Post(
-        summary: 'POST /v1/crm/applications/{applicationSlug}/task-requests',
+        summary: 'Create Task Request',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/CrmTaskRequest'),

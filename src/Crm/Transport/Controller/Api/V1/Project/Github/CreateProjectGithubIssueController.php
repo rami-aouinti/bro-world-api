@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm Github')]
 #[IsGranted(Role::CRM_ADMIN->value)]
 final readonly class CreateProjectGithubIssueController
 {
@@ -32,7 +32,7 @@ final readonly class CreateProjectGithubIssueController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Post(
-        summary: 'Create a GitHub issue from CRM.',
+        summary: 'Create Project GitHub Issue',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(

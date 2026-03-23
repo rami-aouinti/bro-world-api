@@ -36,7 +36,7 @@ final readonly class AddProjectAssigneeController
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Put(
-        summary: 'Add Project Assignee dans le CRM',
+        summary: 'Add Project Assignee',
         description: 'Exécute l action metier Add Project Assignee dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),

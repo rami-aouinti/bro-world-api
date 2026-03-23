@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm TaskRequest')]
 #[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class ListTaskRequestsController
 {
@@ -29,7 +29,7 @@ final readonly class ListTaskRequestsController
     #[OA\Parameter(ref: '#/components/parameters/limit')]
     #[OA\Parameter(ref: '#/components/parameters/q')]
     #[OA\Get(
-        summary: 'List Task Requests dans le CRM',
+        summary: 'List Task Requests',
         description: 'Exécute l action metier List Task Requests dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(

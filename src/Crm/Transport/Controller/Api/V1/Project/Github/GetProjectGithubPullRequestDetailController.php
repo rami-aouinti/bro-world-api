@@ -15,7 +15,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use OpenApi\Attributes as OA;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm Github')]
 #[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class GetProjectGithubPullRequestDetailController
 {
@@ -29,7 +29,7 @@ final readonly class GetProjectGithubPullRequestDetailController
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'number', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
-        summary: 'Get Project Github Pull Request Detail dans le CRM',
+        summary: 'Get Project Github Pull Request Detail',
         description: 'Exécute l action metier Get Project Github Pull Request Detail dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),

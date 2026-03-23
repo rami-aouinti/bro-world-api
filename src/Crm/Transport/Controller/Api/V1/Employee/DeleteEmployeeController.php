@@ -29,10 +29,8 @@ final readonly class DeleteEmployeeController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/employees/{employeeId}', methods: [Request::METHOD_DELETE])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'employeeId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(
-        summary: 'Delete Employee dans le CRM',
+        summary: 'Delete Employee',
         description: 'Exécute l action metier Delete Employee dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_NO_CONTENT, description: 'Ressource supprimée avec succès.'),
@@ -43,10 +41,6 @@ final readonly class DeleteEmployeeController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'employeeId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
-    #[OA\Response(response: JsonResponse::HTTP_NO_CONTENT, description: 'Employee deleted.')]
-    #[OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Employee not found.')]
     public function __invoke(string $applicationSlug, string $employeeId): JsonResponse
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);

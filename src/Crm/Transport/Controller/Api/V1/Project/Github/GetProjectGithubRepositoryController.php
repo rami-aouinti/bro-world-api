@@ -16,7 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm Github')]
 #[IsGranted(Role::CRM_MANAGER->value)]
 final readonly class GetProjectGithubRepositoryController
 {
@@ -31,7 +31,7 @@ final readonly class GetProjectGithubRepositoryController
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'repository', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'rami-aouinti/bro-world-api')]
     #[OA\Get(
-        summary: 'Get repository details from GitHub.',
+        summary: 'Get Project GitHub Repository',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Repository details.'),
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'GitHub API error.'),

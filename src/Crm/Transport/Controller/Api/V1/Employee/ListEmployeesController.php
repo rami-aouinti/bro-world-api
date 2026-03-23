@@ -35,7 +35,7 @@ final readonly class ListEmployeesController
     #[OA\Parameter(ref: '#/components/parameters/limit')]
     #[OA\Parameter(ref: '#/components/parameters/q')]
     #[OA\Get(
-        summary: 'List Employees dans le CRM',
+        summary: 'List Employees',
         description: 'Exécute l action metier List Employees dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(

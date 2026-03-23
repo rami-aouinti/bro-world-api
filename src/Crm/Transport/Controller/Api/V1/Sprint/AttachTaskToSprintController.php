@@ -40,7 +40,7 @@ final readonly class AttachTaskToSprintController
     #[OA\Parameter(name: 'sprintId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'taskId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Put(
-        summary: 'Attach Task To Sprint dans le CRM',
+        summary: 'Attach Task To Sprint',
         description: 'Exécute l action metier Attach Task To Sprint dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),

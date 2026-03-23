@@ -42,7 +42,7 @@ final readonly class AddProjectWikiPageController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Post(
-        summary: 'Add Project Wiki Page dans le CRM',
+        summary: 'Add Project Wiki Page',
         description: 'Exécute l action metier Add Project Wiki Page dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_CREATED, description: 'Ressource créée avec succès.'),

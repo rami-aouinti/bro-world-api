@@ -32,11 +32,15 @@ final readonly class PutProjectController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}', methods: [Request::METHOD_PUT])]
-    #[OA\Put(summary: 'PUT /v1/crm/applications/{applicationSlug}/projects/{project}')]
-    #[OA\Response(response: JsonResponse::HTTP_OK, description: 'Project replaced.')]
-    #[OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Invalid JSON payload or invalid date format.')]
-    #[OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Project not found in CRM scope.')]
-    #[OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation failed.')]
+    #[OA\Put(
+        summary: 'Replace Project',
+        responses: [
+            new OA\Response(response: JsonResponse::HTTP_OK, description: 'Project replaced.'),
+            new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Invalid JSON payload or invalid date format.'),
+            new OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Project not found in CRM scope.'),
+            new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation failed.'),
+        ],
+    )]
     public function __invoke(string $applicationSlug, string $project, Request $request): JsonResponse
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);

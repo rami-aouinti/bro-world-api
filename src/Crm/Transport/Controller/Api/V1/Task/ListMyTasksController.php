@@ -26,7 +26,12 @@ final readonly class ListMyTasksController
 
     #[Route('/v1/crm/applications/{applicationSlug}/me/tasks', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Get(summary: 'Liste mes tasks et task-requests assignées')]
+    #[OA\Get(
+        summary: 'List My Tasks',
+        responses: [
+            new OA\Response(response: JsonResponse::HTTP_OK, description: 'List of assigned tasks and task requests for the current user.'),
+        ],
+    )]
     public function __invoke(string $applicationSlug, User $loggedInUser): JsonResponse
     {
         return new JsonResponse($this->taskBoardService->listMine($applicationSlug, $loggedInUser));

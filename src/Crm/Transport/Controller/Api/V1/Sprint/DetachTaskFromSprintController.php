@@ -40,7 +40,7 @@ final readonly class DetachTaskFromSprintController
     #[OA\Parameter(name: 'sprintId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'taskId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(
-        summary: 'Detach Task From Sprint dans le CRM',
+        summary: 'Detach Task From Sprint',
         description: 'Exécute l action metier Detach Task From Sprint dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_NO_CONTENT, description: 'Ressource supprimée avec succès.'),

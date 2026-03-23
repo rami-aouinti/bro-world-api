@@ -15,7 +15,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use OpenApi\Attributes as OA;
 
 #[AsController]
-#[OA\Tag(name: 'Crm')]
+#[OA\Tag(name: 'Crm Github')]
 #[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class ListProjectGithubBranchesController
 {
@@ -31,7 +31,7 @@ final readonly class ListProjectGithubBranchesController
     #[OA\Parameter(ref: '#/components/parameters/limit')]
     #[OA\Parameter(ref: '#/components/parameters/q')]
     #[OA\Get(
-        summary: 'List Project Github Branches dans le CRM',
+        summary: 'List Project Github Branches',
         description: 'Exécute l action metier List Project Github Branches dans le perimetre de l application CRM.',
         responses: [
             new OA\Response(

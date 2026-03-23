@@ -4,6 +4,61 @@ This document describing how you can use [Swagger](https://swagger.io/).
 ## Using Swagger
 * [Local Swagger service](http://localhost/api/doc) - Open next url http://localhost/api/doc in order to use Swagger.
 
+## Convention interne OpenAPI (CRM)
+
+Cette convention s'applique à tous les endpoints des agrégats CRM:
+
+- `Contact`, `Company`, `Billing`, `Employee`
+- `Project`, `Sprint`, `Task`, `TaskRequest`
+- `Project/Github` (`repositories`, `issues`, `branches`, `pull-requests`, `webhook`)
+
+### 1) Nomenclature `summary` (verbe + ressource)
+
+- Format obligatoire: `Verbe Ressource`.
+- Exemples valides:
+  - `Create Contact`
+  - `List Tasks`
+  - `Replace Project`
+  - `Create Task Request GitHub Branch`
+- Interdits:
+  - inclure le chemin HTTP (`POST /v1/...`)
+  - formulations vagues (ex: `Project Github Pull Request Action`)
+  - suffixes contextuels non nécessaires (`dans le CRM`)
+
+### 2) Structure `responses`
+
+- Déclarer les réponses **dans l'opération** (`OA\Get`, `OA\Post`, `OA\Put`, `OA\Patch`, `OA\Delete`) avec `responses: [ ... ]`.
+- Éviter les `#[OA\Response(...)]` séparés pour un même endpoint.
+- Même type d'endpoint => même structure:
+  - `GET list`: `200` + erreurs standard
+  - `GET detail`: `200` + erreurs standard
+  - `POST create`: `201` + erreurs standard
+  - `PUT replace`: `200` + erreurs standard
+  - `PATCH update`: `200` + erreurs standard
+  - `DELETE`: `204` + erreurs standard
+
+### 3) Règles d'exemples
+
+- Les exemples de payload request doivent utiliser des résumés cohérents:
+  - `Exemple minimal valide`
+  - `Exemple métier complet` (si pertinent)
+- Les exemples d'erreur doivent rester explicites (`JSON invalide`, `Date invalide`, etc.).
+- Préférer des exemples réalistes et stables (UUID, dates ISO 8601, slugs).
+
+### 4) Règles de tags
+
+- Endpoints CRM généraux: `Crm`
+- Endpoints GitHub du projet CRM: `Crm Github`
+- Endpoints TaskRequest (y compris GitHub branch de TaskRequest): `Crm TaskRequest`
+
+## Contrôle de cohérence
+
+Un test automatisé vérifie la cohérence documentaire des endpoints CRM ciblés:
+
+- tag attendu selon l'agrégat (`Crm`, `Crm Github`, `Crm TaskRequest`)
+- présence d'une opération OpenAPI avec `summary` au format verbe + ressource
+- présence de `responses: [ ... ]` dans l'opération
+
 ## Application list endpoints (filters + pagination)
 
 Les endpoints suivants sont documentés dans Swagger avec des query params:
