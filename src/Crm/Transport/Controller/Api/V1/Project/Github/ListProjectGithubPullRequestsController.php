@@ -29,10 +29,10 @@ final readonly class ListProjectGithubPullRequestsController
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1), example: 1)]
     #[OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100), example: 20)]
-    #[OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filtre de recherche libre')]
+    #[OA\Parameter(name: 'search', description: 'Filtre de recherche libre', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
     #[OA\Get(
-        summary: 'List Project Github Pull Requests',
         description: 'Exécute l action metier List Project Github Pull Requests dans le perimetre de l application CRM.',
+        summary: 'List Project Github Pull Requests',
         responses: [
             new OA\Response(
                 response: JsonResponse::HTTP_OK,

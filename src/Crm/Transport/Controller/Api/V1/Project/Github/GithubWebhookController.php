@@ -24,7 +24,8 @@ final readonly class GithubWebhookController
     }
 
     /**
-     * @throws JsonException
+     * @param Request $request
+     * @return JsonResponse
      */
     #[Route('/v1/crm/github/webhook', methods: [Request::METHOD_POST])]
     #[OA\Post(

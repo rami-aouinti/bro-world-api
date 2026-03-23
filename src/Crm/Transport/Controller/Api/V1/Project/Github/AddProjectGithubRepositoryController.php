@@ -35,8 +35,10 @@ final readonly class AddProjectGithubRepositoryController
     }
 
     /**
-     * @throws OptimisticLockException
-     * @throws ORMException
+     * @param string $applicationSlug
+     * @param Project $project
+     * @param Request $request
+     * @return JsonResponse
      */
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/repositories', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'crm-sales-hub')]

@@ -28,8 +28,8 @@ final readonly class GetProjectGithubDashboardController
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
-        summary: 'Get Project Github Dashboard',
         description: 'Exécute l action metier Get Project Github Dashboard dans le perimetre de l application CRM.',
+        summary: 'Get Project Github Dashboard',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),

@@ -31,24 +31,24 @@ final readonly class ListProjectGithubRepositoriesController
     #[OA\Parameter(ref: '#/components/parameters/limit')]
     #[OA\Parameter(ref: '#/components/parameters/q')]
     #[OA\Get(
-        summary: 'List Project Github Repositories',
         description: 'Exécute l action metier List Project Github Repositories dans le perimetre de l application CRM.',
+        summary: 'List Project Github Repositories',
         responses: [
             new OA\Response(
                 response: JsonResponse::HTTP_OK,
                 description: 'Opération exécutée avec succès.',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'items', type: 'array', items: new OA\Items(ref: '#/components/schemas/CrmGithubRepository')),
                     ],
+                    type: 'object',
                 ),
             ),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
-            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized401'),
-            new OA\Response(response: 403, ref: '#/components/responses/Forbidden403'),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFound404'),
-            new OA\Response(response: 422, ref: '#/components/responses/ValidationFailed422'),
+            new OA\Response(ref: '#/components/responses/Unauthorized401', response: 401),
+            new OA\Response(ref: '#/components/responses/Forbidden403', response: 403),
+            new OA\Response(ref: '#/components/responses/NotFound404', response: 404),
+            new OA\Response(ref: '#/components/responses/ValidationFailed422', response: 422),
         ],
     )]
     public function __invoke(string $applicationSlug, Project $project): JsonResponse

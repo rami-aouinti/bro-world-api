@@ -36,7 +36,6 @@ final readonly class CreateProjectGithubIssueController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['repository', 'title'],
                 examples: [
                     'minimalValid' => new OA\Examples(
                         example: 'minimalValid',
@@ -56,6 +55,7 @@ final readonly class CreateProjectGithubIssueController
                         ],
                     ),
                 ],
+                required: ['repository', 'title'],
                 properties: [
                     new OA\Property(property: 'repository', type: 'string', example: 'rami-aouinti/bro-world-api'),
                     new OA\Property(property: 'title', type: 'string', example: 'Créer endpoint de synchronisation webhook'),

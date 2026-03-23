@@ -39,15 +39,15 @@ final readonly class UpdateProjectGithubRepositoryController
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'), example: 'ebf77366-d60c-4ac4-b204-9f91a7f7ee12')]
     #[OA\Parameter(name: 'repositoryId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'), example: '03463358-2e8f-4f63-a893-69d5313b05d2')]
     #[OA\Put(
-        summary: 'Replace Project GitHub Repository',
         description: 'Met à jour la liaison CRM d\'un repository GitHub (branche par défaut, statut de synchro, métadonnées).',
+        summary: 'Replace Project GitHub Repository',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'defaultBranch', type: 'string', nullable: true, example: 'main'),
-                    new OA\Property(property: 'syncStatus', type: 'string', nullable: true, example: 'synced'),
-                    new OA\Property(property: 'metadata', type: 'object', nullable: true, example: ['nodeId' => 'R_kgDOABC123']),
+                    new OA\Property(property: 'defaultBranch', type: 'string', example: 'main', nullable: true),
+                    new OA\Property(property: 'syncStatus', type: 'string', example: 'synced', nullable: true),
+                    new OA\Property(property: 'metadata', type: 'object', example: ['nodeId' => 'R_kgDOABC123'], nullable: true),
                 ],
             ),
         ),

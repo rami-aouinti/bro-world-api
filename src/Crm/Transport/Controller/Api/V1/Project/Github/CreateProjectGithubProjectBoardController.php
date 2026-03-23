@@ -36,7 +36,6 @@ final readonly class CreateProjectGithubProjectBoardController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['owner', 'title'],
                 examples: [
                     'minimalValid' => new OA\Examples(
                         example: 'minimalValid',
@@ -55,6 +54,7 @@ final readonly class CreateProjectGithubProjectBoardController
                         ],
                     ),
                 ],
+                required: ['owner', 'title'],
                 properties: [
                     new OA\Property(property: 'owner', description: 'GitHub owner node id', type: 'string', example: 'O_kgDOBfke3Q'),
                     new OA\Property(property: 'title', type: 'string', example: 'CRM Project Board'),

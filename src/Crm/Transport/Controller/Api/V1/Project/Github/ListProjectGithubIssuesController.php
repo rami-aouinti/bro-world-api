@@ -40,13 +40,13 @@ final readonly class ListProjectGithubIssuesController
                 response: JsonResponse::HTTP_OK,
                 description: 'Opération exécutée avec succès.',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'items', type: 'array', items: new OA\Items(ref: '#/components/schemas/CrmGithubIssue')),
                     ],
+                    type: 'object',
                 ),
             ),
-            new OA\Response(response: 422, ref: '#/components/responses/ValidationFailed422'),
+            new OA\Response(ref: '#/components/responses/ValidationFailed422', response: 422),
         ],
     )]
     public function __invoke(string $applicationSlug, Project $project, Request $request): JsonResponse

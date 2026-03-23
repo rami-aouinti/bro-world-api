@@ -33,8 +33,8 @@ final readonly class ProjectGithubPullRequestActionController
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'number', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Post(
-        summary: 'Run Project GitHub Pull Request Action',
         description: 'Exécute l action metier Project Github Pull Request Action dans le perimetre de l application CRM.',
+        summary: 'Run Project GitHub Pull Request Action',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_CREATED, description: 'Ressource créée avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),

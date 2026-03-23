@@ -36,7 +36,6 @@ final readonly class CreateProjectGithubRepositoryController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['name'],
                 examples: [
                     'minimalValid' => new OA\Examples(
                         example: 'minimalValid',
@@ -55,6 +54,7 @@ final readonly class CreateProjectGithubRepositoryController
                         ],
                     ),
                 ],
+                required: ['name'],
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'crm-sync-service'),
                     new OA\Property(property: 'description', type: 'string', example: 'Repository provisionné depuis CRM.', nullable: true),

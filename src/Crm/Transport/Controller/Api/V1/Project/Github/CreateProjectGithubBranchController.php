@@ -36,7 +36,6 @@ final readonly class CreateProjectGithubBranchController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['repository', 'name'],
                 examples: [
                     'minimalValid' => new OA\Examples(
                         example: 'minimalValid',
@@ -56,6 +55,7 @@ final readonly class CreateProjectGithubBranchController
                         ],
                     ),
                 ],
+                required: ['repository', 'name'],
                 properties: [
                     new OA\Property(property: 'repository', type: 'string', example: 'rami-aouinti/bro-world-api'),
                     new OA\Property(property: 'name', type: 'string', example: 'feature/crm-branch-endpoint'),

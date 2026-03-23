@@ -42,8 +42,8 @@ final readonly class DeleteProjectGithubRepositoryController
     #[OA\Parameter(name: 'repositoryId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'), example: '03463358-2e8f-4f63-a893-69d5313b05d2')]
     #[OA\Parameter(name: 'deleteRemote', in: 'query', required: false, schema: new OA\Schema(type: 'boolean', default: false), example: true)]
     #[OA\Delete(
-        summary: 'Delete Project GitHub Repository',
         description: 'Détache un repository GitHub du projet CRM. Optionnellement supprime aussi le repository côté GitHub avec deleteRemote=true.',
+        summary: 'Delete Project GitHub Repository',
         responses: [
             new OA\Response(response: 204, description: 'Repository détaché.'),
             new OA\Response(response: 404, description: 'Repository inconnu ou non lié à ce projet.'),
