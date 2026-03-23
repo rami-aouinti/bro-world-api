@@ -9,6 +9,9 @@ use App\Crm\Domain\Entity\TaskRequest;
 use App\User\Domain\Entity\User;
 use DateTimeInterface;
 
+use function is_array;
+use function is_string;
+
 final readonly class CrmApiNormalizer
 {
     public function __construct(
@@ -92,11 +95,18 @@ final readonly class CrmApiNormalizer
     {
         $repositoriesCount = (int)($item['githubRepositoriesCount'] ?? 0);
 
+        $provisioningState = is_string($item['provisioningStatus'] ?? null) ? $item['provisioningStatus'] : 'pending';
+        $githubResourceIds = is_array($item['githubResourceIds'] ?? null) ? $item['githubResourceIds'] : [];
+
         return [
             'id' => (string)($item['id'] ?? ''),
             'name' => (string)($item['name'] ?? ''),
             'status' => ($item['status'] ?? ''),
             'githubRepositoriesCount' => $repositoriesCount,
+            'provisioning' => [
+                'state' => $provisioningState,
+                'error' => is_array($githubResourceIds['provisioningError'] ?? null) ? $githubResourceIds['provisioningError'] : null,
+            ],
         ];
     }
 

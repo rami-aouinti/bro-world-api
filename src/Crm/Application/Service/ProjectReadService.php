@@ -110,6 +110,12 @@ readonly class ProjectReadService
                 'wikiPages' => $project->getWikiPages(),
                 'githubRepositories' => $project->getGithubRepositories(),
                 'githubConfigured' => $project->getGithubToken() !== null && $project->getGithubToken() !== '',
+                'provisioning' => [
+                    'state' => $project->getProvisioningStatus(),
+                    'error' => is_array($project->getGithubResourceIds()['provisioningError'] ?? null)
+                        ? $project->getGithubResourceIds()['provisioningError']
+                        : null,
+                ],
                 'tasks' => array_map(static fn (Task $task): array => [
                     'id' => $task->getId(),
                     'TITLE' => $task->getTitle(),

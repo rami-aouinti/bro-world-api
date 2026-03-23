@@ -36,8 +36,6 @@ final class CreateProjectRequest
     #[Assert\Length(max: 255)]
     public ?string $githubToken = null;
 
-    #[Assert\Type(type: 'bool')]
-    public bool $asyncProvisioning = false;
 
     public static function fromArray(array $payload): self
     {
@@ -50,7 +48,6 @@ final class CreateProjectRequest
         $request->dueAt = isset($payload['dueAt']) ? (string)$payload['dueAt'] : null;
         $request->companyId = isset($payload['companyId']) ? (string)$payload['companyId'] : null;
         $request->githubToken = isset($payload['githubToken']) ? (string)$payload['githubToken'] : null;
-        $request->asyncProvisioning = isset($payload['asyncProvisioning']) ? (bool)$payload['asyncProvisioning'] : false;
 
         return $request;
     }

@@ -11,6 +11,8 @@ parameters:
     recruit.interview_invitation.sender_email: '%env(resolve:RECRUIT_INTERVIEW_INVITATION_SENDER_EMAIL)%'
     recruit.interview_invitation.template_create: '%env(default:recruit.interview_invitation.template_create_default:RECRUIT_INTERVIEW_TEMPLATE_CREATE)%'
     recruit.interview_invitation.template_update: '%env(default:recruit.interview_invitation.template_update_default:RECRUIT_INTERVIEW_TEMPLATE_UPDATE)%'
+    crm.github.default_repository_owner: '%env(default:bro-world:CRM_GITHUB_DEFAULT_REPOSITORY_OWNER)%'
+    crm.github.owner_by_application_slug: '%env(json:CRM_GITHUB_OWNER_BY_APPLICATION_SLUG)%'
 
 services:
     # default configuration for services in *this* file
@@ -160,6 +162,11 @@ services:
         class: App\Shop\Infrastructure\Payment\MockPaymentProvider
         arguments:
             $appSecret: '%kernel.secret%'
+
+    App\Crm\Application\Service\CrmGithubOwnerResolver:
+        arguments:
+            $defaultOwner: '%crm.github.default_repository_owner%'
+            $ownersByApplicationSlug: '%crm.github.owner_by_application_slug%'
 
 when@dev:
     services:

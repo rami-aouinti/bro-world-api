@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\Project;
 
-use App\Crm\Application\Message\ProvisionProjectGithubResources;
+use App\Crm\Application\Message\ProjectCreated;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
-use App\Crm\Application\Service\ProjectGithubProvisioningService;
 use App\Crm\Domain\Entity\Project;
 use App\Crm\Domain\Enum\ProjectStatus;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
@@ -40,7 +39,6 @@ final readonly class CreateProjectController
         private ValidatorInterface $validator,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
-        private ProjectGithubProvisioningService $projectGithubProvisioningService,
     ) {
     }
 
@@ -63,7 +61,6 @@ final readonly class CreateProjectController
                     new OA\Property(property: 'startedAt', type: 'string', format: 'date-time', example: '2026-01-15T09:00:00+00:00', nullable: true),
                     new OA\Property(property: 'dueAt', type: 'string', format: 'date-time', example: '2026-06-30T18:00:00+00:00', nullable: true),
                     new OA\Property(property: 'companyId', type: 'string', format: 'uuid', example: '4db7f53d-cf31-4b36-9b9b-78e914c36a39'),
-                    new OA\Property(property: 'asyncProvisioning', type: 'boolean', example: true, nullable: true),
                 ],
             ),
         ),
@@ -74,7 +71,13 @@ final readonly class CreateProjectController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'string', format: 'uuid', example: 'ebf77366-d60c-4ac4-b204-9f91a7f7ee12'),
-                        new OA\Property(property: 'provisioningStatus', type: 'string', example: 'pending'),
+                        new OA\Property(property: 'provisioning', type: 'object', properties: [
+                            new OA\Property(property: 'state', type: 'string', enum: ['pending', 'provisioned', 'failed'], example: 'pending'),
+                            new OA\Property(property: 'error', type: 'object', nullable: true, properties: [
+                                new OA\Property(property: 'code', type: 'string', example: 'github_provisioning_failed'),
+                                new OA\Property(property: 'message', type: 'string', example: 'Unable to provision GitHub resources for this project.'),
+                            ]),
+                        ]),
                         new OA\Property(property: 'githubResourceIds', type: 'object'),
                     ],
                 ),
@@ -185,23 +188,19 @@ final readonly class CreateProjectController
         $this->entityManager->persist($project);
         $this->entityManager->flush();
 
-        if ($input->asyncProvisioning) {
-            $this->messageBus->dispatch(new ProvisionProjectGithubResources($project->getId()));
-        } else {
-            $repositoryName = $input->code !== null && $input->code !== '' ? $input->code : (string)$input->name;
-            $this->projectGithubProvisioningService->provision($project, $repositoryName);
-            $this->entityManager->flush();
-        }
+        $this->messageBus->dispatch(new ProjectCreated($project->getId(), $applicationSlug));
 
         $this->messageBus->dispatch(new EntityCreated('crm_project', $project->getId(), context: [
             'applicationSlug' => $applicationSlug,
             'crmId' => $crm->getId(),
-            'provisioningStatus' => $project->getProvisioningStatus(),
         ]));
 
         return new JsonResponse([
             'id' => $project->getId(),
-            'provisioningStatus' => $project->getProvisioningStatus(),
+            'provisioning' => [
+                'state' => 'pending',
+                'error' => null,
+            ],
             'githubResourceIds' => $project->getGithubResourceIds(),
         ], JsonResponse::HTTP_CREATED);
     }
