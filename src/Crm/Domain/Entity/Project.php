@@ -79,7 +79,9 @@ class Project implements EntityInterface
     #[ORM\Column(name: 'github_token', type: Types::STRING, length: 255, nullable: true)]
     private ?string $githubToken = null;
 
-    #[ORM\Column(name: 'provisioning_status', type: Types::STRING, length: 40, options: ['default' => 'pending'])]
+    #[ORM\Column(name: 'provisioning_status', type: Types::STRING, length: 40, options: [
+        'default' => 'pending',
+    ])]
     private string $provisioningStatus = 'pending';
 
     /**

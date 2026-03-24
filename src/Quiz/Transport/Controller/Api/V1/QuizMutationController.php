@@ -11,9 +11,9 @@ use App\Quiz\Application\Service\QuizEditorAccessService;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Quiz\Domain\Entity\QuizAnswer;
 use App\Quiz\Domain\Entity\QuizQuestion;
-use App\Quiz\Infrastructure\Repository\QuizCategoryRepository;
 use App\Quiz\Domain\Enum\QuizLevel;
 use App\Quiz\Infrastructure\Repository\QuizAnswerRepository;
+use App\Quiz\Infrastructure\Repository\QuizCategoryRepository;
 use App\Quiz\Infrastructure\Repository\QuizQuestionRepository;
 use App\Quiz\Infrastructure\Repository\QuizRepository;
 use App\User\Domain\Entity\User;
@@ -53,10 +53,6 @@ final readonly class QuizMutationController
     }
 
     /**
-     * @param string $applicationSlug
-     * @param Request $request
-     * @param User $loggedInUser
-     * @return JsonResponse
      * @throws JsonException
      * @throws ORMException
      * @throws OptimisticLockException
@@ -89,9 +85,6 @@ final readonly class QuizMutationController
     }
 
     /**
-     * @param Request $request
-     * @param User $loggedInUser
-     * @return JsonResponse
      * @throws JsonException
      * @throws ORMException
      * @throws OptimisticLockException
@@ -104,10 +97,6 @@ final readonly class QuizMutationController
     }
 
     /**
-     * @param string $applicationSlug
-     * @param Request $request
-     * @param User $loggedInUser
-     * @return JsonResponse
      * @throws JsonException
      * @throws ORMException
      * @throws OptimisticLockException
@@ -156,9 +145,6 @@ final readonly class QuizMutationController
     }
 
     /**
-     * @param Request $request
-     * @param User $loggedInUser
-     * @return JsonResponse
      * @throws JsonException
      * @throws ORMException
      * @throws OptimisticLockException
@@ -221,10 +207,6 @@ final readonly class QuizMutationController
     }
 
     /**
-     * @param string $questionId
-     * @param Request $request
-     * @param User $loggedInUser
-     * @return JsonResponse
      * @throws JsonException
      * @throws ORMException
      * @throws OptimisticLockException
@@ -254,10 +236,6 @@ final readonly class QuizMutationController
     }
 
     /**
-     * @param string $questionId
-     * @param Request $request
-     * @param User $loggedInUser
-     * @return JsonResponse
      * @throws JsonException
      * @throws ORMException
      * @throws OptimisticLockException
@@ -301,10 +279,6 @@ final readonly class QuizMutationController
     }
 
     /**
-     * @param string $answerId
-     * @param Request $request
-     * @param User $loggedInUser
-     * @return JsonResponse
      * @throws JsonException
      * @throws ORMException
      * @throws OptimisticLockException
@@ -332,10 +306,6 @@ final readonly class QuizMutationController
     }
 
     /**
-     * @param string $answerId
-     * @param Request $request
-     * @param User $loggedInUser
-     * @return JsonResponse
      * @throws JsonException
      * @throws ORMException
      * @throws OptimisticLockException

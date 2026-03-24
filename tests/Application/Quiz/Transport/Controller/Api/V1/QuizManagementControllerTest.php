@@ -138,7 +138,6 @@ final class QuizManagementControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_NO_CONTENT, $ownerClient->getResponse()->getStatusCode());
     }
 
-
     #[TestDox('General quiz endpoints for put/publish/unpublish/submit are functional.')]
     public function testGeneralQuizSpecificEndpointsFlow(): void
     {

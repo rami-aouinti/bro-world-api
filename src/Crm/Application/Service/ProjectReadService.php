@@ -88,7 +88,7 @@ readonly class ProjectReadService
     {
         $cacheKey = $this->cacheKeyConventionService->buildCrmProjectDetailKey($applicationSlug, $project->getId());
 
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug,  $project): ?array {
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $project): ?array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag([

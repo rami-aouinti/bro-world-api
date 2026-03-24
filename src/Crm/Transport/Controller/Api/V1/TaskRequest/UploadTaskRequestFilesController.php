@@ -61,12 +61,16 @@ final readonly class UploadTaskRequestFilesController
                     new OA\Examples(
                         example: 'minimalValid',
                         summary: 'Exemple minimal valide',
-                        value: ['files' => ['ticket-repro.txt']],
+                        value: [
+                            'files' => ['ticket-repro.txt'],
+                        ],
                     ),
                     new OA\Examples(
                         example: 'fullBusiness',
                         summary: 'Exemple métier complet',
-                        value: ['files' => ['stacktrace.log', 'parcours-utilisateur.mov']],
+                        value: [
+                            'files' => ['stacktrace.log', 'parcours-utilisateur.mov'],
+                        ],
                     ),
                 ],
             ),

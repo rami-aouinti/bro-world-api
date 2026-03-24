@@ -24,8 +24,11 @@ final readonly class MoveProjectGithubIssueController
 {
     use HandlesGithubApiExceptions;
 
-    public function __construct(private CrmGithubService $crmGithubService, private CrmRequestHandler $crmRequestHandler, private CrmGithubApiErrorResponseFactory $errorResponseFactory)
-    {
+    public function __construct(
+        private CrmGithubService $crmGithubService,
+        private CrmRequestHandler $crmRequestHandler,
+        private CrmGithubApiErrorResponseFactory $errorResponseFactory
+    ) {
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/projects/{projectId}/items/{itemId}/move', methods: [Request::METHOD_POST])]

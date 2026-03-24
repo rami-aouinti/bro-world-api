@@ -186,7 +186,6 @@ class TaskRequestRepository extends BaseRepository
             ];
         }
 
-
         $branchQb = $this->createQueryBuilder('taskRequest')
             ->select('taskRequest.id AS taskRequestId, githubBranch.id, githubBranch.repositoryFullName, githubBranch.branchName, githubBranch.branchSha, githubBranch.branchUrl, githubBranch.issueNumber, githubBranch.syncStatus, githubBranch.createdAt, githubBranch.lastSyncedAt, githubBranch.metadata')
             ->leftJoin('taskRequest.githubBranches', 'githubBranch')

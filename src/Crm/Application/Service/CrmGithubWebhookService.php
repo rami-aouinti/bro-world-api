@@ -64,7 +64,9 @@ final readonly class CrmGithubWebhookService
             throw new HttpException(JsonResponse::HTTP_ACCEPTED, 'Event ignored (not supported).');
         }
 
-        if ($this->webhookEventRepository->findOneBy(['deliveryId' => $normalizedDeliveryId]) instanceof CrmGithubWebhookEvent) {
+        if ($this->webhookEventRepository->findOneBy([
+            'deliveryId' => $normalizedDeliveryId,
+        ]) instanceof CrmGithubWebhookEvent) {
             throw new HttpException(JsonResponse::HTTP_ACCEPTED, 'Event already received.');
         }
 

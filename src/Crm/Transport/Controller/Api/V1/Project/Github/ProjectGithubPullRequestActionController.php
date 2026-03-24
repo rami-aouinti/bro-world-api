@@ -8,12 +8,12 @@ use App\Crm\Application\Service\CrmGithubService;
 use App\Crm\Domain\Entity\Project;
 use App\Role\Domain\Enum\Role;
 use JsonException;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use OpenApi\Attributes as OA;
 
 #[AsController]
 #[OA\Tag(name: 'Crm Github')]
@@ -63,6 +63,8 @@ final readonly class ProjectGithubPullRequestActionController
             return new JsonResponse($this->crmGithubService->closePullRequest($project, $repo, $number));
         }
 
-        return new JsonResponse(['message' => 'Unknown action.'], JsonResponse::HTTP_BAD_REQUEST);
+        return new JsonResponse([
+            'message' => 'Unknown action.',
+        ], JsonResponse::HTTP_BAD_REQUEST);
     }
 }

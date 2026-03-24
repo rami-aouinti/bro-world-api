@@ -7,12 +7,12 @@ namespace App\Crm\Transport\Controller\Api\V1\Project\Github;
 use App\Crm\Application\Service\CrmGithubService;
 use App\Crm\Domain\Entity\Project;
 use App\Role\Domain\Enum\Role;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use OpenApi\Attributes as OA;
 
 #[AsController]
 #[OA\Tag(name: 'Crm Github')]

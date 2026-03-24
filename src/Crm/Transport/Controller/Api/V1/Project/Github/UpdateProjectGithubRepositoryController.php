@@ -47,7 +47,9 @@ final readonly class UpdateProjectGithubRepositoryController
                 properties: [
                     new OA\Property(property: 'defaultBranch', type: 'string', example: 'main', nullable: true),
                     new OA\Property(property: 'syncStatus', type: 'string', example: 'synced', nullable: true),
-                    new OA\Property(property: 'metadata', type: 'object', example: ['nodeId' => 'R_kgDOABC123'], nullable: true),
+                    new OA\Property(property: 'metadata', type: 'object', example: [
+                        'nodeId' => 'R_kgDOABC123',
+                    ], nullable: true),
                 ],
             ),
         ),
@@ -62,7 +64,9 @@ final readonly class UpdateProjectGithubRepositoryController
                         'fullName' => 'john-root/bro-world-api',
                         'defaultBranch' => 'main',
                         'syncStatus' => 'synced',
-                        'payload' => ['nodeId' => 'R_kgDOABC123'],
+                        'payload' => [
+                            'nodeId' => 'R_kgDOABC123',
+                        ],
                     ],
                 ),
             ),

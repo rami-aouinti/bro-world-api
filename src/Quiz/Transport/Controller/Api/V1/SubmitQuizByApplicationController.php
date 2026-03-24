@@ -25,11 +25,6 @@ final class SubmitQuizByApplicationController
     private const string GENERAL_APPLICATION_SLUG = 'general';
 
     /**
-     * @param string $applicationSlug
-     * @param Request $request
-     * @param QuizSubmissionService $quizSubmissionService
-     * @param User $loggedInUser
-     * @return JsonResponse
      * @throws JsonException
      * @throws ORMException
      * @throws OptimisticLockException
@@ -44,10 +39,6 @@ final class SubmitQuizByApplicationController
     }
 
     /**
-     * @param Request $request
-     * @param QuizSubmissionService $quizSubmissionService
-     * @param User $loggedInUser
-     * @return JsonResponse
      * @throws JsonException
      * @throws ORMException
      * @throws OptimisticLockException
@@ -76,8 +67,14 @@ final class SubmitQuizByApplicationController
                 ],
                 example: [
                     'answers' => [
-                        ['questionId' => '0195d45f-01ab-7e8d-9ac5-7ef2f1925b18', 'answerId' => '0195d460-5f6a-7f8f-84a6-0fdc9cb15ec1'],
-                        ['questionId' => '0195d45f-01ab-7e8d-9ac5-7ef2f1925b19', 'answerId' => '0195d460-5f6a-7f8f-84a6-0fdc9cb15ec2'],
+                        [
+                            'questionId' => '0195d45f-01ab-7e8d-9ac5-7ef2f1925b18',
+                            'answerId' => '0195d460-5f6a-7f8f-84a6-0fdc9cb15ec1',
+                        ],
+                        [
+                            'questionId' => '0195d45f-01ab-7e8d-9ac5-7ef2f1925b19',
+                            'answerId' => '0195d460-5f6a-7f8f-84a6-0fdc9cb15ec2',
+                        ],
                     ],
                 ]
             )

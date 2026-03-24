@@ -9,6 +9,7 @@ use App\General\Domain\Color\Traits\ColorPaletteTrait;
 enum QuizLevel: string
 {
     use ColorPaletteTrait;
+
     case EASY = 'easy';
     case MEDIUM = 'medium';
     case HARD = 'hard';
@@ -27,4 +28,3 @@ enum QuizLevel: string
         };
     }
 }
-

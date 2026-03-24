@@ -37,13 +37,19 @@ class QuizCategory implements EntityInterface
     #[ORM\Column(name: 'slug', type: Types::STRING, length: 120, unique: true)]
     private string $slug = '';
 
-    #[ORM\Column(name: 'position', type: Types::INTEGER, options: ['default' => 1])]
+    #[ORM\Column(name: 'position', type: Types::INTEGER, options: [
+        'default' => 1,
+    ])]
     private int $position = 1;
 
-    #[ORM\Column(name: 'is_active', type: Types::BOOLEAN, options: ['default' => true])]
+    #[ORM\Column(name: 'is_active', type: Types::BOOLEAN, options: [
+        'default' => true,
+    ])]
     private bool $isActive = true;
 
-    #[ORM\Column(name: 'color', type: Types::STRING, length: 7, options: ['default' => '#64748B'])]
+    #[ORM\Column(name: 'color', type: Types::STRING, length: 7, options: [
+        'default' => '#64748B',
+    ])]
     private string $color = '#64748B';
 
     /**
@@ -124,4 +130,3 @@ class QuizCategory implements EntityInterface
         return $this;
     }
 }
-

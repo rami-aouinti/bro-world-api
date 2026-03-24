@@ -49,16 +49,18 @@ final class PutProjectRequest
     {
         $request = new self();
 
-        foreach ([
-            'name',
-            'code',
-            'description',
-            'status',
-            'startedAt',
-            'dueAt',
-            'githubToken',
-            'githubRepositories',
-        ] as $field) {
+        foreach (
+            [
+                'name',
+                'code',
+                'description',
+                'status',
+                'startedAt',
+                'dueAt',
+                'githubToken',
+                'githubRepositories',
+            ] as $field
+        ) {
             $flag = 'has' . ucfirst($field);
             if (!array_key_exists($field, $payload)) {
                 continue;
@@ -81,16 +83,18 @@ final class PutProjectRequest
     #[Assert\Callback]
     public function validatePutReplacement(ExecutionContextInterface $context): void
     {
-        foreach ([
-            'name',
-            'code',
-            'description',
-            'status',
-            'startedAt',
-            'dueAt',
-            'githubToken',
-            'githubRepositories',
-        ] as $field) {
+        foreach (
+            [
+                'name',
+                'code',
+                'description',
+                'status',
+                'startedAt',
+                'dueAt',
+                'githubToken',
+                'githubRepositories',
+            ] as $field
+        ) {
             $flag = 'has' . ucfirst($field);
             if ($this->{$flag}) {
                 continue;

@@ -51,7 +51,9 @@ class CrmGithubWebhookEvent implements EntityInterface
     #[ORM\Column(name: 'processed_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $processedAt = null;
 
-    /** @var array<string,mixed> */
+    /**
+     * @var array<string,mixed>
+     */
     #[ORM\Column(name: 'payload', type: Types::JSON)]
     private array $payload = [];
 
@@ -69,32 +71,108 @@ class CrmGithubWebhookEvent implements EntityInterface
         return $this->id->toString();
     }
 
-    public function getDeliveryId(): string { return $this->deliveryId; }
-    public function setDeliveryId(string $deliveryId): self { $this->deliveryId = trim($deliveryId); return $this; }
+    public function getDeliveryId(): string
+    {
+        return $this->deliveryId;
+    }
+    public function setDeliveryId(string $deliveryId): self
+    {
+        $this->deliveryId = trim($deliveryId);
 
-    public function getEventName(): string { return $this->eventName; }
-    public function setEventName(string $eventName): self { $this->eventName = trim($eventName); return $this; }
+        return $this;
+    }
 
-    public function getEventAction(): ?string { return $this->eventAction; }
-    public function setEventAction(?string $eventAction): self { $this->eventAction = $eventAction !== null ? trim($eventAction) : null; return $this; }
+    public function getEventName(): string
+    {
+        return $this->eventName;
+    }
+    public function setEventName(string $eventName): self
+    {
+        $this->eventName = trim($eventName);
 
-    public function getRepositoryFullName(): ?string { return $this->repositoryFullName; }
-    public function setRepositoryFullName(?string $repositoryFullName): self { $this->repositoryFullName = $repositoryFullName !== null ? trim($repositoryFullName) : null; return $this; }
+        return $this;
+    }
 
-    public function getSignature(): ?string { return $this->signature; }
-    public function setSignature(?string $signature): self { $this->signature = $signature !== null ? trim($signature) : null; return $this; }
+    public function getEventAction(): ?string
+    {
+        return $this->eventAction;
+    }
+    public function setEventAction(?string $eventAction): self
+    {
+        $this->eventAction = $eventAction !== null ? trim($eventAction) : null;
 
-    public function getChecksum(): string { return $this->checksum; }
-    public function setChecksum(string $checksum): self { $this->checksum = trim($checksum); return $this; }
+        return $this;
+    }
 
-    public function getStatus(): string { return $this->status; }
-    public function setStatus(string $status): self { $this->status = trim($status); return $this; }
+    public function getRepositoryFullName(): ?string
+    {
+        return $this->repositoryFullName;
+    }
+    public function setRepositoryFullName(?string $repositoryFullName): self
+    {
+        $this->repositoryFullName = $repositoryFullName !== null ? trim($repositoryFullName) : null;
 
-    public function getProcessedAt(): ?DateTimeImmutable { return $this->processedAt; }
-    public function setProcessedAt(?DateTimeImmutable $processedAt): self { $this->processedAt = $processedAt; return $this; }
+        return $this;
+    }
 
-    /** @return array<string,mixed> */
-    public function getPayload(): array { return $this->payload; }
-    /** @param array<string,mixed> $payload */
-    public function setPayload(array $payload): self { $this->payload = $payload; return $this; }
+    public function getSignature(): ?string
+    {
+        return $this->signature;
+    }
+    public function setSignature(?string $signature): self
+    {
+        $this->signature = $signature !== null ? trim($signature) : null;
+
+        return $this;
+    }
+
+    public function getChecksum(): string
+    {
+        return $this->checksum;
+    }
+    public function setChecksum(string $checksum): self
+    {
+        $this->checksum = trim($checksum);
+
+        return $this;
+    }
+
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+    public function setStatus(string $status): self
+    {
+        $this->status = trim($status);
+
+        return $this;
+    }
+
+    public function getProcessedAt(): ?DateTimeImmutable
+    {
+        return $this->processedAt;
+    }
+    public function setProcessedAt(?DateTimeImmutable $processedAt): self
+    {
+        $this->processedAt = $processedAt;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function getPayload(): array
+    {
+        return $this->payload;
+    }
+    /**
+     * @param array<string,mixed> $payload
+     */
+    public function setPayload(array $payload): self
+    {
+        $this->payload = $payload;
+
+        return $this;
+    }
 }

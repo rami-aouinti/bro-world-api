@@ -23,10 +23,6 @@ final readonly class GithubWebhookController
     ) {
     }
 
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
     #[Route('/v1/crm/github/webhook', methods: [Request::METHOD_POST])]
     #[OA\Post(
         description: 'Use this endpoint as GitHub webhook URL. In /api/doc, click "Try it out", set required headers and paste the raw GitHub payload JSON.',

@@ -61,12 +61,16 @@ final readonly class UploadTaskFilesController
                     new OA\Examples(
                         example: 'minimalValid',
                         summary: 'Exemple minimal valide',
-                        value: ['files' => ['capture-ecran.png']],
+                        value: [
+                            'files' => ['capture-ecran.png'],
+                        ],
                     ),
                     new OA\Examples(
                         example: 'fullBusiness',
                         summary: 'Exemple métier complet',
-                        value: ['files' => ['brief-produit.pdf', 'maquette-funnel-v4.png']],
+                        value: [
+                            'files' => ['brief-produit.pdf', 'maquette-funnel-v4.png'],
+                        ],
                     ),
                 ],
             ),

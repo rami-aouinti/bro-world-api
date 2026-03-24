@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\Company;
 
-use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Domain\Entity\Company;
 use App\Crm\Domain\Entity\Project;
-use App\Crm\Infrastructure\Repository\CompanyRepository;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\Role\Domain\Enum\Role;
 use OpenApi\Attributes as OA;

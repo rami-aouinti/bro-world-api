@@ -26,9 +26,6 @@ final readonly class ListTasksController
     }
 
     /**
-     * @param string $applicationSlug
-     * @param Request $request
-     * @return JsonResponse
      * @throws JsonException
      * @throws InvalidArgumentException
      */

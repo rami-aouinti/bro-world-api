@@ -58,10 +58,12 @@ final class CrmGithubSyncCommand extends Command
         $taskRequestsUpdated = 0;
         $taskRequestsFailed = 0;
 
-        $repositories = $this->crmProjectRepositoryRepository->findBy(['provider' => 'github']);
+        $repositories = $this->crmProjectRepositoryRepository->findBy([
+            'provider' => 'github',
+        ]);
 
         foreach ($repositories as $repository) {
-            ++$scanned;
+            $scanned++;
             $project = $repository->getProject();
             if ($project === null) {
                 continue;
@@ -99,7 +101,7 @@ final class CrmGithubSyncCommand extends Command
                         ->setPayload($payload);
 
                     $this->crmProjectRepositoryRepository->save($repository, true);
-                    ++$updated;
+                    $updated++;
 
                     continue;
                 }
@@ -108,8 +110,8 @@ final class CrmGithubSyncCommand extends Command
                     ->setLastSyncedAt(new DateTimeImmutable())
                     ->setSyncStatus('synced');
                 $this->crmProjectRepositoryRepository->save($repository, true);
-            } catch (CrmGithubApiException|JsonException) {
-                ++$failed;
+            } catch (CrmGithubApiException | JsonException) {
+                $failed++;
                 $repository->setSyncStatus('error');
                 $this->crmProjectRepositoryRepository->save($repository, true);
             }
@@ -117,7 +119,7 @@ final class CrmGithubSyncCommand extends Command
 
         $taskRequests = $this->taskRequestRepository->findAllWithGithubIssueMapping();
         foreach ($taskRequests as $taskRequest) {
-            ++$taskRequestsScanned;
+            $taskRequestsScanned++;
             $project = $taskRequest->getTask()?->getProject();
             $githubIssue = $taskRequest->getGithubIssue();
             if ($project === null || $githubIssue === null) {
@@ -141,7 +143,7 @@ final class CrmGithubSyncCommand extends Command
                 if ($taskRequest->getStatus() !== $status) {
                     $taskRequest->setStatus($status);
                     $taskRequest->setResolvedAt($status === TaskRequestStatus::PENDING ? null : new DateTimeImmutable());
-                    ++$taskRequestsUpdated;
+                    $taskRequestsUpdated++;
                 }
 
                 $metadata = $githubIssue->getMetadata();
@@ -155,7 +157,7 @@ final class CrmGithubSyncCommand extends Command
 
                 $this->taskRequestRepository->save($taskRequest, true);
             } catch (CrmGithubApiException) {
-                ++$taskRequestsFailed;
+                $taskRequestsFailed++;
                 if ($githubIssue !== null) {
                     $githubIssue->setSyncStatus('error');
                 }

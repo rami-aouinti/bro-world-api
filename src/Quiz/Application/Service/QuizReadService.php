@@ -68,9 +68,11 @@ final readonly class QuizReadService
      */
     public function getLevels(): array
     {
-        return array_map(static fn (QuizLevel $level): array => ['value' => $level->value, 'color' => $level->getColor()], QuizLevel::cases());
+        return array_map(static fn (QuizLevel $level): array => [
+            'value' => $level->value,
+            'color' => $level->getColor(),
+        ], QuizLevel::cases());
     }
-
 
     /**
      * @return list<array{userId:string,username:string,firstName:string,lastName:string,attemptCount:int,averageWeightedScore:float}>
@@ -216,5 +218,4 @@ final readonly class QuizReadService
 
         return $selected;
     }
-
 }

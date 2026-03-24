@@ -31,8 +31,8 @@ use function explode;
 use function is_array;
 use function is_int;
 use function mb_strtolower;
-use function str_contains;
 use function sprintf;
+use function str_contains;
 use function strtolower;
 use function trim;
 
@@ -64,9 +64,21 @@ final readonly class CrmGithubBootstrapSyncService
         string $phase = 'full',
     ): array {
         $report = [
-            'projects' => ['created' => 0, 'updated' => 0, 'skipped' => 0],
-            'repositories' => ['created' => 0, 'updated' => 0, 'skipped' => 0],
-            'issues' => ['created' => 0, 'updated' => 0, 'skipped' => 0],
+            'projects' => [
+                'created' => 0,
+                'updated' => 0,
+                'skipped' => 0,
+            ],
+            'repositories' => [
+                'created' => 0,
+                'updated' => 0,
+                'skipped' => 0,
+            ],
+            'issues' => [
+                'created' => 0,
+                'updated' => 0,
+                'skipped' => 0,
+            ],
             'errors' => [],
         ];
 
@@ -127,6 +139,7 @@ final readonly class CrmGithubBootstrapSyncService
 
             if ($key === null) {
                 $report['projects']['skipped']++;
+
                 continue;
             }
 
@@ -152,6 +165,7 @@ final readonly class CrmGithubBootstrapSyncService
 
                 $projectByGithubIdentity[$key] = $created;
                 $report['projects']['created']++;
+
                 continue;
             }
 
@@ -204,6 +218,7 @@ final readonly class CrmGithubBootstrapSyncService
                 : $this->matchProjectForRepository($repositoryPayload, $projectByGithubIdentity, $publicProject);
             if (!$targetProject instanceof Project) {
                 $report['repositories']['skipped']++;
+
                 continue;
             }
 
@@ -256,6 +271,7 @@ final readonly class CrmGithubBootstrapSyncService
                 $report['repositories']['updated']++;
             } elseif (!$existingRepository instanceof CrmRepository) {
                 $report['repositories']['skipped']++;
+
                 continue;
             }
 
@@ -830,7 +846,6 @@ GRAPHQL, $ownerField);
     }
 
     /**
-     * @param mixed $labels
      * @return list<array{name:string}>
      */
     private function normalizeIssueLabels(mixed $labels): array
@@ -844,7 +859,9 @@ GRAPHQL, $ownerField);
             if (is_array($label)) {
                 $name = trim((string)($label['name'] ?? ''));
                 if ($name !== '') {
-                    $normalized[] = ['name' => $name];
+                    $normalized[] = [
+                        'name' => $name,
+                    ];
                 }
 
                 continue;
@@ -858,12 +875,17 @@ GRAPHQL, $ownerField);
             if (str_contains($raw, ',')) {
                 $parts = array_filter(array_map(static fn (string $part): string => trim($part), explode(',', $raw)));
                 array_walk($parts, static function (string $part) use (&$normalized): void {
-                    $normalized[] = ['name' => $part];
+                    $normalized[] = [
+                        'name' => $part,
+                    ];
                 });
+
                 continue;
             }
 
-            $normalized[] = ['name' => $raw];
+            $normalized[] = [
+                'name' => $raw,
+            ];
         }
 
         return $normalized;
@@ -907,6 +929,7 @@ GRAPHQL, $ownerField);
 
             if ($status >= 400) {
                 $message = is_array($data) ? (string)($data['message'] ?? 'GitHub API request failed.') : 'GitHub API request failed.';
+
                 throw new \RuntimeException($message);
             }
 

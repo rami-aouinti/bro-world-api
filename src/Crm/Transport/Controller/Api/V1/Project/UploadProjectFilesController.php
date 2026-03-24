@@ -59,12 +59,16 @@ final readonly class UploadProjectFilesController
                     new OA\Examples(
                         example: 'minimalValid',
                         summary: 'Exemple minimal valide',
-                        value: ['files' => ['roadmap.pdf']],
+                        value: [
+                            'files' => ['roadmap.pdf'],
+                        ],
                     ),
                     new OA\Examples(
                         example: 'fullBusiness',
                         summary: 'Exemple métier complet',
-                        value: ['files' => ['kickoff-deck.pptx', 'specs-techniques.docx']],
+                        value: [
+                            'files' => ['kickoff-deck.pptx', 'specs-techniques.docx'],
+                        ],
                     ),
                 ],
             ),

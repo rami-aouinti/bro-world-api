@@ -1,51 +1,5 @@
 services:
 
-    nginx:
-        image: ${COMPOSE_PROJECT_NAME}-nginx:latest
-        build:
-            context: ./docker/
-            args:
-                BUILD_ARGUMENT_ENV: prod
-            dockerfile: ./nginx/Dockerfile
-        container_name: ${COMPOSE_PROJECT_NAME}-nginx
-        restart: always
-        ports:
-            - "${WEB_PORT_HTTP}:80"
-            - "${WEB_PORT_SSL}:443"
-        volumes:
-            - ./:/var/www/html:ro,cached
-        depends_on:
-            - symfony
-        networks:
-            - symfony
-
-    symfony: &symfony-template
-        image: ${COMPOSE_PROJECT_NAME}-symfony:latest
-        build:
-            context: .
-            args:
-                BUILD_ARGUMENT_ENV: prod
-                HOST_UID: ${HOST_UID}
-                HOST_GID: ${HOST_GID}
-            dockerfile: ./Dockerfile
-        container_name: ${COMPOSE_PROJECT_NAME}-symfony
-        restart: always
-        depends_on:
-            - mysql
-            - rabbitmq
-            - elasticsearch
-            - redis
-            - mercure
-        networks:
-            - symfony
-
-    ### Cron tasks, RabbitMQ consumers
-    supervisord:
-        <<: *symfony-template
-        container_name: ${COMPOSE_PROJECT_NAME}-supervisord
-        expose: [ ]
-        command: [ "/usr/bin/supervisord" ]
-
     mysql:
         image: mysql:${MYSQL_VERSION}
         platform: linux/x86_64
@@ -97,8 +51,8 @@ services:
             # see https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
             discovery.type: single-node
         ports:
-            - "${ELASTIC_HTTP_PORT}:9200"
-            - "${ELASTIC_TRANSPORT_PORT}:9300"
+            - "9200:9200"
+            - "9300:9300"
         volumes:
             - ./docker/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
             - ./var/elasticsearch-data:/usr/share/elasticsearch/data:delegated
@@ -134,6 +88,31 @@ services:
         networks:
             - symfony
 
+    mongodb:
+        image: mongo:${MONGO_VERSION}
+        container_name: ${COMPOSE_PROJECT_NAME}-mongodb
+        restart: always
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+        ports:
+            - "${MONGO_PORT}:27017"
+        volumes:
+            - ./var/mongodb:/data/db:delegated
+        networks:
+            - symfony
+
+    adminer:
+        image: adminer:${ADMINER_VERSION}
+        container_name: ${COMPOSE_PROJECT_NAME}-adminer
+        restart: always
+        ports:
+            - "${ADMINER_PORT}:8080"
+        depends_on:
+            - mysql
+        networks:
+            - symfony
+
     mercure:
         image: dunglas/mercure:latest
         container_name: ${COMPOSE_PROJECT_NAME}-mercure
@@ -147,6 +126,20 @@ services:
                 anonymous
         ports:
             - "${MERCURE_PORT}:80"
+        networks:
+            - symfony
+
+    graphql:
+        image: ${COMPOSE_PROJECT_NAME}-graphql:latest
+        build:
+            context: ./docker/graphql-playground
+            dockerfile: ./Dockerfile
+        container_name: ${COMPOSE_PROJECT_NAME}-graphql
+        restart: always
+        environment:
+            GRAPHQL_ENDPOINT: ${GRAPHQL_ENDPOINT}
+        ports:
+            - "${GRAPHQL_PORT}:80"
         networks:
             - symfony
 

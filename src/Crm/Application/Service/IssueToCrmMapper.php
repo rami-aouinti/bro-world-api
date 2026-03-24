@@ -130,9 +130,6 @@ final class IssueToCrmMapper
         return false;
     }
 
-    /**
-     * @param mixed $label
-     */
     private function extractLabelName(mixed $label): ?string
     {
         if (is_string($label)) {

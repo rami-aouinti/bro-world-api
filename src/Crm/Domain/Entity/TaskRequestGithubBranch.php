@@ -47,7 +47,9 @@ class TaskRequestGithubBranch implements EntityInterface
     #[ORM\Column(name: 'issue_number', type: Types::INTEGER, nullable: true)]
     private ?int $issueNumber = null;
 
-    #[ORM\Column(name: 'sync_status', type: Types::STRING, length: 40, options: ['default' => 'pending'])]
+    #[ORM\Column(name: 'sync_status', type: Types::STRING, length: 40, options: [
+        'default' => 'pending',
+    ])]
     private string $syncStatus = 'pending';
 
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
@@ -56,7 +58,9 @@ class TaskRequestGithubBranch implements EntityInterface
     #[ORM\Column(name: 'last_synced_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $lastSyncedAt = null;
 
-    /** @var array<string,mixed> */
+    /**
+     * @var array<string,mixed>
+     */
     #[ORM\Column(name: 'metadata', type: Types::JSON)]
     private array $metadata = [];
 

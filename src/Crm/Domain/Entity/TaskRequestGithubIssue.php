@@ -22,7 +22,9 @@ class TaskRequestGithubIssue
     #[ORM\JoinColumn(name: 'task_request_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?TaskRequest $taskRequest = null;
 
-    #[ORM\Column(name: 'provider', type: Types::STRING, length: 30, options: ['default' => 'github'])]
+    #[ORM\Column(name: 'provider', type: Types::STRING, length: 30, options: [
+        'default' => 'github',
+    ])]
     private string $provider = 'github';
 
     #[ORM\Column(name: 'repository_full_name', type: Types::STRING, length: 255)]
@@ -37,13 +39,17 @@ class TaskRequestGithubIssue
     #[ORM\Column(name: 'issue_url', type: Types::STRING, length: 1024, nullable: true)]
     private ?string $issueUrl = null;
 
-    #[ORM\Column(name: 'sync_status', type: Types::STRING, length: 40, options: ['default' => 'pending'])]
+    #[ORM\Column(name: 'sync_status', type: Types::STRING, length: 40, options: [
+        'default' => 'pending',
+    ])]
     private string $syncStatus = 'pending';
 
     #[ORM\Column(name: 'last_synced_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $lastSyncedAt = null;
 
-    /** @var array<string,mixed> */
+    /**
+     * @var array<string,mixed>
+     */
     #[ORM\Column(name: 'metadata', type: Types::JSON)]
     private array $metadata = [];
 

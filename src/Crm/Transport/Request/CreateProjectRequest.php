@@ -36,7 +36,6 @@ final class CreateProjectRequest
     #[Assert\Length(max: 255)]
     public ?string $githubToken = null;
 
-
     public static function fromArray(array $payload): self
     {
         $request = new self();

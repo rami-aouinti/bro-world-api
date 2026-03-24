@@ -145,7 +145,6 @@ class TaskRequest implements EntityInterface
         return $this->githubIssue;
     }
 
-
     /**
      * @return Collection<int, TaskRequestGithubBranch>|ArrayCollection<int, TaskRequestGithubBranch>
      */

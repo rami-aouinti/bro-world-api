@@ -24,8 +24,11 @@ final readonly class CreateProjectGithubBranchController
 {
     use HandlesGithubApiExceptions;
 
-    public function __construct(private CrmGithubService $crmGithubService, private CrmRequestHandler $crmRequestHandler, private CrmGithubApiErrorResponseFactory $errorResponseFactory)
-    {
+    public function __construct(
+        private CrmGithubService $crmGithubService,
+        private CrmRequestHandler $crmRequestHandler,
+        private CrmGithubApiErrorResponseFactory $errorResponseFactory
+    ) {
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/branches/create', methods: [Request::METHOD_POST])]

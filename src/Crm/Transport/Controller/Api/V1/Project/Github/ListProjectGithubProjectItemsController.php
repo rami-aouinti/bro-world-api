@@ -22,8 +22,10 @@ final readonly class ListProjectGithubProjectItemsController
 {
     use HandlesGithubApiExceptions;
 
-    public function __construct(private CrmGithubService $crmGithubService, private CrmGithubApiErrorResponseFactory $errorResponseFactory)
-    {
+    public function __construct(
+        private CrmGithubService $crmGithubService,
+        private CrmGithubApiErrorResponseFactory $errorResponseFactory
+    ) {
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/projects/{projectId}/items', methods: [Request::METHOD_GET])]

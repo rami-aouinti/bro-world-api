@@ -36,7 +36,9 @@ final class ReindexCrmRepositoriesCommand extends Command
         $indexed = 0;
 
         /** @var CrmRepository $repository */
-        foreach ($this->crmRepository->findBy([], ['createdAt' => 'DESC']) as $repository) {
+        foreach ($this->crmRepository->findBy([], [
+            'createdAt' => 'DESC',
+        ]) as $repository) {
             $this->elasticsearchService->index(CrmRepositoryProjection::INDEX_NAME, $repository->getId(), [
                 'id' => $repository->getId(),
                 'projectId' => $repository->getProject()?->getId(),

@@ -37,7 +37,9 @@ class CrmRepository implements EntityInterface
     #[Assert\NotNull]
     private ?Project $project = null;
 
-    #[ORM\Column(name: 'provider', type: Types::STRING, length: 30, options: ['default' => 'github'])]
+    #[ORM\Column(name: 'provider', type: Types::STRING, length: 30, options: [
+        'default' => 'github',
+    ])]
     private string $provider = 'github';
 
     #[ORM\Column(name: 'owner', type: Types::STRING, length: 255)]
@@ -52,7 +54,9 @@ class CrmRepository implements EntityInterface
     #[ORM\Column(name: 'default_branch', type: Types::STRING, length: 255, nullable: true)]
     private ?string $defaultBranch = null;
 
-    #[ORM\Column(name: 'is_private', type: Types::BOOLEAN, options: ['default' => false])]
+    #[ORM\Column(name: 'is_private', type: Types::BOOLEAN, options: [
+        'default' => false,
+    ])]
     private bool $isPrivate = false;
 
     #[ORM\Column(name: 'html_url', type: Types::STRING, length: 1024, nullable: true)]
@@ -64,7 +68,9 @@ class CrmRepository implements EntityInterface
     #[ORM\Column(name: 'last_synced_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $lastSyncedAt = null;
 
-    #[ORM\Column(name: 'sync_status', type: Types::STRING, length: 40, options: ['default' => 'pending'])]
+    #[ORM\Column(name: 'sync_status', type: Types::STRING, length: 40, options: [
+        'default' => 'pending',
+    ])]
     private string $syncStatus = 'pending';
 
     /**

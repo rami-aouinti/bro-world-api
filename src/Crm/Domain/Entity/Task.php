@@ -69,7 +69,9 @@ class Task implements EntityInterface
     #[ORM\Column(name: 'estimated_hours', type: Types::FLOAT, nullable: true)]
     private ?float $estimatedHours = null;
 
-    /** @var array<string,mixed>|null */
+    /**
+     * @var array<string,mixed>|null
+     */
     #[ORM\Column(name: 'github_issue', type: Types::JSON, nullable: true)]
     private ?array $githubIssue = null;
 

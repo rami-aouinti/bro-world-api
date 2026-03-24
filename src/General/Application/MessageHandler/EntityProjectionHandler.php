@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\General\Application\MessageHandler;
 
-use App\Crm\Application\Projection\CrmTaskProjection;
 use App\Crm\Application\Projection\CrmIssueProjection;
 use App\Crm\Application\Projection\CrmRepositoryProjection;
+use App\Crm\Application\Projection\CrmTaskProjection;
 use App\Crm\Infrastructure\Repository\CrmGithubWebhookEventRepository;
 use App\Crm\Infrastructure\Repository\CrmProjectRepositoryRepository;
 use App\Crm\Infrastructure\Repository\TaskRepository;

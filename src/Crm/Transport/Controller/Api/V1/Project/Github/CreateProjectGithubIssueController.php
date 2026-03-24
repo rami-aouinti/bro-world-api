@@ -24,8 +24,11 @@ final readonly class CreateProjectGithubIssueController
 {
     use HandlesGithubApiExceptions;
 
-    public function __construct(private CrmGithubService $crmGithubService, private CrmRequestHandler $crmRequestHandler, private CrmGithubApiErrorResponseFactory $errorResponseFactory)
-    {
+    public function __construct(
+        private CrmGithubService $crmGithubService,
+        private CrmRequestHandler $crmRequestHandler,
+        private CrmGithubApiErrorResponseFactory $errorResponseFactory
+    ) {
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/issues', methods: [Request::METHOD_POST])]
@@ -51,7 +54,7 @@ final readonly class CreateProjectGithubIssueController
                         value: [
                             'repository' => 'acme/crm-platform',
                             'title' => 'Automatiser la création des tickets support premium',
-                            'body' => "Contexte: projet CRM enterprise\\nPriorité: P1\\nSource: workflow task request.",
+                            'body' => 'Contexte: projet CRM enterprise\\nPriorité: P1\\nSource: workflow task request.',
                         ],
                     ),
                 ],

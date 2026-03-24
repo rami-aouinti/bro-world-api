@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\TaskRequest;
 
+use App\Crm\Application\Message\ProvisionTaskRequestGithubIssue;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
 use App\Crm\Application\Service\CrmTaskBlogProvisioningService;
-use App\Crm\Application\Message\ProvisionTaskRequestGithubIssue;
 use App\Crm\Domain\Entity\TaskRequest;
 use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\Crm\Infrastructure\Repository\CrmProjectRepositoryRepository;

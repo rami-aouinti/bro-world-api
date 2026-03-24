@@ -7,7 +7,6 @@ namespace App\Quiz\Domain\Entity;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
-use App\Quiz\Domain\Entity\QuizCategory;
 use App\Quiz\Domain\Enum\QuizLevel;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;

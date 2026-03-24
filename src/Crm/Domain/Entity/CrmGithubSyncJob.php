@@ -56,11 +56,15 @@ class CrmGithubSyncJob implements EntityInterface
     #[ORM\Column(name: 'errors_count', type: Types::INTEGER)]
     private int $errorsCount = 0;
 
-    /** @var array<int,mixed> */
+    /**
+     * @var array<int,mixed>
+     */
     #[ORM\Column(name: 'errors', type: Types::JSON)]
     private array $errors = [];
 
-    /** @var array<string,mixed> */
+    /**
+     * @var array<string,mixed>
+     */
     #[ORM\Column(name: 'parameters', type: Types::JSON)]
     private array $parameters = [];
 
@@ -78,42 +82,138 @@ class CrmGithubSyncJob implements EntityInterface
         return $this->id->toString();
     }
 
-    public function getApplicationSlug(): string { return $this->applicationSlug; }
-    public function setApplicationSlug(string $applicationSlug): self { $this->applicationSlug = trim($applicationSlug); return $this; }
+    public function getApplicationSlug(): string
+    {
+        return $this->applicationSlug;
+    }
+    public function setApplicationSlug(string $applicationSlug): self
+    {
+        $this->applicationSlug = trim($applicationSlug);
 
-    public function getOwner(): string { return $this->owner; }
-    public function setOwner(string $owner): self { $this->owner = trim($owner); return $this; }
+        return $this;
+    }
 
-    public function getStartedAt(): ?DateTimeImmutable { return $this->startedAt; }
-    public function setStartedAt(?DateTimeImmutable $startedAt): self { $this->startedAt = $startedAt; return $this; }
+    public function getOwner(): string
+    {
+        return $this->owner;
+    }
+    public function setOwner(string $owner): self
+    {
+        $this->owner = trim($owner);
 
-    public function getFinishedAt(): ?DateTimeImmutable { return $this->finishedAt; }
-    public function setFinishedAt(?DateTimeImmutable $finishedAt): self { $this->finishedAt = $finishedAt; return $this; }
+        return $this;
+    }
 
-    public function getStatus(): string { return $this->status; }
-    public function setStatus(string $status): self { $this->status = trim($status); return $this; }
+    public function getStartedAt(): ?DateTimeImmutable
+    {
+        return $this->startedAt;
+    }
+    public function setStartedAt(?DateTimeImmutable $startedAt): self
+    {
+        $this->startedAt = $startedAt;
 
-    public function getProjectsCreated(): int { return $this->projectsCreated; }
-    public function setProjectsCreated(int $projectsCreated): self { $this->projectsCreated = $projectsCreated; return $this; }
+        return $this;
+    }
 
-    public function getReposAttached(): int { return $this->reposAttached; }
-    public function setReposAttached(int $reposAttached): self { $this->reposAttached = $reposAttached; return $this; }
+    public function getFinishedAt(): ?DateTimeImmutable
+    {
+        return $this->finishedAt;
+    }
+    public function setFinishedAt(?DateTimeImmutable $finishedAt): self
+    {
+        $this->finishedAt = $finishedAt;
 
-    public function getIssuesImported(): int { return $this->issuesImported; }
-    public function setIssuesImported(int $issuesImported): self { $this->issuesImported = $issuesImported; return $this; }
+        return $this;
+    }
 
-    public function getErrorsCount(): int { return $this->errorsCount; }
-    public function setErrorsCount(int $errorsCount): self { $this->errorsCount = $errorsCount; return $this; }
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+    public function setStatus(string $status): self
+    {
+        $this->status = trim($status);
 
-    /** @return array<int,mixed> */
-    public function getErrors(): array { return $this->errors; }
+        return $this;
+    }
 
-    /** @param array<int,mixed> $errors */
-    public function setErrors(array $errors): self { $this->errors = $errors; return $this; }
+    public function getProjectsCreated(): int
+    {
+        return $this->projectsCreated;
+    }
+    public function setProjectsCreated(int $projectsCreated): self
+    {
+        $this->projectsCreated = $projectsCreated;
 
-    /** @return array<string,mixed> */
-    public function getParameters(): array { return $this->parameters; }
+        return $this;
+    }
 
-    /** @param array<string,mixed> $parameters */
-    public function setParameters(array $parameters): self { $this->parameters = $parameters; return $this; }
+    public function getReposAttached(): int
+    {
+        return $this->reposAttached;
+    }
+    public function setReposAttached(int $reposAttached): self
+    {
+        $this->reposAttached = $reposAttached;
+
+        return $this;
+    }
+
+    public function getIssuesImported(): int
+    {
+        return $this->issuesImported;
+    }
+    public function setIssuesImported(int $issuesImported): self
+    {
+        $this->issuesImported = $issuesImported;
+
+        return $this;
+    }
+
+    public function getErrorsCount(): int
+    {
+        return $this->errorsCount;
+    }
+    public function setErrorsCount(int $errorsCount): self
+    {
+        $this->errorsCount = $errorsCount;
+
+        return $this;
+    }
+
+    /**
+     * @return array<int,mixed>
+     */
+    public function getErrors(): array
+    {
+        return $this->errors;
+    }
+
+    /**
+     * @param array<int,mixed> $errors
+     */
+    public function setErrors(array $errors): self
+    {
+        $this->errors = $errors;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function getParameters(): array
+    {
+        return $this->parameters;
+    }
+
+    /**
+     * @param array<string,mixed> $parameters
+     */
+    public function setParameters(array $parameters): self
+    {
+        $this->parameters = $parameters;
+
+        return $this;
+    }
 }

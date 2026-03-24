@@ -41,7 +41,11 @@ final class ReindexCrmIssuesCommand extends Command
         $indexed = 0;
 
         /** @var CrmGithubWebhookEvent $event */
-        foreach ($this->webhookEventRepository->findBy(['eventName' => 'issues'], ['createdAt' => 'DESC']) as $event) {
+        foreach ($this->webhookEventRepository->findBy([
+            'eventName' => 'issues',
+        ], [
+            'createdAt' => 'DESC',
+        ]) as $event) {
             $payload = $event->getPayload();
             $issue = is_array($payload['issue'] ?? null) ? $payload['issue'] : [];
 

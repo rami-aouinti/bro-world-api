@@ -199,7 +199,6 @@ final readonly class CrmApiNormalizer
         return $normalizedAssignees;
     }
 
-
     /**
      * @param array<int,mixed> $branches
      * @return array<int,array<string,mixed>>

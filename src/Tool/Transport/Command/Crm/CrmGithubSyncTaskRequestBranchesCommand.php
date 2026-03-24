@@ -59,7 +59,7 @@ final class CrmGithubSyncTaskRequestBranchesCommand extends Command
             try {
                 $remoteBranchNames = $this->fetchRemoteBranchNames($project, $repositoryFullName);
                 foreach ($groupBranches as $branch) {
-                    ++$scanned;
+                    $scanned++;
                     $remoteExists = array_key_exists(strtolower($branch->getBranchName()), $remoteBranchNames);
                     $nextStatus = $remoteExists ? 'synced' : 'deleted';
                     $metadata = $branch->getMetadata();
@@ -72,7 +72,7 @@ final class CrmGithubSyncTaskRequestBranchesCommand extends Command
                     ];
 
                     if ($branch->getSyncStatus() !== $nextStatus) {
-                        ++$updated;
+                        $updated++;
                     }
 
                     $branch
@@ -103,8 +103,8 @@ final class CrmGithubSyncTaskRequestBranchesCommand extends Command
                 }
             } catch (CrmGithubApiException) {
                 foreach ($groupBranches as $branch) {
-                    ++$scanned;
-                    ++$failed;
+                    $scanned++;
+                    $failed++;
                     $branch->setSyncStatus('error')->setLastSyncedAt(new DateTimeImmutable());
                     $this->taskRequestGithubBranchRepository->save($branch, true);
 
@@ -191,7 +191,7 @@ final class CrmGithubSyncTaskRequestBranchesCommand extends Command
             }
 
             $hasNextPage = (bool)($response['pagination']['hasNextPage'] ?? false);
-            ++$page;
+            $page++;
         } while ($hasNextPage === true);
 
         return $names;

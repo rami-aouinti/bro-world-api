@@ -38,7 +38,11 @@ readonly class CrmGithubService
     public function getDashboard(Project $project): array
     {
         $repositories = $this->listRepositories($project);
-        $stats = ['open' => 0, 'closed' => 0, 'merged' => 0];
+        $stats = [
+            'open' => 0,
+            'closed' => 0,
+            'merged' => 0,
+        ];
 
         foreach ($repositories as $repository) {
             $pulls = $this->listPullRequests($project, $repository['fullName'], state: 'all', page: 1, perPage: 100);
@@ -46,12 +50,14 @@ readonly class CrmGithubService
                 $state = (string)($pullRequest['state'] ?? '');
                 if ($state === 'open') {
                     $stats['open']++;
+
                     continue;
                 }
 
                 $mergedAt = $pullRequest['mergedAt'] ?? null;
                 if (is_string($mergedAt) && $mergedAt !== '') {
                     $stats['merged']++;
+
                     continue;
                 }
 
@@ -180,7 +186,10 @@ readonly class CrmGithubService
     public function listBranches(Project $project, string $repoFullName, int $page = 1, int $perPage = 30, string $search = ''): array
     {
         $response = $this->requestWithMeta($project, 'GET', sprintf('/repos/%s/branches', $repoFullName), [
-            'query' => ['page' => $page, 'per_page' => $perPage],
+            'query' => [
+                'page' => $page,
+                'per_page' => $perPage,
+            ],
         ]);
 
         $items = array_map(static fn (array $branch): array => [
@@ -390,7 +399,10 @@ query($owner:String!, $perPage:Int!) {
     }
   }
 }
-GRAPHQL, $ownerField), ['owner' => $owner, 'perPage' => $perPage]);
+GRAPHQL, $ownerField), [
+            'owner' => $owner,
+            'perPage' => $perPage,
+        ]);
 
         $projectBlock = $graphql['data'][$ownerField]['projectsV2'] ?? null;
         $nodes = is_array($projectBlock['nodes'] ?? null) ? $projectBlock['nodes'] : [];
@@ -433,7 +445,11 @@ query($projectId:ID!, $perPage:Int!, $after:String) {
     }
   }
 }
-GRAPHQL, ['projectId' => $projectId, 'perPage' => $perPage, 'after' => null]);
+GRAPHQL, [
+            'projectId' => $projectId,
+            'perPage' => $perPage,
+            'after' => null,
+        ]);
 
         $itemsBlock = $graphql['data']['node']['items'] ?? [];
         $nodes = is_array($itemsBlock['nodes'] ?? null) ? $itemsBlock['nodes'] : [];
@@ -478,30 +494,40 @@ GRAPHQL, ['projectId' => $projectId, 'perPage' => $perPage, 'after' => null]);
         $owner = trim((string)$owner);
         $path = $owner !== '' ? sprintf('/orgs/%s/repos', $owner) : '/user/repos';
 
-        return $this->request($project, 'POST', $path, ['json' => $payload]);
+        return $this->request($project, 'POST', $path, [
+            'json' => $payload,
+        ]);
     }
 
     public function createIssue(Project $project, string $repoFullName, string $title, ?string $body = null): array
     {
-        $payload = ['title' => trim($title)];
+        $payload = [
+            'title' => trim($title),
+        ];
         if (is_string($body) && trim($body) !== '') {
             $payload['body'] = trim($body);
         }
 
-        return $this->request($project, 'POST', sprintf('/repos/%s/issues', $repoFullName), ['json' => $payload]);
+        return $this->request($project, 'POST', sprintf('/repos/%s/issues', $repoFullName), [
+            'json' => $payload,
+        ]);
     }
 
     public function updateIssueState(Project $project, string $repoFullName, int $number, string $state): array
     {
         return $this->request($project, 'PATCH', sprintf('/repos/%s/issues/%d', $repoFullName, $number), [
-            'json' => ['state' => strtolower(trim($state))],
+            'json' => [
+                'state' => strtolower(trim($state)),
+            ],
         ]);
     }
 
     public function addIssueComment(Project $project, string $repoFullName, int $number, string $body): array
     {
         return $this->request($project, 'POST', sprintf('/repos/%s/issues/%d/comments', $repoFullName, $number), [
-            'json' => ['body' => trim($body)],
+            'json' => [
+                'body' => trim($body),
+            ],
         ]);
     }
 
@@ -513,7 +539,10 @@ mutation($owner:String!, $title:String!) {
     projectV2 { id title number url }
   }
 }
-GRAPHQL, ['owner' => $ownerLogin, 'title' => $title]);
+GRAPHQL, [
+            'owner' => $ownerLogin,
+            'title' => $title,
+        ]);
 
         return $graphql['data']['createProjectV2']['projectV2'] ?? [];
     }
@@ -526,7 +555,11 @@ mutation($projectId:ID!, $itemId:ID!, $afterId:ID) {
     items { totalCount }
   }
 }
-GRAPHQL, ['projectId' => $projectId, 'itemId' => $itemId, 'afterId' => $afterItemId]);
+GRAPHQL, [
+            'projectId' => $projectId,
+            'itemId' => $itemId,
+            'afterId' => $afterItemId,
+        ]);
 
         return $graphql['data']['updateProjectV2ItemPosition']['items'] ?? [];
     }
@@ -543,7 +576,9 @@ GRAPHQL, ['projectId' => $projectId, 'itemId' => $itemId, 'afterId' => $afterIte
     public function closePullRequest(Project $project, string $repoFullName, int $number): array
     {
         return $this->request($project, 'PATCH', sprintf('/repos/%s/pulls/%d', $repoFullName, $number), [
-            'json' => ['state' => 'closed'],
+            'json' => [
+                'state' => 'closed',
+            ],
         ]);
     }
 
@@ -603,7 +638,12 @@ GRAPHQL, ['projectId' => $projectId, 'itemId' => $itemId, 'afterId' => $afterIte
      */
     private function graphql(Project $project, string $query, array $variables = []): array
     {
-        $data = $this->request($project, 'POST', '/graphql', ['json' => ['query' => $query, 'variables' => $variables]]);
+        $data = $this->request($project, 'POST', '/graphql', [
+            'json' => [
+                'query' => $query,
+                'variables' => $variables,
+            ],
+        ]);
         if (is_array($data['errors'] ?? null) && $data['errors'] !== []) {
             throw new CrmGithubApiException('GitHub project operation failed.', 422, $data['errors']);
         }

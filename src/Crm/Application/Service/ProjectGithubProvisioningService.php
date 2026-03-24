@@ -12,15 +12,16 @@ use function explode;
 use function is_array;
 use function is_numeric;
 use function is_string;
-use function str_contains;
 use function preg_replace;
+use function str_contains;
 use function strtolower;
 use function trim;
 
 final readonly class ProjectGithubProvisioningService
 {
-    public function __construct(private CrmGithubService $crmGithubService)
-    {
+    public function __construct(
+        private CrmGithubService $crmGithubService
+    ) {
     }
 
     /**

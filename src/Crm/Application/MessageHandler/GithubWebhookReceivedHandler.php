@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Crm\Application\MessageHandler;
 
 use App\Crm\Application\Message\GithubWebhookReceived;
-use App\Crm\Application\Service\CrmTaskRequestGithubStatusMapper;
 use App\Crm\Application\Service\CrmReadCacheInvalidator;
+use App\Crm\Application\Service\CrmTaskRequestGithubStatusMapper;
 use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\Crm\Infrastructure\Repository\CrmGithubWebhookEventRepository;
 use App\Crm\Infrastructure\Repository\CrmProjectRepositoryRepository;

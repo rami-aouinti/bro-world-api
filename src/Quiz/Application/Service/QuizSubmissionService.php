@@ -40,9 +40,6 @@ final readonly class QuizSubmissionService
     }
 
     /**
-     * @param string $applicationSlug
-     * @param array $payload
-     * @param User $loggedInUser
      * @return array<string, mixed>
      * @throws ORMException
      * @throws OptimisticLockException

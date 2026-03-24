@@ -11,8 +11,6 @@ use App\Crm\Transport\Request\AddProjectGithubRepositoryRequest;
 use App\Crm\Transport\Request\CrmGithubApiErrorResponseFactory;
 use App\Crm\Transport\Request\CrmRequestHandler;
 use App\Role\Domain\Enum\Role;
-use Doctrine\ORM\Exception\ORMException;
-use Doctrine\ORM\OptimisticLockException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,6 +24,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class AddProjectGithubRepositoryController
 {
     use HandlesGithubApiExceptions;
+
     public function __construct(
         private CrmGithubService $crmGithubService,
         private CrmRequestHandler $crmRequestHandler,
@@ -34,12 +33,6 @@ final readonly class AddProjectGithubRepositoryController
     ) {
     }
 
-    /**
-     * @param string $applicationSlug
-     * @param Project $project
-     * @param Request $request
-     * @return JsonResponse
-     */
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/repositories', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'crm-sales-hub')]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'), example: 'ebf77366-d60c-4ac4-b204-9f91a7f7ee12')]
