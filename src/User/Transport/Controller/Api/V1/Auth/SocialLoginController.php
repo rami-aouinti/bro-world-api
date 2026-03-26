@@ -53,7 +53,6 @@ class SocialLoginController
     #[Route(path: '/v1/auth/social_login', methods: [Request::METHOD_POST])]
     #[OA\Post(
         summary: 'Authenticate or create a user via a social provider',
-        tags: ['Authentication'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -70,6 +69,7 @@ class SocialLoginController
                 ],
             ),
         ),
+        tags: ['Authentication'],
         responses: [
             new OA\Response(response: 200, description: 'Authenticated successfully, token returned.'),
             new OA\Response(response: 400, description: 'Invalid payload or unsupported provider.'),

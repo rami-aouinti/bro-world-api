@@ -29,6 +29,7 @@ services:
             RABBITMQ_DEFAULT_VHOST: /
         ports:
             - "${RABBITMQ_MANAGEMENT_PORT}:15672"
+            - "5672:5672"
         volumes:
             - ./var/rabbitmq:/var/lib/rabbitmq:delegated
         networks:
@@ -44,7 +45,7 @@ services:
         container_name: ${COMPOSE_PROJECT_NAME}-elasticsearch
         restart: always
         environment:
-            ES_JAVA_OPTS: "-Xmx4096m -Xms4096m"
+            ES_JAVA_OPTS: "-Xms512m -Xmx512m"
             ELASTIC_USERNAME: ${ELASTICSEARCH_USERNAME}
             ELASTIC_PASSWORD: ${ELASTICSEARCH_PASSWORD}
             # Use single node discovery in order to disable production mode and avoid bootstrap checks

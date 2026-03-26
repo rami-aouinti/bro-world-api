@@ -30,17 +30,17 @@ use function trim;
 
 #[AsController]
 #[OA\Tag(name: 'Authentication')]
-class RegisterController
+readonly class RegisterController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly JWTTokenManagerInterface $jwtTokenManager,
-        private readonly MailerServiceInterface $mailerService,
-        private readonly Twig $twig,
-        private readonly UserRepositoryInterface $userRepository,
-        private readonly RolesServiceInterface $rolesService,
+        private EntityManagerInterface   $entityManager,
+        private JWTTokenManagerInterface $jwtTokenManager,
+        private MailerServiceInterface   $mailerService,
+        private Twig                     $twig,
+        private UserRepositoryInterface  $userRepository,
+        private RolesServiceInterface    $rolesService,
         #[Autowire('%env(resolve:APP_SENDER_EMAIL)%')]
-        private readonly string $appSenderEmail,
+        private string                   $appSenderEmail,
     ) {
     }
 
@@ -51,7 +51,6 @@ class RegisterController
     #[Route(path: '/v1/auth/register', methods: [Request::METHOD_POST])]
     #[OA\Post(
         summary: 'Register a new user account',
-        tags: ['Authentication'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -68,6 +67,7 @@ class RegisterController
                 ],
             ),
         ),
+        tags: ['Authentication'],
         responses: [
             new OA\Response(response: 201, description: 'User created and token returned.'),
             new OA\Response(response: 400, description: 'Invalid payload or email already used.'),
