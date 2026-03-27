@@ -15,6 +15,7 @@ use App\General\Application\Service\CacheInvalidationService;
 use App\General\Application\Service\MercurePublisher;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
+use DateTimeImmutable;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -32,6 +33,10 @@ final readonly class CreateMessageCommandHandler
     ) {
     }
 
+    /**
+     * @throws \Throwable
+     * @throws \JsonException
+     */
     public function __invoke(CreateMessageCommand $command): string
     {
         /** @var array{chatId: string, message: ChatMessage} $result */
@@ -43,14 +48,14 @@ final readonly class CreateMessageCommandHandler
 
             $conversation = $this->findParticipantConversation($command->conversationId, $actor);
 
-            $message = (new ChatMessage())
+            $message = new ChatMessage()
                 ->setConversation($conversation)
                 ->setSender($actor)
                 ->setContent($command->content)
                 ->setAttachments([])
                 ->setMetadata([]);
 
-            $conversation->setLastMessageAt(new \DateTimeImmutable());
+            $conversation->setLastMessageAt(new DateTimeImmutable());
             $this->conversationRepository->save($conversation, false);
 
             $this->messageRepository->save($message);

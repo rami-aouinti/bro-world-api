@@ -54,10 +54,10 @@ class NotificationRepository extends BaseRepository
 
     public function markAllAsReadByRecipient(User $user): int
     {
-        return $this->markAllAsReadByRecipientId($user->getId());
+        return $this->markAllAsReadByRecipientId($user);
     }
 
-    public function markAllAsReadByRecipientId(string $recipientId): int
+    public function markAllAsReadByRecipientId(User $user): int
     {
         return $this->createQueryBuilder('n')
             ->update()
@@ -66,7 +66,7 @@ class NotificationRepository extends BaseRepository
             ->andWhere('n.isRead = :currentState')
             ->setParameter('isRead', true)
             ->setParameter('currentState', false)
-            ->setParameter('recipient', $recipientId, UuidBinaryOrderedTimeType::NAME)
+            ->setParameter('recipient', $user->getId(), UuidBinaryOrderedTimeType::NAME)
             ->getQuery()
             ->execute();
     }
