@@ -21,6 +21,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+use Throwable;
 use function is_string;
 use function trim;
 
@@ -114,7 +115,7 @@ final readonly class NotificationController
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     #[Route('/v1/notifications/read-all', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(summary: 'Mark all notifications as read for the logged-in user.')]
@@ -160,7 +161,7 @@ final readonly class NotificationController
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     #[Route('/v1/notifications', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'Create a notification.')]

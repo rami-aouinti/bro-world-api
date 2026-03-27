@@ -53,7 +53,7 @@ final readonly class CreateNotificationCommandHandler
                 }
             }
 
-            $notification = (new Notification())
+            $notification = new Notification()
                 ->setTitle(trim($command->title))
                 ->setDescription(trim($command->description))
                 ->setType(trim($command->type))
