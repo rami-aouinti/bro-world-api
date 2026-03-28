@@ -8,6 +8,7 @@ use App\Library\Domain\Entity\LibraryFile;
 use App\User\Domain\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 
 /**
  * @extends ServiceEntityRepository<LibraryFile>
@@ -34,7 +35,7 @@ class LibraryFileRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('file')
             ->andWhere('file.owner = :owner')
-            ->setParameter('owner', $owner)
+            ->setParameter('owner', $owner->getId(), UuidBinaryOrderedTimeType::NAME)
             ->orderBy('file.createdAt', 'ASC')
             ->getQuery()
             ->getResult();

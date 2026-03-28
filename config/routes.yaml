@@ -146,3 +146,11 @@ page-controllers:
     prefix: /api
     defaults:
         _format: json
+library-controllers:
+    resource:
+        path: ../src/Library/Transport/Controller/Api/
+        namespace: App\Library\Transport\Controller\Api
+    type: attribute
+    prefix: /api
+    defaults:
+        _format: json
