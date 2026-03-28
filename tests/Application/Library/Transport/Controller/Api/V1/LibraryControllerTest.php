@@ -82,18 +82,17 @@ class LibraryControllerTest extends WebTestCase
 
         $treePayload = JSON::decode((string)$jsonClient->getResponse()->getContent(), true);
         self::assertIsArray($treePayload);
-        self::assertArrayHasKey('folders', $treePayload);
-        self::assertArrayHasKey('files', $treePayload);
-        self::assertIsArray($treePayload['folders']);
+        self::assertArrayHasKey('children', $treePayload);
+        self::assertIsArray($treePayload['children']);
 
-        $rootNode = $this->findFolderNode($treePayload['folders'], 'Racine');
+        $rootNode = $this->findFolderNode($treePayload['children'], 'Racine');
         self::assertNotNull($rootNode);
 
-        $subNode = $this->findFolderNode($rootNode['folders'] ?? [], 'Sous Dossier');
+        $subNode = $this->findFolderNode($rootNode['children'] ?? [], 'Sous Dossier');
         self::assertNotNull($subNode);
-        self::assertIsArray($subNode['files'] ?? null);
-        self::assertCount(1, $subNode['files']);
-        self::assertSame('pdf', $subNode['files'][0]['fileType'] ?? null);
+        $fileNode = $this->findFileNode($subNode['children'] ?? [], 'cv.pdf');
+        self::assertNotNull($fileNode);
+        self::assertSame('pdf', $fileNode['fileType'] ?? null);
 
         if (file_exists($tmpPdf)) {
             unlink($tmpPdf);
@@ -102,6 +101,29 @@ class LibraryControllerTest extends WebTestCase
         if (file_exists($absolutePath)) {
             unlink($absolutePath);
         }
+    }
+
+    /**
+     * @param mixed $nodes
+     * @return array<string,mixed>|null
+     */
+    private function findFileNode(mixed $nodes, string $name): ?array
+    {
+        if (!is_array($nodes)) {
+            return null;
+        }
+
+        foreach ($nodes as $node) {
+            if (!is_array($node)) {
+                continue;
+            }
+
+            if (($node['type'] ?? null) === 'file' && ($node['name'] ?? null) === $name) {
+                return $node;
+            }
+        }
+
+        return null;
     }
 
     /**

@@ -223,51 +223,16 @@ readonly class LibraryController
                 description: 'Arbre de la library.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(
-                            property: 'folders',
-                            type: 'array',
-                            items: new OA\Items(
-                                properties: [
-                                    new OA\Property(property: 'id', type: 'string', example: '0195df8e-9f4a-7cf2-9f51-b6ed8b4e5bf8'),
-                                    new OA\Property(property: 'name', type: 'string', example: 'Documents'),
-                                    new OA\Property(property: 'type', type: 'string', example: 'folder'),
-                                    new OA\Property(property: 'folders', type: 'array', items: new OA\Items(type: 'object')),
-                                    new OA\Property(
-                                        property: 'files',
-                                        type: 'array',
-                                        items: new OA\Items(
-                                            properties: [
-                                                new OA\Property(property: 'id', type: 'string', example: '0195df99-f0f8-7b45-8e22-31f0f5acef52'),
-                                                new OA\Property(property: 'name', type: 'string', example: 'contrat.pdf'),
-                                                new OA\Property(property: 'type', type: 'string', example: 'file'),
-                                                new OA\Property(property: 'fileType', type: 'string', example: 'pdf'),
-                                                new OA\Property(property: 'mimeType', type: 'string', example: 'application/pdf'),
-                                                new OA\Property(property: 'size', type: 'integer', example: 32145),
-                                                new OA\Property(property: 'extension', type: 'string', example: 'pdf'),
-                                                new OA\Property(property: 'url', type: 'string', example: 'https://localhost/uploads/library/a3f9f63e7d5f4a7fa0c4efed6f12f9dd.pdf'),
-                                            ],
-                                            type: 'object',
-                                        ),
-                                    ),
-                                ],
-                                type: 'object',
-                            ),
-                        ),
-                        new OA\Property(
-                            property: 'files',
-                            type: 'array',
-                            items: new OA\Items(type: 'object'),
-                        ),
+                        new OA\Property(property: 'children', type: 'array', items: new OA\Items(type: 'object')),
                     ],
                     type: 'object',
                     example: [
-                        'folders' => [
+                        'children' => [
                             [
                                 'id' => '0195df8e-9f4a-7cf2-9f51-b6ed8b4e5bf8',
                                 'name' => 'Documents',
                                 'type' => 'folder',
-                                'folders' => [],
-                                'files' => [
+                                'children' => [
                                     [
                                         'id' => '0195df99-f0f8-7b45-8e22-31f0f5acef52',
                                         'name' => 'contrat.pdf',
@@ -281,7 +246,6 @@ readonly class LibraryController
                                 ],
                             ],
                         ],
-                        'files' => [],
                     ],
                 ),
             ),

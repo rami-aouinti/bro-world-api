@@ -10,8 +10,10 @@ use App\Library\Infrastructure\Repository\LibraryFileRepository;
 use App\Library\Infrastructure\Repository\LibraryFolderRepository;
 use App\User\Domain\Entity\User;
 
-use function array_map;
-use function array_values;
+use function is_array;
+use function is_string;
+use function str_starts_with;
+use function substr;
 
 readonly class LibraryTreeService
 {
@@ -41,37 +43,53 @@ readonly class LibraryTreeService
                 'id' => $folderId,
                 'name' => $folder->getName(),
                 'type' => 'folder',
-                'folders' => [],
-                'files' => [],
+                'children' => [],
             ];
 
-            $childrenByParent[$parentId ?? 'root'][] = $folderId;
+            $childrenByParent[$parentId ?? 'root'][] = 'folder:' . $folderId;
         }
 
         foreach ($files as $file) {
             $folderId = $file->getFolder()?->getId();
-            if ($folderId !== null && isset($folderNodes[$folderId])) {
-                $folderNodes[$folderId]['files'][] = $this->normalizeFile($file);
-                continue;
-            }
 
-            $childrenByParent['root_files'][] = $this->normalizeFile($file);
+            $nodeKey = $folderId ?? 'root';
+            $childrenByParent[$nodeKey][] = $this->normalizeFile($file);
         }
 
         $buildFolder = function (string $folderId) use (&$buildFolder, &$childrenByParent, &$folderNodes): array {
             $node = $folderNodes[$folderId];
 
-            $childIds = $childrenByParent[$folderId] ?? [];
-            $node['folders'] = array_values(array_map(static fn (string $id): array => $buildFolder($id), $childIds));
+            $children = [];
+            foreach ($childrenByParent[$folderId] ?? [] as $child) {
+                if (is_string($child) && str_starts_with($child, 'folder:')) {
+                    $children[] = $buildFolder(substr($child, 7));
+                    continue;
+                }
+
+                if (is_array($child)) {
+                    $children[] = $child;
+                }
+            }
+
+            $node['children'] = $children;
 
             return $node;
         };
 
-        $rootFolderIds = $childrenByParent['root'] ?? [];
+        $rootNodes = [];
+        foreach ($childrenByParent['root'] ?? [] as $child) {
+            if (is_string($child) && str_starts_with($child, 'folder:')) {
+                $rootNodes[] = $buildFolder(substr($child, 7));
+                continue;
+            }
+
+            if (is_array($child)) {
+                $rootNodes[] = $child;
+            }
+        }
 
         return [
-            'folders' => array_values(array_map(fn (string $id): array => $buildFolder($id), $rootFolderIds)),
-            'files' => array_values($childrenByParent['root_files'] ?? []),
+            'children' => $rootNodes,
         ];
     }
 
