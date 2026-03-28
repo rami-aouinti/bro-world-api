@@ -14,6 +14,7 @@ use App\Media\Application\Service\MediaUploaderService;
 use App\Media\Application\Service\MediaUploadValidationPolicy;
 use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use JsonException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -264,15 +265,13 @@ readonly class LibraryController
         return new JsonResponse($this->libraryTreeService->getTree($loggedInUser));
     }
 
-    #[Route(path: '/v1/library/folders/{id}', methods: [Request::METHOD_PATCH])]
+    /**
+     * @throws JsonException
+     */
+    #[Route(path: '/v1/library/folders/{folder}', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(summary: 'Renommer un dossier et/ou changer son parent.')]
-    public function patchFolder(string $id, Request $request, User $loggedInUser): JsonResponse
+    public function patchFolder(LibraryFolder $folder, Request $request, User $loggedInUser): JsonResponse
     {
-        $folder = $this->folderRepository->findOneByIdAndOwner($id, $loggedInUser);
-        if (!$folder instanceof LibraryFolder) {
-            throw new HttpException(Response::HTTP_NOT_FOUND, 'Folder not found.');
-        }
-
         /** @var array<string,mixed> $payload */
         $payload = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
@@ -315,30 +314,23 @@ readonly class LibraryController
         ]);
     }
 
-    #[Route(path: '/v1/library/folders/{id}', methods: [Request::METHOD_DELETE])]
+    #[Route(path: '/v1/library/folders/{folder}', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(summary: 'Supprimer un dossier (et ses children).')]
-    public function deleteFolder(string $id, User $loggedInUser): JsonResponse
+    public function deleteFolder(LibraryFolder $folder, User $loggedInUser): JsonResponse
     {
-        $folder = $this->folderRepository->findOneByIdAndOwner($id, $loggedInUser);
-        if (!$folder instanceof LibraryFolder) {
-            throw new HttpException(Response::HTTP_NOT_FOUND, 'Folder not found.');
-        }
-
         $this->entityManager->remove($folder);
         $this->entityManager->flush();
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
-    #[Route(path: '/v1/library/files/{id}', methods: [Request::METHOD_PATCH])]
+    /**
+     * @throws JsonException
+     */
+    #[Route(path: '/v1/library/files/{file}', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(summary: 'Renommer un fichier et/ou changer son dossier parent.')]
-    public function patchFile(string $id, Request $request, User $loggedInUser): JsonResponse
+    public function patchFile(LibraryFile $file, Request $request, User $loggedInUser): JsonResponse
     {
-        $file = $this->fileRepository->findOneByIdAndOwner($id, $loggedInUser);
-        if (!$file instanceof LibraryFile) {
-            throw new HttpException(Response::HTTP_NOT_FOUND, 'File not found.');
-        }
-
         /** @var array<string,mixed> $payload */
         $payload = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
@@ -375,15 +367,10 @@ readonly class LibraryController
         ]);
     }
 
-    #[Route(path: '/v1/library/files/{id}', methods: [Request::METHOD_DELETE])]
+    #[Route(path: '/v1/library/files/{file}', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(summary: 'Supprimer un fichier.')]
-    public function deleteFile(string $id, User $loggedInUser): JsonResponse
+    public function deleteFile(LibraryFile $file, User $loggedInUser): JsonResponse
     {
-        $file = $this->fileRepository->findOneByIdAndOwner($id, $loggedInUser);
-        if (!$file instanceof LibraryFile) {
-            throw new HttpException(Response::HTTP_NOT_FOUND, 'File not found.');
-        }
-
         $this->deletePhysicalFileIfInsideLibraryUploads($file->getUrl());
 
         $this->entityManager->remove($file);
