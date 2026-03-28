@@ -20,6 +20,14 @@ class LibraryFileRepository extends ServiceEntityRepository
         parent::__construct($registry, LibraryFile::class);
     }
 
+    public function findOneByIdAndOwner(string $id, User $owner): ?LibraryFile
+    {
+        return $this->findOneBy([
+            'id' => $id,
+            'owner' => $owner,
+        ]);
+    }
+
     /**
      * @return list<LibraryFile>
      */

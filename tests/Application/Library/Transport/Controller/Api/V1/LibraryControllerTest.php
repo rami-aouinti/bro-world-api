@@ -104,6 +104,86 @@ class LibraryControllerTest extends WebTestCase
     }
 
     /**
+     * @throws Throwable
+     */
+    #[TestDox('Authenticated user can rename, move and delete folders/files.')]
+    public function testLibraryCanPatchMoveAndDeleteResources(): void
+    {
+        $jsonClient = $this->getTestClient('john-user', 'password-user');
+
+        $jsonClient->request('POST', $this->createFolderUrl, [], [], [], JSON::encode(['name' => 'Folder A']));
+        self::assertSame(Response::HTTP_CREATED, $jsonClient->getResponse()->getStatusCode(), "Response:\n" . $jsonClient->getResponse());
+        $folderA = JSON::decode((string)$jsonClient->getResponse()->getContent(), true);
+        self::assertIsArray($folderA);
+
+        $jsonClient->request('POST', $this->createFolderUrl, [], [], [], JSON::encode(['name' => 'Folder B']));
+        self::assertSame(Response::HTTP_CREATED, $jsonClient->getResponse()->getStatusCode(), "Response:\n" . $jsonClient->getResponse());
+        $folderB = JSON::decode((string)$jsonClient->getResponse()->getContent(), true);
+        self::assertIsArray($folderB);
+
+        $multipartClient = $this->getTestClient('john-user', 'password-user', null, [
+            'CONTENT_TYPE' => 'multipart/form-data',
+        ]);
+
+        $tmpPdf = $this->createTempPdf();
+        $multipartClient->request('POST', $this->uploadUrl, [
+            'folderId' => $folderA['id'],
+        ], [
+            'file' => new UploadedFile($tmpPdf, 'doc.pdf', 'application/pdf', null, true),
+        ]);
+        self::assertSame(Response::HTTP_CREATED, $multipartClient->getResponse()->getStatusCode(), "Response:\n" . $multipartClient->getResponse());
+        $uploaded = JSON::decode((string)$multipartClient->getResponse()->getContent(), true);
+        self::assertIsArray($uploaded);
+
+        $filePath = parse_url((string)($uploaded['url'] ?? ''), PHP_URL_PATH);
+        self::assertIsString($filePath);
+        $projectDir = (string)static::getContainer()->getParameter('kernel.project_dir');
+        $absolutePath = $projectDir . '/public' . $filePath;
+        self::assertFileExists($absolutePath);
+
+        $jsonClient->request(
+            'PATCH',
+            self::API_URL_PREFIX . '/v1/library/folders/' . $folderA['id'],
+            [],
+            [],
+            [],
+            JSON::encode(['name' => 'Folder A Renamed', 'parentId' => $folderB['id']])
+        );
+        self::assertSame(Response::HTTP_OK, $jsonClient->getResponse()->getStatusCode(), "Response:\n" . $jsonClient->getResponse());
+
+        $jsonClient->request(
+            'PATCH',
+            self::API_URL_PREFIX . '/v1/library/files/' . $uploaded['id'],
+            [],
+            [],
+            [],
+            JSON::encode(['name' => 'doc-renamed.pdf', 'folderId' => $folderB['id']])
+        );
+        self::assertSame(Response::HTTP_OK, $jsonClient->getResponse()->getStatusCode(), "Response:\n" . $jsonClient->getResponse());
+        $patchedFile = JSON::decode((string)$jsonClient->getResponse()->getContent(), true);
+        self::assertIsArray($patchedFile);
+        self::assertSame('doc-renamed.pdf', $patchedFile['name'] ?? null);
+        self::assertSame($folderB['id'], $patchedFile['folderId'] ?? null);
+
+        $jsonClient->request('DELETE', self::API_URL_PREFIX . '/v1/library/files/' . $uploaded['id']);
+        self::assertSame(Response::HTTP_NO_CONTENT, $jsonClient->getResponse()->getStatusCode(), "Response:\n" . $jsonClient->getResponse());
+        self::assertFileDoesNotExist($absolutePath);
+
+        $jsonClient->request('DELETE', self::API_URL_PREFIX . '/v1/library/folders/' . $folderB['id']);
+        self::assertSame(Response::HTTP_NO_CONTENT, $jsonClient->getResponse()->getStatusCode(), "Response:\n" . $jsonClient->getResponse());
+
+        $jsonClient->request('GET', $this->treeUrl);
+        self::assertSame(Response::HTTP_OK, $jsonClient->getResponse()->getStatusCode(), "Response:\n" . $jsonClient->getResponse());
+        $tree = JSON::decode((string)$jsonClient->getResponse()->getContent(), true);
+        self::assertIsArray($tree);
+        self::assertSame([], $tree['children'] ?? null);
+
+        if (file_exists($tmpPdf)) {
+            unlink($tmpPdf);
+        }
+    }
+
+    /**
      * @param mixed $nodes
      * @return array<string,mixed>|null
      */

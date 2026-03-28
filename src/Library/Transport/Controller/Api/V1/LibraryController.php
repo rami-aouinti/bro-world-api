@@ -8,12 +8,14 @@ use App\Library\Application\Service\LibraryTreeService;
 use App\Library\Domain\Entity\LibraryFile;
 use App\Library\Domain\Entity\LibraryFolder;
 use App\Library\Domain\Enum\LibraryFileType;
+use App\Library\Infrastructure\Repository\LibraryFileRepository;
 use App\Library\Infrastructure\Repository\LibraryFolderRepository;
 use App\Media\Application\Service\MediaUploaderService;
 use App\Media\Application\Service\MediaUploadValidationPolicy;
 use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,6 +27,8 @@ use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 use function is_string;
+use function parse_url;
+use function str_starts_with;
 use function trim;
 
 #[AsController]
@@ -35,8 +39,11 @@ readonly class LibraryController
     public function __construct(
         private EntityManagerInterface $entityManager,
         private LibraryFolderRepository $folderRepository,
+        private LibraryFileRepository $fileRepository,
         private MediaUploaderService $mediaUploaderService,
         private LibraryTreeService $libraryTreeService,
+        private Filesystem $filesystem,
+        private string $projectDir,
     ) {
     }
 
@@ -49,7 +56,7 @@ readonly class LibraryController
                 required: ['name'],
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Documents'),
-                    new OA\Property(property: 'parentId', type: 'string', example: '0195df8e-9f4a-7cf2-9f51-b6ed8b4e5bf8', nullable: true),
+                    new OA\Property(property: 'parentId', type: 'string', nullable: true, example: '0195df8e-9f4a-7cf2-9f51-b6ed8b4e5bf8'),
                 ],
                 type: 'object',
                 example: [
@@ -66,7 +73,7 @@ readonly class LibraryController
                     properties: [
                         new OA\Property(property: 'id', type: 'string', example: '0195df93-91d2-7eaa-a16e-2abaf2ff57f4'),
                         new OA\Property(property: 'name', type: 'string', example: 'Factures'),
-                        new OA\Property(property: 'parentId', type: 'string', example: '0195df8e-9f4a-7cf2-9f51-b6ed8b4e5bf8', nullable: true),
+                        new OA\Property(property: 'parentId', type: 'string', nullable: true, example: '0195df8e-9f4a-7cf2-9f51-b6ed8b4e5bf8'),
                     ],
                     type: 'object',
                 ),
@@ -94,7 +101,7 @@ readonly class LibraryController
             }
         }
 
-        $folder = new LibraryFolder()
+        $folder = (new LibraryFolder())
             ->setOwner($loggedInUser)
             ->setName($name)
             ->setParent($parent);
@@ -133,7 +140,7 @@ readonly class LibraryController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'string', example: '0195df99-f0f8-7b45-8e22-31f0f5acef52'),
-                        new OA\Property(property: 'folderId', type: 'string', example: '0195df8e-9f4a-7cf2-9f51-b6ed8b4e5bf8', nullable: true),
+                        new OA\Property(property: 'folderId', type: 'string', nullable: true, example: '0195df8e-9f4a-7cf2-9f51-b6ed8b4e5bf8'),
                         new OA\Property(property: 'name', type: 'string', example: 'contrat.pdf'),
                         new OA\Property(property: 'url', type: 'string', example: 'https://localhost/uploads/library/a3f9f63e7d5f4a7fa0c4efed6f12f9dd.pdf'),
                         new OA\Property(property: 'mimeType', type: 'string', example: 'application/pdf'),
@@ -189,7 +196,7 @@ readonly class LibraryController
         );
 
         $uploaded = $this->mediaUploaderService->upload($request, [$file], '/uploads/library', $policy)[0];
-        $libraryFile = new LibraryFile()
+        $libraryFile = (new LibraryFile())
             ->setOwner($loggedInUser)
             ->setFolder($folder)
             ->setName($uploaded['originalName'])
@@ -255,5 +262,160 @@ readonly class LibraryController
     public function tree(User $loggedInUser): JsonResponse
     {
         return new JsonResponse($this->libraryTreeService->getTree($loggedInUser));
+    }
+
+    #[Route(path: '/v1/library/folders/{id}', methods: [Request::METHOD_PATCH])]
+    #[OA\Patch(summary: 'Renommer un dossier et/ou changer son parent.')]
+    public function patchFolder(string $id, Request $request, User $loggedInUser): JsonResponse
+    {
+        $folder = $this->folderRepository->findOneByIdAndOwner($id, $loggedInUser);
+        if (!$folder instanceof LibraryFolder) {
+            throw new HttpException(Response::HTTP_NOT_FOUND, 'Folder not found.');
+        }
+
+        /** @var array<string,mixed> $payload */
+        $payload = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        if (is_string($payload['name'] ?? null)) {
+            $name = trim($payload['name']);
+            if ($name === '') {
+                throw new HttpException(Response::HTTP_BAD_REQUEST, 'Field "name" must not be empty.');
+            }
+
+            $folder->setName($name);
+        }
+
+        if (array_key_exists('parentId', $payload)) {
+            $newParent = null;
+            $parentId = $payload['parentId'];
+            if (is_string($parentId) && trim($parentId) !== '') {
+                $newParent = $this->folderRepository->findOneByIdAndOwner(trim($parentId), $loggedInUser);
+                if (!$newParent instanceof LibraryFolder) {
+                    throw new HttpException(Response::HTTP_NOT_FOUND, 'Parent folder not found.');
+                }
+
+                if ($newParent->getId() === $folder->getId()) {
+                    throw new HttpException(Response::HTTP_BAD_REQUEST, 'A folder cannot be its own parent.');
+                }
+
+                if ($this->isDescendantOfFolder($newParent, $folder)) {
+                    throw new HttpException(Response::HTTP_BAD_REQUEST, 'Cannot move folder into one of its children.');
+                }
+            }
+
+            $folder->setParent($newParent);
+        }
+
+        $this->entityManager->flush();
+
+        return new JsonResponse([
+            'id' => $folder->getId(),
+            'name' => $folder->getName(),
+            'parentId' => $folder->getParent()?->getId(),
+        ]);
+    }
+
+    #[Route(path: '/v1/library/folders/{id}', methods: [Request::METHOD_DELETE])]
+    #[OA\Delete(summary: 'Supprimer un dossier (et ses children).')]
+    public function deleteFolder(string $id, User $loggedInUser): JsonResponse
+    {
+        $folder = $this->folderRepository->findOneByIdAndOwner($id, $loggedInUser);
+        if (!$folder instanceof LibraryFolder) {
+            throw new HttpException(Response::HTTP_NOT_FOUND, 'Folder not found.');
+        }
+
+        $this->entityManager->remove($folder);
+        $this->entityManager->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    #[Route(path: '/v1/library/files/{id}', methods: [Request::METHOD_PATCH])]
+    #[OA\Patch(summary: 'Renommer un fichier et/ou changer son dossier parent.')]
+    public function patchFile(string $id, Request $request, User $loggedInUser): JsonResponse
+    {
+        $file = $this->fileRepository->findOneByIdAndOwner($id, $loggedInUser);
+        if (!$file instanceof LibraryFile) {
+            throw new HttpException(Response::HTTP_NOT_FOUND, 'File not found.');
+        }
+
+        /** @var array<string,mixed> $payload */
+        $payload = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        if (is_string($payload['name'] ?? null)) {
+            $name = trim($payload['name']);
+            if ($name === '') {
+                throw new HttpException(Response::HTTP_BAD_REQUEST, 'Field "name" must not be empty.');
+            }
+
+            $file->setName($name);
+        }
+
+        if (array_key_exists('folderId', $payload)) {
+            $folder = null;
+            $folderId = $payload['folderId'];
+            if (is_string($folderId) && trim($folderId) !== '') {
+                $folder = $this->folderRepository->findOneByIdAndOwner(trim($folderId), $loggedInUser);
+                if (!$folder instanceof LibraryFolder) {
+                    throw new HttpException(Response::HTTP_NOT_FOUND, 'Folder not found.');
+                }
+            }
+
+            $file->setFolder($folder);
+        }
+
+        $this->entityManager->flush();
+
+        return new JsonResponse([
+            'id' => $file->getId(),
+            'name' => $file->getName(),
+            'folderId' => $file->getFolder()?->getId(),
+            'url' => $file->getUrl(),
+            'fileType' => $file->getFileType()->value,
+        ]);
+    }
+
+    #[Route(path: '/v1/library/files/{id}', methods: [Request::METHOD_DELETE])]
+    #[OA\Delete(summary: 'Supprimer un fichier.')]
+    public function deleteFile(string $id, User $loggedInUser): JsonResponse
+    {
+        $file = $this->fileRepository->findOneByIdAndOwner($id, $loggedInUser);
+        if (!$file instanceof LibraryFile) {
+            throw new HttpException(Response::HTTP_NOT_FOUND, 'File not found.');
+        }
+
+        $this->deletePhysicalFileIfInsideLibraryUploads($file->getUrl());
+
+        $this->entityManager->remove($file);
+        $this->entityManager->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    private function isDescendantOfFolder(LibraryFolder $candidate, LibraryFolder $target): bool
+    {
+        $current = $candidate->getParent();
+        while ($current instanceof LibraryFolder) {
+            if ($current->getId() === $target->getId()) {
+                return true;
+            }
+
+            $current = $current->getParent();
+        }
+
+        return false;
+    }
+
+    private function deletePhysicalFileIfInsideLibraryUploads(string $url): void
+    {
+        $path = parse_url($url, PHP_URL_PATH);
+        if (!is_string($path) || !str_starts_with($path, '/uploads/library/')) {
+            return;
+        }
+
+        $absolutePath = $this->projectDir . '/public' . $path;
+        if ($this->filesystem->exists($absolutePath)) {
+            $this->filesystem->remove($absolutePath);
+        }
     }
 }
