@@ -49,7 +49,7 @@ readonly class LibraryController
                 required: ['name'],
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Documents'),
-                    new OA\Property(property: 'parentId', type: 'string', nullable: true, example: '0195df8e-9f4a-7cf2-9f51-b6ed8b4e5bf8'),
+                    new OA\Property(property: 'parentId', type: 'string', example: '0195df8e-9f4a-7cf2-9f51-b6ed8b4e5bf8', nullable: true),
                 ],
                 type: 'object',
                 example: [
@@ -66,7 +66,7 @@ readonly class LibraryController
                     properties: [
                         new OA\Property(property: 'id', type: 'string', example: '0195df93-91d2-7eaa-a16e-2abaf2ff57f4'),
                         new OA\Property(property: 'name', type: 'string', example: 'Factures'),
-                        new OA\Property(property: 'parentId', type: 'string', nullable: true, example: '0195df8e-9f4a-7cf2-9f51-b6ed8b4e5bf8'),
+                        new OA\Property(property: 'parentId', type: 'string', example: '0195df8e-9f4a-7cf2-9f51-b6ed8b4e5bf8', nullable: true),
                     ],
                     type: 'object',
                 ),
@@ -94,7 +94,7 @@ readonly class LibraryController
             }
         }
 
-        $folder = (new LibraryFolder())
+        $folder = new LibraryFolder()
             ->setOwner($loggedInUser)
             ->setName($name)
             ->setParent($parent);
@@ -133,7 +133,7 @@ readonly class LibraryController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'string', example: '0195df99-f0f8-7b45-8e22-31f0f5acef52'),
-                        new OA\Property(property: 'folderId', type: 'string', nullable: true, example: '0195df8e-9f4a-7cf2-9f51-b6ed8b4e5bf8'),
+                        new OA\Property(property: 'folderId', type: 'string', example: '0195df8e-9f4a-7cf2-9f51-b6ed8b4e5bf8', nullable: true),
                         new OA\Property(property: 'name', type: 'string', example: 'contrat.pdf'),
                         new OA\Property(property: 'url', type: 'string', example: 'https://localhost/uploads/library/a3f9f63e7d5f4a7fa0c4efed6f12f9dd.pdf'),
                         new OA\Property(property: 'mimeType', type: 'string', example: 'application/pdf'),
@@ -189,7 +189,7 @@ readonly class LibraryController
         );
 
         $uploaded = $this->mediaUploaderService->upload($request, [$file], '/uploads/library', $policy)[0];
-        $libraryFile = (new LibraryFile())
+        $libraryFile = new LibraryFile()
             ->setOwner($loggedInUser)
             ->setFolder($folder)
             ->setName($uploaded['originalName'])

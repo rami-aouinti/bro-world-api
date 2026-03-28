@@ -8,6 +8,7 @@ use App\Library\Domain\Entity\LibraryFolder;
 use App\User\Domain\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 
 /**
  * @extends ServiceEntityRepository<LibraryFolder>
@@ -34,7 +35,7 @@ class LibraryFolderRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('folder')
             ->andWhere('folder.owner = :owner')
-            ->setParameter('owner', $owner)
+            ->setParameter('owner', $owner->getId(), UuidBinaryOrderedTimeType::NAME)
             ->orderBy('folder.createdAt', 'ASC')
             ->getQuery()
             ->getResult();

@@ -148,6 +148,12 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Page/Domain/Entity'
                         prefix: 'App\Page\Domain\Entity'
                         alias: Page
+                    Library:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Library/Domain/Entity'
+                        prefix: 'App\Library\Domain\Entity'
+                        alias: Library
                 dql:
                     datetime_functions:
                         datesub: DoctrineExtensions\Query\Mysql\DateSub
