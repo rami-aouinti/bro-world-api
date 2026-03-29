@@ -38,6 +38,8 @@ services:
         App\General\Application\Rest\Interfaces\BaseRestResourceInterface:
             calls:
                 - setValidator: ['@validator']
+        App\Game\Application\Strategy\GameRuleStrategyInterface:
+            tags: [ 'app.game_rule_strategy' ]
         AutoMapperPlus\MapperInterface:
             tags: [ 'app.stopwatch' ]
         Symfony\Component\EventDispatcher\EventSubscriberInterface:
