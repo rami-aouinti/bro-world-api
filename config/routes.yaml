@@ -154,3 +154,6 @@ library-controllers:
     prefix: /api
     defaults:
         _format: json
+
+game:
+    resource: routes/game.yaml
