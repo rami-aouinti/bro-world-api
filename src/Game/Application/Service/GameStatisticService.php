@@ -5,35 +5,58 @@ declare(strict_types=1);
 namespace App\Game\Application\Service;
 
 use App\Game\Domain\Entity\Game;
-use App\Game\Domain\Entity\GameScore;
 use App\Game\Domain\Entity\GameSession;
+use App\Game\Domain\Entity\GameScore;
 use App\Game\Domain\Entity\GameStatistic;
 use App\Game\Domain\ValueObject\StatisticKey;
 use App\Game\Domain\ValueObject\StatisticValue;
+use App\Game\Infrastructure\Repository\GameScoreRepository;
+use App\Game\Infrastructure\Repository\GameSessionRepository;
+use App\Game\Infrastructure\Repository\GameStatisticRepository;
+use App\Game\Domain\Enum\GameStatus;
 use App\User\Domain\Entity\User;
 
 use function array_filter;
 use function array_map;
 use function array_sum;
-use function array_values;
 use function count;
 use function max;
 
-readonly class GameStatisticService
+final readonly class GameStatisticService
 {
-    public function __construct(private ScoreCalculatorService $scoreCalculatorService)
-    {
+    public function __construct(
+        private GameRuleRegistry $gameRuleRegistry,
+        private GameSessionRepository $gameSessionRepository,
+        private GameScoreRepository $gameScoreRepository,
+        private GameStatisticRepository $gameStatisticRepository,
+    ) {
     }
 
     /**
-     * @param list<GameSession> $sessions
-     * @param list<GameScore>   $scores
-     *
      * @return list<GameStatistic>
      */
-    public function buildForGame(Game $game, array $sessions, array $scores, ?User $user = null): array
+    public function refreshForGame(Game $game, ?User $user = null): array
     {
-        $scoreValues = array_values(array_map(static fn (GameScore $score): int => $score->getValue(), $scores));
+        $sessions = $this->gameSessionRepository->findCompletedByGameAndUser($game, $user);
+
+        $scores = $this->gameScoreRepository
+            ->createQueryBuilder('score')
+            ->innerJoin('score.session', 'session')
+            ->andWhere('session.game = :game')
+            ->setParameter('game', $game)
+            ->andWhere('session.status = :status')
+            ->setParameter('status', GameStatus::COMPLETED->value);
+
+        if (null !== $user) {
+            $scores
+                ->andWhere('session.user = :user')
+                ->setParameter('user', $user);
+        }
+
+        /** @var list<GameScore> $scoreEntities */
+        $scoreEntities = $scores->getQuery()->getResult();
+
+        $scoreValues = array_map(static fn ($score): int => $score->getValue(), $scoreEntities);
         $totalGames = count($sessions);
         $wins = count(array_filter($sessions, static fn (GameSession $session): bool => ($session->getContext()['is_win'] ?? false) === true));
 
@@ -41,26 +64,39 @@ readonly class GameStatisticService
         $average = $scoreValues === [] ? 0.0 : (array_sum($scoreValues) / count($scoreValues));
         $winRate = $totalGames === 0 ? 0.0 : (($wins / $totalGames) * 100);
 
-        $baseStats = [
+        $strategyStats = $this->gameRuleRegistry->resolve($game)->computeStats($game, $user);
+
+        $statistics = [
             'winrate' => new StatisticValue($winRate),
             'average_score' => new StatisticValue($average),
-            'best_score' => new StatisticValue((float)$best),
-            'streak' => new StatisticValue((float)$this->computeWinStreak($sessions)),
+            'best_score' => new StatisticValue((float) $best),
+            'streak' => new StatisticValue((float) $this->computeWinStreak($sessions)),
         ];
 
-        $strategy = $this->scoreCalculatorService->resolveStrategyForGame($game);
-        $strategyStats = $strategy->calculateStatistics($game, $sessions, $scores);
+        foreach ($strategyStats as $key => $value) {
+            $statistics[$key] = new StatisticValue((float) $value);
+        }
 
-        $statistics = [];
-        foreach ([...$baseStats, ...$strategyStats] as $key => $value) {
-            $statistics[] = (new GameStatistic())
+        $entities = [];
+        foreach ($statistics as $key => $value) {
+            $entities[] = (new GameStatistic())
                 ->setGame($game)
                 ->setUser($user)
                 ->setKey((new StatisticKey($key))->toString())
                 ->setValue($value->toFloat());
         }
 
-        return $statistics;
+        $this->gameStatisticRepository->replaceForGameAndUser($game, $user, ...$entities);
+
+        return $entities;
+    }
+
+    /**
+     * @return list<GameStatistic>
+     */
+    public function getForGame(Game $game, ?User $user = null): array
+    {
+        return $this->gameStatisticRepository->findByGameAndUser($game, $user);
     }
 
     /**

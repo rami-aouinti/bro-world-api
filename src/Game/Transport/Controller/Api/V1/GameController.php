@@ -140,9 +140,6 @@ final readonly class GameController
             }
 
             $score = $this->gameSessionService->complete($session, $input->context);
-            $this->entityManager->persist($session);
-            $this->entityManager->persist($score);
-            $this->entityManager->flush();
 
             return new JsonResponse(GameSessionResponseDto::fromEntity($session, $score)->toArray());
         }
@@ -191,17 +188,7 @@ final readonly class GameController
             return new JsonResponse(['message' => 'Game not found.'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $sessions = $this->entityManager->getRepository(GameSession::class)->findBy(['game' => $game], ['startedAt' => 'ASC']);
-        $scores = $this->entityManager
-            ->getRepository(GameScore::class)
-            ->createQueryBuilder('score')
-            ->innerJoin('score.session', 'session')
-            ->andWhere('session.game = :game')
-            ->setParameter('game', $game)
-            ->getQuery()
-            ->getResult();
-
-        $stats = $this->gameStatisticService->buildForGame($game, $sessions, $scores);
+        $stats = $this->gameStatisticService->getForGame($game);
 
         return new JsonResponse([
             'items' => array_map(
