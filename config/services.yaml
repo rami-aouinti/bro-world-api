@@ -198,6 +198,9 @@ when@dev:
         App\Quiz\Infrastructure\DataFixtures\:
             resource: '../src/Quiz/Infrastructure/DataFixtures/*'
 
+        App\Game\Infrastructure\DataFixtures\:
+            resource: '../src/Game/Infrastructure/DataFixtures/*'
+
         App\Notification\Infrastructure\DataFixtures\:
             resource: '../src/Notification/Infrastructure/DataFixtures/*'
 
@@ -255,6 +258,9 @@ when@test:
 
         App\User\Infrastructure\DataFixtures\:
             resource: '../src/User/Infrastructure/DataFixtures/*'
+
+        App\Game\Infrastructure\DataFixtures\:
+            resource: '../src/Game/Infrastructure/DataFixtures/*'
 
         App\Shop\Infrastructure\DataFixtures\:
             resource: '../src/Shop/Infrastructure/DataFixtures/*'
