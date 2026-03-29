@@ -17,7 +17,10 @@ use Ramsey\Uuid\UuidInterface;
 use Throwable;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'game_statistic')]
+#[ORM\Table(name: 'game_statistic', indexes: [
+    new ORM\Index(name: 'idx_game_statistic_user_game', columns: ['user_id', 'game_id']),
+    new ORM\Index(name: 'idx_game_statistic_game_value', columns: ['game_id', 'stat_value']),
+])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class GameStatistic implements EntityInterface
 {
@@ -28,7 +31,7 @@ class GameStatistic implements EntityInterface
     #[ORM\Column(name: 'id', type: UuidBinaryOrderedTimeType::NAME, unique: true)]
     private UuidInterface $id;
 
-    #[ORM\ManyToOne(targetEntity: Game::class)]
+    #[ORM\ManyToOne(targetEntity: Game::class, inversedBy: 'statistics')]
     #[ORM\JoinColumn(name: 'game_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Game $game = null;
 

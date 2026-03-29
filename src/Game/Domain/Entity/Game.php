@@ -9,6 +9,8 @@ use App\Game\Domain\Enum\GameStatus;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
@@ -28,9 +30,21 @@ class Game implements EntityInterface
     #[ORM\Column(name: 'id', type: UuidBinaryOrderedTimeType::NAME, unique: true)]
     private UuidInterface $id;
 
-    #[ORM\ManyToOne(targetEntity: GameCategory::class)]
+    #[ORM\ManyToOne(targetEntity: GameCategory::class, inversedBy: 'games')]
     #[ORM\JoinColumn(name: 'category_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?GameCategory $category = null;
+
+    /**
+     * @var Collection<int, GameSession>
+     */
+    #[ORM\OneToMany(targetEntity: GameSession::class, mappedBy: 'game', cascade: ['remove'])]
+    private Collection $sessions;
+
+    /**
+     * @var Collection<int, GameStatistic>
+     */
+    #[ORM\OneToMany(targetEntity: GameStatistic::class, mappedBy: 'game', cascade: ['remove'])]
+    private Collection $statistics;
 
     #[ORM\Column(name: 'name', type: Types::STRING, length: 255)]
     private string $name = '';
@@ -50,6 +64,8 @@ class Game implements EntityInterface
     public function __construct()
     {
         $this->id = $this->createUuid();
+        $this->sessions = new ArrayCollection();
+        $this->statistics = new ArrayCollection();
     }
 
     #[Override]
@@ -68,6 +84,22 @@ class Game implements EntityInterface
         $this->category = $category;
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, GameSession>
+     */
+    public function getSessions(): Collection
+    {
+        return $this->sessions;
+    }
+
+    /**
+     * @return Collection<int, GameStatistic>
+     */
+    public function getStatistics(): Collection
+    {
+        return $this->statistics;
     }
 
     public function getName(): string

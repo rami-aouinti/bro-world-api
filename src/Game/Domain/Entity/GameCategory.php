@@ -7,6 +7,8 @@ namespace App\Game\Domain\Entity;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
@@ -36,11 +38,18 @@ class GameCategory implements EntityInterface
     private string $description = '';
 
     /**
+     * @var Collection<int, Game>
+     */
+    #[ORM\OneToMany(targetEntity: Game::class, mappedBy: 'category')]
+    private Collection $games;
+
+    /**
      * @throws Throwable
      */
     public function __construct()
     {
         $this->id = $this->createUuid();
+        $this->games = new ArrayCollection();
     }
 
     #[Override]
@@ -83,5 +92,13 @@ class GameCategory implements EntityInterface
         $this->description = $description;
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Game>
+     */
+    public function getGames(): Collection
+    {
+        return $this->games;
     }
 }

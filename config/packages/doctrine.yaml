@@ -154,6 +154,12 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Library/Domain/Entity'
                         prefix: 'App\Library\Domain\Entity'
                         alias: Library
+                    Game:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Game/Domain/Entity'
+                        prefix: 'App\Game\Domain\Entity'
+                        alias: Game
                 dql:
                     datetime_functions:
                         datesub: DoctrineExtensions\Query\Mysql\DateSub

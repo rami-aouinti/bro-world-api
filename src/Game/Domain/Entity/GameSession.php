@@ -10,6 +10,8 @@ use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
 use App\User\Domain\Entity\User;
 use DateTimeImmutable;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
@@ -18,7 +20,9 @@ use Ramsey\Uuid\UuidInterface;
 use Throwable;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'game_session')]
+#[ORM\Table(name: 'game_session', indexes: [
+    new ORM\Index(name: 'idx_game_session_game_created_at', columns: ['game_id', 'created_at']),
+])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class GameSession implements EntityInterface
 {
@@ -29,7 +33,7 @@ class GameSession implements EntityInterface
     #[ORM\Column(name: 'id', type: UuidBinaryOrderedTimeType::NAME, unique: true)]
     private UuidInterface $id;
 
-    #[ORM\ManyToOne(targetEntity: Game::class)]
+    #[ORM\ManyToOne(targetEntity: Game::class, inversedBy: 'sessions')]
     #[ORM\JoinColumn(name: 'game_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Game $game = null;
 
@@ -50,12 +54,19 @@ class GameSession implements EntityInterface
     private array $context = [];
 
     /**
+     * @var Collection<int, GameScore>
+     */
+    #[ORM\OneToMany(targetEntity: GameScore::class, mappedBy: 'session', cascade: ['remove'])]
+    private Collection $scores;
+
+    /**
      * @throws Throwable
      */
     public function __construct()
     {
         $this->id = $this->createUuid();
         $this->startedAt = new DateTimeImmutable();
+        $this->scores = new ArrayCollection();
     }
 
     #[Override]
@@ -140,5 +151,13 @@ class GameSession implements EntityInterface
         $this->context = $context;
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, GameScore>
+     */
+    public function getScores(): Collection
+    {
+        return $this->scores;
     }
 }
