@@ -1,0 +1,8 @@
+game-controllers:
+    resource:
+        path: ../../src/Game/Transport/Controller/Api/
+        namespace: App\Game\Transport\Controller\Api
+    type: attribute
+    prefix: /api
+    defaults:
+        _format: json
