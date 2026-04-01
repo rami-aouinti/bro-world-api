@@ -30,7 +30,7 @@ final readonly class GameTaxonomyController
     #[Route('/v1/game-categories', methods: [Request::METHOD_GET])]
     public function categories(): JsonResponse
     {
-        $categories = $this->entityManager->getRepository(GameCategory::class)->findBy([], ['name' => 'ASC']);
+        $categories = $this->entityManager->getRepository(GameCategory::class)->findBy([], ['nameKey' => 'ASC']);
 
         return new JsonResponse([
             'items' => array_map(
