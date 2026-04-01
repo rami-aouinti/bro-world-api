@@ -19,6 +19,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+use Throwable;
 
 final readonly class UserGameService
 {
@@ -56,7 +57,11 @@ final readonly class UserGameService
     }
 
     /**
+     * @param Game $game
+     * @param User $user
+     * @param UserGameLevel $level
      * @return array{session: GameSession, userGame: UserGame}
+     * @throws Throwable
      */
     public function startTracked(Game $game, User $user, UserGameLevel $level): array
     {

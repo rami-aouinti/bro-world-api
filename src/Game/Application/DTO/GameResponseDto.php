@@ -15,6 +15,7 @@ final readonly class GameResponseDto
      */
     public function __construct(
         public string $id,
+        public string $key,
         public string $nameKey,
         public string $descriptionKey,
         public ?string $img,
@@ -34,7 +35,8 @@ final readonly class GameResponseDto
     public static function fromEntity(Game $game): self
     {
         return new self(
-            id: $game->getKey(),
+            id: $game->getId(),
+            key: $game->getKey(),
             nameKey: $game->getNameKey(),
             descriptionKey: $game->getDescriptionKey() ?? '',
             img: $game->getImg(),
@@ -58,6 +60,7 @@ final readonly class GameResponseDto
     {
         return [
             'id' => $this->id,
+            'key' => $this->key,
             'nameKey' => $this->nameKey,
             'descriptionKey' => $this->descriptionKey,
             'img' => $this->img,
