@@ -11,6 +11,50 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class PublicGameCatalogFixtureIntegrationTest extends WebTestCase
 {
+
+    /**
+     * @var array<string, string>
+     */
+    private const UUID_BY_KEY = [
+        'cards' => '21000000-0000-1000-8000-000000000001',
+        'board' => '21000000-0000-1000-8000-000000000002',
+        'smart-games' => '21000000-0000-1000-8000-000000000003',
+        'arcade' => '21000000-0000-1000-8000-000000000004',
+        'classic-cards' => '21000000-0000-1000-8000-000000000011',
+        'party-cards' => '21000000-0000-1000-8000-000000000012',
+        'table-classic' => '21000000-0000-1000-8000-000000000013',
+        'family-board' => '21000000-0000-1000-8000-000000000014',
+        'logic' => '21000000-0000-1000-8000-000000000015',
+        'words-language' => '21000000-0000-1000-8000-000000000016',
+        'grids-puzzles' => '21000000-0000-1000-8000-000000000017',
+        'brain-training' => '21000000-0000-1000-8000-000000000018',
+        'reaction-arcade' => '21000000-0000-1000-8000-000000000019',
+        'classic-arcade' => '21000000-0000-1000-8000-000000000020',
+        'rami' => '21000000-0000-1000-8000-000000000101',
+        'belote' => '21000000-0000-1000-8000-000000000102',
+        'poker' => '21000000-0000-1000-8000-000000000103',
+        'uno' => '21000000-0000-1000-8000-000000000104',
+        'solitaire' => '21000000-0000-1000-8000-000000000105',
+        'hearts' => '21000000-0000-1000-8000-000000000106',
+        'spades' => '21000000-0000-1000-8000-000000000107',
+        'checkers' => '21000000-0000-1000-8000-000000000108',
+        'chess' => '21000000-0000-1000-8000-000000000109',
+        'ludo' => '21000000-0000-1000-8000-000000000110',
+        'backgammon' => '21000000-0000-1000-8000-000000000111',
+        'dominoes' => '21000000-0000-1000-8000-000000000112',
+        'sudoku' => '21000000-0000-1000-8000-000000000113',
+        'game-2048' => '21000000-0000-1000-8000-000000000114',
+        'hidden-word' => '21000000-0000-1000-8000-000000000115',
+        'nonogram' => '21000000-0000-1000-8000-000000000116',
+        'memory-match' => '21000000-0000-1000-8000-000000000117',
+        'mastermind' => '21000000-0000-1000-8000-000000000118',
+        'minesweeper' => '21000000-0000-1000-8000-000000000119',
+        'flappy-rocket' => '21000000-0000-1000-8000-000000000120',
+        'stack-jump' => '21000000-0000-1000-8000-000000000121',
+        'space-invaders' => '21000000-0000-1000-8000-000000000122',
+        'brick-breaker' => '21000000-0000-1000-8000-000000000123',
+        'snake' => '21000000-0000-1000-8000-000000000124',
+    ];
     #[TestDox('Public game catalog returns HTTP 200 and the exact JSON payload from fixtures.')]
     public function testPublicGameCatalogStrictJsonEqualsFixturePayload(): void
     {
@@ -88,7 +132,7 @@ final class PublicGameCatalogFixtureIntegrationTest extends WebTestCase
      */
     private function expectedPayload(): array
     {
-        return [
+        $payload = [
             [
                 'id' => 'cards',
                 'nameKey' => 'gamePage.catalog.categories.cards.name',
@@ -240,5 +284,40 @@ final class PublicGameCatalogFixtureIntegrationTest extends WebTestCase
                 ],
             ],
         ];
+
+        return $this->withUuidAndKey($payload);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $categories
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function withUuidAndKey(array $categories): array
+    {
+        return array_map(function (array $category): array {
+            $categoryKey = $category['id'];
+            $category['id'] = self::UUID_BY_KEY[$categoryKey];
+            $category['key'] = $categoryKey;
+
+            $category['subCategories'] = array_map(function (array $subCategory): array {
+                $subCategoryKey = $subCategory['id'];
+                $subCategory['id'] = self::UUID_BY_KEY[$subCategoryKey];
+                $subCategory['key'] = $subCategoryKey;
+
+                $subCategory['games'] = array_map(function (array $game): array {
+                    $gameKey = $game['id'];
+                    $game['id'] = self::UUID_BY_KEY[$gameKey];
+                    $game['key'] = $gameKey;
+
+                    return $game;
+                }, $subCategory['games']);
+
+                return $subCategory;
+            }, $category['subCategories']);
+
+            return $category;
+        }, $categories);
     }
 }
+

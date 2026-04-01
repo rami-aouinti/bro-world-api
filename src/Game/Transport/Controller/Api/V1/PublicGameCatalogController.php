@@ -35,7 +35,8 @@ final readonly class PublicGameCatalogController
                     items: new OA\Items(
                         type: 'object',
                         properties: [
-                            new OA\Property(property: 'id', type: 'string', example: 'card'),
+                            new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '21000000-0000-1000-8000-000000000001'),
+                            new OA\Property(property: 'key', type: 'string', example: 'cards'),
                             new OA\Property(property: 'nameKey', type: 'string', example: 'Card'),
                             new OA\Property(property: 'descriptionKey', type: 'string', example: 'Card games'),
                             new OA\Property(property: 'img', type: 'string', nullable: true, example: '/img/categories/card.png'),
@@ -46,7 +47,8 @@ final readonly class PublicGameCatalogController
                                 items: new OA\Items(
                                     type: 'object',
                                     properties: [
-                                        new OA\Property(property: 'id', type: 'string', example: 'classic-card'),
+                                        new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '21000000-0000-1000-8000-000000000011'),
+                                        new OA\Property(property: 'key', type: 'string', example: 'classic-cards'),
                                         new OA\Property(property: 'nameKey', type: 'string', example: 'Classic card games'),
                                         new OA\Property(property: 'descriptionKey', type: 'string', example: 'Classic card game modes'),
                                         new OA\Property(property: 'img', type: 'string', nullable: true, example: '/img/subcategories/classic-card.png'),
@@ -57,7 +59,8 @@ final readonly class PublicGameCatalogController
                                             items: new OA\Items(
                                                 type: 'object',
                                                 properties: [
-                                                    new OA\Property(property: 'id', type: 'string', example: 'card-memory-duel'),
+                                                    new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '21000000-0000-1000-8000-000000000101'),
+                                                    new OA\Property(property: 'key', type: 'string', example: 'rami'),
                                                     new OA\Property(property: 'nameKey', type: 'string', example: 'Memory Duel'),
                                                     new OA\Property(property: 'descriptionKey', type: 'string', example: 'Fast card battles'),
                                                     new OA\Property(property: 'img', type: 'string', nullable: true, example: '/img/games/memory-duel.png'),
@@ -92,7 +95,8 @@ final readonly class PublicGameCatalogController
             );
 
             return [
-                'id' => $category->getKey(),
+                'id' => (string) $category->getId(),
+                'key' => $category->getKey(),
                 'nameKey' => $category->getNameKey(),
                 'descriptionKey' => $category->getDescriptionKey() ?? '',
                 'img' => $category->getImg(),
@@ -104,7 +108,8 @@ final readonly class PublicGameCatalogController
                     );
 
                     return [
-                        'id' => $subCategory->getKey(),
+                        'id' => (string) $subCategory->getId(),
+                        'key' => $subCategory->getKey(),
                         'nameKey' => $subCategory->getNameKey(),
                         'descriptionKey' => $subCategory->getDescriptionKey() ?? '',
                         'img' => $subCategory->getImg(),
@@ -124,7 +129,8 @@ final readonly class PublicGameCatalogController
     private static function normalizeGame(Game $game): array
     {
         $payload = [
-            'id' => $game->getKey(),
+            'id' => (string) $game->getId(),
+            'key' => $game->getKey(),
             'nameKey' => $game->getNameKey(),
             'descriptionKey' => $game->getDescriptionKey() ?? '',
             'img' => $game->getImg(),
