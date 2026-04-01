@@ -27,19 +27,6 @@ final readonly class GameTaxonomyController
     {
     }
 
-    #[Route('/v1/game-categories', methods: [Request::METHOD_GET])]
-    public function categories(): JsonResponse
-    {
-        $categories = $this->entityManager->getRepository(GameCategory::class)->findBy([], ['nameKey' => 'ASC']);
-
-        return new JsonResponse([
-            'items' => array_map(
-                static fn (GameCategory $category): array => GameCategoryResponseDto::fromEntity($category)->toArray(),
-                $categories,
-            ),
-        ]);
-    }
-
     #[Route('/v1/game-categories/{id}', methods: [Request::METHOD_GET])]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
     public function categoryDetail(string $id): JsonResponse
