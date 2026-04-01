@@ -24,12 +24,12 @@ final readonly class PublicGameCatalogController
 
     #[Route('/v1/public/game-catalog', methods: [Request::METHOD_GET])]
     #[OA\Get(
-        summary: 'GET /v1/public/game-catalog',
+        summary: 'Retrieve the public game catalog grouped by categories, sub-categories and games.',
         security: [],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Public game catalog.',
+                description: 'Public game catalog grouped by taxonomy.',
                 content: new OA\JsonContent(
                     type: 'array',
                     items: new OA\Items(
@@ -37,10 +37,10 @@ final readonly class PublicGameCatalogController
                         properties: [
                             new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '21000000-0000-1000-8000-000000000001'),
                             new OA\Property(property: 'key', type: 'string', example: 'cards'),
-                            new OA\Property(property: 'nameKey', type: 'string', example: 'Card'),
-                            new OA\Property(property: 'descriptionKey', type: 'string', example: 'Card games'),
-                            new OA\Property(property: 'img', type: 'string', nullable: true, example: '/img/categories/card.png'),
-                            new OA\Property(property: 'icon', type: 'string', nullable: true, example: 'spade'),
+                            new OA\Property(property: 'nameKey', type: 'string', example: 'gamePage.catalog.categories.cards.name'),
+                            new OA\Property(property: 'descriptionKey', type: 'string', example: 'gamePage.catalog.categories.cards.description'),
+                            new OA\Property(property: 'img', type: 'string', nullable: true, example: '/img/game/card-game.png'),
+                            new OA\Property(property: 'icon', type: 'string', nullable: true, example: 'mdi-cards-playing-outline'),
                             new OA\Property(
                                 property: 'subCategories',
                                 type: 'array',
@@ -49,10 +49,10 @@ final readonly class PublicGameCatalogController
                                     properties: [
                                         new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '21000000-0000-1000-8000-000000000011'),
                                         new OA\Property(property: 'key', type: 'string', example: 'classic-cards'),
-                                        new OA\Property(property: 'nameKey', type: 'string', example: 'Classic card games'),
-                                        new OA\Property(property: 'descriptionKey', type: 'string', example: 'Classic card game modes'),
-                                        new OA\Property(property: 'img', type: 'string', nullable: true, example: '/img/subcategories/classic-card.png'),
-                                        new OA\Property(property: 'icon', type: 'string', nullable: true, example: 'cards'),
+                                        new OA\Property(property: 'nameKey', type: 'string', example: 'gamePage.catalog.subCategories.classicCards.name'),
+                                        new OA\Property(property: 'descriptionKey', type: 'string', example: 'gamePage.catalog.subCategories.classicCards.description'),
+                                        new OA\Property(property: 'img', type: 'string', nullable: true, example: '/img/game/classic-card.png'),
+                                        new OA\Property(property: 'icon', type: 'string', nullable: true, example: 'mdi-cards-outline'),
                                         new OA\Property(
                                             property: 'games',
                                             type: 'array',
@@ -61,17 +61,17 @@ final readonly class PublicGameCatalogController
                                                 properties: [
                                                     new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '21000000-0000-1000-8000-000000000101'),
                                                     new OA\Property(property: 'key', type: 'string', example: 'rami'),
-                                                    new OA\Property(property: 'nameKey', type: 'string', example: 'Memory Duel'),
-                                                    new OA\Property(property: 'descriptionKey', type: 'string', example: 'Fast card battles'),
-                                                    new OA\Property(property: 'img', type: 'string', nullable: true, example: '/img/games/memory-duel.png'),
-                                                    new OA\Property(property: 'icon', type: 'string', nullable: true, example: 'memory'),
-                                                    new OA\Property(property: 'component', type: 'string', nullable: true, example: 'MemoryDuel'),
-                                                    new OA\Property(property: 'supportedModes', type: 'array', items: new OA\Items(type: 'string', example: 'solo')),
-                                                    new OA\Property(property: 'categoryKey', type: 'string', nullable: true, example: 'card'),
-                                                    new OA\Property(property: 'subcategoryKey', type: 'string', nullable: true, example: 'classic-card'),
-                                                    new OA\Property(property: 'difficultyKey', type: 'string', nullable: true, example: 'beginner'),
-                                                    new OA\Property(property: 'tags', type: 'array', items: new OA\Items(type: 'string', example: 'memory')),
-                                                    new OA\Property(property: 'features', type: 'array', items: new OA\Items(type: 'string', example: 'multiplayer')),
+                                                    new OA\Property(property: 'nameKey', type: 'string', example: 'gamePage.catalog.games.rami.name'),
+                                                    new OA\Property(property: 'descriptionKey', type: 'string', example: 'gamePage.catalog.games.rami.description'),
+                                                    new OA\Property(property: 'img', type: 'string', nullable: true, example: '/img/game/classic-card.png'),
+                                                    new OA\Property(property: 'icon', type: 'string', nullable: true, example: 'mdi-cards-diamond-outline'),
+                                                    new OA\Property(property: 'component', type: 'string', nullable: true, example: 'rami'),
+                                                    new OA\Property(property: 'supportedModes', type: 'array', items: new OA\Items(type: 'string', example: 'ai')),
+                                                    new OA\Property(property: 'categoryKey', type: 'string', nullable: true, example: 'cards'),
+                                                    new OA\Property(property: 'subcategoryKey', type: 'string', nullable: true, example: 'classic-cards'),
+                                                    new OA\Property(property: 'difficultyKey', type: 'string', nullable: true, example: 'gamePage.catalog.difficulties.hard'),
+                                                    new OA\Property(property: 'tags', type: 'array', items: new OA\Items(type: 'string', example: 'gamePage.catalog.games.chess.meta.tags.strategy')),
+                                                    new OA\Property(property: 'features', type: 'array', items: new OA\Items(type: 'string', example: 'gamePage.catalog.games.chess.meta.features.ai')),
                                                 ],
                                             ),
                                         ),

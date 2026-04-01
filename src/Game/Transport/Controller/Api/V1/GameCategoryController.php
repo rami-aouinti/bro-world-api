@@ -22,6 +22,47 @@ final readonly class GameCategoryController
     }
 
     #[Route('/v1/game-categories', methods: [Request::METHOD_GET])]
+    #[OA\Get(
+        summary: 'List game categories with nested sub-categories.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Game categories list.',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(
+                        type: 'object',
+                        properties: [
+                            new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '21000000-0000-1000-8000-000000000001'),
+                            new OA\Property(property: 'key', type: 'string', example: 'cards'),
+                            new OA\Property(property: 'nameKey', type: 'string', example: 'gamePage.catalog.categories.cards.name'),
+                            new OA\Property(property: 'descriptionKey', type: 'string', example: 'gamePage.catalog.categories.cards.description'),
+                            new OA\Property(property: 'img', type: 'string', nullable: true, example: '/img/game/card-game.png'),
+                            new OA\Property(property: 'icon', type: 'string', nullable: true, example: 'mdi-cards-playing-outline'),
+                            new OA\Property(
+                                property: 'subCategories',
+                                type: 'array',
+                                items: new OA\Items(
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '21000000-0000-1000-8000-000000000011'),
+                                        new OA\Property(property: 'key', type: 'string', example: 'classic-cards'),
+                                        new OA\Property(property: 'nameKey', type: 'string', example: 'gamePage.catalog.subCategories.classicCards.name'),
+                                        new OA\Property(property: 'descriptionKey', type: 'string', example: 'gamePage.catalog.subCategories.classicCards.description'),
+                                        new OA\Property(property: 'img', type: 'string', nullable: true, example: '/img/game/classic-card.png'),
+                                        new OA\Property(property: 'icon', type: 'string', nullable: true, example: 'mdi-cards-outline'),
+                                    ],
+                                ),
+                            ),
+                        ],
+                    ),
+                ),
+            ),
+            new OA\Response(response: 401, description: 'Authentication required.'),
+            new OA\Response(response: 403, description: 'Access denied.'),
+        ],
+    )]
     public function __invoke(): JsonResponse
     {
         $categories = $this->entityManager->getRepository(GameCategory::class)->findBy([], ['createdAt' => 'ASC', 'id' => 'ASC']);

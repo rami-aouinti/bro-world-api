@@ -28,6 +28,7 @@ final readonly class GameTaxonomyController
     }
 
     #[Route('/v1/game-categories/{id}', methods: [Request::METHOD_GET])]
+    #[OA\Get(summary: 'Get game category details.', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Category details.'), new OA\Response(response: 404, description: 'Category not found.'), new OA\Response(response: 401, description: 'Authentication required.')]) ]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
     public function categoryDetail(string $id): JsonResponse
     {
@@ -40,6 +41,7 @@ final readonly class GameTaxonomyController
     }
 
     #[Route('/v1/game-categories', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'Create game category.', security: [['bearerAuth' => []]], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object', properties: [new OA\Property(property: 'name', type: 'string'), new OA\Property(property: 'key', type: 'string'), new OA\Property(property: 'description', type: 'string')], required: ['name', 'key'])), responses: [new OA\Response(response: 201, description: 'Category created.'), new OA\Response(response: 409, description: 'Key already exists.'), new OA\Response(response: 422, description: 'Validation failed.'), new OA\Response(response: 401, description: 'Authentication required.')]) ]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
     public function createCategory(Request $request): JsonResponse
     {
@@ -76,6 +78,7 @@ final readonly class GameTaxonomyController
     }
 
     #[Route('/v1/game-categories/{id}', methods: [Request::METHOD_PUT, Request::METHOD_PATCH])]
+    #[OA\Put(summary: 'Update game category.', security: [['bearerAuth' => []]], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object', properties: [new OA\Property(property: 'name', type: 'string'), new OA\Property(property: 'key', type: 'string'), new OA\Property(property: 'description', type: 'string')])), responses: [new OA\Response(response: 200, description: 'Category updated.'), new OA\Response(response: 404, description: 'Category not found.'), new OA\Response(response: 409, description: 'Key already exists.'), new OA\Response(response: 422, description: 'Validation failed.'), new OA\Response(response: 401, description: 'Authentication required.')]) ]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
     public function updateCategory(string $id, Request $request): JsonResponse
     {
@@ -120,6 +123,7 @@ final readonly class GameTaxonomyController
     }
 
     #[Route('/v1/game-categories/{id}', methods: [Request::METHOD_DELETE])]
+    #[OA\Delete(summary: 'Delete game category.', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 204, description: 'Category deleted.'), new OA\Response(response: 404, description: 'Category not found.'), new OA\Response(response: 401, description: 'Authentication required.')]) ]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
     public function deleteCategory(string $id): JsonResponse
     {
@@ -135,6 +139,7 @@ final readonly class GameTaxonomyController
     }
 
     #[Route('/v1/game-levels', methods: [Request::METHOD_GET])]
+    #[OA\Get(summary: 'List available game levels.', security: [], responses: [new OA\Response(response: 200, description: 'Levels list.')]) ]
     public function levels(): JsonResponse
     {
         $levels = $this->entityManager->getRepository(GameLevelOption::class)->findBy([], ['value' => 'ASC']);
@@ -148,6 +153,7 @@ final readonly class GameTaxonomyController
     }
 
     #[Route('/v1/game-levels/{id}', methods: [Request::METHOD_GET])]
+    #[OA\Get(summary: 'Get game level details.', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Level details.'), new OA\Response(response: 404, description: 'Level not found.'), new OA\Response(response: 401, description: 'Authentication required.')]) ]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
     public function levelDetail(string $id): JsonResponse
     {
@@ -160,6 +166,7 @@ final readonly class GameTaxonomyController
     }
 
     #[Route('/v1/game-levels', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'Create game level option.', security: [['bearerAuth' => []]], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object', properties: [new OA\Property(property: 'value', type: 'string', example: 'EASY'), new OA\Property(property: 'label', type: 'string'), new OA\Property(property: 'description', type: 'string')], required: ['value', 'label'])), responses: [new OA\Response(response: 201, description: 'Level created.'), new OA\Response(response: 409, description: 'Value already exists.'), new OA\Response(response: 422, description: 'Validation failed.'), new OA\Response(response: 401, description: 'Authentication required.')]) ]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
     public function createLevel(Request $request): JsonResponse
     {
@@ -200,6 +207,7 @@ final readonly class GameTaxonomyController
     }
 
     #[Route('/v1/game-levels/{id}', methods: [Request::METHOD_PUT, Request::METHOD_PATCH])]
+    #[OA\Put(summary: 'Update game level option.', security: [['bearerAuth' => []]], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object', properties: [new OA\Property(property: 'value', type: 'string'), new OA\Property(property: 'label', type: 'string'), new OA\Property(property: 'description', type: 'string')])), responses: [new OA\Response(response: 200, description: 'Level updated.'), new OA\Response(response: 404, description: 'Level not found.'), new OA\Response(response: 409, description: 'Value already exists.'), new OA\Response(response: 422, description: 'Validation failed.'), new OA\Response(response: 401, description: 'Authentication required.')]) ]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
     public function updateLevel(string $id, Request $request): JsonResponse
     {
@@ -244,6 +252,7 @@ final readonly class GameTaxonomyController
     }
 
     #[Route('/v1/game-levels/{id}', methods: [Request::METHOD_DELETE])]
+    #[OA\Delete(summary: 'Delete game level option.', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 204, description: 'Level deleted.'), new OA\Response(response: 404, description: 'Level not found.'), new OA\Response(response: 401, description: 'Authentication required.')]) ]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
     public function deleteLevel(string $id): JsonResponse
     {
