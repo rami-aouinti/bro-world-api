@@ -12,11 +12,15 @@ use App\Game\Application\DTO\LeaderboardEntryResponseDto;
 use App\Game\Application\DTO\ManageGameSessionRequestDto;
 use App\Game\Application\Service\GameSessionService;
 use App\Game\Application\Service\GameStatisticService;
+use App\Game\Application\Service\UserGameService;
 use App\Game\Domain\Entity\Game;
 use App\Game\Domain\Entity\GameCategory;
 use App\Game\Domain\Entity\GameScore;
 use App\Game\Domain\Entity\GameSession;
 use App\Game\Domain\Entity\GameStatistic;
+use App\Game\Domain\Entity\UserGame;
+use App\Game\Domain\Enum\UserGameLevel;
+use App\Game\Domain\Enum\UserGameResult;
 use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use JsonException;
@@ -24,6 +28,7 @@ use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -37,6 +42,7 @@ final readonly class GameController
         private EntityManagerInterface $entityManager,
         private GameSessionService $gameSessionService,
         private GameStatisticService $gameStatisticService,
+        private UserGameService $userGameService,
     ) {
     }
 
@@ -150,6 +156,91 @@ final readonly class GameController
         ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
     }
 
+    #[Route('/v1/games/{id}/plays/start', methods: [Request::METHOD_POST])]
+    public function startPlay(string $id, Request $request, User $loggedInUser): JsonResponse
+    {
+        $game = $this->entityManager->getRepository(Game::class)->find($id);
+        if (!$game instanceof Game) {
+            return new JsonResponse(['message' => 'Game not found.'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $payload = $this->decodeRequest($request);
+        if ($payload instanceof JsonResponse) {
+            return $payload;
+        }
+
+        $level = UserGameLevel::tryFrom(strtolower(trim((string)($payload['level'] ?? ''))));
+        if (null === $level) {
+            return new JsonResponse([
+                'message' => 'Validation failed.',
+                'errors' => ['level is required and must be one of: easy, medium, hard.'],
+            ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        try {
+            $session = $this->userGameService->start($game, $loggedInUser, $level);
+        } catch (HttpExceptionInterface $exception) {
+            return new JsonResponse(['message' => $exception->getMessage()], $exception->getStatusCode());
+        }
+
+        $this->entityManager->persist($loggedInUser);
+        $this->entityManager->persist($session);
+        $this->entityManager->flush();
+
+        return new JsonResponse([
+            'session' => GameSessionResponseDto::fromEntity($session)->toArray(),
+            'coins' => $loggedInUser->getCoins(),
+        ], JsonResponse::HTTP_CREATED);
+    }
+
+    #[Route('/v1/games/{id}/plays/{sessionId}/result', methods: [Request::METHOD_POST])]
+    public function submitResult(string $id, string $sessionId, Request $request, User $loggedInUser): JsonResponse
+    {
+        $game = $this->entityManager->getRepository(Game::class)->find($id);
+        if (!$game instanceof Game) {
+            return new JsonResponse(['message' => 'Game not found.'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $session = $this->entityManager->getRepository(GameSession::class)->find($sessionId);
+        if (
+            !$session instanceof GameSession
+            || $session->getGame()?->getId() !== $game->getId()
+            || $session->getUser()?->getId() !== $loggedInUser->getId()
+        ) {
+            return new JsonResponse(['message' => 'Game session not found.'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $payload = $this->decodeRequest($request);
+        if ($payload instanceof JsonResponse) {
+            return $payload;
+        }
+
+        $result = UserGameResult::tryFrom(strtolower(trim((string)($payload['result'] ?? ''))));
+        if (null === $result) {
+            return new JsonResponse([
+                'message' => 'Validation failed.',
+                'errors' => ['result is required and must be one of: win, lose.'],
+            ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $coinsAmount = (int)($payload['coinsAmount'] ?? 0);
+        $idempotencyKey = trim((string)($payload['idempotencyKey'] ?? ''));
+
+        try {
+            $userGame = $this->userGameService->submitResult(
+                session: $session,
+                user: $loggedInUser,
+                result: $result,
+                coinsAmount: $coinsAmount,
+                idempotencyKey: $idempotencyKey,
+            );
+        } catch (HttpExceptionInterface $exception) {
+            return new JsonResponse(['message' => $exception->getMessage()], $exception->getStatusCode());
+        }
+
+        return new JsonResponse($this->buildUserGameResponse($userGame, $loggedInUser));
+    }
+
     #[Route('/v1/games/{id}/leaderboard', methods: [Request::METHOD_GET])]
     public function leaderboard(string $id, Request $request): JsonResponse
     {
@@ -210,5 +301,21 @@ final readonly class GameController
                 'message' => 'Invalid JSON payload.',
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildUserGameResponse(UserGame $userGame, User $user): array
+    {
+        return [
+            'id' => $userGame->getId(),
+            'result' => $userGame->getResult()->value,
+            'selectedLevel' => $userGame->getSelectedLevel()->value,
+            'entryCostCoins' => $userGame->getEntryCostCoins(),
+            'rewardOrPenaltyCoins' => $userGame->getRewardOrPenaltyCoins(),
+            'coins' => $user->getCoins(),
+            'createdAt' => $userGame->getCreatedAt()?->format(DATE_ATOM),
+        ];
     }
 }
