@@ -34,6 +34,10 @@ class Game implements EntityInterface
     #[ORM\JoinColumn(name: 'category_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?GameCategory $category = null;
 
+    #[ORM\ManyToOne(targetEntity: GameSubCategory::class, inversedBy: 'games')]
+    #[ORM\JoinColumn(name: 'sub_category_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?GameSubCategory $subCategory = null;
+
     /**
      * @var Collection<int, GameSession>
      */
@@ -46,8 +50,41 @@ class Game implements EntityInterface
     #[ORM\OneToMany(targetEntity: GameStatistic::class, mappedBy: 'game', cascade: ['remove'])]
     private Collection $statistics;
 
-    #[ORM\Column(name: 'name', type: Types::STRING, length: 255)]
-    private string $name = '';
+    #[ORM\Column(name: 'game_key', type: Types::STRING, length: 100, unique: true)]
+    private string $key = '';
+
+    #[ORM\Column(name: 'name_key', type: Types::STRING, length: 255)]
+    private string $nameKey = '';
+
+    #[ORM\Column(name: 'description_key', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $descriptionKey = null;
+
+    #[ORM\Column(name: 'img', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $img = null;
+
+    #[ORM\Column(name: 'icon', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $icon = null;
+
+    #[ORM\Column(name: 'component', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $component = null;
+
+    #[ORM\Column(name: 'supported_modes', type: Types::JSON)]
+    private array $supportedModes = [];
+
+    #[ORM\Column(name: 'category_key', type: Types::STRING, length: 100, nullable: true)]
+    private ?string $categoryKey = null;
+
+    #[ORM\Column(name: 'subcategory_key', type: Types::STRING, length: 100, nullable: true)]
+    private ?string $subcategoryKey = null;
+
+    #[ORM\Column(name: 'difficulty_key', type: Types::STRING, length: 100, nullable: true)]
+    private ?string $difficultyKey = null;
+
+    #[ORM\Column(name: 'tags', type: Types::JSON)]
+    private array $tags = [];
+
+    #[ORM\Column(name: 'features', type: Types::JSON)]
+    private array $features = [];
 
     #[ORM\Column(name: 'metadata', type: Types::JSON)]
     private array $metadata = [];
@@ -86,6 +123,18 @@ class Game implements EntityInterface
         return $this;
     }
 
+    public function getSubCategory(): ?GameSubCategory
+    {
+        return $this->subCategory;
+    }
+
+    public function setSubCategory(?GameSubCategory $subCategory): self
+    {
+        $this->subCategory = $subCategory;
+
+        return $this;
+    }
+
     /**
      * @return Collection<int, GameSession>
      */
@@ -102,14 +151,182 @@ class Game implements EntityInterface
         return $this->statistics;
     }
 
-    public function getName(): string
+    public function getKey(): string
     {
-        return $this->name;
+        return $this->key;
     }
 
+    public function setKey(string $key): self
+    {
+        $this->key = $key;
+
+        return $this;
+    }
+
+    public function getNameKey(): string
+    {
+        return $this->nameKey;
+    }
+
+    public function setNameKey(string $nameKey): self
+    {
+        $this->nameKey = $nameKey;
+
+        return $this;
+    }
+
+    public function getDescriptionKey(): ?string
+    {
+        return $this->descriptionKey;
+    }
+
+    public function setDescriptionKey(?string $descriptionKey): self
+    {
+        $this->descriptionKey = $descriptionKey;
+
+        return $this;
+    }
+
+    public function getImg(): ?string
+    {
+        return $this->img;
+    }
+
+    public function setImg(?string $img): self
+    {
+        $this->img = $img;
+
+        return $this;
+    }
+
+    public function getIcon(): ?string
+    {
+        return $this->icon;
+    }
+
+    public function setIcon(?string $icon): self
+    {
+        $this->icon = $icon;
+
+        return $this;
+    }
+
+    public function getComponent(): ?string
+    {
+        return $this->component;
+    }
+
+    public function setComponent(?string $component): self
+    {
+        $this->component = $component;
+
+        return $this;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getSupportedModes(): array
+    {
+        return $this->supportedModes;
+    }
+
+    /**
+     * @param array<int, string> $supportedModes
+     */
+    public function setSupportedModes(array $supportedModes): self
+    {
+        $this->supportedModes = $supportedModes;
+
+        return $this;
+    }
+
+    public function getCategoryKey(): ?string
+    {
+        return $this->categoryKey;
+    }
+
+    public function setCategoryKey(?string $categoryKey): self
+    {
+        $this->categoryKey = $categoryKey;
+
+        return $this;
+    }
+
+    public function getSubcategoryKey(): ?string
+    {
+        return $this->subcategoryKey;
+    }
+
+    public function setSubcategoryKey(?string $subcategoryKey): self
+    {
+        $this->subcategoryKey = $subcategoryKey;
+
+        return $this;
+    }
+
+    public function getDifficultyKey(): ?string
+    {
+        return $this->difficultyKey;
+    }
+
+    public function setDifficultyKey(?string $difficultyKey): self
+    {
+        $this->difficultyKey = $difficultyKey;
+
+        return $this;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getTags(): array
+    {
+        return $this->tags;
+    }
+
+    /**
+     * @param array<int, string> $tags
+     */
+    public function setTags(array $tags): self
+    {
+        $this->tags = $tags;
+
+        return $this;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getFeatures(): array
+    {
+        return $this->features;
+    }
+
+    /**
+     * @param array<int, string> $features
+     */
+    public function setFeatures(array $features): self
+    {
+        $this->features = $features;
+
+        return $this;
+    }
+
+    /**
+     * Legacy alias.
+     */
+    public function getName(): string
+    {
+        return $this->nameKey;
+    }
+
+    /**
+     * Legacy alias.
+     */
     public function setName(string $name): self
     {
-        $this->name = $name;
+        $this->nameKey = $name;
 
         return $this;
     }

@@ -126,6 +126,7 @@ final class LoadGameData extends Fixture implements OrderedFixtureInterface
 
         foreach ($games as $item) {
             $game = (new Game())
+                ->setKey($item['key'])
                 ->setName($item['name'])
                 ->setCategory($this->getReference('GameCategory-' . $item['category'], GameCategory::class))
                 ->setLevel($item['level'])

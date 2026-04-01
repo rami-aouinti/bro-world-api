@@ -9,33 +9,45 @@ use App\Game\Domain\Entity\Game;
 final readonly class GameResponseDto
 {
     /**
-     * @param array<string,mixed> $metadata
+     * @param array<int,string> $supportedModes
+     * @param array<int,string> $tags
+     * @param array<int,string> $features
      */
     public function __construct(
         public string $id,
-        public string $name,
-        public string $categoryId,
-        public string $categoryKey,
-        public string $categoryName,
+        public string $nameKey,
+        public string $descriptionKey,
+        public ?string $img,
+        public ?string $icon,
+        public ?string $component,
+        public array $supportedModes,
+        public ?string $categoryKey,
+        public ?string $subcategoryKey,
+        public ?string $difficultyKey,
+        public array $tags,
+        public array $features,
         public string $level,
         public string $status,
-        public array $metadata,
     ) {
     }
 
     public static function fromEntity(Game $game): self
     {
-        $category = $game->getCategory();
-
         return new self(
-            id: $game->getId(),
-            name: $game->getName(),
-            categoryId: (string)$category?->getId(),
-            categoryKey: (string)$category?->getKey(),
-            categoryName: (string)$category?->getName(),
+            id: $game->getKey(),
+            nameKey: $game->getNameKey(),
+            descriptionKey: $game->getDescriptionKey() ?? '',
+            img: $game->getImg(),
+            icon: $game->getIcon(),
+            component: $game->getComponent(),
+            supportedModes: $game->getSupportedModes(),
+            categoryKey: $game->getCategoryKey() ?? $game->getCategory()?->getKey(),
+            subcategoryKey: $game->getSubcategoryKey() ?? $game->getSubCategory()?->getKey(),
+            difficultyKey: $game->getDifficultyKey(),
+            tags: $game->getTags(),
+            features: $game->getFeatures(),
             level: $game->getLevel()->value,
             status: $game->getStatus()->value,
-            metadata: $game->getMetadata(),
         );
     }
 
@@ -46,13 +58,19 @@ final readonly class GameResponseDto
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'categoryId' => $this->categoryId,
+            'nameKey' => $this->nameKey,
+            'descriptionKey' => $this->descriptionKey,
+            'img' => $this->img,
+            'icon' => $this->icon,
+            'component' => $this->component,
+            'supportedModes' => $this->supportedModes,
             'categoryKey' => $this->categoryKey,
-            'categoryName' => $this->categoryName,
+            'subcategoryKey' => $this->subcategoryKey,
+            'difficultyKey' => $this->difficultyKey,
+            'tags' => $this->tags,
+            'features' => $this->features,
             'level' => $this->level,
             'status' => $this->status,
-            'metadata' => $this->metadata,
         ];
     }
 }

@@ -17,9 +17,9 @@ use Ramsey\Uuid\UuidInterface;
 use Throwable;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'game_category')]
+#[ORM\Table(name: 'game_sub_category')]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
-class GameCategory implements EntityInterface
+class GameSubCategory implements EntityInterface
 {
     use Timestampable;
     use Uuid;
@@ -28,7 +28,11 @@ class GameCategory implements EntityInterface
     #[ORM\Column(name: 'id', type: UuidBinaryOrderedTimeType::NAME, unique: true)]
     private UuidInterface $id;
 
-    #[ORM\Column(name: 'category_key', type: Types::STRING, length: 100, unique: true)]
+    #[ORM\ManyToOne(targetEntity: GameCategory::class, inversedBy: 'subCategories')]
+    #[ORM\JoinColumn(name: 'category_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    private ?GameCategory $category = null;
+
+    #[ORM\Column(name: 'sub_category_key', type: Types::STRING, length: 100, unique: true)]
     private string $key = '';
 
     #[ORM\Column(name: 'name_key', type: Types::STRING, length: 255)]
@@ -46,14 +50,8 @@ class GameCategory implements EntityInterface
     /**
      * @var Collection<int, Game>
      */
-    #[ORM\OneToMany(targetEntity: Game::class, mappedBy: 'category')]
+    #[ORM\OneToMany(targetEntity: Game::class, mappedBy: 'subCategory')]
     private Collection $games;
-
-    /**
-     * @var Collection<int, GameSubCategory>
-     */
-    #[ORM\OneToMany(targetEntity: GameSubCategory::class, mappedBy: 'category', cascade: ['remove'])]
-    private Collection $subCategories;
 
     /**
      * @throws Throwable
@@ -62,13 +60,24 @@ class GameCategory implements EntityInterface
     {
         $this->id = $this->createUuid();
         $this->games = new ArrayCollection();
-        $this->subCategories = new ArrayCollection();
     }
 
     #[Override]
     public function getId(): string
     {
         return $this->id->toString();
+    }
+
+    public function getCategory(): ?GameCategory
+    {
+        return $this->category;
+    }
+
+    public function setCategory(?GameCategory $category): self
+    {
+        $this->category = $category;
+
+        return $this;
     }
 
     public function getKey(): string
@@ -132,54 +141,10 @@ class GameCategory implements EntityInterface
     }
 
     /**
-     * Legacy alias.
-     */
-    public function getName(): string
-    {
-        return $this->nameKey;
-    }
-
-    /**
-     * Legacy alias.
-     */
-    public function setName(string $name): self
-    {
-        $this->nameKey = $name;
-
-        return $this;
-    }
-
-    /**
-     * Legacy alias.
-     */
-    public function getDescription(): string
-    {
-        return $this->descriptionKey ?? '';
-    }
-
-    /**
-     * Legacy alias.
-     */
-    public function setDescription(string $description): self
-    {
-        $this->descriptionKey = $description;
-
-        return $this;
-    }
-
-    /**
      * @return Collection<int, Game>
      */
     public function getGames(): Collection
     {
         return $this->games;
-    }
-
-    /**
-     * @return Collection<int, GameSubCategory>
-     */
-    public function getSubCategories(): Collection
-    {
-        return $this->subCategories;
     }
 }

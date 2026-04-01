@@ -10,32 +10,35 @@ final readonly class GameCategoryResponseDto
 {
     public function __construct(
         public string $id,
-        public string $name,
-        public string $key,
-        public string $description,
+        public string $nameKey,
+        public string $descriptionKey,
+        public ?string $img,
+        public ?string $icon,
     ) {
     }
 
     public static function fromEntity(GameCategory $category): self
     {
         return new self(
-            id: $category->getId(),
-            name: $category->getName(),
-            key: $category->getKey(),
-            description: $category->getDescription(),
+            id: $category->getKey(),
+            nameKey: $category->getNameKey(),
+            descriptionKey: $category->getDescriptionKey() ?? '',
+            img: $category->getImg(),
+            icon: $category->getIcon(),
         );
     }
 
     /**
-     * @return array<string,string>
+     * @return array<string,string|null>
      */
     public function toArray(): array
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'key' => $this->key,
-            'description' => $this->description,
+            'nameKey' => $this->nameKey,
+            'descriptionKey' => $this->descriptionKey,
+            'img' => $this->img,
+            'icon' => $this->icon,
         ];
     }
 }
