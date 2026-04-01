@@ -241,6 +241,78 @@ final readonly class GameController
         return new JsonResponse($this->buildUserGameResponse($userGame, $loggedInUser));
     }
 
+    #[Route('/v1/games/{gameId}/sessions/start', methods: [Request::METHOD_POST])]
+    public function startSession(string $gameId, Request $request, User $loggedInUser): JsonResponse
+    {
+        $game = $this->entityManager->getRepository(Game::class)->find($gameId);
+        if (!$game instanceof Game) {
+            return new JsonResponse(['message' => 'Game not found.'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $payload = $this->decodeRequest($request);
+        if ($payload instanceof JsonResponse) {
+            return $payload;
+        }
+
+        $level = UserGameLevel::tryFrom(strtolower(trim((string)($payload['level'] ?? ''))));
+        if (null === $level) {
+            return new JsonResponse([
+                'message' => 'Validation failed.',
+                'errors' => ['level is required and must be one of: easy, medium, hard.'],
+            ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        try {
+            $started = $this->userGameService->startTracked($game, $loggedInUser, $level);
+        } catch (HttpExceptionInterface $exception) {
+            return new JsonResponse(['message' => $exception->getMessage()], $exception->getStatusCode());
+        }
+
+        return new JsonResponse([
+            'session' => GameSessionResponseDto::fromEntity($started['session'])->toArray(),
+            'userGameId' => $started['userGame']->getId(),
+            'coins' => $loggedInUser->getCoins(),
+        ], JsonResponse::HTTP_CREATED);
+    }
+
+    #[Route('/v1/games/{gameId}/sessions/{sessionId}/finish', methods: [Request::METHOD_POST])]
+    public function finishSession(string $gameId, string $sessionId, Request $request, User $loggedInUser): JsonResponse
+    {
+        $game = $this->entityManager->getRepository(Game::class)->find($gameId);
+        if (!$game instanceof Game) {
+            return new JsonResponse(['message' => 'Game not found.'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $session = $this->entityManager->getRepository(GameSession::class)->find($sessionId);
+        if (!$session instanceof GameSession || $session->getGame()?->getId() !== $game->getId()) {
+            return new JsonResponse(['message' => 'Game session not found.'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $payload = $this->decodeRequest($request);
+        if ($payload instanceof JsonResponse) {
+            return $payload;
+        }
+
+        $result = UserGameResult::tryFrom(strtolower(trim((string)($payload['result'] ?? ''))));
+        if (null === $result) {
+            return new JsonResponse([
+                'message' => 'Validation failed.',
+                'errors' => ['result is required and must be one of: win, lose.'],
+            ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        try {
+            $userGame = $this->userGameService->finishSession($session, $loggedInUser, $result);
+        } catch (HttpExceptionInterface $exception) {
+            return new JsonResponse(['message' => $exception->getMessage()], $exception->getStatusCode());
+        }
+
+        return new JsonResponse([
+            'userGame' => $this->buildUserGameResponse($userGame, $loggedInUser),
+            'coins' => $loggedInUser->getCoins(),
+        ]);
+    }
+
     #[Route('/v1/games/{id}/leaderboard', methods: [Request::METHOD_GET])]
     public function leaderboard(string $id, Request $request): JsonResponse
     {
@@ -310,7 +382,7 @@ final readonly class GameController
     {
         return [
             'id' => $userGame->getId(),
-            'result' => $userGame->getResult()->value,
+            'result' => $userGame->getResult()?->value,
             'selectedLevel' => $userGame->getSelectedLevel()->value,
             'entryCostCoins' => $userGame->getEntryCostCoins(),
             'rewardOrPenaltyCoins' => $userGame->getRewardOrPenaltyCoins(),

@@ -10,6 +10,7 @@ use App\Game\Domain\Entity\UserGame;
 use App\Game\Domain\Enum\GameStatus;
 use App\Game\Domain\Enum\UserGameLevel;
 use App\Game\Domain\Enum\UserGameResult;
+use App\Game\Domain\Enum\UserGameStatus;
 use App\Game\Infrastructure\Repository\GameLevelCostRepository;
 use App\Game\Infrastructure\Repository\UserGameRepository;
 use App\User\Domain\Entity\User;
@@ -52,6 +53,97 @@ final readonly class UserGameService
                 'entryCostCoins' => $entryCost,
                 'resultSubmitted' => false,
             ]);
+    }
+
+    /**
+     * @return array{session: GameSession, userGame: UserGame}
+     */
+    public function startTracked(Game $game, User $user, UserGameLevel $level): array
+    {
+        if ($game->getStatus() !== GameStatus::ACTIVE) {
+            throw new UnprocessableEntityHttpException('Game is not available.');
+        }
+
+        return $this->entityManager->getConnection()->transactional(function () use ($game, $user, $level): array {
+            $session = $this->start($game, $user, $level);
+            $entryCost = (int)($session->getContext()['entryCostCoins'] ?? 0);
+
+            $userGame = (new UserGame())
+                ->setUser($user)
+                ->setGame($game)
+                ->setSession($session)
+                ->setStatus(UserGameStatus::STARTED)
+                ->setSelectedLevel($level)
+                ->setEntryCostCoins($entryCost)
+                ->setRewardOrPenaltyCoins(0);
+
+            $this->entityManager->persist($user);
+            $this->entityManager->persist($session);
+            $this->entityManager->persist($userGame);
+            $this->entityManager->flush();
+
+            return [
+                'session' => $session,
+                'userGame' => $userGame,
+            ];
+        });
+    }
+
+    public function finishSession(GameSession $session, User $user, UserGameResult $result): UserGame
+    {
+        if ($session->getUser()?->getId() !== $user->getId()) {
+            throw new ConflictHttpException('You do not have access to this game session.');
+        }
+
+        $userGame = $this->userGameRepository->findOneBySession($session);
+        if (!$userGame instanceof UserGame) {
+            throw new BadRequestHttpException('Game session is not linked to a user game trace.');
+        }
+
+        if ($userGame->getStatus() === UserGameStatus::FINISHED || $session->getStatus() === GameStatus::COMPLETED) {
+            throw new ConflictHttpException('Game session is already finished.');
+        }
+
+        $game = $userGame->getGame();
+        if (null === $game) {
+            throw new BadRequestHttpException('User game trace has no related game.');
+        }
+
+        $costConfig = $this->gameLevelCostRepository->findOneByGameAndLevel($game, $userGame->getSelectedLevel());
+        if (null === $costConfig) {
+            throw new UnprocessableEntityHttpException('No coins configuration found for this game level.');
+        }
+
+        $delta = $result === UserGameResult::WIN
+            ? abs($costConfig->getWinRewardCoins())
+            : -abs($costConfig->getLosePenaltyCoins());
+
+        return $this->entityManager->getConnection()->transactional(function () use ($session, $user, $userGame, $result, $delta): UserGame {
+            $newBalance = $user->getCoins() + $delta;
+            if ($newBalance < 0) {
+                throw new UnprocessableEntityHttpException('Operation would result in a negative coins balance.');
+            }
+
+            $user->setCoins($newBalance);
+            $session->setStatus(GameStatus::COMPLETED)->setEndedAt(new DateTimeImmutable());
+
+            $context = $session->getContext();
+            $context['resultSubmitted'] = true;
+            $context['result'] = $result->value;
+            $session->setContext($context);
+
+            $userGame
+                ->setStatus(UserGameStatus::FINISHED)
+                ->setResult($result)
+                ->setRewardOrPenaltyCoins($delta);
+
+            $this->entityManager->persist($user);
+            $this->entityManager->persist($session);
+            $this->entityManager->persist($userGame);
+            $this->entityManager->flush();
+
+            return $userGame;
+        });
     }
 
     public function submitResult(
@@ -109,6 +201,8 @@ final readonly class UserGameService
             $userGame = (new UserGame())
                 ->setUser($user)
                 ->setGame($game)
+                ->setSession($session)
+                ->setStatus(UserGameStatus::FINISHED)
                 ->setSelectedLevel($level)
                 ->setEntryCostCoins($entryCost)
                 ->setResult($result)

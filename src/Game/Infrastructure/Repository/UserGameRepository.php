@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Game\Infrastructure\Repository;
 
+use App\Game\Domain\Entity\GameSession;
 use App\Game\Domain\Entity\UserGame as Entity;
 use App\General\Infrastructure\Repository\BaseRepository;
 use App\User\Domain\Entity\User;
@@ -27,6 +28,16 @@ final class UserGameRepository extends BaseRepository
         $entity = $this->findOneBy([
             'user' => $user,
             'idempotencyKey' => $idempotencyKey,
+        ]);
+
+        return $entity;
+    }
+
+    public function findOneBySession(GameSession $session): ?Entity
+    {
+        /** @var Entity|null $entity */
+        $entity = $this->findOneBy([
+            'session' => $session,
         ]);
 
         return $entity;

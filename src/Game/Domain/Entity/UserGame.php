@@ -6,6 +6,7 @@ namespace App\Game\Domain\Entity;
 
 use App\Game\Domain\Enum\UserGameLevel;
 use App\Game\Domain\Enum\UserGameResult;
+use App\Game\Domain\Enum\UserGameStatus;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
@@ -41,14 +42,21 @@ class UserGame implements EntityInterface
     #[ORM\JoinColumn(name: 'game_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Game $game = null;
 
+    #[ORM\ManyToOne(targetEntity: GameSession::class)]
+    #[ORM\JoinColumn(name: 'session_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    private ?GameSession $session = null;
+
+    #[ORM\Column(name: 'status', type: Types::STRING, length: 16, enumType: UserGameStatus::class)]
+    private UserGameStatus $status = UserGameStatus::STARTED;
+
     #[ORM\Column(name: 'selected_level', type: Types::STRING, length: 16, enumType: UserGameLevel::class)]
     private UserGameLevel $selectedLevel = UserGameLevel::EASY;
 
     #[ORM\Column(name: 'entry_cost_coins', type: Types::BIGINT)]
     private int $entryCostCoins = 0;
 
-    #[ORM\Column(name: 'result', type: Types::STRING, length: 8, enumType: UserGameResult::class)]
-    private UserGameResult $result = UserGameResult::LOSE;
+    #[ORM\Column(name: 'result', type: Types::STRING, length: 8, enumType: UserGameResult::class, nullable: true)]
+    private ?UserGameResult $result = null;
 
     #[ORM\Column(name: 'reward_or_penalty_coins', type: Types::BIGINT)]
     private int $rewardOrPenaltyCoins = 0;
@@ -94,6 +102,30 @@ class UserGame implements EntityInterface
         return $this;
     }
 
+    public function getSession(): ?GameSession
+    {
+        return $this->session;
+    }
+
+    public function setSession(?GameSession $session): self
+    {
+        $this->session = $session;
+
+        return $this;
+    }
+
+    public function getStatus(): UserGameStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(UserGameStatus $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
     public function getSelectedLevel(): UserGameLevel
     {
         return $this->selectedLevel;
@@ -118,12 +150,12 @@ class UserGame implements EntityInterface
         return $this;
     }
 
-    public function getResult(): UserGameResult
+    public function getResult(): ?UserGameResult
     {
         return $this->result;
     }
 
-    public function setResult(UserGameResult $result): self
+    public function setResult(?UserGameResult $result): self
     {
         $this->result = $result;
 

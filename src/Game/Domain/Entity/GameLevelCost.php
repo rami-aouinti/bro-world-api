@@ -39,6 +39,12 @@ class GameLevelCost implements EntityInterface
     #[ORM\Column(name: 'min_coins_cost', type: Types::BIGINT)]
     private int $minCoinsCost = 0;
 
+    #[ORM\Column(name: 'win_reward_coins', type: Types::BIGINT)]
+    private int $winRewardCoins = 0;
+
+    #[ORM\Column(name: 'lose_penalty_coins', type: Types::BIGINT)]
+    private int $losePenaltyCoins = 0;
+
     /**
      * @throws Throwable
      */
@@ -85,6 +91,30 @@ class GameLevelCost implements EntityInterface
     public function setMinCoinsCost(int $minCoinsCost): self
     {
         $this->minCoinsCost = $minCoinsCost;
+
+        return $this;
+    }
+
+    public function getWinRewardCoins(): int
+    {
+        return $this->winRewardCoins;
+    }
+
+    public function setWinRewardCoins(int $winRewardCoins): self
+    {
+        $this->winRewardCoins = $winRewardCoins;
+
+        return $this;
+    }
+
+    public function getLosePenaltyCoins(): int
+    {
+        return $this->losePenaltyCoins;
+    }
+
+    public function setLosePenaltyCoins(int $losePenaltyCoins): self
+    {
+        $this->losePenaltyCoins = $losePenaltyCoins;
 
         return $this;
     }
