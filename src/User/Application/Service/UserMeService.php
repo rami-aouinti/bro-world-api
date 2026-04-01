@@ -281,6 +281,7 @@ readonly class UserMeService
             'firstName' => $user->getFirstName(),
             'lastName' => $user->getLastName(),
             'photo' => $user->getPhoto(),
+            'coins' => $user->getCoins(),
             'profile' => $this->normalizeProfile($profile),
             'socials' => array_map(static fn (Social $social): array => [
                 'provider' => $social->getProvider(),
@@ -334,6 +335,7 @@ readonly class UserMeService
                 'email' => $user->getEmail(),
                 'firstName' => $user->getFirstName(),
                 'lastName' => $user->getLastName(),
+                'coins' => $user->getCoins(),
                 'title' => $profile->getTitle(),
                 'information' => $profile->getInformation(),
                 'location' => $profile->getLocation(),

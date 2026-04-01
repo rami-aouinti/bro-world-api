@@ -30,6 +30,7 @@ class RequestMapper extends RestRequestMapper
         'language',
         'locale',
         'timezone',
+        'coins',
         'userGroups',
         'password',
     ];

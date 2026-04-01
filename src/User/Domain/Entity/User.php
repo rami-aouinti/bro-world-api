@@ -56,6 +56,9 @@ class User implements EntityInterface, UserInterface, UserGroupAwareInterface
     final public const string SET_USER_BASIC = 'set.UserBasic';
 
     final public const int PASSWORD_MIN_LENGTH = 8;
+    final public const int COINS_DEFAULT = 5000;
+    final public const int COINS_MIN = 0;
+    final public const int COINS_MAX = 100000000000;
 
     #[ORM\Id]
     #[ORM\Column(
@@ -238,6 +241,26 @@ class User implements EntityInterface, UserInterface, UserGroupAwareInterface
     private string $photo = '';
 
     #[ORM\Column(
+        name: 'coins',
+        type: Types::BIGINT,
+        nullable: false,
+        options: [
+            'default' => self::COINS_DEFAULT,
+            'comment' => 'Virtual coins balance',
+        ],
+    )]
+    #[Groups([
+        'User',
+        'User.coins',
+
+        self::SET_USER_PROFILE,
+        self::SET_USER_BASIC,
+    ])]
+    #[Assert\GreaterThanOrEqual(value: self::COINS_MIN)]
+    #[Assert\LessThanOrEqual(value: self::COINS_MAX)]
+    private int $coins = self::COINS_DEFAULT;
+
+    #[ORM\Column(
         name: 'password',
         type: Types::STRING,
         length: 255,
@@ -384,6 +407,22 @@ class User implements EntityInterface, UserInterface, UserGroupAwareInterface
             $name = rawurlencode($this->firstName . ' ' . $this->lastName);
             $this->photo = 'https://ui-avatars.com/api/?name=' . str_replace('%20', '+', $name);
         }
+
+        return $this;
+    }
+
+    public function getCoins(): int
+    {
+        return $this->coins;
+    }
+
+    public function setCoins(int $coins): self
+    {
+        if ($coins < self::COINS_MIN || $coins > self::COINS_MAX) {
+            throw new \InvalidArgumentException('coins must be between 0 and 100000000000');
+        }
+
+        $this->coins = $coins;
 
         return $this;
     }

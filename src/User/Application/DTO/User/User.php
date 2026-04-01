@@ -75,6 +75,10 @@ class User extends RestDto
 
     protected string $photo = '';
 
+    #[Assert\GreaterThanOrEqual(value: Entity::COINS_MIN)]
+    #[Assert\LessThanOrEqual(value: Entity::COINS_MAX)]
+    protected int $coins = Entity::COINS_DEFAULT;
+
     /**
      * @var UserGroupEntity[]|array<int, UserGroupEntity>
      */
@@ -199,6 +203,19 @@ class User extends RestDto
         return $this;
     }
 
+    public function getCoins(): int
+    {
+        return $this->coins;
+    }
+
+    public function setCoins(int $coins): self
+    {
+        $this->setVisited('coins');
+        $this->coins = $coins;
+
+        return $this;
+    }
+
     /**
      * @return array<int, UserGroupEntity>
      */
@@ -251,6 +268,7 @@ class User extends RestDto
             $this->locale = $entity->getLocale();
             $this->timezone = $entity->getTimezone();
             $this->photo = $entity->getPhoto();
+            $this->coins = $entity->getCoins();
             /** @var array<int, UserGroupEntity> $groups */
             $groups = $entity->getUserGroups()->toArray();
             $this->userGroups = $groups;

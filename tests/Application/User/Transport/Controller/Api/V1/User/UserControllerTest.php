@@ -176,6 +176,7 @@ class UserControllerTest extends WebTestCase
         self::assertEquals($userEntity->getLocale()->value, $responseData['locale']);
         self::assertEquals($userEntity->getTimezone(), $responseData['timezone']);
         self::assertEquals($userEntity->getPhoto(), $responseData['photo']);
+        self::assertEquals($userEntity->getCoins(), $responseData['coins']);
     }
 
     /**
@@ -217,6 +218,7 @@ class UserControllerTest extends WebTestCase
         $this->checkBasicFieldsInResponse($responseData);
         $this->checkThatRequestEqualsResponseData($requestData, $responseData);
         self::assertStringContainsString('https://ui-avatars.com/api/?name=Name+Last+name', $responseData['photo']);
+        self::assertSame(5000, $responseData['coins']);
     }
 
     /**
@@ -303,6 +305,45 @@ class UserControllerTest extends WebTestCase
         $this->checkThatRequestEqualsResponseData($requestData, $responseData);
     }
 
+
+    #[TestDox('Test that setting user coins below minimum is rejected.')]
+    public function testThatPatchCoinsBelowMinimumIsRejected(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $userEntity = $this->userResource->findOneBy([
+            'username' => self::USERNAME_FOR_TEST,
+        ]);
+        self::assertInstanceOf(User::class, $userEntity);
+
+        $client->request(
+            method: 'PATCH',
+            uri: static::$baseUrl . '/' . $userEntity->getId(),
+            content: JSON::encode(['coins' => -1]),
+        );
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+    }
+
+    #[TestDox('Test that setting user coins above maximum is rejected.')]
+    public function testThatPatchCoinsAboveMaximumIsRejected(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $userEntity = $this->userResource->findOneBy([
+            'username' => self::USERNAME_FOR_TEST,
+        ]);
+        self::assertInstanceOf(User::class, $userEntity);
+
+        $client->request(
+            method: 'PATCH',
+            uri: static::$baseUrl . '/' . $userEntity->getId(),
+            content: JSON::encode(['coins' => 100000000001]),
+        );
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode(), "Response:\n" . $client->getResponse());
+    }
+
     /**
      * @return Generator<array{0: string, 1: string}>
      */
@@ -360,6 +401,7 @@ class UserControllerTest extends WebTestCase
         self::assertArrayHasKey('locale', $responseData);
         self::assertArrayHasKey('timezone', $responseData);
         self::assertArrayHasKey('photo', $responseData);
+        self::assertArrayHasKey('coins', $responseData);
     }
 
     /**

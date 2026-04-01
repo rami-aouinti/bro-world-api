@@ -49,4 +49,21 @@ final class UserMeControllerTest extends WebTestCase
             self::assertArrayHasKey('createdAt', $payload[0]);
         }
     }
+
+
+    #[TestDox('GET /api/v1/users/me includes coins in payload.')]
+    public function testMeIncludesCoins(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('GET', self::API_URL_PREFIX . '/v1/users/me');
+        $response = $client->getResponse();
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:\n" . $response);
+
+        $payload = JSON::decode((string)$response->getContent(), true);
+
+        self::assertArrayHasKey('coins', $payload);
+        self::assertSame(5000, $payload['coins']);
+    }
 }
