@@ -79,9 +79,9 @@ final class LoadGameData extends Fixture implements OrderedFixtureInterface
     public function load(ObjectManager $manager): void
     {
         $coinsByLevel = [
-            UserGameLevel::EASY => 200,
-            UserGameLevel::MEDIUM => 400,
-            UserGameLevel::HARD => 600,
+            ['level' => UserGameLevel::EASY, 'coins' => 200],
+            ['level' => UserGameLevel::MEDIUM, 'coins' => 400],
+            ['level' => UserGameLevel::HARD, 'coins' => 600],
         ];
 
         $levels = [
@@ -324,7 +324,9 @@ final class LoadGameData extends Fixture implements OrderedFixtureInterface
                     $manager->persist($game);
                     $this->addReference('Game-' . $gameData['id'], $game);
 
-                    foreach ($coinsByLevel as $level => $coins) {
+                    foreach ($coinsByLevel as $coinsConfig) {
+                        $level = $coinsConfig['level'];
+                        $coins = $coinsConfig['coins'];
                         $gameLevelCost = (new GameLevelCost())
                             ->setGame($game)
                             ->setLevelKey($level)
