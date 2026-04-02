@@ -125,12 +125,12 @@ final readonly class UserGameService
             $entryCost = (int)($sessionContext['entryCostCoins'] ?? 0);
         }
 
-        $winReward = abs($costConfig->getWinRewardCoins());
-        $losePenalty = abs($costConfig->getLosePenaltyCoins());
-
-        $delta = $result === UserGameResult::WIN
-            ? $entryCost + $winReward
-            : -max(0, $losePenalty - $entryCost);
+        $delta = $this->calculateCoinsDelta(
+            entryCost: $entryCost,
+            result: $result,
+            winReward: $costConfig->getWinRewardCoins(),
+            losePenalty: $costConfig->getLosePenaltyCoins(),
+        );
 
         return $this->entityManager->getConnection()->transactional(function () use ($session, $user, $userGame, $result, $delta): UserGame {
             $newBalance = $user->getCoins() + $delta;
@@ -164,7 +164,7 @@ final readonly class UserGameService
         GameSession $session,
         User $user,
         UserGameResult $result,
-        int $coinsAmount,
+        ?int $coinsAmount,
         string $idempotencyKey,
     ): UserGame {
         if ($idempotencyKey === '') {
@@ -189,9 +189,30 @@ final readonly class UserGameService
             throw new BadRequestHttpException('Session has no valid selected level metadata.');
         }
 
-        $delta = $result === UserGameResult::WIN ? abs($coinsAmount) : -abs($coinsAmount);
+        $game = $session->getGame();
+        if (null === $game) {
+            throw new BadRequestHttpException('Session has no related game.');
+        }
 
-        return $this->entityManager->getConnection()->transactional(function () use ($session, $user, $result, $delta, $entryCost, $level, $idempotencyKey): UserGame {
+        $costConfig = $this->gameLevelCostRepository->findOneByGameAndLevel($game, $level);
+        if (null === $costConfig) {
+            throw new UnprocessableEntityHttpException('No coins configuration found for this game level.');
+        }
+
+        $delta = $this->calculateCoinsDelta(
+            entryCost: $entryCost,
+            result: $result,
+            winReward: $costConfig->getWinRewardCoins(),
+            losePenalty: $costConfig->getLosePenaltyCoins(),
+        );
+
+        $this->validateSubmittedCoinsAmount(
+            coinsAmount: $coinsAmount,
+            expectedDelta: $delta,
+            result: $result,
+        );
+
+        return $this->entityManager->getConnection()->transactional(function () use ($session, $user, $result, $delta, $entryCost, $level, $idempotencyKey, $game): UserGame {
             $newBalance = $user->getCoins() + $delta;
             if ($newBalance < 0) {
                 throw new UnprocessableEntityHttpException('Operation would result in a negative coins balance.');
@@ -206,11 +227,6 @@ final readonly class UserGameService
                 ->setStatus(GameStatus::COMPLETED)
                 ->setEndedAt(new DateTimeImmutable())
                 ->setContext($context);
-
-            $game = $session->getGame();
-            if (null === $game) {
-                throw new BadRequestHttpException('Session has no related game.');
-            }
 
             $userGame = (new UserGame())
                 ->setUser($user)
@@ -230,5 +246,43 @@ final readonly class UserGameService
 
             return $userGame;
         });
+    }
+
+    private function calculateCoinsDelta(
+        int $entryCost,
+        UserGameResult $result,
+        int $winReward,
+        int $losePenalty,
+    ): int {
+        $normalizedEntryCost = max(0, $entryCost);
+        $normalizedWinReward = abs($winReward);
+        $normalizedLosePenalty = abs($losePenalty);
+
+        if ($result === UserGameResult::WIN) {
+            return $normalizedEntryCost + $normalizedWinReward;
+        }
+
+        return -max(0, $normalizedLosePenalty - $normalizedEntryCost);
+    }
+
+    private function validateSubmittedCoinsAmount(?int $coinsAmount, int $expectedDelta, UserGameResult $result): void
+    {
+        if (null === $coinsAmount) {
+            return;
+        }
+
+        if ($coinsAmount < 0) {
+            throw new UnprocessableEntityHttpException('coinsAmount must be a positive integer.');
+        }
+
+        $expectedAmount = abs($expectedDelta);
+        if ($coinsAmount !== $expectedAmount) {
+            throw new UnprocessableEntityHttpException(sprintf(
+                'coinsAmount (%d) is inconsistent with the level configuration for result %s (expected: %d).',
+                $coinsAmount,
+                $result->value,
+                $expectedAmount,
+            ));
+        }
     }
 }

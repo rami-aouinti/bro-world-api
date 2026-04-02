@@ -192,7 +192,7 @@ final readonly class GameController
             ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $coinsAmount = (int)($payload['coinsAmount'] ?? 0);
+        $coinsAmount = array_key_exists('coinsAmount', $payload) ? (int)$payload['coinsAmount'] : null;
         $idempotencyKey = trim((string)($payload['idempotencyKey'] ?? ''));
 
         try {
