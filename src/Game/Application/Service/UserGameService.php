@@ -119,9 +119,18 @@ final readonly class UserGameService
             throw new UnprocessableEntityHttpException('No coins configuration found for this game level.');
         }
 
+        $sessionContext = $session->getContext();
+        $entryCost = $userGame->getEntryCostCoins();
+        if ($entryCost <= 0) {
+            $entryCost = (int)($sessionContext['entryCostCoins'] ?? 0);
+        }
+
+        $winReward = abs($costConfig->getWinRewardCoins());
+        $losePenalty = abs($costConfig->getLosePenaltyCoins());
+
         $delta = $result === UserGameResult::WIN
-            ? abs($costConfig->getWinRewardCoins())
-            : -abs($costConfig->getLosePenaltyCoins());
+            ? $entryCost + $winReward
+            : -max(0, $losePenalty - $entryCost);
 
         return $this->entityManager->getConnection()->transactional(function () use ($session, $user, $userGame, $result, $delta): UserGame {
             $newBalance = $user->getCoins() + $delta;
