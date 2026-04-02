@@ -7,9 +7,11 @@ namespace App\Game\Infrastructure\DataFixtures\ORM;
 use App\Game\Domain\Entity\Game;
 use App\Game\Domain\Entity\GameCategory;
 use App\Game\Domain\Entity\GameLevelOption;
+use App\Game\Domain\Entity\GameLevelCost;
 use App\Game\Domain\Entity\GameSubCategory;
 use App\Game\Domain\Enum\GameLevel;
 use App\Game\Domain\Enum\GameStatus;
+use App\Game\Domain\Enum\UserGameLevel;
 use App\General\Domain\Rest\UuidHelper;
 use App\Tests\Utils\PhpUnitUtil;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -76,6 +78,12 @@ final class LoadGameData extends Fixture implements OrderedFixtureInterface
     #[Override]
     public function load(ObjectManager $manager): void
     {
+        $coinsByLevel = [
+            ['level' => UserGameLevel::EASY, 'coins' => 200],
+            ['level' => UserGameLevel::MEDIUM, 'coins' => 400],
+            ['level' => UserGameLevel::HARD, 'coins' => 600],
+        ];
+
         $levels = [
             'beginner' => ['BEGINNER', 'Beginner', 'Découverte et prise en main rapide.'],
             'intermediate' => ['INTERMEDIATE', 'Intermediate', 'Mécaniques plus riches pour joueurs réguliers.'],
@@ -315,6 +323,19 @@ final class LoadGameData extends Fixture implements OrderedFixtureInterface
                     $this->forceUuid($game, 'game-' . $gameData['id']);
                     $manager->persist($game);
                     $this->addReference('Game-' . $gameData['id'], $game);
+
+                    foreach ($coinsByLevel as $coinsConfig) {
+                        $level = $coinsConfig['level'];
+                        $coins = $coinsConfig['coins'];
+                        $gameLevelCost = (new GameLevelCost())
+                            ->setGame($game)
+                            ->setLevelKey($level)
+                            ->setMinCoinsCost($coins)
+                            ->setWinRewardCoins($coins)
+                            ->setLosePenaltyCoins($coins);
+
+                        $manager->persist($gameLevelCost);
+                    }
                 }
             }
         }
