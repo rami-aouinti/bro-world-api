@@ -25,6 +25,7 @@ use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use JsonException;
 use OpenApi\Attributes as OA;
+use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -273,13 +274,8 @@ final readonly class GameController
 
     #[Route('/v1/games/{id}/leaderboard', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'Get game leaderboard.', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Leaderboard entries.', content: new OA\JsonContent(type: 'object', properties: [new OA\Property(property: 'items', type: 'array', items: new OA\Items(type: 'object'))])), new OA\Response(response: 404, description: 'Game not found.'), new OA\Response(response: 401, description: 'Authentication required.')])]
-    public function leaderboard(string $id, Request $request): JsonResponse
+    public function leaderboard(Game $game, Request $request): JsonResponse
     {
-        $game = $this->entityManager->getRepository(Game::class)->find($id);
-        if (!$game instanceof Game) {
-            return new JsonResponse(['message' => 'Game not found.'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
         $limit = max(1, min((int)$request->query->get('limit', 10), 100));
 
         $scores = $this->entityManager
@@ -287,7 +283,7 @@ final readonly class GameController
             ->createQueryBuilder('score')
             ->innerJoin('score.session', 'session')
             ->andWhere('session.game = :game')
-            ->setParameter('game', $game)
+            ->setParameter('game', $game->getId(), UuidBinaryOrderedTimeType::NAME)
             ->orderBy('score.value', 'DESC')
             ->addOrderBy('score.calculatedAt', 'ASC')
             ->setMaxResults($limit)
