@@ -46,6 +46,76 @@ final readonly class AddGeneralCartItemController
      * @throws OptimisticLockException
      */
     #[Route('/v1/shop/general/carts/{shopId}/items', methods: [Request::METHOD_POST])]
+    #[OA\Parameter(name: 'shopId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+    #[OA\Post(
+        summary: 'Add a product to the authenticated user cart in global shop scope.',
+        description: 'Independent from any application slug: creates or updates an active cart line for the authenticated user and the targeted shop.',
+        security: [['Bearer' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['productId', 'quantity'],
+                properties: [
+                    new OA\Property(property: 'productId', type: 'string', format: 'uuid', example: '8b673f1d-8f2f-4a81-b5e8-6f2f14b26626'),
+                    new OA\Property(property: 'quantity', type: 'integer', minimum: 1, example: 2),
+                ],
+                examples: [
+                    new OA\Examples(
+                        example: 'add_to_cart',
+                        summary: 'Add two units of a product',
+                        value: [
+                            'productId' => '8b673f1d-8f2f-4a81-b5e8-6f2f14b26626',
+                            'quantity' => 2,
+                        ],
+                    ),
+                ],
+            ),
+        ),
+    )]
+    #[OA\Response(
+        response: JsonResponse::HTTP_CREATED,
+        description: 'Cart updated with new item.',
+        content: new OA\JsonContent(example: [
+            'id' => 'cart_8c501b14-4c4e-4f74-9ff7-cce9dd0cf1f7',
+            'shopId' => 'f95da407-b9f0-4d5f-a14e-15c4b22af6e3',
+            'userId' => 'aa5f0b80-6a57-4fa5-ab8f-321723ebfd6a',
+            'subtotal' => 129.9,
+            'itemsCount' => 2,
+            'currencyCode' => 'EUR',
+            'updatedAt' => '2026-04-15T10:09:03+00:00',
+            'items' => [[
+                'id' => 'item_922da95e-212f-435f-b20b-ced40f74f8dc',
+                'productId' => '8b673f1d-8f2f-4a81-b5e8-6f2f14b26626',
+                'quantity' => 2,
+                'unitPriceSnapshot' => 64.95,
+                'lineTotal' => 129.9,
+            ]],
+        ]),
+    )]
+    #[OA\Response(
+        response: JsonResponse::HTTP_BAD_REQUEST,
+        description: 'Invalid JSON payload or invalid quantity/product id.',
+        content: new OA\JsonContent(example: [
+            'message' => 'Validation failed.',
+            'errors' => [[
+                'field' => 'payload',
+                'message' => 'Invalid JSON payload.',
+                'code' => 'INVALID_JSON',
+            ]],
+        ]),
+    )]
+    #[OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Missing or invalid Bearer token.')]
+    #[OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Authenticated user required.')]
+    #[OA\Response(
+        response: JsonResponse::HTTP_NOT_FOUND,
+        description: 'Shop or product not found.',
+        content: new OA\JsonContent(
+            examples: [
+                new OA\Examples(example: 'shop_not_found', value: ['message' => 'Shop not found.']),
+                new OA\Examples(example: 'product_not_found', value: ['message' => 'Product not found for this shop.']),
+            ],
+        ),
+    )]
     public function __invoke(string $shopId, Request $request): JsonResponse
     {
         $user = $this->security->getUser();

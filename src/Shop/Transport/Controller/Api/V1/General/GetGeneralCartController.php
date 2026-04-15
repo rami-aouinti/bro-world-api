@@ -34,6 +34,20 @@ final readonly class GetGeneralCartController
      * @throws ORMException
      */
     #[Route('/v1/shop/general/carts/{shopId}', methods: [Request::METHOD_GET])]
+    #[OA\Parameter(name: 'shopId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+    #[OA\Get(
+        summary: 'Get the authenticated user active cart for a global shop.',
+        description: 'Independent from application scope: returns and recalculates the active cart for the authenticated user and selected shop.',
+        security: [['Bearer' => []]],
+    )]
+    #[OA\Response(response: JsonResponse::HTTP_OK, description: 'Cart retrieved.')]
+    #[OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Missing or invalid Bearer token.')]
+    #[OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Authenticated user required.')]
+    #[OA\Response(
+        response: JsonResponse::HTTP_NOT_FOUND,
+        description: 'Shop not found.',
+        content: new OA\JsonContent(example: ['message' => 'Shop not found.']),
+    )]
     public function __invoke(string $shopId, User $loggedInUser): JsonResponse
     {
         $shop = $this->shopRepository->find($shopId);

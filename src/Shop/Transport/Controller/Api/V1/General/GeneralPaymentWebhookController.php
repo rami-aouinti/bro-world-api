@@ -30,7 +30,71 @@ final readonly class GeneralPaymentWebhookController
      * @throws JsonException
      */
     #[Route('/v1/shop/general/payments/webhook', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'Handle global payment provider webhook (no applicationSlug required).', security: [])]
+    #[OA\Parameter(
+        name: 'provider',
+        in: 'query',
+        required: false,
+        description: 'Optional provider hint used to route webhook events.',
+        schema: new OA\Schema(type: 'string', enum: ['paypal', 'stripe', 'mock']),
+    )]
+    #[OA\Post(
+        summary: 'Receive provider webhook notifications for global shop payments.',
+        description: 'Public endpoint independent from application context. Providers notify payment state changes through this callback.',
+        security: [],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                description: 'Provider webhook payload (shape depends on provider).',
+                examples: [
+                    new OA\Examples(
+                        example: 'webhook_payload',
+                        summary: 'Stripe webhook payload example',
+                        value: [
+                            'id' => 'evt_1QyQtx2x8d9',
+                            'type' => 'payment_intent.succeeded',
+                            'data' => [
+                                'object' => [
+                                    'id' => 'pi_3QyQkL2x8d9',
+                                    'status' => 'succeeded',
+                                ],
+                            ],
+                        ],
+                    ),
+                ],
+            ),
+        ),
+    )]
+    #[OA\Response(
+        response: JsonResponse::HTTP_OK,
+        description: 'Webhook processed and transaction updated.',
+        content: new OA\JsonContent(example: [
+            'processed' => true,
+            'transactionId' => 'txn_8f96897f-bf44-4ed5-b2e8-cd8b64ac9ef8',
+            'providerReference' => 'pi_3QyQkL2x8d9',
+            'status' => 'succeeded',
+        ]),
+    )]
+    #[OA\Response(
+        response: JsonResponse::HTTP_ACCEPTED,
+        description: 'Webhook accepted but no matching transaction was updated.',
+        content: new OA\JsonContent(example: ['processed' => false]),
+    )]
+    #[OA\Response(
+        response: JsonResponse::HTTP_BAD_REQUEST,
+        description: 'Invalid JSON payload.',
+        content: new OA\JsonContent(example: [
+            'message' => 'Validation failed.',
+            'errors' => [[
+                'field' => 'payload',
+                'message' => 'Invalid JSON payload.',
+                'code' => 'INVALID_JSON',
+            ]],
+        ]),
+    )]
+    #[OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Not used for this public endpoint.')]
+    #[OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Signature verification failed.')]
+    #[OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Provider not found.')]
     public function __invoke(Request $request): JsonResponse
     {
         try {
