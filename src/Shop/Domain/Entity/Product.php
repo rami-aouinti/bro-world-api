@@ -45,6 +45,9 @@ class Product implements EntityInterface
     #[ORM\Column(name: 'description', type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
+    #[ORM\Column(name: 'texture', type: Types::STRING, length: 120, nullable: true)]
+    private ?string $texture = null;
+
     #[ORM\Column(name: 'photo', type: Types::STRING, length: 1024, options: [
         'default' => '',
     ])]
@@ -70,6 +73,23 @@ class Product implements EntityInterface
     ])]
     private int $coinsAmount = 0;
 
+    #[ORM\Column(name: 'promotion_percentage', type: Types::SMALLINT, options: [
+        'default' => 0,
+    ])]
+    private int $promotionPercentage = 0;
+
+    #[ORM\Column(name: 'seo_title', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $seoTitle = null;
+
+    #[ORM\Column(name: 'seo_description', type: Types::TEXT, nullable: true)]
+    private ?string $seoDescription = null;
+
+    /** @var array<int, string> */
+    #[ORM\Column(name: 'seo_keywords', type: Types::JSON, options: [
+        'default' => '[]',
+    ])]
+    private array $seoKeywords = [];
+
     #[ORM\Column(name: 'is_featured', type: Types::BOOLEAN, options: [
         'default' => false,
     ])]
@@ -83,10 +103,18 @@ class Product implements EntityInterface
     #[ORM\JoinTable(name: 'shop_product_tag')]
     private Collection|ArrayCollection $tags;
 
+    /** @var Collection<int, Product>|ArrayCollection<int, Product> */
+    #[ORM\ManyToMany(targetEntity: self::class)]
+    #[ORM\JoinTable(name: 'shop_product_similarity')]
+    #[ORM\JoinColumn(name: 'product_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'similar_product_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    private Collection|ArrayCollection $similarProducts;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
         $this->tags = new ArrayCollection();
+        $this->similarProducts = new ArrayCollection();
     }
 
     #[Override]
@@ -155,6 +183,18 @@ class Product implements EntityInterface
         return $this;
     }
 
+    public function getTexture(): ?string
+    {
+        return $this->texture;
+    }
+
+    public function setTexture(?string $texture): self
+    {
+        $this->texture = $texture !== null ? trim($texture) : null;
+
+        return $this;
+    }
+
     public function getPhoto(): string
     {
         return $this->photo;
@@ -215,6 +255,60 @@ class Product implements EntityInterface
         return $this;
     }
 
+    public function getPromotionPercentage(): int
+    {
+        return $this->promotionPercentage;
+    }
+
+    public function setPromotionPercentage(int $promotionPercentage): self
+    {
+        $this->promotionPercentage = min(100, max(0, $promotionPercentage));
+
+        return $this;
+    }
+
+    public function getSeoTitle(): ?string
+    {
+        return $this->seoTitle;
+    }
+
+    public function setSeoTitle(?string $seoTitle): self
+    {
+        $this->seoTitle = $seoTitle !== null ? trim($seoTitle) : null;
+
+        return $this;
+    }
+
+    public function getSeoDescription(): ?string
+    {
+        return $this->seoDescription;
+    }
+
+    public function setSeoDescription(?string $seoDescription): self
+    {
+        $this->seoDescription = $seoDescription !== null ? trim($seoDescription) : null;
+
+        return $this;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getSeoKeywords(): array
+    {
+        return $this->seoKeywords;
+    }
+
+    /**
+     * @param array<int, string> $seoKeywords
+     */
+    public function setSeoKeywords(array $seoKeywords): self
+    {
+        $this->seoKeywords = array_values(array_filter(array_map(static fn (mixed $keyword): string => trim((string)$keyword), $seoKeywords), static fn (string $keyword): bool => $keyword !== ''));
+
+        return $this;
+    }
+
     public function isFeatured(): bool
     {
         return $this->isFeatured;
@@ -259,6 +353,34 @@ class Product implements EntityInterface
     public function removeTag(Tag $tag): self
     {
         $this->tags->removeElement($tag);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Product>|ArrayCollection<int, Product>
+     */
+    public function getSimilarProducts(): Collection|ArrayCollection
+    {
+        return $this->similarProducts;
+    }
+
+    public function addSimilarProduct(Product $product): self
+    {
+        if ($product->getId() === $this->getId()) {
+            return $this;
+        }
+
+        if (!$this->similarProducts->contains($product)) {
+            $this->similarProducts->add($product);
+        }
+
+        return $this;
+    }
+
+    public function removeSimilarProduct(Product $product): self
+    {
+        $this->similarProducts->removeElement($product);
 
         return $this;
     }

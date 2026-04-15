@@ -10,6 +10,7 @@ use App\Shop\Domain\Entity\Shop;
 use App\Shop\Domain\Entity\Tag;
 use App\Shop\Domain\Enum\ProductStatus;
 use App\Shop\Infrastructure\Repository\CategoryRepository;
+use App\Shop\Infrastructure\Repository\ProductRepository;
 use App\Shop\Infrastructure\Repository\TagRepository;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
@@ -19,6 +20,7 @@ final readonly class ProductHydratorService
     public function __construct(
         private CategoryRepository $categoryRepository,
         private TagRepository $tagRepository,
+        private ProductRepository $productRepository,
     ) {
     }
 
@@ -42,6 +44,9 @@ final readonly class ProductHydratorService
         if (!$partial || array_key_exists('description', $payload)) {
             $product->setDescription(($payload['description'] ?? null) !== null ? (string)$payload['description'] : null);
         }
+        if (!$partial || array_key_exists('texture', $payload)) {
+            $product->setTexture(($payload['texture'] ?? null) !== null ? (string)$payload['texture'] : null);
+        }
         if (!$partial || array_key_exists('photo', $payload)) {
             $product->setPhoto((string)($payload['photo'] ?? ''));
         }
@@ -53,6 +58,19 @@ final readonly class ProductHydratorService
         }
         if (!$partial || array_key_exists('coinsAmount', $payload)) {
             $product->setCoinsAmount((int)($payload['coinsAmount'] ?? 0));
+        }
+        if (!$partial || array_key_exists('promotionPercentage', $payload)) {
+            $product->setPromotionPercentage((int)($payload['promotionPercentage'] ?? 0));
+        }
+        if (!$partial || array_key_exists('seoTitle', $payload)) {
+            $product->setSeoTitle(($payload['seoTitle'] ?? null) !== null ? (string)$payload['seoTitle'] : null);
+        }
+        if (!$partial || array_key_exists('seoDescription', $payload)) {
+            $product->setSeoDescription(($payload['seoDescription'] ?? null) !== null ? (string)$payload['seoDescription'] : null);
+        }
+        if (!$partial || array_key_exists('seoKeywords', $payload)) {
+            $keywords = array_values(array_filter((array)($payload['seoKeywords'] ?? []), static fn (mixed $keyword): bool => is_string($keyword) && trim($keyword) !== ''));
+            $product->setSeoKeywords($keywords);
         }
         if (!$partial || array_key_exists('isFeatured', $payload)) {
             $product->setIsFeatured((bool)($payload['isFeatured'] ?? false));
@@ -92,6 +110,29 @@ final readonly class ProductHydratorService
                 }
 
                 $product->addTag($tag);
+            }
+        }
+
+        if (!$partial || array_key_exists('similarProductIds', $payload)) {
+            foreach ($product->getSimilarProducts()->toArray() as $similarProduct) {
+                $product->removeSimilarProduct($similarProduct);
+            }
+
+            foreach ((array)($payload['similarProductIds'] ?? []) as $similarProductId) {
+                if (!is_string($similarProductId) || $similarProductId === $product->getId()) {
+                    continue;
+                }
+
+                $similarProduct = $this->productRepository->find($similarProductId);
+                if (!$similarProduct instanceof Product) {
+                    continue;
+                }
+
+                if ($product->getShop() instanceof Shop && $similarProduct->getShop()?->getId() !== $product->getShop()?->getId()) {
+                    continue;
+                }
+
+                $product->addSimilarProduct($similarProduct);
             }
         }
 
