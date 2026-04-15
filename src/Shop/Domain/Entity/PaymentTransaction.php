@@ -8,6 +8,8 @@ use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
 use App\Shop\Domain\Enum\PaymentStatus;
+
+use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
@@ -18,6 +20,7 @@ use Ramsey\Uuid\UuidInterface;
 #[ORM\Table(name: 'shop_payment_transaction')]
 #[ORM\UniqueConstraint(name: 'uniq_shop_payment_provider_reference', columns: ['provider', 'provider_reference'])]
 #[ORM\UniqueConstraint(name: 'uniq_shop_payment_webhook_key', columns: ['webhook_idempotence_key'])]
+#[ORM\UniqueConstraint(name: 'uniq_shop_payment_coins_credit_reference', columns: ['coins_credit_reference'])]
 #[ORM\Index(name: 'idx_shop_payment_order_id', columns: ['order_id'])]
 #[ORM\Index(name: 'idx_shop_payment_status', columns: ['status'])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
@@ -59,6 +62,12 @@ class PaymentTransaction implements EntityInterface
 
     #[ORM\Column(name: 'webhook_idempotence_key', type: Types::STRING, length: 190, nullable: true)]
     private ?string $webhookIdempotenceKey = null;
+
+    #[ORM\Column(name: 'coins_credit_reference', type: Types::STRING, length: 190, nullable: true)]
+    private ?string $coinsCreditReference = null;
+
+    #[ORM\Column(name: 'coins_credited_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?DateTimeImmutable $coinsCreditedAt = null;
 
     public function __construct()
     {
@@ -169,6 +178,30 @@ class PaymentTransaction implements EntityInterface
     public function setWebhookIdempotenceKey(?string $webhookIdempotenceKey): self
     {
         $this->webhookIdempotenceKey = $webhookIdempotenceKey !== null ? trim($webhookIdempotenceKey) : null;
+
+        return $this;
+    }
+
+    public function getCoinsCreditReference(): ?string
+    {
+        return $this->coinsCreditReference;
+    }
+
+    public function setCoinsCreditReference(?string $coinsCreditReference): self
+    {
+        $this->coinsCreditReference = $coinsCreditReference !== null ? trim($coinsCreditReference) : null;
+
+        return $this;
+    }
+
+    public function getCoinsCreditedAt(): ?DateTimeImmutable
+    {
+        return $this->coinsCreditedAt;
+    }
+
+    public function setCoinsCreditedAt(?DateTimeImmutable $coinsCreditedAt): self
+    {
+        $this->coinsCreditedAt = $coinsCreditedAt;
 
         return $this;
     }

@@ -6,12 +6,16 @@ namespace App\Shop\Application\Service;
 
 use App\Shop\Application\Monitoring\ShopMonitoringService;
 use App\Shop\Domain\Entity\Order;
+use App\Shop\Domain\Entity\OrderItem;
 use App\Shop\Domain\Entity\PaymentTransaction;
+use App\Shop\Domain\Entity\Product;
 use App\Shop\Domain\Enum\OrderStatus;
 use App\Shop\Domain\Enum\PaymentStatus;
 use App\Shop\Infrastructure\Repository\OrderRepository;
 use App\Shop\Infrastructure\Repository\PaymentTransactionRepository;
 use App\User\Domain\Entity\User;
+use App\User\Infrastructure\Repository\UserRepository;
+use DateTimeImmutable;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -19,6 +23,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 use function is_string;
+use function max;
 use function trim;
 
 final readonly class PaymentService
@@ -30,6 +35,7 @@ final readonly class PaymentService
         private Security $security,
         private string $environment,
         private ShopMonitoringService $monitoringService,
+        private UserRepository $userRepository,
     ) {
     }
 
@@ -49,6 +55,7 @@ final readonly class PaymentService
         }
 
         $this->assertOrderAccess($order, $applicationSlug);
+        $this->assertOrderCoinsEligibility($order, $applicationSlug);
 
         if ($order->getStatus() !== OrderStatus::PENDING_PAYMENT) {
             throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Order is not in pending_payment status.');
@@ -74,6 +81,8 @@ final readonly class PaymentService
             ->setCurrency('EUR')
             ->setStatus($this->resolvePaymentStatus((string)$providerIntent['status']))
             ->setPayload((array)($providerIntent['payload'] ?? []));
+
+        $this->assertPaymentConsistency($order, $transaction, $applicationSlug);
 
         $this->paymentTransactionRepository->save($transaction, true);
 
@@ -110,6 +119,7 @@ final readonly class PaymentService
         $transaction->setStatus($this->resolvePaymentStatus((string)$providerResponse['status']));
         $transaction->setPayload((array)($providerResponse['payload'] ?? []));
 
+        $this->assertPaymentConsistency($order, $transaction, $applicationSlug);
         $this->applyOrderStateFromPayment($order, $transaction->getStatus());
 
         if ($transaction->getStatus() === PaymentStatus::FAILED) {
@@ -129,6 +139,8 @@ final readonly class PaymentService
                 'provider' => $transaction->getProvider(),
             ]);
         }
+
+        $this->creditCoinsIfSucceeded($order, $transaction, $applicationSlug, 'confirm');
 
         $this->orderRepository->save($order, false);
         $this->paymentTransactionRepository->save($transaction, true);
@@ -221,7 +233,9 @@ final readonly class PaymentService
 
         $order = $transaction->getOrder();
         if ($order !== null) {
+            $this->assertPaymentConsistency($order, $transaction, null);
             $this->applyOrderStateFromPayment($order, $transaction->getStatus());
+            $this->creditCoinsIfSucceeded($order, $transaction, null, 'webhook');
             $this->orderRepository->save($order, false);
         }
 
@@ -310,5 +324,181 @@ final readonly class PaymentService
             PaymentStatus::FAILED->value => PaymentStatus::FAILED,
             default => PaymentStatus::CREATED,
         };
+    }
+
+    private function assertOrderCoinsEligibility(Order $order, ?string $applicationSlug): void
+    {
+        $computedSubtotal = 0;
+
+        foreach ($order->getItems() as $item) {
+            $computedSubtotal += $this->assertOrderItemConsistency($order, $item, $applicationSlug);
+        }
+
+        if ($computedSubtotal !== $order->getSubtotal()) {
+            $this->trackPaymentValidationFailure('subtotal_mismatch', $order, null, $applicationSlug);
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Order subtotal mismatch with order items.');
+        }
+    }
+
+    private function assertOrderItemConsistency(Order $order, OrderItem $item, ?string $applicationSlug): int
+    {
+        if ($item->getOrder()?->getId() !== $order->getId()) {
+            $this->trackPaymentValidationFailure('order_item_relation_mismatch', $order, null, $applicationSlug);
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Order item relation mismatch detected.');
+        }
+
+        $product = $item->getProduct();
+        if (!$product instanceof Product) {
+            $this->trackPaymentValidationFailure('missing_product', $order, null, $applicationSlug);
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Order item product is missing.');
+        }
+
+        if ($product->getCoinsAmount() <= 0) {
+            $this->trackPaymentValidationFailure('non_coin_product', $order, null, $applicationSlug);
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Order contains a product not eligible for coins credit.');
+        }
+
+        if ($product->getCurrencyCode() !== 'EUR') {
+            $this->trackPaymentValidationFailure('unsupported_currency', $order, null, $applicationSlug);
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Only EUR products are eligible for checkout payment.');
+        }
+
+        $expectedLineTotal = $item->getUnitPriceSnapshot() * $item->getQuantity();
+        if ($expectedLineTotal !== $item->getLineTotal()) {
+            $this->trackPaymentValidationFailure('line_total_mismatch', $order, null, $applicationSlug);
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Order item line total mismatch detected.');
+        }
+
+        return $expectedLineTotal;
+    }
+
+    private function assertPaymentConsistency(Order $order, PaymentTransaction $transaction, ?string $applicationSlug): void
+    {
+        $this->assertOrderCoinsEligibility($order, $applicationSlug);
+
+        if ($transaction->getCurrency() !== 'EUR') {
+            $this->trackPaymentValidationFailure('transaction_currency_mismatch', $order, $transaction, $applicationSlug);
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Payment currency must be EUR.');
+        }
+
+        if ($transaction->getAmount() !== $order->getSubtotal()) {
+            $this->trackPaymentValidationFailure('transaction_amount_mismatch', $order, $transaction, $applicationSlug);
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Payment amount does not match order subtotal.');
+        }
+    }
+
+    private function creditCoinsIfSucceeded(Order $order, PaymentTransaction $transaction, ?string $applicationSlug, string $source): void
+    {
+        if ($transaction->getStatus() !== PaymentStatus::SUCCEEDED) {
+            return;
+        }
+
+        $idempotenceReference = $this->resolveCoinsCreditReference($transaction);
+        if ($idempotenceReference === '') {
+            $this->trackPaymentValidationFailure('coins_credit_reference_missing', $order, $transaction, $applicationSlug);
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Payment idempotence reference is missing for coins credit.');
+        }
+
+        if ($transaction->getCoinsCreditedAt() !== null || $transaction->getCoinsCreditReference() !== null) {
+            $this->monitoringService->logStructured(
+                event: 'shop.payment.coins_credit.skipped',
+                message: 'Coins credit skipped because payment transaction was already credited.',
+                context: [
+                    'applicationSlug' => $applicationSlug,
+                    'orderId' => $order->getId(),
+                    'transactionId' => $transaction->getId(),
+                    'providerReference' => $transaction->getProviderReference(),
+                    'idempotenceReference' => $idempotenceReference,
+                    'source' => $source,
+                ],
+                level: 'info',
+            );
+            $this->monitoringService->incrementCounter('shop.payment.coins_credit_total', [
+                'result' => 'already_credited',
+                'source' => $source,
+            ]);
+
+            return;
+        }
+
+        $coinsToCredit = 0;
+        foreach ($order->getItems() as $item) {
+            $product = $item->getProduct();
+            if ($product instanceof Product) {
+                $coinsToCredit += $product->getCoinsAmount() * $item->getQuantity();
+            }
+        }
+
+        if ($coinsToCredit <= 0) {
+            $this->trackPaymentValidationFailure('coins_total_invalid', $order, $transaction, $applicationSlug);
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Order coins amount must be greater than zero.');
+        }
+
+        $user = $order->getUser();
+        if (!$user instanceof User) {
+            $this->trackPaymentValidationFailure('order_user_missing', $order, $transaction, $applicationSlug);
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Order user is missing for coins credit.');
+        }
+
+        $user->setCoins(max(0, $user->getCoins() + $coinsToCredit));
+        $this->userRepository->save($user, false);
+
+        $transaction
+            ->setCoinsCreditReference($idempotenceReference)
+            ->setCoinsCreditedAt(new DateTimeImmutable());
+
+        $this->monitoringService->logStructured(
+            event: 'shop.payment.coins_credit.succeeded',
+            message: 'Coins credited to user after payment success.',
+            context: [
+                'applicationSlug' => $applicationSlug,
+                'orderId' => $order->getId(),
+                'transactionId' => $transaction->getId(),
+                'providerReference' => $transaction->getProviderReference(),
+                'idempotenceReference' => $idempotenceReference,
+                'coinsCredited' => $coinsToCredit,
+                'source' => $source,
+                'userId' => $user->getId(),
+            ],
+            level: 'info',
+        );
+        $this->monitoringService->incrementCounter('shop.payment.coins_credit_total', [
+            'result' => 'credited',
+            'source' => $source,
+        ]);
+    }
+
+    private function resolveCoinsCreditReference(PaymentTransaction $transaction): string
+    {
+        $webhookKey = trim((string)($transaction->getWebhookIdempotenceKey() ?? ''));
+        if ($webhookKey !== '') {
+            return $webhookKey;
+        }
+
+        return trim($transaction->getProviderReference());
+    }
+
+    private function trackPaymentValidationFailure(
+        string $reason,
+        Order $order,
+        ?PaymentTransaction $transaction,
+        ?string $applicationSlug,
+    ): void {
+        $this->monitoringService->logStructured(
+            event: 'shop.payment.validation_failed',
+            message: 'Payment consistency validation failed.',
+            context: [
+                'reason' => $reason,
+                'applicationSlug' => $applicationSlug,
+                'orderId' => $order->getId(),
+                'transactionId' => $transaction?->getId(),
+                'providerReference' => $transaction?->getProviderReference(),
+            ],
+            level: 'error',
+        );
+
+        $this->monitoringService->incrementCounter('shop.payment.validation_failures_total', [
+            'reason' => $reason,
+        ]);
     }
 }

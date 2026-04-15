@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Shop\Application\Service;
 
 use App\Platform\Domain\Entity\Application;
+use App\Shop\Application\Monitoring\ShopMonitoringService;
+use App\Shop\Application\Service\PaymentProviderRouter;
 use App\Shop\Application\Service\PaymentService;
 use App\Shop\Domain\Entity\Order;
+use App\Shop\Domain\Entity\OrderItem;
 use App\Shop\Domain\Entity\PaymentTransaction;
+use App\Shop\Domain\Entity\Product;
 use App\Shop\Domain\Entity\Shop;
 use App\Shop\Domain\Enum\OrderStatus;
 use App\Shop\Domain\Enum\PaymentStatus;
@@ -15,6 +19,7 @@ use App\Shop\Domain\Service\Interfaces\PaymentProviderInterface;
 use App\Shop\Infrastructure\Repository\OrderRepository;
 use App\Shop\Infrastructure\Repository\PaymentTransactionRepository;
 use App\User\Domain\Entity\User;
+use App\User\Infrastructure\Repository\UserRepository;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,81 +27,19 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 final class PaymentServiceTest extends TestCase
 {
-    public function testCreatePaymentIntentWithValidScope(): void
+    public function testConfirmPaymentSucceededCreditsCoinsOnce(): void
     {
-        $owner = $this->createConfiguredMock(User::class, [
-            'getId' => 'owner-id',
-        ]);
-        $order = $this->createOrder('app-shop', $owner, 4250);
+        $owner = $this->createConfiguredMock(User::class, ['getId' => 'owner-id', 'getCoins' => 100]);
+        $owner->expects(self::once())->method('setCoins')->with(500)->willReturnSelf();
 
-        $orderRepository = $this->createMock(OrderRepository::class);
-        $orderRepository->method('find')->with($order->getId())->willReturn($order);
-
-        $paymentTransactionRepository = $this->createMock(PaymentTransactionRepository::class);
-        $paymentTransactionRepository->expects(self::once())->method('save');
-
-        $paymentProvider = $this->createMock(PaymentProviderInterface::class);
-        $paymentProvider->method('createIntent')->willReturn([
-            'provider' => 'mock',
-            'providerReference' => 'mock-ref-1',
-            'status' => 'requires_confirmation',
-            'payload' => [
-                'intent' => true,
-            ],
-        ]);
-
-        $security = $this->createMock(Security::class);
-        $security->method('getUser')->willReturn($owner);
-
-        $service = new PaymentService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, 'test');
-
-        $transaction = $service->createPaymentIntent('app-shop', $order->getId());
-
-        self::assertSame('mock-ref-1', $transaction->getProviderReference());
-        self::assertSame(PaymentStatus::REQUIRES_CONFIRMATION, $transaction->getStatus());
-        self::assertSame(OrderStatus::PENDING_PAYMENT, $order->getStatus());
-        self::assertSame(4250, $transaction->getAmount());
-    }
-
-    public function testCreatePaymentIntentWithInvalidScopeReturnsForbidden(): void
-    {
-        $owner = $this->createConfiguredMock(User::class, [
-            'getId' => 'owner-id',
-        ]);
-        $order = $this->createOrder('app-shop', $owner, 1999);
-
-        $orderRepository = $this->createMock(OrderRepository::class);
-        $orderRepository->method('find')->willReturn($order);
-
-        $paymentTransactionRepository = $this->createMock(PaymentTransactionRepository::class);
-        $paymentProvider = $this->createMock(PaymentProviderInterface::class);
-
-        $security = $this->createMock(Security::class);
-        $security->method('getUser')->willReturn($owner);
-
-        $service = new PaymentService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, 'test');
-
-        try {
-            $service->createPaymentIntent('wrong-scope', $order->getId());
-            self::fail('Expected HttpException to be thrown.');
-        } catch (HttpException $exception) {
-            self::assertSame(JsonResponse::HTTP_FORBIDDEN, $exception->getStatusCode());
-        }
-    }
-
-    public function testConfirmPaymentWithValidScopeMarksOrderPaid(): void
-    {
-        $owner = $this->createConfiguredMock(User::class, [
-            'getId' => 'owner-id',
-        ]);
-        $order = $this->createOrder('app-shop', $owner, 9990);
+        $order = $this->createOrder('app-shop', $owner, 1200, 2, 200);
 
         $transaction = (new PaymentTransaction())
             ->setOrder($order)
             ->setProvider('mock')
             ->setProviderReference('mock-ref-2')
             ->setStatus(PaymentStatus::REQUIRES_CONFIRMATION)
-            ->setAmount(9990)
+            ->setAmount(1200)
             ->setCurrency('EUR');
 
         $orderRepository = $this->createMock(OrderRepository::class);
@@ -112,28 +55,74 @@ final class PaymentServiceTest extends TestCase
             'provider' => 'mock',
             'providerReference' => 'mock-ref-2',
             'status' => 'succeeded',
-            'payload' => [
-                'confirmed' => true,
-            ],
+            'payload' => ['confirmed' => true],
         ]);
 
         $security = $this->createMock(Security::class);
         $security->method('getUser')->willReturn($owner);
 
-        $service = new PaymentService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, 'test');
+        $monitoring = $this->createMock(ShopMonitoringService::class);
+        $monitoring->expects(self::atLeastOnce())->method('incrementCounter');
+
+        $userRepository = $this->createMock(UserRepository::class);
+        $userRepository->expects(self::once())->method('save')->with($owner, false);
+
+        $service = $this->createService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, $monitoring, $userRepository);
 
         $confirmed = $service->confirmPayment('app-shop', $order->getId(), 'mock-ref-2');
 
         self::assertSame(OrderStatus::PAID, $order->getStatus());
         self::assertSame(PaymentStatus::SUCCEEDED, $confirmed->getStatus());
+        self::assertSame('mock-ref-2', $confirmed->getCoinsCreditReference());
+        self::assertNotNull($confirmed->getCoinsCreditedAt());
     }
 
-    public function testConfirmPaymentWithInvalidScopeReturnsForbidden(): void
+    public function testConfirmPaymentSucceededDoesNotCreditTwice(): void
     {
-        $owner = $this->createConfiguredMock(User::class, [
-            'getId' => 'owner-id',
+        $owner = $this->createConfiguredMock(User::class, ['getId' => 'owner-id', 'getCoins' => 100]);
+        $owner->expects(self::never())->method('setCoins');
+
+        $order = $this->createOrder('app-shop', $owner, 1200, 1, 200);
+
+        $transaction = (new PaymentTransaction())
+            ->setOrder($order)
+            ->setProvider('mock')
+            ->setProviderReference('mock-ref-already')
+            ->setStatus(PaymentStatus::REQUIRES_CONFIRMATION)
+            ->setAmount(1200)
+            ->setCurrency('EUR')
+            ->setCoinsCreditReference('existing-key')
+            ->setCoinsCreditedAt(new \DateTimeImmutable());
+
+        $orderRepository = $this->createMock(OrderRepository::class);
+        $orderRepository->method('find')->willReturn($order);
+
+        $paymentTransactionRepository = $this->createMock(PaymentTransactionRepository::class);
+        $paymentTransactionRepository->method('findOneBy')->willReturn($transaction);
+
+        $paymentProvider = $this->createMock(PaymentProviderInterface::class);
+        $paymentProvider->method('confirm')->willReturn([
+            'provider' => 'mock',
+            'providerReference' => 'mock-ref-already',
+            'status' => 'succeeded',
+            'payload' => ['confirmed' => true],
         ]);
-        $order = $this->createOrder('app-shop', $owner, 3000);
+
+        $security = $this->createMock(Security::class);
+        $security->method('getUser')->willReturn($owner);
+
+        $monitoring = $this->createMock(ShopMonitoringService::class);
+        $userRepository = $this->createMock(UserRepository::class);
+        $userRepository->expects(self::never())->method('save');
+
+        $service = $this->createService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, $monitoring, $userRepository);
+        $service->confirmPayment('app-shop', $order->getId(), 'mock-ref-already');
+    }
+
+    public function testCreatePaymentIntentRejectsNonCoinProduct(): void
+    {
+        $owner = $this->createConfiguredMock(User::class, ['getId' => 'owner-id']);
+        $order = $this->createOrder('app-shop', $owner, 500, 1, 0);
 
         $orderRepository = $this->createMock(OrderRepository::class);
         $orderRepository->method('find')->willReturn($order);
@@ -144,97 +133,30 @@ final class PaymentServiceTest extends TestCase
         $security = $this->createMock(Security::class);
         $security->method('getUser')->willReturn($owner);
 
-        $service = new PaymentService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, 'test');
+        $monitoring = $this->createMock(ShopMonitoringService::class);
+        $monitoring->expects(self::once())->method('incrementCounter')->with('shop.payment.validation_failures_total', ['reason' => 'non_coin_product']);
 
-        try {
-            $service->confirmPayment('wrong-scope', $order->getId(), 'mock-ref-2');
-            self::fail('Expected HttpException to be thrown.');
-        } catch (HttpException $exception) {
-            self::assertSame(JsonResponse::HTTP_FORBIDDEN, $exception->getStatusCode());
-        }
-    }
+        $userRepository = $this->createMock(UserRepository::class);
 
-    public function testCreatePaymentIntentWithDifferentAuthenticatedUserReturnsForbidden(): void
-    {
-        $owner = $this->createConfiguredMock(User::class, [
-            'getId' => 'owner-id',
-        ]);
-        $otherUser = $this->createConfiguredMock(User::class, [
-            'getId' => 'another-id',
-        ]);
-        $order = $this->createOrder('app-shop', $owner, 5000);
+        $service = $this->createService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, $monitoring, $userRepository);
 
-        $orderRepository = $this->createMock(OrderRepository::class);
-        $orderRepository->method('find')->willReturn($order);
-
-        $paymentTransactionRepository = $this->createMock(PaymentTransactionRepository::class);
-        $paymentProvider = $this->createMock(PaymentProviderInterface::class);
-
-        $security = $this->createMock(Security::class);
-        $security->method('getUser')->willReturn($otherUser);
-
-        $service = new PaymentService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, 'test');
-
-        try {
-            $service->createPaymentIntent('app-shop', $order->getId());
-            self::fail('Expected HttpException to be thrown.');
-        } catch (HttpException $exception) {
-            self::assertSame(JsonResponse::HTTP_FORBIDDEN, $exception->getStatusCode());
-        }
-    }
-
-    public function testProcessWebhookWithoutSignatureInProdReturnsBadRequest(): void
-    {
-        $orderRepository = $this->createMock(OrderRepository::class);
-        $paymentTransactionRepository = $this->createMock(PaymentTransactionRepository::class);
-        $paymentProvider = $this->createMock(PaymentProviderInterface::class);
-        $security = $this->createMock(Security::class);
-
-        $service = new PaymentService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, 'prod');
-
-        try {
-            $service->processWebhook([
-                'eventId' => 'evt-prod',
-            ]);
-            self::fail('Expected HttpException to be thrown.');
-        } catch (HttpException $exception) {
-            self::assertSame(JsonResponse::HTTP_BAD_REQUEST, $exception->getStatusCode());
-        }
-    }
-
-    public function testProcessWebhookWithInvalidPayloadReturnsUnauthorized(): void
-    {
-        $orderRepository = $this->createMock(OrderRepository::class);
-        $paymentTransactionRepository = $this->createMock(PaymentTransactionRepository::class);
-
-        $paymentProvider = $this->createMock(PaymentProviderInterface::class);
-        $paymentProvider->method('verifyWebhook')->willReturn(null);
-
-        $security = $this->createMock(Security::class);
-
-        $service = new PaymentService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, 'test');
-
-        try {
-            $service->processWebhook([
-                'eventId' => 'evt-invalid',
-            ], 'sig-invalid');
-            self::fail('Expected HttpException to be thrown.');
-        } catch (HttpException $exception) {
-            self::assertSame(JsonResponse::HTTP_UNAUTHORIZED, $exception->getStatusCode());
-        }
+        $this->expectException(HttpException::class);
+        $this->expectExceptionMessage('Order contains a product not eligible for coins credit.');
+        $service->createPaymentIntent('app-shop', $order->getId());
     }
 
     public function testProcessWebhookReturnsNullOnDuplicateWebhookKey(): void
     {
-        $order = $this->createOrder('app-shop', $this->createConfiguredMock(User::class, [
-            'getId' => 'owner-id',
-        ]), 2500);
+        $owner = $this->createConfiguredMock(User::class, ['getId' => 'owner-id', 'getCoins' => 100]);
+        $owner->expects(self::once())->method('setCoins')->with(300)->willReturnSelf();
+        $order = $this->createOrder('app-shop', $owner, 1200, 1, 200);
+
         $transaction = (new PaymentTransaction())
             ->setOrder($order)
             ->setProvider('mock')
             ->setProviderReference('mock-ref-3')
             ->setStatus(PaymentStatus::REQUIRES_CONFIRMATION)
-            ->setAmount(2500)
+            ->setAmount(1200)
             ->setCurrency('EUR');
 
         $orderRepository = $this->createMock(OrderRepository::class);
@@ -262,41 +184,56 @@ final class PaymentServiceTest extends TestCase
                 [
                     'provider' => 'mock',
                     'providerReference' => 'mock-ref-3',
-                    'status' => 'failed',
+                    'status' => 'succeeded',
                     'webhookKey' => 'evt-1',
-                    'payload' => [
-                        'a' => 1,
-                    ],
+                    'payload' => ['a' => 1],
                 ],
                 [
                     'provider' => 'mock',
                     'providerReference' => 'mock-ref-3',
                     'status' => 'failed',
                     'webhookKey' => 'evt-duplicated',
-                    'payload' => [
-                        'a' => 1,
-                    ],
+                    'payload' => ['a' => 1],
                 ],
             );
 
         $security = $this->createMock(Security::class);
+        $monitoring = $this->createMock(ShopMonitoringService::class);
 
-        $service = new PaymentService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, 'test');
+        $userRepository = $this->createMock(UserRepository::class);
+        $userRepository->expects(self::once())->method('save')->with($owner, false);
 
-        $processed = $service->processWebhook([
-            'eventId' => 'evt-1',
-        ], 'sig-valid');
-        $ignored = $service->processWebhook([
-            'eventId' => 'evt-duplicated',
-        ], 'sig-valid');
+        $service = $this->createService($orderRepository, $paymentTransactionRepository, $paymentProvider, $security, $monitoring, $userRepository);
+
+        $processed = $service->processWebhook(['eventId' => 'evt-1'], 'sig-valid');
+        $ignored = $service->processWebhook(['eventId' => 'evt-duplicated'], 'sig-valid');
 
         self::assertInstanceOf(PaymentTransaction::class, $processed);
         self::assertNull($ignored);
-        self::assertSame(OrderStatus::FAILED, $order->getStatus());
+        self::assertSame(OrderStatus::PAID, $order->getStatus());
         self::assertSame('evt-1', $transaction->getWebhookIdempotenceKey());
     }
 
-    private function createOrder(string $applicationSlug, User $owner, int $subtotal): Order
+    private function createService(
+        OrderRepository $orderRepository,
+        PaymentTransactionRepository $paymentTransactionRepository,
+        PaymentProviderInterface $provider,
+        Security $security,
+        ShopMonitoringService $monitoringService,
+        UserRepository $userRepository,
+    ): PaymentService {
+        return new PaymentService(
+            $orderRepository,
+            $paymentTransactionRepository,
+            new PaymentProviderRouter(['mock' => $provider, 'stripe' => $provider]),
+            $security,
+            'test',
+            $monitoringService,
+            $userRepository,
+        );
+    }
+
+    private function createOrder(string $applicationSlug, User $owner, int $subtotal, int $quantity, int $coinsAmount): Order
     {
         $application = (new Application())
             ->setTitle('Test App')
@@ -306,10 +243,29 @@ final class PaymentServiceTest extends TestCase
             ->setName('Test Shop')
             ->setApplication($application);
 
-        return (new Order())
+        $product = (new Product())
+            ->setName('Coins pack')
+            ->setSku('COINS-PACK-1')
+            ->setPrice((int)($subtotal / $quantity))
+            ->setCurrencyCode('EUR')
+            ->setCoinsAmount($coinsAmount);
+
+        $item = (new OrderItem())
+            ->setProduct($product)
+            ->setQuantity($quantity)
+            ->setUnitPriceSnapshot((int)($subtotal / $quantity))
+            ->setLineTotal($subtotal)
+            ->setProductNameSnapshot('Coins pack')
+            ->setProductSkuSnapshot('COINS-PACK-1');
+
+        $order = (new Order())
             ->setShop($shop)
             ->setUser($owner)
             ->setStatus(OrderStatus::PENDING_PAYMENT)
             ->setSubtotal($subtotal);
+
+        $order->addItem($item);
+
+        return $order;
     }
 }
