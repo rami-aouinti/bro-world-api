@@ -15,6 +15,7 @@ use App\School\Domain\Entity\Teacher;
 use App\School\Domain\Enum\ExamStatus;
 use App\School\Domain\Enum\ExamType;
 use App\School\Domain\Enum\Term;
+use App\User\Domain\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
@@ -30,12 +31,14 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
             'school-campus-core',
             'school-course-flow',
             'school-grade-track',
+            'school-general-core',
         ],
     ];
 
     #[Override]
     public function load(ObjectManager $manager): void
     {
+        $generalOwner = $this->getReference('User-john-root', User::class);
         $examTypes = ExamType::cases();
         $examStatuses = ExamStatus::cases();
         $terms = Term::cases();
@@ -56,6 +59,9 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
 
             $school->setName($application->getTitle() . ' Academy');
             $this->addReference('School-' . $appKey, $school);
+            if ($appKey === 'school-general-core') {
+                $this->addReference('School-General-Core', $school);
+            }
 
             $classes = [];
             $classesByLabel = [
@@ -73,6 +79,7 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
                 $classes[$label] = $class;
                 $this->addReference('SchoolClass-' . $appKey . '-' . $label, $class);
             }
+            $this->addReference('SchoolClass-' . $appKey . '-1', $classes['small']);
 
             $teacherMath = (new Teacher())->setName('Mme Martin - ' . $applicationIndex);
             $teacherFrench = (new Teacher())->setName('M. Dubois - ' . $applicationIndex);
@@ -93,6 +100,7 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
             $this->addReference('Teacher-' . $appKey . '-math', $teacherMath);
             $this->addReference('Teacher-' . $appKey . '-french', $teacherFrench);
             $this->addReference('Teacher-' . $appKey . '-head', $teacherHead);
+            $this->addReference('Teacher-' . $appKey . '-1', $teacherMath);
 
             $students = [];
             $studentCounter = 1;
@@ -161,6 +169,10 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
                     }
                 }
             }
+        }
+
+        if ($generalOwner instanceof User) {
+            $this->addReference('School-General-Owner', $generalOwner);
         }
 
         $manager->flush();
