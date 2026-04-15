@@ -136,7 +136,7 @@ readonly class ContactReadService
             }
 
             $items = $this->contactRepository->findBy([], ['createdAt' => 'DESC'], $queryOptions->limit, $queryOptions->offset());
-            $totalItems = (int)$this->contactRepository->count([]);
+            $totalItems = (int)count($this->contactRepository->findAll());
 
             return [
                 'items' => array_map(static fn ($contact): array => [

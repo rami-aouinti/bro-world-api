@@ -160,7 +160,7 @@ readonly class ProjectReadService
                 'githubResourceIds' => $project->getGithubResourceIds(),
                 'githubRepositoriesCount' => count($project->getRepositories()),
             ], $projects);
-            $totalItems = (int)$this->projectRepository->count([]);
+            $totalItems = (int)count($this->projectRepository->findAll());
 
             return [
                 'items' => array_map(fn (array $item): array => $this->crmApiNormalizer->normalizeProjectProjection($item), $items),

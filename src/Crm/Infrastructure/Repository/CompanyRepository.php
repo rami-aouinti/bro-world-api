@@ -15,7 +15,6 @@ use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
  * @method Entity[] findBy(array $criteria, ?array $orderBy = null, ?int $limit = null, ?int $offset = null, ?string $entityManagerName = null)
  * @method Entity[] findAll(string $entityManagerName = null)
  * @method Entity[] search(array $criteria, ?array $orderBy = null, ?int $limit = null, ?int $offset = null, ?string $entityManagerName = null)
- * @method Entity[] count(array $criteria, ?string $entityManagerName = null)
  */
 class CompanyRepository extends BaseRepository
 {

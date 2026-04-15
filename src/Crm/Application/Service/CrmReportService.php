@@ -165,7 +165,7 @@ final readonly class CrmReportService
             contacts: count($contacts),
             employees: count($employees),
             billings: count($billings),
-            tasks: (int)$this->taskRepository->count([]),
+            tasks: (int)count($this->taskRepository->findAll()),
         );
 
         return new CrmReportDto(
@@ -177,7 +177,7 @@ final readonly class CrmReportService
             ),
             kpis: new CrmReportKpisDto(
                 pipeline: round($totalBilling, 2),
-                dealsWon: (int)$this->projectRepository->count([]),
+                dealsWon: (int)count($this->projectRepository->findAll()),
                 cycleDays: $cycleDays,
                 npsClients: (int)round(max(0.0, min(100.0, $averageContactScore))),
             ),

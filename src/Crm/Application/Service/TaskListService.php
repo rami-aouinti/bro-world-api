@@ -187,7 +187,7 @@ readonly class TaskListService
                 fn (Task $task): array => $this->crmApiNormalizer->normalizeTask($task),
                 $this->taskRepository->findBy([], ['createdAt' => 'DESC'], $limit, ($page - 1) * $limit)
             );
-            $totalItems = (int)$this->taskRepository->count([]);
+            $totalItems = (int)count($this->taskRepository->findAll());
 
             return [
                 'items' => $items,

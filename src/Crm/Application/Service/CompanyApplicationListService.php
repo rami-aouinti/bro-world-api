@@ -69,7 +69,7 @@ readonly class CompanyApplicationListService
             }
 
             $items = $this->companyRepository->findBy([], ['createdAt' => 'DESC'], $queryOptions->limit, $queryOptions->offset());
-            $totalItems = (int)$this->companyRepository->count([]);
+            $totalItems = (int)count($this->companyRepository->findAll());
 
             $normalizedItems = array_map(
                 static fn (Company $company): array => [

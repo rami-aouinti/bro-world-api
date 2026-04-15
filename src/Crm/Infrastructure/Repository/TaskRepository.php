@@ -13,7 +13,6 @@ use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 /**
  * @method Entity|null find(string $id, LockMode|int|null $lockMode = null, ?int $lockVersion = null, ?string $entityManagerName = null)
  * @method Entity[] findBy(array $criteria, ?array $orderBy = null, ?int $limit = null, ?int $offset = null, ?string $entityManagerName = null)
- * @method Entity[] count(array $criteria, ?string $entityManagerName = null)
  */
 class TaskRepository extends BaseRepository
 {
