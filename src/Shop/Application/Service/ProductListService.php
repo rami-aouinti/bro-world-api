@@ -40,6 +40,9 @@ readonly class ProductListService
             'name' => trim((string)$request->query->get('name', '')),
             'category' => trim((string)$request->query->get('category', '')),
             'status' => trim((string)$request->query->get('status', '')),
+            'minPrice' => max(0, (float)$request->query->get('minPrice', 0)),
+            'maxPrice' => max(0, (float)$request->query->get('maxPrice', 0)),
+            'minPromotion' => max(0, min(100, (int)$request->query->get('promotion', $request->query->get('minPromotion', 0)))),
         ];
 
         $cacheKey = $this->cacheKeyConventionService->buildShopProductListKey($page, $limit, $filters);
@@ -83,6 +86,15 @@ readonly class ProductListService
             if ($filters['status'] !== '') {
                 $qb->andWhere('product.status = :status')->setParameter('status', $filters['status']);
             }
+            if ($filters['minPrice'] > 0) {
+                $qb->andWhere('product.price >= :minPrice')->setParameter('minPrice', (int)round($filters['minPrice'] * 100));
+            }
+            if ($filters['maxPrice'] > 0) {
+                $qb->andWhere('product.price <= :maxPrice')->setParameter('maxPrice', (int)round($filters['maxPrice'] * 100));
+            }
+            if ($filters['minPromotion'] > 0) {
+                $qb->andWhere('product.promotionPercentage >= :minPromotion')->setParameter('minPromotion', $filters['minPromotion']);
+            }
 
             if ($esIds !== null) {
                 $qb->andWhere('product.id IN (:ids)')->setParameter('ids', $esIds);
@@ -101,6 +113,15 @@ readonly class ProductListService
             }
             if ($filters['status'] !== '') {
                 $countQb->andWhere('product.status = :status')->setParameter('status', $filters['status']);
+            }
+            if ($filters['minPrice'] > 0) {
+                $countQb->andWhere('product.price >= :minPrice')->setParameter('minPrice', (int)round($filters['minPrice'] * 100));
+            }
+            if ($filters['maxPrice'] > 0) {
+                $countQb->andWhere('product.price <= :maxPrice')->setParameter('maxPrice', (int)round($filters['maxPrice'] * 100));
+            }
+            if ($filters['minPromotion'] > 0) {
+                $countQb->andWhere('product.promotionPercentage >= :minPromotion')->setParameter('minPromotion', $filters['minPromotion']);
             }
             if ($esIds !== null) {
                 $countQb->andWhere('product.id IN (:ids)')->setParameter('ids', $esIds);
@@ -122,7 +143,7 @@ readonly class ProductListService
             ];
         });
 
-        $result['meta']['filters'] = array_filter($filters, static fn (string $value): bool => $value !== '');
+        $result['meta']['filters'] = array_filter($filters, static fn (mixed $value): bool => $value !== '' && $value !== 0 && $value !== 0.0);
 
         return $result;
     }
@@ -141,6 +162,9 @@ readonly class ProductListService
             'name' => trim((string)$request->query->get('name', '')),
             'category' => trim((string)$request->query->get('category', '')),
             'status' => trim((string)$request->query->get('status', '')),
+            'minPrice' => max(0, (float)$request->query->get('minPrice', 0)),
+            'maxPrice' => max(0, (float)$request->query->get('maxPrice', 0)),
+            'minPromotion' => max(0, min(100, (int)$request->query->get('promotion', $request->query->get('minPromotion', 0)))),
         ];
 
         $cacheKey = $this->cacheKeyConventionService->buildShopProductListKey($page, $limit, array_merge($filters, ['scope' => 'global']));
@@ -186,6 +210,15 @@ readonly class ProductListService
             if ($filters['status'] !== '') {
                 $qb->andWhere('product.status = :status')->setParameter('status', $filters['status']);
             }
+            if ($filters['minPrice'] > 0) {
+                $qb->andWhere('product.price >= :minPrice')->setParameter('minPrice', (int)round($filters['minPrice'] * 100));
+            }
+            if ($filters['maxPrice'] > 0) {
+                $qb->andWhere('product.price <= :maxPrice')->setParameter('maxPrice', (int)round($filters['maxPrice'] * 100));
+            }
+            if ($filters['minPromotion'] > 0) {
+                $qb->andWhere('product.promotionPercentage >= :minPromotion')->setParameter('minPromotion', $filters['minPromotion']);
+            }
 
             if ($esIds !== null) {
                 $qb->andWhere('product.id IN (:ids)')->setParameter('ids', $esIds);
@@ -208,6 +241,15 @@ readonly class ProductListService
             if ($filters['status'] !== '') {
                 $countQb->andWhere('product.status = :status')->setParameter('status', $filters['status']);
             }
+            if ($filters['minPrice'] > 0) {
+                $countQb->andWhere('product.price >= :minPrice')->setParameter('minPrice', (int)round($filters['minPrice'] * 100));
+            }
+            if ($filters['maxPrice'] > 0) {
+                $countQb->andWhere('product.price <= :maxPrice')->setParameter('maxPrice', (int)round($filters['maxPrice'] * 100));
+            }
+            if ($filters['minPromotion'] > 0) {
+                $countQb->andWhere('product.promotionPercentage >= :minPromotion')->setParameter('minPromotion', $filters['minPromotion']);
+            }
             if ($esIds !== null) {
                 $countQb->andWhere('product.id IN (:ids)')->setParameter('ids', $esIds);
             }
@@ -229,7 +271,7 @@ readonly class ProductListService
             ];
         });
 
-        $result['meta']['filters'] = array_filter($filters, static fn (string $value): bool => $value !== '');
+        $result['meta']['filters'] = array_filter($filters, static fn (mixed $value): bool => $value !== '' && $value !== 0 && $value !== 0.0);
 
         return $result;
     }
@@ -244,21 +286,37 @@ readonly class ProductListService
             'name' => $product->getName(),
             'sku' => $product->getSku(),
             'description' => $product->getDescription(),
+            'texture' => $product->getTexture(),
             'photo' => $product->getPhoto(),
             'price' => MoneyFormatter::toApiAmount($product->getPrice()),
+            'discountedPrice' => MoneyFormatter::toApiAmount(self::computeDiscountedPrice($product)),
             'currencyCode' => $product->getCurrencyCode(),
             'stock' => $product->getStock(),
             'coinsAmount' => $product->getCoinsAmount(),
+            'promotionPercentage' => $product->getPromotionPercentage(),
             'isFeatured' => $product->isFeatured(),
             'status' => $product->getStatus()->value,
             'categoryId' => $product->getCategory()?->getId(),
             'categoryName' => $product->getCategory()?->getName(),
             'tags' => array_map(static fn ($tag): string => $tag->getLabel(), $product->getTags()->toArray()),
+            'seo' => [
+                'title' => $product->getSeoTitle(),
+                'description' => $product->getSeoDescription(),
+                'keywords' => $product->getSeoKeywords(),
+            ],
+            'similarProductIds' => array_map(static fn (Product $similarProduct): string => $similarProduct->getId(), $product->getSimilarProducts()->toArray()),
             'updatedAt' => $product->getUpdatedAt()?->format(DATE_ATOM),
         ];
     }
 
-    /** @param array<string, string> $filters
+    private static function computeDiscountedPrice(Product $product): int
+    {
+        $discountRatio = max(0.0, min(1.0, $product->getPromotionPercentage() / 100));
+
+        return (int)round($product->getPrice() * (1 - $discountRatio));
+    }
+
+    /** @param array<string, mixed> $filters
      * @return array<int, string>|null
      */
     private function searchIdsFromElastic(array $filters): ?array

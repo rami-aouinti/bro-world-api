@@ -72,10 +72,15 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             sku: 'COINS-200',
             price: 200,
             stock: 999999,
-            description: 'Crédite 200 coins.',
+            description: 'Pack d’entrée idéal pour commencer rapidement: crédite 200 coins, actif immédiatement, et parfait pour débloquer les premières options premium.',
             photo: $this->buildAssetUrl('/img/shop/products/200.png'),
             coinsAmount: 200,
             isFeatured: true,
+            texture: 'digital-wallet',
+            promotionPercentage: 10,
+            seoTitle: 'Pack 200 coins - Starter',
+            seoDescription: 'Pack starter de 200 coins pour booster votre progression dès les premières minutes.',
+            seoKeywords: ['coins', 'starter', 'pack'],
         );
 
         $this->findOrCreateProduct(
@@ -86,10 +91,15 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             sku: 'COINS-400',
             price: 360,
             stock: 999999,
-            description: 'Crédite 400 coins.',
+            description: 'Offre intermédiaire avec 400 coins, pensée pour les joueurs réguliers qui veulent une progression fluide et de meilleures marges d’optimisation.',
             photo: $this->buildAssetUrl('/img/shop/products/400.png'),
             coinsAmount: 400,
             isFeatured: true,
+            texture: 'digital-wallet',
+            promotionPercentage: 20,
+            seoTitle: 'Pack 400 coins - Smart Value',
+            seoDescription: 'Pack 400 coins avec excellent rapport quantité/prix pour progresser plus vite.',
+            seoKeywords: ['coins', 'value', 'promotion'],
         );
 
         $this->findOrCreateProduct(
@@ -100,10 +110,15 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             sku: 'COINS-600',
             price: 500,
             stock: 999999,
-            description: 'Crédite 600 coins.',
+            description: 'Pack le plus avantageux de la gamme coins: 600 coins crédités avec un bonus tarifaire adapté aux sessions intensives et achats récurrents.',
             photo: $this->buildAssetUrl('/img/shop/products/600.png'),
             coinsAmount: 600,
             isFeatured: true,
+            texture: 'digital-wallet-premium',
+            promotionPercentage: 25,
+            seoTitle: 'Pack 600 coins - Best Seller',
+            seoDescription: 'Pack premium 600 coins pour les utilisateurs power et achats fréquents.',
+            seoKeywords: ['coins', 'premium', 'best seller'],
         );
 
         $this->findOrCreateProduct(
@@ -306,6 +321,11 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
         string $photo,
         int $coinsAmount = 0,
         bool $isFeatured = false,
+        ?string $texture = null,
+        int $promotionPercentage = 0,
+        ?string $seoTitle = null,
+        ?string $seoDescription = null,
+        array $seoKeywords = [],
     ): Product {
         $product = $manager->getRepository(Product::class)->findOneBy(['sku' => $sku]);
 
@@ -320,6 +340,11 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
                 ->setCurrencyCode('EUR')
                 ->setStock($stock)
                 ->setCoinsAmount($coinsAmount)
+                ->setTexture($texture)
+                ->setPromotionPercentage($promotionPercentage)
+                ->setSeoTitle($seoTitle)
+                ->setSeoDescription($seoDescription)
+                ->setSeoKeywords($seoKeywords)
                 ->setStatus(ProductStatus::ACTIVE)
                 ->setIsFeatured($isFeatured);
         }
@@ -335,6 +360,11 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             ->setCurrencyCode('EUR')
             ->setStock($stock)
             ->setCoinsAmount($coinsAmount)
+            ->setTexture($texture)
+            ->setPromotionPercentage($promotionPercentage)
+            ->setSeoTitle($seoTitle)
+            ->setSeoDescription($seoDescription)
+            ->setSeoKeywords($seoKeywords)
             ->setStatus(ProductStatus::ACTIVE)
             ->setIsFeatured($isFeatured);
         $manager->persist($product);

@@ -19,6 +19,21 @@ readonly class SimilarProductService
      */
     public function getSimilarProducts(Product $product, int $limit = 8): array
     {
-        return $this->productRepository->findSimilarCandidates($product, $limit);
+        $manual = $product->getSimilarProducts()->toArray();
+        $candidates = $this->productRepository->findSimilarCandidates($product, $limit);
+
+        $merged = [];
+        foreach (array_merge($manual, $candidates) as $item) {
+            if (!$item instanceof Product) {
+                continue;
+            }
+
+            $merged[$item->getId()] = $item;
+            if (count($merged) >= $limit) {
+                break;
+            }
+        }
+
+        return array_values($merged);
     }
 }

@@ -70,6 +70,13 @@ final readonly class ProductInputValidator
                 'code' => 'COINS_AMOUNT_INVALID',
             ];
         }
+        if ($input->promotionPercentage !== null && ($input->promotionPercentage < 0 || $input->promotionPercentage > 100)) {
+            $errors[] = [
+                'field' => 'promotionPercentage',
+                'message' => 'promotionPercentage must be between 0 and 100.',
+                'code' => 'PROMOTION_PERCENTAGE_INVALID',
+            ];
+        }
         if ($input->photo !== null && $input->photo !== '' && preg_match('#^https?://#i', $input->photo) !== 1) {
             $errors[] = [
                 'field' => 'photo',

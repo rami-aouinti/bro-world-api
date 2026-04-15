@@ -24,15 +24,30 @@ final class CreateProductInput
     #[Assert\GreaterThanOrEqual(value: 0, message: 'coinsAmount must be greater than or equal to 0.')]
     public int $coinsAmount = 0;
 
+    #[Assert\Range(min: 0, max: 100, notInRangeMessage: 'promotionPercentage must be between {{ min }} and {{ max }}.')]
+    public int $promotionPercentage = 0;
+
     public ?string $description = null;
+    public ?string $texture = null;
     public ?string $photo = null;
     public ?string $currencyCode = null;
     public ?string $categoryId = null;
+    public ?string $seoTitle = null;
+    public ?string $seoDescription = null;
+
+    /**
+     * @var array<int, string>
+     */
+    public array $seoKeywords = [];
 
     /**
      * @var array<int, string>
      */
     public array $tagIds = [];
+    /**
+     * @var array<int, string>
+     */
+    public array $similarProductIds = [];
 
     public bool $isFeatured = false;
     public ?string $status = null;
@@ -50,11 +65,17 @@ final class CreateProductInput
         $input->price = (float)($payload['price'] ?? 0);
         $input->stock = (int)($payload['stock'] ?? 0);
         $input->coinsAmount = (int)($payload['coinsAmount'] ?? 0);
+        $input->promotionPercentage = (int)($payload['promotionPercentage'] ?? 0);
         $input->description = ($payload['description'] ?? null) !== null ? (string)$payload['description'] : null;
+        $input->texture = ($payload['texture'] ?? null) !== null ? (string)$payload['texture'] : null;
         $input->photo = is_string($payload['photo'] ?? null) ? trim((string)$payload['photo']) : null;
         $input->currencyCode = is_string($payload['currencyCode'] ?? null) ? trim((string)$payload['currencyCode']) : null;
         $input->categoryId = is_string($payload['categoryId'] ?? null) ? trim((string)$payload['categoryId']) : null;
+        $input->seoTitle = is_string($payload['seoTitle'] ?? null) ? trim((string)$payload['seoTitle']) : null;
+        $input->seoDescription = is_string($payload['seoDescription'] ?? null) ? trim((string)$payload['seoDescription']) : null;
+        $input->seoKeywords = array_values(array_filter((array)($payload['seoKeywords'] ?? []), static fn (mixed $keyword): bool => is_string($keyword) && trim($keyword) !== ''));
         $input->tagIds = array_values(array_filter((array)($payload['tagIds'] ?? []), static fn (mixed $id): bool => is_string($id)));
+        $input->similarProductIds = array_values(array_filter((array)($payload['similarProductIds'] ?? []), static fn (mixed $id): bool => is_string($id)));
         $input->isFeatured = (bool)($payload['isFeatured'] ?? false);
         $input->status = is_string($payload['status'] ?? null) ? (string)$payload['status'] : null;
         $input->shopId = is_string($payload['shopId'] ?? null) ? trim((string)$payload['shopId']) : null;
