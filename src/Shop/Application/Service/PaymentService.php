@@ -9,7 +9,6 @@ use App\Shop\Domain\Entity\Order;
 use App\Shop\Domain\Entity\PaymentTransaction;
 use App\Shop\Domain\Enum\OrderStatus;
 use App\Shop\Domain\Enum\PaymentStatus;
-use App\Shop\Domain\Service\Interfaces\PaymentProviderInterface;
 use App\Shop\Infrastructure\Repository\OrderRepository;
 use App\Shop\Infrastructure\Repository\PaymentTransactionRepository;
 use App\User\Domain\Entity\User;
@@ -27,7 +26,7 @@ final readonly class PaymentService
     public function __construct(
         private OrderRepository $orderRepository,
         private PaymentTransactionRepository $paymentTransactionRepository,
-        private PaymentProviderInterface $paymentProvider,
+        private PaymentProviderRouter $paymentProviderRouter,
         private Security $security,
         private string $environment,
         private ShopMonitoringService $monitoringService,
@@ -38,8 +37,12 @@ final readonly class PaymentService
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    public function createPaymentIntent(string $applicationSlug, string $orderId): PaymentTransaction
-    {
+    public function createPaymentIntent(
+        string $applicationSlug,
+        string $orderId,
+        ?string $provider = null,
+        ?string $paymentMethod = null,
+    ): PaymentTransaction {
         $order = $this->orderRepository->find($orderId);
         if ($order === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Order not found.');
@@ -51,7 +54,10 @@ final readonly class PaymentService
             throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Order is not in pending_payment status.');
         }
 
-        $providerIntent = $this->paymentProvider->createIntent(
+        $providerKey = $this->paymentProviderRouter->resolveProviderKey($provider, $paymentMethod);
+        $providerClient = $this->paymentProviderRouter->getProvider($providerKey);
+
+        $providerIntent = $providerClient->createIntent(
             orderId: $order->getId(),
             amount: $order->getSubtotal(),
             currency: 'EUR',
@@ -97,7 +103,10 @@ final readonly class PaymentService
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Payment transaction not found.');
         }
 
-        $providerResponse = $this->paymentProvider->confirm($providerReference, $payload);
+        $providerResponse = $this->paymentProviderRouter
+            ->getProvider($transaction->getProvider())
+            ->confirm($providerReference, $payload);
+
         $transaction->setStatus($this->resolvePaymentStatus((string)$providerResponse['status']));
         $transaction->setPayload((array)($providerResponse['payload'] ?? []));
 
@@ -132,7 +141,7 @@ final readonly class PaymentService
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function processWebhook(array $payload, ?string $signature = null): ?PaymentTransaction
+    public function processWebhook(array $payload, ?string $signature = null, ?string $provider = null): ?PaymentTransaction
     {
         $normalizedSignature = is_string($signature) ? trim($signature) : '';
         if ($this->environment === 'prod' && $normalizedSignature === '') {
@@ -151,13 +160,21 @@ final readonly class PaymentService
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Webhook signature is required in production.');
         }
 
-        $verifiedPayload = $this->paymentProvider->verifyWebhook($payload, $normalizedSignature !== '' ? $normalizedSignature : null);
+        $providerKey = $this->paymentProviderRouter->resolveProviderKey(
+            $provider,
+            is_string($payload['provider'] ?? null) ? (string) $payload['provider'] : null,
+            'stripe',
+        );
+        $providerClient = $this->paymentProviderRouter->getProvider($providerKey);
+
+        $verifiedPayload = $providerClient->verifyWebhook($payload, $normalizedSignature !== '' ? $normalizedSignature : null);
         if ($verifiedPayload === null) {
             $this->monitoringService->logStructured(
                 event: 'shop.webhook.invalid',
                 message: 'Webhook rejected because signature or payload is invalid.',
                 context: [
                     'reason' => 'invalid_signature_or_payload',
+                    'provider' => $providerKey,
                 ],
             );
             $this->monitoringService->incrementCounter('shop.webhook.invalid_total', [

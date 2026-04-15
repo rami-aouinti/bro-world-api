@@ -41,6 +41,18 @@ final readonly class ConfirmPaymentController
         security: [[
             'Bearer' => [],
         ]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                required: ['providerReference'],
+                properties: [
+                    new OA\Property(property: 'providerReference', type: 'string', example: 'pi_3Nxx...'),
+                    new OA\Property(property: 'provider', type: 'string', enum: ['paypal', 'stripe', 'mock'], nullable: true),
+                    new OA\Property(property: 'paymentMethod', type: 'string', enum: ['paypal', 'stripe', 'mock'], nullable: true),
+                ],
+            ),
+        ),
     )]
     #[OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Forbidden. The order does not belong to the authenticated user or requested application.')]
     public function __invoke(string $applicationSlug, string $orderId, Request $request): JsonResponse

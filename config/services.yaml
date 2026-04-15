@@ -160,10 +160,31 @@ services:
         arguments:
             $monitoringLogger: '@monolog.logger.monitoring'
 
-    App\Shop\Domain\Service\Interfaces\PaymentProviderInterface:
-        class: App\Shop\Infrastructure\Payment\MockPaymentProvider
+    App\Shop\Infrastructure\Payment\StripePaymentProvider:
+        arguments:
+            $secretKey: '%env(default::SHOP_STRIPE_SECRET_KEY)%'
+            $webhookSecret: '%env(default::SHOP_STRIPE_WEBHOOK_SECRET)%'
+        tags:
+            - { name: 'app.shop.payment_provider', key: 'stripe' }
+
+    App\Shop\Infrastructure\Payment\MockPaymentProvider:
         arguments:
             $appSecret: '%kernel.secret%'
+        tags:
+            - { name: 'app.shop.payment_provider', key: 'mock' }
+
+    App\Shop\Infrastructure\Payment\PayPalPaymentProvider:
+        arguments:
+            $clientId: '%env(default::SHOP_PAYPAL_CLIENT_ID)%'
+            $clientSecret: '%env(default::SHOP_PAYPAL_CLIENT_SECRET)%'
+            $webhookSecret: '%env(default::SHOP_PAYPAL_WEBHOOK_SECRET)%'
+            $apiBaseUrl: '%env(default:https://api-m.sandbox.paypal.com:SHOP_PAYPAL_API_BASE_URL)%'
+        tags:
+            - { name: 'app.shop.payment_provider', key: 'paypal' }
+
+    App\Shop\Application\Service\PaymentProviderRouter:
+        arguments:
+            $providers: !tagged_iterator { tag: 'app.shop.payment_provider', index_by: 'key' }
 
     App\Crm\Application\Service\CrmGithubOwnerResolver:
         arguments:

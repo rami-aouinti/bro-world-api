@@ -31,9 +31,17 @@ final readonly class PaymentWebhookController
      */
     #[Route('/v1/shop/applications/{applicationSlug}/payments/webhook', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'provider', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['paypal', 'stripe', 'mock']))]
     #[OA\Post(
         summary: 'Handle payment provider webhook (public endpoint with strict signature verification).',
         security: [],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                description: 'Webhook payload from the selected provider. Optionally include provider in body as fallback.',
+            ),
+        ),
     )]
     #[OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Webhook signature is required in production.')]
     #[OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Invalid webhook signature or payload.')]
@@ -47,8 +55,9 @@ final readonly class PaymentWebhookController
             return ValidationResponseFactory::invalidJson();
         }
         $signature = $request->headers->get('x-signature');
+        $provider = $request->query->get('provider');
 
-        $transaction = $this->paymentService->processWebhook($payload, $signature);
+        $transaction = $this->paymentService->processWebhook($payload, $signature, is_string($provider) ? $provider : null);
 
         if ($transaction === null) {
             return new JsonResponse([

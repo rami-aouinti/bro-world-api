@@ -15,7 +15,7 @@ final readonly class PaymentInputValidator
     ) {
     }
 
-    public function validate(ConfirmPaymentInput $input): ?JsonResponse
+    public function validate(CreatePaymentIntentInput|ConfirmPaymentInput $input): ?JsonResponse
     {
         $violations = $this->validator->validate($input);
         if ($violations->count() === 0) {

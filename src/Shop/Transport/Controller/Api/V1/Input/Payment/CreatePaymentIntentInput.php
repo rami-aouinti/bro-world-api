@@ -6,11 +6,8 @@ namespace App\Shop\Transport\Controller\Api\V1\Input\Payment;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-final class ConfirmPaymentInput
+final class CreatePaymentIntentInput
 {
-    #[Assert\NotBlank(message: 'providerReference is required.')]
-    public string $providerReference = '';
-
     #[Assert\Choice(choices: ['paypal', 'stripe', 'mock'], message: 'provider must be one of: paypal, stripe, mock.')]
     public ?string $provider = null;
 
@@ -23,7 +20,6 @@ final class ConfirmPaymentInput
     public static function fromArray(array $payload): self
     {
         $input = new self();
-        $input->providerReference = trim((string)($payload['providerReference'] ?? ''));
 
         $provider = isset($payload['provider']) ? trim((string) $payload['provider']) : null;
         $paymentMethod = isset($payload['paymentMethod']) ? trim((string) $payload['paymentMethod']) : null;
