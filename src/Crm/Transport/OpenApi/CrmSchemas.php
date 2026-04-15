@@ -15,12 +15,12 @@ use OpenApi\Attributes as OA;
             property: 'errors',
             type: 'array',
             items: new OA\Items(
-                type: 'object',
                 properties: [
-                    new OA\Property(property: 'propertyPath', type: 'string', nullable: true, example: 'issueTarget'),
-                    new OA\Property(property: 'message', type: 'string', nullable: true, example: 'This value is not valid.'),
-                    new OA\Property(property: 'code', type: 'string', nullable: true, example: 'c1051bb4-d103-4f74-8988-acbcafc7fdc3'),
+                    new OA\Property(property: 'propertyPath', type: 'string', example: 'issueTarget', nullable: true),
+                    new OA\Property(property: 'message', type: 'string', example: 'This value is not valid.', nullable: true),
+                    new OA\Property(property: 'code', type: 'string', example: 'c1051bb4-d103-4f74-8988-acbcafc7fdc3', nullable: true),
                 ],
+                type: 'object',
             ),
         ),
     ],
@@ -43,7 +43,6 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'status', type: 'string', example: 'queued'),
         new OA\Property(
             property: 'summary',
-            nullable: true,
             properties: [
                 new OA\Property(property: 'mode', type: 'string', example: 'dry-run'),
                 new OA\Property(property: 'owner', type: 'string', example: 'acme-org'),
@@ -51,7 +50,8 @@ use OpenApi\Attributes as OA;
                 new OA\Property(property: 'createPublicProject', type: 'boolean', example: true),
                 new OA\Property(property: 'plannedActions', type: 'array', items: new OA\Items(type: 'string')),
             ],
-            type: 'object'
+            type: 'object',
+            nullable: true
         ),
     ],
     type: 'object'
@@ -62,7 +62,7 @@ use OpenApi\Attributes as OA;
     properties: [
         new OA\Property(property: 'token', type: 'string', example: 'ghp_xxxxxxxxx'),
         new OA\Property(property: 'owner', type: 'string', example: 'acme-org'),
-        new OA\Property(property: 'issueTarget', type: 'string', enum: ['task', 'task_request'], default: 'task'),
+        new OA\Property(property: 'issueTarget', type: 'string', default: 'task', enum: ['task', 'task_request']),
         new OA\Property(property: 'createPublicProject', type: 'boolean', default: true),
         new OA\Property(property: 'dryRun', type: 'boolean', default: false),
     ],

@@ -48,17 +48,12 @@ final readonly class AddGeneralCartItemController
     #[Route('/v1/shop/general/carts/{shopId}/items', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'shopId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: 'f95da407-b9f0-4d5f-a14e-15c4b22af6e3'))]
     #[OA\Post(
-        summary: 'Add a product to the authenticated user cart in global shop scope.',
         description: 'Manual /api/doc chain step 1/6: POST /v1/shop/general/carts/{shopId}/items. Use shopId=f95da407-b9f0-4d5f-a14e-15c4b22af6e3, then reuse the same shopId in step 2 (GET cart) and step 3 (checkout).',
+        summary: 'Add a product to the authenticated user cart in global shop scope.',
         security: [['Bearer' => []]],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['productId', 'quantity'],
-                properties: [
-                    new OA\Property(property: 'productId', type: 'string', format: 'uuid', example: '8b673f1d-8f2f-4a81-b5e8-6f2f14b26626'),
-                    new OA\Property(property: 'quantity', type: 'integer', minimum: 1, example: 2),
-                ],
                 examples: [
                     new OA\Examples(
                         example: 'manual_step_1_add_item_input',
@@ -68,6 +63,11 @@ final readonly class AddGeneralCartItemController
                             'quantity' => 2,
                         ],
                     ),
+                ],
+                required: ['productId', 'quantity'],
+                properties: [
+                    new OA\Property(property: 'productId', type: 'string', format: 'uuid', example: '8b673f1d-8f2f-4a81-b5e8-6f2f14b26626'),
+                    new OA\Property(property: 'quantity', type: 'integer', minimum: 1, example: 2),
                 ],
             ),
         ),
@@ -111,17 +111,25 @@ final readonly class AddGeneralCartItemController
         description: 'Shop or product not found.',
         content: new OA\JsonContent(
             examples: [
-                new OA\Examples(example: 'shop_not_found', value: ['message' => 'Shop not found.']),
-                new OA\Examples(example: 'product_not_found', value: ['message' => 'Product not found for this shop.']),
+                new OA\Examples(
+                    example: 'shop_not_found',
+                    summary: 'Shop not found response',
+                    value: [
+                        'message' => 'Shop not found.',
+                    ],
+                ),
+                new OA\Examples(
+                    example: 'product_not_found',
+                    summary: 'Product not found for this shop response',
+                    value: [
+                        'message' => 'Product not found for this shop.',
+                    ],
+                ),
             ],
         ),
     )]
-    public function __invoke(string $shopId, Request $request): JsonResponse
+    public function __invoke(User $loggedInUser ,string $shopId, Request $request): JsonResponse
     {
-        $user = $this->security->getUser();
-        if (!$user instanceof User) {
-            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'Authenticated user required.');
-        }
 
         $shop = $this->shopRepository->find($shopId);
         if (!$shop instanceof Shop) {
@@ -152,7 +160,7 @@ final readonly class AddGeneralCartItemController
             ], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $cart = $this->cartService->getOrCreateActiveCart($user, $shop);
+        $cart = $this->cartService->getOrCreateActiveCart($loggedInUser, $shop);
         $cart = $this->cartService->addProduct($cart, $product, $quantity);
 
         return new JsonResponse($this->cartService->serializeCart($cart), JsonResponse::HTTP_CREATED);
