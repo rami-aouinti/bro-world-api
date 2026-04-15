@@ -26,16 +26,11 @@ final readonly class GetGeneralProductController
     ) {
     }
 
-    #[Route('/v1/shop/general/products/{id}', methods: [Request::METHOD_GET])]
+    #[Route('/v1/shop/general/products/{product}', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'Get one product in global shop scope')]
     #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
-    public function __invoke(string $id): JsonResponse
+    public function __invoke(Product $product): JsonResponse
     {
-        $product = $this->productRepository->findOneGlobalById($id);
-        if (!$product instanceof Product) {
-            return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
-        }
-
         $similarProducts = array_map(
             static fn (Product $similarProduct): array => ProductListService::serializeProduct($similarProduct),
             $this->similarProductService->getSimilarProducts($product),
