@@ -48,7 +48,7 @@ final readonly class ListGeneralSprintsController
             'endDate' => $sprint->getEndDate()?->format(DATE_ATOM),
             'projectId' => $sprint->getProject()?->getId(),
         ], $sprints);
-        $totalItems = (int)$this->sprintRepository->count([]);
+        $totalItems = (int)count($this->sprintRepository->findAll());
 
         return new JsonResponse([
             'items' => $items,

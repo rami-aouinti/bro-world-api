@@ -33,13 +33,13 @@ final readonly class GetGeneralDashboardController
     public function __invoke(): JsonResponse
     {
         return new JsonResponse([
-            'companies' => (int)$this->companyRepository->count([]),
-            'projects' => (int)$this->projectRepository->count([]),
-            'tasks' => (int)$this->taskRepository->count([]),
+            'companies' => (int)count($this->companyRepository->findAll()),
+            'projects' => (int)count($this->projectRepository->findAll()),
+            'tasks' => (int)count($this->taskRepository->findAll()),
             'taskRequests' => [
-                TaskRequestStatus::PENDING->value => (int)$this->taskRequestRepository->count(['status' => TaskRequestStatus::PENDING->value]),
-                TaskRequestStatus::APPROVED->value => (int)$this->taskRequestRepository->count(['status' => TaskRequestStatus::APPROVED->value]),
-                TaskRequestStatus::REJECTED->value => (int)$this->taskRequestRepository->count(['status' => TaskRequestStatus::REJECTED->value]),
+                TaskRequestStatus::PENDING->value => (int)count($this->taskRequestRepository->findBy(['status' => TaskRequestStatus::PENDING->value])),
+                TaskRequestStatus::APPROVED->value => (int)count($this->taskRequestRepository->findBy(['status' => TaskRequestStatus::APPROVED->value])),
+                TaskRequestStatus::REJECTED->value => (int)count($this->taskRequestRepository->findBy(['status' => TaskRequestStatus::REJECTED->value])),
             ],
         ]);
     }
