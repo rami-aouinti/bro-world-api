@@ -78,4 +78,18 @@ class ProductRepository extends BaseRepository
 
         return $product;
     }
+
+    public function findOneGlobalById(string $id): ?Entity
+    {
+        /** @var Entity|null $product */
+        $product = $this->createQueryBuilder('product')
+            ->innerJoin('product.shop', 'shop')
+            ->andWhere('product.id = :id')
+            ->andWhere('shop.isGlobal = true')
+            ->setParameter('id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $product;
+    }
 }

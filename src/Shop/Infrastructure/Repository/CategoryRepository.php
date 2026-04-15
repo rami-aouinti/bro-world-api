@@ -57,4 +57,21 @@ class CategoryRepository extends BaseRepository
 
         return $category;
     }
+
+    /**
+     * @return array<int, Entity>
+     */
+    public function findGlobalCategories(int $limit = 200): array
+    {
+        /** @var array<int, Entity> $categories */
+        $categories = $this->createQueryBuilder('category')
+            ->innerJoin('category.shop', 'shop')
+            ->andWhere('shop.isGlobal = true')
+            ->orderBy('category.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return $categories;
+    }
 }

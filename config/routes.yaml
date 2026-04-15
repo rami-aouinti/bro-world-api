@@ -99,6 +99,17 @@ shop-controllers:
     resource:
         path: ../src/Shop/Transport/Controller/Api/
         namespace: App\Shop\Transport\Controller\Api
+        exclude:
+            - ../src/Shop/Transport/Controller/Api/V1/General/
+    type: attribute
+    prefix: /api
+    defaults:
+        _format: json
+
+shop-general-controllers:
+    resource:
+        path: ../src/Shop/Transport/Controller/Api/V1/General/
+        namespace: App\Shop\Transport\Controller\Api\V1\General
     type: attribute
     prefix: /api
     defaults:
