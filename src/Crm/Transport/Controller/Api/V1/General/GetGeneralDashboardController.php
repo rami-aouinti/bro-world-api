@@ -19,7 +19,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
-#[IsGranted(Role::CRM_OWNER->value)]
 final readonly class GetGeneralDashboardController
 {
     public function __construct(

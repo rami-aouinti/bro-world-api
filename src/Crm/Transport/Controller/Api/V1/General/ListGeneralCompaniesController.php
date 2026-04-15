@@ -17,7 +17,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
-#[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class ListGeneralCompaniesController
 {
     public function __construct(private CompanyApplicationListService $companyApplicationListService)

@@ -22,7 +22,6 @@ use function trim;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
-#[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class ListGeneralSprintsController
 {
     public function __construct(
