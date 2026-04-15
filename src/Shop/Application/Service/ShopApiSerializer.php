@@ -33,6 +33,7 @@ final class ShopApiSerializer
             'name' => $category->getName(),
             'slug' => $category->getSlug(),
             'description' => $category->getDescription(),
+            'photo' => $category->getPhoto(),
             'shopId' => $category->getShop()?->getId(),
         ];
     }

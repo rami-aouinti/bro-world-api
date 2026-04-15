@@ -25,6 +25,7 @@ final class CreateProductInput
     public int $coinsAmount = 0;
 
     public ?string $description = null;
+    public ?string $photo = null;
     public ?string $currencyCode = null;
     public ?string $categoryId = null;
 
@@ -50,6 +51,7 @@ final class CreateProductInput
         $input->stock = (int)($payload['stock'] ?? 0);
         $input->coinsAmount = (int)($payload['coinsAmount'] ?? 0);
         $input->description = ($payload['description'] ?? null) !== null ? (string)$payload['description'] : null;
+        $input->photo = is_string($payload['photo'] ?? null) ? trim((string)$payload['photo']) : null;
         $input->currencyCode = is_string($payload['currencyCode'] ?? null) ? trim((string)$payload['currencyCode']) : null;
         $input->categoryId = is_string($payload['categoryId'] ?? null) ? trim((string)$payload['categoryId']) : null;
         $input->tagIds = array_values(array_filter((array)($payload['tagIds'] ?? []), static fn (mixed $id): bool => is_string($id)));

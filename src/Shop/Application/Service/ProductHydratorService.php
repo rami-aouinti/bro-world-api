@@ -42,6 +42,9 @@ final readonly class ProductHydratorService
         if (!$partial || array_key_exists('description', $payload)) {
             $product->setDescription(($payload['description'] ?? null) !== null ? (string)$payload['description'] : null);
         }
+        if (!$partial || array_key_exists('photo', $payload)) {
+            $product->setPhoto((string)($payload['photo'] ?? ''));
+        }
         if (!$partial || array_key_exists('currencyCode', $payload)) {
             $product->setCurrencyCode((string)($payload['currencyCode'] ?? 'EUR'));
         }

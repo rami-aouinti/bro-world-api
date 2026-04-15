@@ -13,6 +13,7 @@ final class CreateCategoryInput
 
     public ?string $slug = null;
     public ?string $description = null;
+    public ?string $photo = null;
 
     /**
      * @param array<string, mixed> $payload
@@ -23,6 +24,7 @@ final class CreateCategoryInput
         $input->name = trim((string)($payload['name'] ?? ''));
         $input->slug = is_string($payload['slug'] ?? null) ? trim((string)$payload['slug']) : null;
         $input->description = ($payload['description'] ?? null) !== null ? (string)$payload['description'] : null;
+        $input->photo = is_string($payload['photo'] ?? null) ? trim((string)$payload['photo']) : null;
 
         return $input;
     }

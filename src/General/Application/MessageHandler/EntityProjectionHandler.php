@@ -234,6 +234,7 @@ final readonly class EntityProjectionHandler
         $this->elasticsearchService->index(ShopProductProjection::INDEX_NAME, $product->getId(), [
             'id' => $product->getId(),
             'name' => $product->getName(),
+            'photo' => $product->getPhoto(),
             'price' => $product->getPrice(),
             'sku' => $product->getSku(),
             'status' => $product->getStatus()->value,

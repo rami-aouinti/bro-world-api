@@ -40,6 +40,11 @@ class Category implements EntityInterface
     #[ORM\Column(name: 'description', type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
+    #[ORM\Column(name: 'photo', type: Types::STRING, length: 1024, options: [
+        'default' => '',
+    ])]
+    private string $photo = '';
+
     /** @var Collection<int, Product>|ArrayCollection<int, Product> */
     #[ORM\OneToMany(targetEntity: Product::class, mappedBy: 'category')]
     private Collection|ArrayCollection $products;
@@ -100,6 +105,18 @@ class Category implements EntityInterface
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getPhoto(): string
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(string $photo): self
+    {
+        $this->photo = trim($photo);
 
         return $this;
     }

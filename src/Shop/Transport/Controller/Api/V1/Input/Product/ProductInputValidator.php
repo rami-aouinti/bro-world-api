@@ -23,6 +23,14 @@ final readonly class ProductInputValidator
                 return ValidationResponseFactory::fromViolations($violations);
             }
 
+            if ($input->photo !== null && $input->photo !== '' && preg_match('#^https?://#i', $input->photo) !== 1) {
+                return ValidationResponseFactory::fromErrors([[
+                    'field' => 'photo',
+                    'message' => 'photo must be an absolute http(s) URL.',
+                    'code' => 'PHOTO_INVALID',
+                ]]);
+            }
+
             return null;
         }
 
@@ -60,6 +68,13 @@ final readonly class ProductInputValidator
                 'field' => 'coinsAmount',
                 'message' => 'coinsAmount must be greater than or equal to 0.',
                 'code' => 'COINS_AMOUNT_INVALID',
+            ];
+        }
+        if ($input->photo !== null && $input->photo !== '' && preg_match('#^https?://#i', $input->photo) !== 1) {
+            $errors[] = [
+                'field' => 'photo',
+                'message' => 'photo must be an absolute http(s) URL.',
+                'code' => 'PHOTO_INVALID',
             ];
         }
 

@@ -45,6 +45,11 @@ class Product implements EntityInterface
     #[ORM\Column(name: 'description', type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
+    #[ORM\Column(name: 'photo', type: Types::STRING, length: 1024, options: [
+        'default' => '',
+    ])]
+    private string $photo = '';
+
     #[ORM\Column(name: 'price', type: Types::INTEGER, options: [
         'default' => 0,
     ])]
@@ -146,6 +151,18 @@ class Product implements EntityInterface
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getPhoto(): string
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(string $photo): self
+    {
+        $this->photo = trim($photo);
 
         return $this;
     }

@@ -59,7 +59,8 @@ final readonly class CreateCategoryController
             ->setShop($shop)
             ->setName($input->name)
             ->setSlug($this->slugBuilderService->buildSlug((string)($input->slug ?? $input->name)))
-            ->setDescription($input->description);
+            ->setDescription($input->description)
+            ->setPhoto((string)($input->photo ?? ''));
 
         $this->entityManager->persist($category);
         $this->entityManager->flush();

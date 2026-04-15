@@ -42,7 +42,8 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             $globalShop,
             'Coins',
             'coins',
-            sprintf('Packs de coins virtuels. Image: %s', $this->buildAssetUrl('/img/shop/categories/coins.png')),
+            'Packs de coins virtuels.',
+            $this->buildAssetUrl('/img/shop/categories/coins.png'),
         );
 
         $housesCategory = $this->findOrCreateCategory(
@@ -50,7 +51,8 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             $globalShop,
             'Houses',
             'houses',
-            sprintf('Maisons et décor premium. Image: %s', $this->buildAssetUrl('/img/shop/categories/houses.png')),
+            'Maisons et décor premium.',
+            $this->buildAssetUrl('/img/shop/categories/houses.png'),
         );
 
         $furnitureCategory = $this->findOrCreateCategory(
@@ -58,7 +60,8 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             $globalShop,
             'Meubles',
             'meubles',
-            sprintf('Mobilier et décoration intérieure. Image: %s', $this->buildAssetUrl('/img/shop/categories/meubles.png')),
+            'Mobilier et décoration intérieure.',
+            $this->buildAssetUrl('/img/shop/categories/meubles.png'),
         );
 
         $this->findOrCreateProduct(
@@ -69,7 +72,8 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             sku: 'COINS-200',
             price: 200,
             stock: 999999,
-            description: sprintf('Crédite 200 coins. Image: %s', $this->buildAssetUrl('/img/shop/products/200.png')),
+            description: 'Crédite 200 coins.',
+            photo: $this->buildAssetUrl('/img/shop/products/200.png'),
             coinsAmount: 200,
             isFeatured: true,
         );
@@ -82,7 +86,8 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             sku: 'COINS-400',
             price: 360,
             stock: 999999,
-            description: sprintf('Crédite 400 coins. Image: %s', $this->buildAssetUrl('/img/shop/products/400.png')),
+            description: 'Crédite 400 coins.',
+            photo: $this->buildAssetUrl('/img/shop/products/400.png'),
             coinsAmount: 400,
             isFeatured: true,
         );
@@ -95,7 +100,8 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             sku: 'COINS-600',
             price: 500,
             stock: 999999,
-            description: sprintf('Crédite 600 coins. Image: %s', $this->buildAssetUrl('/img/shop/products/600.png')),
+            description: 'Crédite 600 coins.',
+            photo: $this->buildAssetUrl('/img/shop/products/600.png'),
             coinsAmount: 600,
             isFeatured: true,
         );
@@ -108,7 +114,8 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             sku: 'HOUSE-001',
             price: 15900,
             stock: 120,
-            description: sprintf('Pack maison 1. Image: %s', $this->buildAssetUrl('/img/shop/products/product-1-min.jpeg')),
+            description: 'Pack maison 1.',
+            photo: $this->buildAssetUrl('/img/shop/products/product-1-min.jpeg'),
         );
 
         $this->findOrCreateProduct(
@@ -119,7 +126,8 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             sku: 'HOUSE-002',
             price: 22900,
             stock: 80,
-            description: sprintf('Pack maison 2. Image: %s', $this->buildAssetUrl('/img/shop/products/product-2-min.jpeg')),
+            description: 'Pack maison 2.',
+            photo: $this->buildAssetUrl('/img/shop/products/product-2-min.jpeg'),
         );
 
         $this->findOrCreateProduct(
@@ -130,7 +138,8 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             sku: 'HOUSE-003',
             price: 31900,
             stock: 60,
-            description: sprintf('Pack maison 3. Image: %s', $this->buildAssetUrl('/img/shop/products/product-3-min.jpeg')),
+            description: 'Pack maison 3.',
+            photo: $this->buildAssetUrl('/img/shop/products/product-3-min.jpeg'),
         );
 
         $this->findOrCreateProduct(
@@ -141,7 +150,8 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             sku: 'FURN-001',
             price: 3900,
             stock: 250,
-            description: sprintf('Set meuble 1. Image: %s', $this->buildAssetUrl('/img/shop/products/product-details-1.jpg')),
+            description: 'Set meuble 1.',
+            photo: $this->buildAssetUrl('/img/shop/products/product-details-1.jpg'),
         );
 
         $this->findOrCreateProduct(
@@ -152,7 +162,8 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             sku: 'FURN-002',
             price: 4900,
             stock: 220,
-            description: sprintf('Set meuble 2. Image: %s', $this->buildAssetUrl('/img/shop/products/product-details-2.jpg')),
+            description: 'Set meuble 2.',
+            photo: $this->buildAssetUrl('/img/shop/products/product-details-2.jpg'),
         );
 
         $this->findOrCreateProduct(
@@ -163,7 +174,8 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             sku: 'FURN-003',
             price: 5900,
             stock: 180,
-            description: sprintf('Set meuble 3. Image: %s', $this->buildAssetUrl('/img/shop/products/product-details-3.jpg')),
+            description: 'Set meuble 3.',
+            photo: $this->buildAssetUrl('/img/shop/products/product-details-3.jpg'),
         );
 
         $this->findOrCreateProduct(
@@ -174,7 +186,8 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             sku: 'FURN-004',
             price: 7900,
             stock: 140,
-            description: sprintf('Set meuble 4. Image: %s', $this->buildAssetUrl('/img/shop/products/product-details-4.jpg')),
+            description: 'Set meuble 4.',
+            photo: $this->buildAssetUrl('/img/shop/products/product-details-4.jpg'),
         );
 
         foreach ($this->getApplicationsByPlatform(PlatformKey::SHOP) as $application) {
@@ -256,7 +269,7 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
         return $shop;
     }
 
-    private function findOrCreateCategory(ObjectManager $manager, Shop $shop, string $name, string $slug, string $description): Category
+    private function findOrCreateCategory(ObjectManager $manager, Shop $shop, string $name, string $slug, string $description, string $photo): Category
     {
         $category = $manager->getRepository(Category::class)->findOneBy([
             'shop' => $shop,
@@ -266,14 +279,16 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
         if ($category instanceof Category) {
             return $category
                 ->setName($name)
-                ->setDescription($description);
+                ->setDescription($description)
+                ->setPhoto($photo);
         }
 
         $category = (new Category())
             ->setShop($shop)
             ->setName($name)
             ->setSlug($slug)
-            ->setDescription($description);
+            ->setDescription($description)
+            ->setPhoto($photo);
         $manager->persist($category);
 
         return $category;
@@ -288,6 +303,7 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
         int $price,
         int $stock,
         string $description,
+        string $photo,
         int $coinsAmount = 0,
         bool $isFeatured = false,
     ): Product {
@@ -299,6 +315,7 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
                 ->setCategory($category)
                 ->setName($name)
                 ->setDescription($description)
+                ->setPhoto($photo)
                 ->setPrice($price)
                 ->setCurrencyCode('EUR')
                 ->setStock($stock)
@@ -313,6 +330,7 @@ final class LoadShopData extends Fixture implements OrderedFixtureInterface
             ->setName($name)
             ->setSku($sku)
             ->setDescription($description)
+            ->setPhoto($photo)
             ->setPrice($price)
             ->setCurrencyCode('EUR')
             ->setStock($stock)
