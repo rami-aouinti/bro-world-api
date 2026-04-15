@@ -29,6 +29,18 @@ final class LoadUserData extends Fixture implements OrderedFixtureInterface
     /**
      * @var array<non-empty-string, non-empty-string>
      */
+    private const array USER_PHOTOS = [
+        'john' => 'https://localhost/img/team-1.jpg',
+        'john-logged' => 'https://localhost/img/team-2.jpg',
+        'john-api' => 'https://localhost/img/team-3.jpg',
+        'john-user' => 'https://localhost/img/team-4.jpg',
+        'john-admin' => 'https://localhost/img/team-5.jpg',
+        'john-root' => 'https://localhost/img/team-9.jpeg',
+    ];
+
+    /**
+     * @var array<non-empty-string, non-empty-string>
+     */
     public static array $uuids = [
         'john' => '20000000-0000-1000-8000-000000000001',
         'john-logged' => '20000000-0000-1000-8000-000000000002',
@@ -114,6 +126,11 @@ final class LoadUserData extends Fixture implements OrderedFixtureInterface
             ->setLanguage(Language::EN)
             ->setLocale(Locale::EN)
             ->setPlainPassword('password' . $suffix);
+
+        $username = $entity->getUsername();
+        if (isset(self::USER_PHOTOS[$username])) {
+            $entity->setPhoto(self::USER_PHOTOS[$username]);
+        }
 
         if ($role !== null) {
             /** @var UserGroup $userGroup */
