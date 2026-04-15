@@ -163,7 +163,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                     // Sprints
                     $sprints = $this->generateSprints($manager, $faker, $project, $profile['sprintsPerProject']);
 
-                    foreach ($sprints as $sprint) {
+                    foreach ($sprints as $sprintIndex => $sprint) {
                         // Tasks
                         $tasks = $this->generateTasks(
                             $manager,
@@ -176,7 +176,10 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                             $applicationHasBlogPlugin,
                         );
                         if ($tasks !== []) {
-                            $this->addReference('Crm-Task-' . $applicationKey . '-' . ($companyIndex + 1) . '-' . $project->getCode() . '-1', $tasks[0]);
+                            $this->addReference(
+                                'Crm-Task-' . $applicationKey . '-' . ($companyIndex + 1) . '-' . $project->getCode() . '-S' . ($sprintIndex + 1) . '-T1',
+                                $tasks[0],
+                            );
                         }
 
                         // Task requests
