@@ -22,8 +22,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class GetGeneralProductController
 {
     public function __construct(
-        private ProductRepository $productRepository,
-        private ShopRepository $shopRepository,
         private SimilarProductService $similarProductService,
     ) {
     }
@@ -33,24 +31,8 @@ final readonly class GetGeneralProductController
     #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     public function __invoke(Product $product): JsonResponse
     {
-        $shop = $this->shopRepository->findGlobalShop();
-        if ($shop === null) {
-            return new JsonResponse(['message' => 'Global shop not found.'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-        $scopedProduct = $this->productRepository->findOneByIdAndShop($product->getId(), $shop);
-        if (!$scopedProduct instanceof Product) {
-            return new JsonResponse(status: JsonResponse::HTTP_NOT_FOUND);
-        }
-
-        $similarProducts = array_map(
-            static fn (Product $similarProduct): array => ProductListService::serializeProduct($similarProduct),
-            $this->similarProductService->getSimilarProducts($scopedProduct),
-        );
-
         return new JsonResponse([
-            'product' => ProductListService::serializeProduct($scopedProduct),
-            'similarProducts' => $similarProducts,
+            'product' => ProductListService::serializeProduct($product),
         ]);
     }
 }
