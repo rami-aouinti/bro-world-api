@@ -38,7 +38,7 @@ final readonly class PaymentService
      * @throws ORMException
      */
     public function createPaymentIntent(
-        string $applicationSlug,
+        ?string $applicationSlug,
         string $orderId,
         ?string $provider = null,
         ?string $paymentMethod = null,
@@ -85,7 +85,7 @@ final readonly class PaymentService
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function confirmPayment(string $applicationSlug, string $orderId, string $providerReference, array $payload = []): PaymentTransaction
+    public function confirmPayment(?string $applicationSlug, string $orderId, string $providerReference, array $payload = []): PaymentTransaction
     {
         $order = $this->orderRepository->find($orderId);
         if ($order === null) {
@@ -230,17 +230,19 @@ final readonly class PaymentService
         return $transaction;
     }
 
-    private function assertOrderAccess(Order $order, string $applicationSlug): void
+    private function assertOrderAccess(Order $order, ?string $applicationSlug): void
     {
-        $orderApplicationSlug = $order->getShop()?->getApplication()?->getSlug();
-        if ($orderApplicationSlug !== trim($applicationSlug)) {
+        $requestedScope = $this->normalizeScope($applicationSlug);
+        $orderScope = $this->resolveOrderScope($order);
+        if ($orderScope !== $requestedScope) {
             $this->monitoringService->logStructured(
                 event: 'shop.payment.scope_access_denied',
                 message: 'Payment access rejected due to scope access refusal.',
                 context: [
-                    'applicationSlug' => trim($applicationSlug),
+                    'applicationSlug' => $requestedScope,
                     'orderId' => $order->getId(),
-                    'orderApplicationSlug' => $orderApplicationSlug,
+                    'orderApplicationSlug' => $order->getShop()?->getApplication()?->getSlug(),
+                    'orderShopIsGlobal' => $order->getShop()?->isGlobal(),
                     'shopId' => $order->getShop()?->getId(),
                 ],
             );
@@ -255,6 +257,36 @@ final readonly class PaymentService
         if (!$user instanceof User || $order->getUser()?->getId() !== $user->getId()) {
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'This order does not belong to the authenticated user.');
         }
+    }
+
+    private function normalizeScope(?string $applicationSlug): ?string
+    {
+        $scope = trim((string) $applicationSlug);
+
+        return $scope === '' ? null : $scope;
+    }
+
+    private function resolveOrderScope(Order $order): ?string
+    {
+        $shop = $order->getShop();
+        if ($shop === null) {
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Order shop scope is invalid.');
+        }
+
+        if ($shop->isGlobal()) {
+            if ($shop->getApplication() !== null) {
+                throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Global shop configuration is invalid.');
+            }
+
+            return null;
+        }
+
+        $shopApplicationSlug = $shop->getApplication()?->getSlug();
+        if (!is_string($shopApplicationSlug) || trim($shopApplicationSlug) === '') {
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Application-scoped shop configuration is invalid.');
+        }
+
+        return trim($shopApplicationSlug);
     }
 
     private function applyOrderStateFromPayment(Order $order, PaymentStatus $status): void

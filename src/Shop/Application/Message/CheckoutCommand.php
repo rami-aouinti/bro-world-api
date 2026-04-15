@@ -10,7 +10,7 @@ final readonly class CheckoutCommand implements MessageHighInterface
 {
     public function __construct(
         public string $operationId,
-        public string $applicationSlug,
+        public ?string $applicationSlug,
         public string $shopId,
         public string $userId,
         public string $billingAddress,

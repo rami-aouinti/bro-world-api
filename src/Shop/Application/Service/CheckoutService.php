@@ -24,6 +24,8 @@ use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
+use function trim;
+
 final readonly class CheckoutService
 {
     public function __construct(
@@ -49,14 +51,18 @@ final readonly class CheckoutService
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Shop not found.');
         }
 
-        if ($shop->getApplication()?->getSlug() !== $command->applicationSlug) {
+        $requestedScope = $this->normalizeScope($command->applicationSlug);
+        $shopScope = $this->resolveShopScope($shop);
+
+        if ($requestedScope !== $shopScope) {
             $this->monitoringService->logStructured(
                 event: 'shop.checkout.scope_access_denied',
                 message: 'Checkout rejected due to scope access refusal.',
                 context: [
-                    'applicationSlug' => $command->applicationSlug,
+                    'applicationSlug' => $requestedScope,
                     'shopId' => $shop->getId(),
                     'shopApplicationSlug' => $shop->getApplication()?->getSlug(),
+                    'shopIsGlobal' => $shop->isGlobal(),
                     'userId' => $command->userId,
                 ],
             );
@@ -154,5 +160,30 @@ final readonly class CheckoutService
         $this->cartRepository->save($cart, false);
 
         return $order;
+    }
+
+    private function normalizeScope(?string $applicationSlug): ?string
+    {
+        $scope = trim((string) $applicationSlug);
+
+        return $scope === '' ? null : $scope;
+    }
+
+    private function resolveShopScope(\App\Shop\Domain\Entity\Shop $shop): ?string
+    {
+        if ($shop->isGlobal()) {
+            if ($shop->getApplication() !== null) {
+                throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Global shop configuration is invalid.');
+            }
+
+            return null;
+        }
+
+        $applicationSlug = $shop->getApplication()?->getSlug();
+        if (!is_string($applicationSlug) || trim($applicationSlug) === '') {
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Application-scoped shop configuration is invalid.');
+        }
+
+        return trim($applicationSlug);
     }
 }

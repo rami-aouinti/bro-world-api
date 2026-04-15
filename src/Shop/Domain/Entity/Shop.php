@@ -12,6 +12,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use DomainException;
 use Override;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Ramsey\Uuid\UuidInterface;
@@ -39,8 +40,13 @@ class Shop implements EntityInterface
     ])]
     private bool $isActive = true;
 
+    #[ORM\Column(name: 'is_global', type: Types::BOOLEAN, options: [
+        'default' => false,
+    ])]
+    private bool $isGlobal = false;
+
     #[ORM\OneToOne(targetEntity: PlatformApplication::class)]
-    #[ORM\JoinColumn(name: 'application_id', referencedColumnName: 'id', nullable: false, unique: true, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'application_id', referencedColumnName: 'id', nullable: true, unique: true, onDelete: 'CASCADE')]
     private ?PlatformApplication $application = null;
 
     /** @var Collection<int, Category>|ArrayCollection<int, Category> */
@@ -107,7 +113,27 @@ class Shop implements EntityInterface
 
     public function setApplication(?PlatformApplication $application): self
     {
+        if ($this->isGlobal && $application instanceof PlatformApplication) {
+            throw new DomainException('Global shop cannot be attached to an application.');
+        }
+
         $this->application = $application;
+
+        return $this;
+    }
+
+    public function isGlobal(): bool
+    {
+        return $this->isGlobal;
+    }
+
+    public function setIsGlobal(bool $isGlobal): self
+    {
+        if ($isGlobal && $this->application instanceof PlatformApplication) {
+            throw new DomainException('Application-scoped shop cannot be marked as global.');
+        }
+
+        $this->isGlobal = $isGlobal;
 
         return $this;
     }

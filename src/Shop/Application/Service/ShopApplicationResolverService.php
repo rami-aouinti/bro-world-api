@@ -23,8 +23,14 @@ final readonly class ShopApplicationResolverService
 
     public function resolveOrCreateShopByApplicationSlug(string $applicationSlug): Shop
     {
+        $this->assertNoGlobalScopeAmbiguity();
+
         $shop = $this->shopRepository->findOneByApplicationSlug($applicationSlug);
         if ($shop instanceof Shop) {
+            if ($shop->isGlobal()) {
+                throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Application route cannot resolve a global shop.');
+            }
+
             $this->assertApplicationAccess($shop->getApplication(), PlatformKey::SHOP);
 
             return $shop;
@@ -40,6 +46,22 @@ final readonly class ShopApplicationResolverService
         throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Shop root entity not found for this application.');
     }
 
+    public function resolveGlobalShop(): Shop
+    {
+        $this->assertNoGlobalScopeAmbiguity();
+
+        $shop = $this->shopRepository->findGlobalShop();
+        if (!$shop instanceof Shop) {
+            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Global shop root entity not found.');
+        }
+
+        if ($shop->getApplication() instanceof Application) {
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Global shop cannot be attached to an application.');
+        }
+
+        return $shop;
+    }
+
     public function assertApplicationAccess(?Application $application, PlatformKey $platformKey): void
     {
         if (!$application instanceof Application || $application->getPlatform()?->getPlatformKey() !== $platformKey) {
@@ -49,6 +71,13 @@ final readonly class ShopApplicationResolverService
         $user = $this->security->getUser();
         if (!$user instanceof User || $application->getUser()?->getId() !== $user->getId()) {
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You cannot access this application scope.');
+        }
+    }
+
+    private function assertNoGlobalScopeAmbiguity(): void
+    {
+        if ($this->shopRepository->countGlobalShops() > 1) {
+            throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Ambiguous global scope: multiple global shops are configured.');
         }
     }
 }
