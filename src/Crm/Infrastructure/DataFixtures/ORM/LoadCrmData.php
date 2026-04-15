@@ -51,6 +51,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
             'crm-sales-hub',
             'crm-pipeline-pro',
             'crm-support-desk',
+            'crm-general-core',
         ],
     ];
 
@@ -116,6 +117,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     {
         $faker = Factory::create('fr_FR');
         $faker->seed(self::FAKER_SEED);
+        $generalOwner = $this->getReference('User-john-root', User::class);
 
         $profile = self::VOLUME_PROFILES[$this->resolveVolume()] ?? self::VOLUME_PROFILES[self::DEFAULT_VOLUME];
         $crmUsers = $this->getCrmUsers($manager);
@@ -123,9 +125,17 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         foreach ($this->getApplicationsByPlatform(PlatformKey::CRM) as $application) {
             $applicationHasBlogPlugin = $this->applicationHasBlogPlugin($manager, $application);
             $crm = $this->findOrCreateCrm($manager, $application);
+            $applicationKey = $application->getSlug();
+            $this->addReference('Crm-' . $applicationKey, $crm);
+            if ($applicationKey === 'crm-general-core') {
+                $this->addReference('Crm-General-Core', $crm);
+            }
 
             // Companies
             $companies = $this->generateCompanies($manager, $faker, $crm, $application, $profile['companies']);
+            if ($companies !== []) {
+                $this->addReference('Crm-Company-' . $applicationKey . '-1', $companies[0]);
+            }
 
             foreach ($companies as $companyIndex => $company) {
                 // Contacts
@@ -145,6 +155,9 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                     $profile['projectAttachments'],
                     $profile['wikiPagesPerProject'],
                 );
+                if ($projects !== []) {
+                    $this->addReference('Crm-Project-' . $applicationKey . '-' . ($companyIndex + 1) . '-1', $projects[0]);
+                }
 
                 foreach ($projects as $project) {
                     // Sprints
@@ -162,6 +175,9 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                             $profile['taskAttachments'],
                             $applicationHasBlogPlugin,
                         );
+                        if ($tasks !== []) {
+                            $this->addReference('Crm-Task-' . $applicationKey . '-' . ($companyIndex + 1) . '-' . $project->getCode() . '-1', $tasks[0]);
+                        }
 
                         // Task requests
                         $this->generateTaskRequests($manager, $faker, $application, $tasks, $profile['taskRequestsPerTask']);
@@ -171,6 +187,10 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                 // Billings
                 $this->generateBillings($manager, $faker, $company, $profile['billingsPerCompany']);
             }
+        }
+
+        if ($generalOwner instanceof User) {
+            $this->addReference('Crm-General-Owner', $generalOwner);
         }
 
         $manager->flush();

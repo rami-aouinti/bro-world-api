@@ -532,6 +532,66 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                 ],
             ],
         ],
+        [
+            'uuid' => '60000000-0000-1000-8000-000000000014',
+            'key' => 'crm-general-core',
+            'title' => 'CRM General Core',
+            'description' => 'Scope general CRM pour les endpoints transverses.',
+            'status' => PlatformStatus::ACTIVE,
+            'private' => false,
+            'ownerReference' => 'User-john-root',
+            'platformReference' => 'Platform-CR-CRM 1',
+            'appConfigurations' => [
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000014',
+                    'key' => 'application.crm.general',
+                    'value' => [
+                        'enabled' => true,
+                    ],
+                ],
+            ],
+            'plugins' => [],
+        ],
+        [
+            'uuid' => '60000000-0000-1000-8000-000000000015',
+            'key' => 'school-general-core',
+            'title' => 'School General Core',
+            'description' => 'Scope general School pour les endpoints transverses.',
+            'status' => PlatformStatus::ACTIVE,
+            'private' => false,
+            'ownerReference' => 'User-john-root',
+            'platformReference' => 'Platform-SC-School Principal',
+            'appConfigurations' => [
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000015',
+                    'key' => 'application.school.general',
+                    'value' => [
+                        'enabled' => true,
+                    ],
+                ],
+            ],
+            'plugins' => [],
+        ],
+        [
+            'uuid' => '60000000-0000-1000-8000-000000000016',
+            'key' => 'recruit-general-core',
+            'title' => 'Recruit General Core',
+            'description' => 'Scope general Recruit pour les endpoints transverses.',
+            'status' => PlatformStatus::ACTIVE,
+            'private' => false,
+            'ownerReference' => 'User-john-root',
+            'platformReference' => 'Platform-RE-Recruit Principal',
+            'appConfigurations' => [
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000016',
+                    'key' => 'application.recruit.general',
+                    'value' => [
+                        'enabled' => true,
+                    ],
+                ],
+            ],
+            'plugins' => [],
+        ],
     ];
 
     /**
@@ -551,6 +611,9 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
         'recruit-hiring-pipeline' => '60000000-0000-1000-8000-000000000011',
         'recruit-interview-desk' => '60000000-0000-1000-8000-000000000012',
         'general' => '60000000-0000-1000-8000-000000000013',
+        'crm-general-core' => '60000000-0000-1000-8000-000000000014',
+        'school-general-core' => '60000000-0000-1000-8000-000000000015',
+        'recruit-general-core' => '60000000-0000-1000-8000-000000000016',
     ];
 
     /**

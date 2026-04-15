@@ -16,6 +16,7 @@ use App\Recruit\Domain\Enum\ContractType;
 use App\Recruit\Domain\Enum\ExperienceLevel;
 use App\Recruit\Domain\Enum\Schedule;
 use App\Recruit\Domain\Enum\WorkMode;
+use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
@@ -29,6 +30,7 @@ use function sprintf;
 final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
 {
     private const int JOB_COUNT_PER_APPLICATION = 12;
+    private const string GENERAL_APPLICATION_KEY = 'recruit-general-core';
 
     /**
      * @var array<int, array{name: string, logo: string, sector: string, size: string}>
@@ -103,6 +105,7 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
     #[Override]
     public function load(ObjectManager $manager): void
     {
+        $generalOwner = $this->getReference('User-john-root', User::class);
         /** @var Application $application */
         $application = $this->getReference('Application-recruit-lite-app', Application::class);
 
@@ -126,6 +129,9 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
             $manager->persist($company);
             $companies[] = $company;
         }
+        if ($companies !== []) {
+            $this->addReference('Recruit-Company-1', $companies[0]);
+        }
 
         $tags = [];
         foreach (self::TAGS as $item) {
@@ -133,12 +139,18 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
             $manager->persist($tag);
             $tags[] = $tag;
         }
+        if ($tags !== []) {
+            $this->addReference('Recruit-Tag-1', $tags[0]);
+        }
 
         $badges = [];
         foreach (self::BADGES as $item) {
             $badge = (new Badge())->setLabel($item);
             $manager->persist($badge);
             $badges[] = $badge;
+        }
+        if ($badges !== []) {
+            $this->addReference('Recruit-Badge-1', $badges[0]);
         }
 
         $recruitApplications = $manager->getRepository(Application::class)
@@ -164,6 +176,11 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
                 $recruit = (new Recruit())->setApplication($application);
                 $manager->persist($recruit);
             }
+            $applicationKey = $application->getSlug();
+            $this->addReference('Recruit-' . $applicationKey, $recruit);
+            if ($applicationKey === self::GENERAL_APPLICATION_KEY) {
+                $this->addReference('Recruit-General-Core', $recruit);
+            }
 
             for ($i = 1; $i <= self::JOB_COUNT_PER_APPLICATION; $i++) {
                 $loopIndex = ($applicationIndex * self::JOB_COUNT_PER_APPLICATION) + $i;
@@ -179,7 +196,7 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
 
                 $job = (new Job())
                     ->setRecruit($recruit)
-                    ->setOwner($application->getUser())
+                    ->setOwner($applicationKey === self::GENERAL_APPLICATION_KEY && $generalOwner instanceof User ? $generalOwner : $application->getUser())
                     ->setTitle($title)
                     ->setCompany($company)
                     ->setSalary($salary)
@@ -242,9 +259,19 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
                 $manager->persist($salary);
                 $manager->persist($job);
                 $this->addReference(sprintf('Recruit-Job-%03d', $jobReferenceIndex), $job);
+                if ($i === 1) {
+                    $this->addReference('Recruit-Job-' . $applicationKey . '-1', $job);
+                    if ($applicationKey === self::GENERAL_APPLICATION_KEY) {
+                        $this->addReference('Recruit-Job-General-Core-1', $job);
+                    }
+                }
 
                 $jobReferenceIndex++;
             }
+        }
+
+        if ($generalOwner instanceof User) {
+            $this->addReference('Recruit-General-Owner', $generalOwner);
         }
 
         $manager->flush();
