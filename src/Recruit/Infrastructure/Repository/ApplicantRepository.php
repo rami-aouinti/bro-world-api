@@ -9,6 +9,7 @@ use App\Recruit\Domain\Entity\Applicant as Entity;
 use App\Recruit\Domain\Repository\Interfaces\ApplicantRepositoryInterface;
 use Doctrine\DBAL\LockMode;
 use Doctrine\Persistence\ManagerRegistry;
+use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 
 /**
  * @method Entity|null find(string $id, LockMode|int|null $lockMode = null, ?int $lockVersion = null, ?string $entityManagerName = null)
@@ -25,5 +26,14 @@ class ApplicantRepository extends BaseRepository implements ApplicantRepositoryI
     public function __construct(
         protected ManagerRegistry $managerRegistry
     ) {
+    }
+
+    public function findByUser(string $id): array|float|int|string
+    {
+        return $this->createQueryBuilder('applicant')
+            ->andWhere('applicant.user = :id')
+            ->setParameter('id', $id, UuidBinaryOrderedTimeType::NAME)
+            ->getQuery()
+            ->getArrayResult();
     }
 }

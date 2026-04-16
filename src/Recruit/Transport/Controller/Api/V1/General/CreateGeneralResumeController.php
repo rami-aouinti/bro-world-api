@@ -9,7 +9,11 @@ use App\Recruit\Application\Service\ResumePayloadService;
 use App\Recruit\Domain\Entity\Resume;
 use App\Recruit\Infrastructure\Repository\ResumeRepository;
 use App\User\Domain\Entity\User;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
+use JsonException;
 use OpenApi\Attributes as OA;
+use Random\RandomException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,6 +34,12 @@ final readonly class CreateGeneralResumeController
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws RandomException
+     * @throws ORMException
+     * @throws JsonException
+     */
     #[Route(path: '/v1/recruit/general/resumes', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'Crée un CV et permet l’upload optionnel d’un PDF.')]
     #[OA\RequestBody(

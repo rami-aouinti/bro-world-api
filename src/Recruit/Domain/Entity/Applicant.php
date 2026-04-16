@@ -33,7 +33,7 @@ class Applicant implements EntityInterface
     private User $user;
 
     #[ORM\OneToOne(targetEntity: Resume::class, inversedBy: 'applicant', cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(name: 'resume_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE', unique: true)]
+    #[ORM\JoinColumn(name: 'resume_id', referencedColumnName: 'id', unique: true, nullable: true, onDelete: 'CASCADE')]
     private ?Resume $resume = null;
 
     #[ORM\Column(name: 'cover_letter', type: Types::TEXT, options: [
