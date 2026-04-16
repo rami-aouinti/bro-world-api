@@ -16,7 +16,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[OA\Tag(name: 'Recruit Resume')]
+#[OA\Tag(name: 'Recruit General Resume')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class ListGeneralMyResumesController
 {
@@ -27,7 +27,16 @@ final readonly class ListGeneralMyResumesController
     }
 
     #[Route(path: '/v1/recruit/general/private/me/resumes', methods: [Request::METHOD_GET])]
-    #[OA\Get(summary: 'Retourne les CV du user connecté.')]
+    #[OA\Get(
+        summary: 'Retourne les CV du user connecté.',
+        responses: [
+            new OA\Response(response: 200, description: 'Liste des CV récupérée.'),
+            new OA\Response(response: 400, description: 'Requête invalide.'),
+            new OA\Response(response: 401, description: 'Authentification requise.'),
+            new OA\Response(response: 403, description: 'Accès refusé.'),
+            new OA\Response(response: 404, description: 'Ressource introuvable.'),
+        ],
+    )]
     public function __invoke(User $loggedInUser): JsonResponse
     {
         $resumes = $this->resumeRepository->findBy([

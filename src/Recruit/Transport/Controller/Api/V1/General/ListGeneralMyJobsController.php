@@ -15,7 +15,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[OA\Tag(name: 'Recruit Job')]
+#[OA\Tag(name: 'Recruit General Job')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class ListGeneralMyJobsController
 {
@@ -90,7 +90,10 @@ final readonly class ListGeneralMyJobsController
                     ],
                 ),
             ),
+            new OA\Response(response: 400, description: 'Requête invalide.'),
             new OA\Response(response: 401, description: 'Utilisateur non authentifié.'),
+            new OA\Response(response: 403, description: 'Accès refusé.'),
+            new OA\Response(response: 404, description: 'Ressource introuvable.'),
         ],
     )]
     public function __invoke(User $loggedInUser): JsonResponse

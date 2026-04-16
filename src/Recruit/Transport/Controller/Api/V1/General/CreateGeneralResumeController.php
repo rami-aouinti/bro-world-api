@@ -19,7 +19,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[OA\Tag(name: 'Recruit Resume')]
+#[OA\Tag(name: 'Recruit General Resume')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class CreateGeneralResumeController
 {
@@ -97,6 +97,8 @@ final readonly class CreateGeneralResumeController
     )]
     #[OA\Response(response: 400, description: 'Invalid payload or file format')]
     #[OA\Response(response: 401, description: 'Authentication required')]
+    #[OA\Response(response: 403, description: 'Access denied')]
+    #[OA\Response(response: 404, description: 'Related resource not found')]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
         $payload = $this->resumePayloadService->extractPayload($request);

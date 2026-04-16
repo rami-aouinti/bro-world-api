@@ -23,7 +23,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use function is_string;
 
 #[AsController]
-#[OA\Tag(name: 'Recruit Application')]
+#[OA\Tag(name: 'Recruit General Application')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 #[IsGranted(RecruitPermissions::APPLICATION_STATUS_TRANSITION)]
 final readonly class UpdateGeneralApplicationStatusController
@@ -61,6 +61,7 @@ final readonly class UpdateGeneralApplicationStatusController
         responses: [
             new OA\Response(response: 200, description: 'Statut de candidature mis à jour.'),
             new OA\Response(response: 400, description: 'Transition invalide ou payload incomplet.'),
+            new OA\Response(response: 401, description: 'Authentification requise.'),
             new OA\Response(response: 403, description: 'Vous n\'êtes pas propriétaire du job.'),
             new OA\Response(response: 404, description: 'Candidature introuvable.'),
         ],

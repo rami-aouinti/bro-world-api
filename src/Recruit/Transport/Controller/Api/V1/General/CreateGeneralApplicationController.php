@@ -17,7 +17,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[OA\Tag(name: 'Recruit Application')]
+#[OA\Tag(name: 'Recruit General Application')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class CreateGeneralApplicationController
 {
@@ -46,6 +46,9 @@ final readonly class CreateGeneralApplicationController
         responses: [
             new OA\Response(response: 201, description: 'Candidature créée.'),
             new OA\Response(response: 400, description: 'Payload invalide.'),
+            new OA\Response(response: 401, description: 'Authentification requise.'),
+            new OA\Response(response: 403, description: 'Accès refusé.'),
+            new OA\Response(response: 404, description: 'Ressource liée introuvable.'),
         ],
     )]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse

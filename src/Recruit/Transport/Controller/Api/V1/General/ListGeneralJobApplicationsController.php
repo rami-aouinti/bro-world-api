@@ -16,7 +16,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[OA\Tag(name: 'Recruit Application')]
+#[OA\Tag(name: 'Recruit General Application')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 #[IsGranted(RecruitPermissions::INTERVIEW_VIEW)]
 final readonly class ListGeneralJobApplicationsController
@@ -75,7 +75,10 @@ final readonly class ListGeneralJobApplicationsController
                     ),
                 ),
             ),
+            new OA\Response(response: 400, description: 'Paramètres de recherche invalides.'),
+            new OA\Response(response: 401, description: 'Authentification requise.'),
             new OA\Response(response: 403, description: 'Vous n\'êtes pas propriétaire du job.'),
+            new OA\Response(response: 404, description: 'Job introuvable.'),
         ],
     )]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
