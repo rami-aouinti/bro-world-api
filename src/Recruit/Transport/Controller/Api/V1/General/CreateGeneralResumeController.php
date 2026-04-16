@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace App\Recruit\Transport\Controller\Api\V1\General;
 
-use App\Recruit\Application\Service\ResumeDocumentUploaderService;
-use App\Recruit\Application\Service\ResumePayloadService;
-use App\Recruit\Domain\Entity\Resume;
-use App\Recruit\Infrastructure\Repository\ResumeRepository;
+use App\Recruit\Application\Service\GeneralResumeService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -24,9 +20,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class CreateGeneralResumeController
 {
     public function __construct(
-        private ResumeRepository $resumeRepository,
-        private ResumeDocumentUploaderService $resumeDocumentUploaderService,
-        private ResumePayloadService $resumePayloadService,
+        private GeneralResumeService $generalResumeService,
     ) {
     }
 
@@ -64,25 +58,7 @@ final readonly class CreateGeneralResumeController
     #[OA\Response(response: 401, description: 'Authentication required')]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        $payload = $this->resumePayloadService->extractPayload($request);
-
-        $resume = new Resume()->setOwner($loggedInUser);
-
-        /** @var UploadedFile|null $document */
-        $document = $request->files->get('document');
-        if ($document instanceof UploadedFile) {
-            $documentUrl = $this->resumeDocumentUploaderService->upload($request, $document, '/uploads/resumes');
-            $resume->setDocumentUrl($documentUrl);
-        }
-
-        $this->resumePayloadService->hydrateResumeSections($resume, $payload);
-
-        $this->resumeRepository->save($resume);
-
-        return new JsonResponse([
-            'id' => $resume->getId(),
-            'documentUrl' => $resume->getDocumentUrl(),
-        ], JsonResponse::HTTP_CREATED);
+        return new JsonResponse($this->generalResumeService->create($request, $loggedInUser), JsonResponse::HTTP_CREATED);
     }
 }
 

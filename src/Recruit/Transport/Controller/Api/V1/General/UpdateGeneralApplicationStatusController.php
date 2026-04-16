@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace App\Recruit\Transport\Controller\Api\V1\General;
 
 use App\Recruit\Application\Security\RecruitPermissions;
-use App\Recruit\Application\Service\ApplicationStatusTransitionService;
-use App\Recruit\Infrastructure\Repository\ApplicationRepository;
+use App\Recruit\Application\Service\GeneralApplicationStatusService;
 use App\User\Domain\Entity\User;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
@@ -14,13 +13,9 @@ use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-
-use function is_string;
 
 #[AsController]
 #[OA\Tag(name: 'Recruit Application')]
@@ -29,8 +24,7 @@ use function is_string;
 final readonly class UpdateGeneralApplicationStatusController
 {
     public function __construct(
-        private ApplicationRepository $applicationRepository,
-        private ApplicationStatusTransitionService $applicationStatusTransitionService,
+        private GeneralApplicationStatusService $generalApplicationStatusService,
     ) {
     }
 
@@ -61,27 +55,9 @@ final readonly class UpdateGeneralApplicationStatusController
     )]
     public function __invoke(string $applicationId, Request $request, User $loggedInUser): JsonResponse
     {
-        $application = $this->applicationRepository->find($applicationId);
-
-        if ($application === null) {
-            throw new NotFoundHttpException('Application not found.');
-        }
-
-        $ownerId = $application->getJob()->getOwner()?->getId();
-        if ($ownerId === null || $ownerId !== $loggedInUser->getId()) {
-            throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You are not allowed to update the status for this application.');
-        }
-
         /** @var array<string, mixed> $payload */
         $payload = $request->toArray();
-        $comment = is_string($payload['comment'] ?? null) ? $payload['comment'] : null;
-        $this->applicationStatusTransitionService->applyStatusTransition($application, $payload['status'] ?? null, $loggedInUser, $comment);
 
-        $this->applicationRepository->save($application);
-
-        return new JsonResponse([
-            'id' => $application->getId(),
-            'status' => $application->getStatusValue(),
-        ]);
+        return new JsonResponse($this->generalApplicationStatusService->updateStatus($applicationId, $payload, $loggedInUser));
     }
 }

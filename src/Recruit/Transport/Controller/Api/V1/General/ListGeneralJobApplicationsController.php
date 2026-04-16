@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Recruit\Transport\Controller\Api\V1\General;
 
 use App\Recruit\Application\Security\RecruitPermissions;
-use App\Recruit\Application\Service\JobApplicationListService;
+use App\Recruit\Application\Service\GeneralJobApplicationListService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,7 +22,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class ListGeneralJobApplicationsController
 {
     public function __construct(
-        private JobApplicationListService $jobApplicationListService,
+        private GeneralJobApplicationListService $generalJobApplicationListService,
     ) {
     }
 
@@ -40,7 +40,7 @@ final readonly class ListGeneralJobApplicationsController
     )]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        return new JsonResponse($this->jobApplicationListService->getList(
+        return new JsonResponse($this->generalJobApplicationListService->getList(
             $loggedInUser,
             $request->query->getString('jobId', ''),
             $request->query->getString('jobSlug', ''),

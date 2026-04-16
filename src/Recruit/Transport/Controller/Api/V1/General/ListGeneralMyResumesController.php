@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace App\Recruit\Transport\Controller\Api\V1\General;
 
-use App\Recruit\Application\Service\ResumeNormalizerService;
-use App\Recruit\Infrastructure\Repository\ResumeRepository;
+use App\Recruit\Application\Service\GeneralResumeService;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,8 +20,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class ListGeneralMyResumesController
 {
     public function __construct(
-        private ResumeRepository $resumeRepository,
-        private ResumeNormalizerService $resumeNormalizerService,
+        private GeneralResumeService $generalResumeService,
     ) {
     }
 
@@ -30,12 +28,6 @@ final readonly class ListGeneralMyResumesController
     #[OA\Get(summary: 'Retourne les CV du user connecté.')]
     public function __invoke(User $loggedInUser): JsonResponse
     {
-        $resumes = $this->resumeRepository->findBy([
-            'owner' => $loggedInUser,
-        ], [
-            'createdAt' => 'DESC',
-        ]);
-
-        return new JsonResponse($this->resumeNormalizerService->normalizeCollection($resumes));
+        return new JsonResponse($this->generalResumeService->getMyResumes($loggedInUser));
     }
 }
