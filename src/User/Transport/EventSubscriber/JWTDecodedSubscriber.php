@@ -24,6 +24,7 @@ class JWTDecodedSubscriber implements EventSubscriberInterface
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly LoggerInterface $logger,
+        private readonly bool $jwtBindClientFingerprint,
     ) {
     }
 
@@ -67,6 +68,10 @@ class JWTDecodedSubscriber implements EventSubscriberInterface
      */
     private function checkPayload(JWTDecodedEvent $event, ?Request $request): void
     {
+        if (!$this->jwtBindClientFingerprint) {
+            return;
+        }
+
         if ($request === null) {
             return;
         }

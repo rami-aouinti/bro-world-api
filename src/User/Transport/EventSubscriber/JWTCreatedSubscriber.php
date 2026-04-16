@@ -30,6 +30,7 @@ class JWTCreatedSubscriber implements EventSubscriberInterface
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly LoggerInterface $logger,
+        private readonly bool $jwtBindClientFingerprint,
     ) {
     }
 
@@ -107,6 +108,10 @@ class JWTCreatedSubscriber implements EventSubscriberInterface
      */
     private function setSecurityData(array &$payload): void
     {
+        if (!$this->jwtBindClientFingerprint) {
+            return;
+        }
+
         // Get current request
         $request = $this->requestStack->getCurrentRequest();
 
