@@ -23,6 +23,7 @@ use function array_key_exists;
 use function is_array;
 use function is_string;
 use function json_decode;
+use function sprintf;
 use function trim;
 
 class ResumePayloadService
@@ -57,10 +58,33 @@ class ResumePayloadService
             $payload = $request->request->all();
 
             foreach (self::RESUME_SECTION_FIELDS as $field) {
-                if (is_string($payload[$field] ?? null)) {
-                    $decoded = json_decode($payload[$field], true, 512, JSON_THROW_ON_ERROR);
-                    $payload[$field] = is_array($decoded) ? $decoded : [];
+                if (!is_string($payload[$field] ?? null)) {
+                    continue;
                 }
+
+                if (trim($payload[$field]) === '') {
+                    $payload[$field] = [];
+                    continue;
+                }
+
+                try {
+                    $decoded = json_decode($payload[$field], true, 512, JSON_THROW_ON_ERROR);
+                } catch (JsonException $exception) {
+                    throw new HttpException(
+                        JsonResponse::HTTP_BAD_REQUEST,
+                        sprintf('Field "%s" must be a valid JSON array string.', $field),
+                        $exception,
+                    );
+                }
+
+                if (!is_array($decoded)) {
+                    throw new HttpException(
+                        JsonResponse::HTTP_BAD_REQUEST,
+                        sprintf('Field "%s" must decode to an array.', $field),
+                    );
+                }
+
+                $payload[$field] = $decoded;
             }
 
             return $payload;
