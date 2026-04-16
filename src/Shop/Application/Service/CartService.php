@@ -111,6 +111,7 @@ readonly class CartService
                         'name' => $serializedProduct['name'] ?? null,
                         'sku' => $serializedProduct['sku'] ?? null,
                         'price' => $serializedProduct['price'] ?? null,
+                        'photo' => $serializedProduct['photo'] ?? null,
                         'currencyCode' => $serializedProduct['currencyCode'] ?? null,
                         'stock' => $serializedProduct['stock'] ?? null,
                         'status' => $serializedProduct['status'] ?? null,
