@@ -34,7 +34,47 @@ final readonly class ListGeneralJobApplicationsController
             new OA\Parameter(name: 'jobSlug', description: 'Slug du job', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Liste des candidatures du job.'),
+            new OA\Response(
+                response: 200,
+                description: 'Liste des candidatures du job.',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(
+                        properties: [
+                            new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+                            new OA\Property(property: 'status', type: 'string'),
+                            new OA\Property(property: 'createdAt', type: 'string', format: 'date-time', nullable: true),
+                            new OA\Property(
+                                property: 'applicant',
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+                                    new OA\Property(property: 'coverLetter', type: 'string', nullable: true),
+                                    new OA\Property(
+                                        property: 'user',
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+                                            new OA\Property(property: 'username', type: 'string', nullable: true),
+                                            new OA\Property(property: 'firstName', type: 'string', nullable: true),
+                                            new OA\Property(property: 'lastName', type: 'string', nullable: true),
+                                            new OA\Property(property: 'email', type: 'string', format: 'email', nullable: true),
+                                        ],
+                                        type: 'object',
+                                    ),
+                                    new OA\Property(
+                                        property: 'resume',
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'string', format: 'uuid', nullable: true),
+                                        ],
+                                        type: 'object',
+                                    ),
+                                ],
+                                type: 'object',
+                            ),
+                        ],
+                        type: 'object',
+                    ),
+                ),
+            ),
             new OA\Response(response: 403, description: 'Vous n\'êtes pas propriétaire du job.'),
         ],
     )]
