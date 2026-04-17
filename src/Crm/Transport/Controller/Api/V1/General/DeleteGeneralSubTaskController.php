@@ -25,7 +25,11 @@ final readonly class DeleteGeneralSubTaskController
     }
 
     #[Route('/v1/crm/general/subtasks/{subtask}', methods: [Request::METHOD_DELETE])]
-    #[OA\Delete(summary: 'General - Delete Subtask', responses: [new OA\Response(response: 204, description: 'Sous-task supprimée')])]
+    #[OA\Delete(
+        summary: 'General - Delete Subtask',
+        parameters: [new OA\Parameter(name: 'subtask', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],
+        responses: [new OA\Response(response: 204, description: 'Sous-task supprimée')]
+    )]
     public function __invoke(Task $subtask): JsonResponse
     {
         if ($subtask->getParentTask() === null) {
@@ -38,4 +42,3 @@ final readonly class DeleteGeneralSubTaskController
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
 }
-

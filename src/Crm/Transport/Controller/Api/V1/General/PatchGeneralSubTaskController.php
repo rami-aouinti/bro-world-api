@@ -37,7 +37,15 @@ final readonly class PatchGeneralSubTaskController
     }
 
     #[Route('/v1/crm/general/subtasks/{subtask}', methods: [Request::METHOD_PATCH])]
-    #[OA\Patch(summary: 'General - Update Subtask', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['status' => 'in_progress', 'parentTaskId' => 'uuid'])), responses: [new OA\Response(response: 200, description: 'Sous-task mise à jour', content: new OA\JsonContent(example: ['id' => 'uuid']))])]
+    #[OA\Patch(
+        summary: 'General - Update Subtask',
+        parameters: [new OA\Parameter(name: 'subtask', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['status' => 'in_progress', 'parentTaskId' => 'uuid'])),
+        responses: [
+            new OA\Response(response: 200, description: 'Sous-task mise à jour', content: new OA\JsonContent(example: ['id' => 'uuid'])),
+            new OA\Response(response: 422, description: 'La task parente n est pas dans le même projet ou la relation est circulaire.'),
+        ]
+    )]
     public function __invoke(Task $subtask, Request $request): JsonResponse
     {
         if ($subtask->getParentTask() === null) {

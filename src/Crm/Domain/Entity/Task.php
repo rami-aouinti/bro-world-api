@@ -23,7 +23,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Throwable;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'crm_task')]
+#[ORM\Table(
+    name: 'crm_task',
+    indexes: [new ORM\Index(name: 'IDX_FA9A9B9D801B5A19', columns: ['parent_task_id'])]
+)]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class Task implements EntityInterface
 {

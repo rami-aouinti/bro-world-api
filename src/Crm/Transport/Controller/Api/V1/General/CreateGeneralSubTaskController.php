@@ -37,7 +37,15 @@ final readonly class CreateGeneralSubTaskController
     }
 
     #[Route('/v1/crm/general/tasks/{task}/subtasks', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'General - Create Subtask', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['title' => 'Créer un script de migration', 'priority' => 'high'])), responses: [new OA\Response(response: 201, description: 'Sous-task créée', content: new OA\JsonContent(example: ['id' => 'uuid']))])]
+    #[OA\Post(
+        summary: 'General - Create Subtask',
+        parameters: [new OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['title' => 'Créer un script de migration', 'priority' => 'high'])),
+        responses: [
+            new OA\Response(response: 201, description: 'Sous-task créée', content: new OA\JsonContent(example: ['id' => 'uuid'])),
+            new OA\Response(response: 422, description: 'La task parente n est pas dans le même projet ou la relation est circulaire.'),
+        ]
+    )]
     public function __invoke(Task $task, Request $request): JsonResponse
     {
         $payload = $this->decodePayload($request);

@@ -35,6 +35,10 @@ final readonly class PutGeneralAttachSubTaskToTaskController
     #[Route('/v1/crm/general/tasks/{task}/subtasks/{subtask}', methods: [Request::METHOD_PUT])]
     #[OA\Put(
         summary: 'General - Attach Subtask To Task',
+        parameters: [
+            new OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+            new OA\Parameter(name: 'subtask', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+        ],
         responses: [
             new OA\Response(response: JsonResponse::HTTP_NO_CONTENT, description: 'Sous-task rattachée avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Authentification requise.'),

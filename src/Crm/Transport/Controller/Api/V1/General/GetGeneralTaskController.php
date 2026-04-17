@@ -23,6 +23,17 @@ final readonly class GetGeneralTaskController
     }
 
     #[Route('/v1/crm/general/tasks/{task}', methods: [Request::METHOD_GET])]
+    #[OA\Get(
+        summary: 'General - Get Task',
+        parameters: [new OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],
+        responses: [new OA\Response(response: 200, description: 'Task détaillée', content: new OA\JsonContent(example: [
+            'id' => 'uuid',
+            'title' => 'Implémenter la migration',
+            'projectId' => 'uuid',
+            'parentTaskId' => null,
+            'subTasks' => [['id' => 'uuid', 'title' => 'Créer migration', 'parentTaskId' => 'uuid']],
+        ]))]
+    )]
     public function __invoke(Task $task): JsonResponse
     {
         return new JsonResponse($this->normalizer->normalizeTask($task));
