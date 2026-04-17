@@ -15,6 +15,8 @@ use function bin2hex;
 use function in_array;
 use function is_int;
 use function random_bytes;
+use function rtrim;
+use function str_starts_with;
 use function strtolower;
 use function trim;
 
@@ -23,6 +25,7 @@ readonly class MediaUploaderService
     public function __construct(
         private Filesystem $filesystem,
         private string $projectDir,
+        private string $publicBaseUrl = '',
     ) {
     }
 
@@ -53,7 +56,7 @@ readonly class MediaUploaderService
             $file->move($targetDirectory, $fileName);
 
             $uploadedFiles[] = [
-                'url' => $request->getSchemeAndHttpHost() . $normalizedDirectory . '/' . $fileName,
+                'url' => $this->resolvePublicBaseUrl($request) . $normalizedDirectory . '/' . $fileName,
                 'originalName' => $originalName,
                 'mimeType' => $mimeType,
                 'size' => $size,
@@ -94,5 +97,18 @@ readonly class MediaUploaderService
         $size = $file->getSize();
 
         return is_int($size) ? $size : 0;
+    }
+
+    private function resolvePublicBaseUrl(Request $request): string
+    {
+        $normalizedPublicBaseUrl = rtrim(trim($this->publicBaseUrl), '/');
+        if (
+            $normalizedPublicBaseUrl !== ''
+            && (str_starts_with($normalizedPublicBaseUrl, 'https://') || str_starts_with($normalizedPublicBaseUrl, 'http://'))
+        ) {
+            return $normalizedPublicBaseUrl;
+        }
+
+        return $request->getSchemeAndHttpHost();
     }
 }
