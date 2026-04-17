@@ -259,6 +259,8 @@ readonly class TaskListService
             ->distinct()
             ->leftJoin('task.project', 'project')->addSelect('project')
             ->leftJoin('task.sprint', 'sprint')->addSelect('sprint')
+            ->leftJoin('task.parentTask', 'parentTask')->addSelect('parentTask')
+            ->leftJoin('task.subTasks', 'subTasks')->addSelect('subTasks')
             ->leftJoin('project.company', 'company')->addSelect('company');
 
         $this->applyBinaryUuidIdsFilter($qb, 'task.id', $ids, 'task_id_');

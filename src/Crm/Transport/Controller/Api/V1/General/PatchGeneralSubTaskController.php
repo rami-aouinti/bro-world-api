@@ -24,58 +24,66 @@ use function is_string;
 #[AsController]
 #[OA\Tag(name: 'Crm')]
 #[IsGranted(Role::CRM_MANAGER->value)]
-final readonly class PatchGeneralTaskController
+final readonly class PatchGeneralSubTaskController
 {
     use GeneralCrudApiTrait;
 
-    public function __construct(private EntityManagerInterface $entityManager, private TaskRepository $taskRepository) {}
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private TaskRepository $taskRepository,
+    ) {
+    }
 
-    #[Route('/v1/crm/general/tasks/{task}', methods: [Request::METHOD_PATCH])]
-    #[OA\Patch(summary: 'General - Update Task', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['status' => 'in_progress', 'estimatedHours' => 4.5, 'parentTaskId' => 'uuid'])), responses: [new OA\Response(response: 200, description: 'Task mise à jour', content: new OA\JsonContent(example: ['id' => 'uuid']))])]
-    public function __invoke(Task $task, Request $request): JsonResponse
+    #[Route('/v1/crm/general/subtasks/{subtask}', methods: [Request::METHOD_PATCH])]
+    #[OA\Patch(summary: 'General - Update Subtask', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['status' => 'in_progress', 'parentTaskId' => 'uuid'])), responses: [new OA\Response(response: 200, description: 'Sous-task mise à jour', content: new OA\JsonContent(example: ['id' => 'uuid']))])]
+    public function __invoke(Task $subtask, Request $request): JsonResponse
     {
+        if ($subtask->getParentTask() === null) {
+            throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Provided task is not a subtask.');
+        }
+
         $payload = $this->decodePayload($request);
         if ($payload instanceof JsonResponse) {
             return $payload;
         }
 
         if (isset($payload['title']) && is_string($payload['title']) && $payload['title'] !== '') {
-            $task->setTitle($payload['title']);
+            $subtask->setTitle($payload['title']);
         }
 
         if (isset($payload['description'])) {
-            $task->setDescription($this->nullableString($payload['description']));
+            $subtask->setDescription($this->nullableString($payload['description']));
         }
 
         if (isset($payload['status'])) {
-            $task->setStatus(TaskStatus::tryFrom((string) $payload['status']) ?? TaskStatus::TODO);
+            $subtask->setStatus(TaskStatus::tryFrom((string) $payload['status']) ?? TaskStatus::TODO);
         }
 
         if (isset($payload['priority'])) {
-            $task->setPriority(TaskPriority::tryFrom((string) $payload['priority']) ?? TaskPriority::MEDIUM);
+            $subtask->setPriority(TaskPriority::tryFrom((string) $payload['priority']) ?? TaskPriority::MEDIUM);
         }
 
         if (isset($payload['dueAt'])) {
-            $task->setDueAt($this->parseNullableDate($payload['dueAt']));
+            $subtask->setDueAt($this->parseNullableDate($payload['dueAt']));
         }
 
         if (isset($payload['estimatedHours']) && is_numeric($payload['estimatedHours'])) {
-            $task->setEstimatedHours((float) $payload['estimatedHours']);
+            $subtask->setEstimatedHours((float) $payload['estimatedHours']);
         }
 
         if (array_key_exists('parentTaskId', $payload)) {
-            $this->assignParentTask($task, $payload['parentTaskId']);
+            $this->assignParentTask($subtask, $payload['parentTaskId']);
         }
 
         $this->entityManager->flush();
 
-        return new JsonResponse(['id' => $task->getId()]);
+        return new JsonResponse(['id' => $subtask->getId()]);
     }
 
-    private function assignParentTask(Task $task, mixed $parentTaskId): void
+    private function assignParentTask(Task $subtask, mixed $parentTaskId): void
     {
         if ($parentTaskId === null || $parentTaskId === '') {
-            $task->setParentTask(null);
+            $subtask->setParentTask(null);
 
             return;
         }
@@ -89,32 +97,15 @@ final readonly class PatchGeneralTaskController
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Parent task not found.');
         }
 
-        if ($parentTask->getId() === $task->getId()) {
+        if ($parentTask->getId() === $subtask->getId()) {
             throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Task cannot be its own parent.');
         }
 
-        if ($parentTask->getProject()?->getId() !== $task->getProject()?->getId()) {
+        if ($parentTask->getProject()?->getId() !== $subtask->getProject()?->getId()) {
             throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Provided "parentTaskId" must belong to the same project.');
         }
 
-        if ($this->isDescendantOf($parentTask, $task)) {
-            throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Circular parent relation is not allowed.');
-        }
-
-        $task->setParentTask($parentTask);
-    }
-
-    private function isDescendantOf(Task $candidate, Task $task): bool
-    {
-        $current = $candidate->getParentTask();
-        while ($current !== null) {
-            if ($current->getId() === $task->getId()) {
-                return true;
-            }
-
-            $current = $current->getParentTask();
-        }
-
-        return false;
+        $subtask->setParentTask($parentTask);
     }
 }
+

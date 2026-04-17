@@ -43,6 +43,14 @@ class Task implements EntityInterface
     #[ORM\JoinColumn(name: 'sprint_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?Sprint $sprint = null;
 
+    #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'subTasks')]
+    #[ORM\JoinColumn(name: 'parent_task_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?self $parentTask = null;
+
+    /** @var Collection<int, self>|ArrayCollection<int, self> */
+    #[ORM\OneToMany(targetEntity: self::class, mappedBy: 'parentTask')]
+    private Collection|ArrayCollection $subTasks;
+
     #[ORM\OneToOne(targetEntity: Blog::class, cascade: ['persist'])]
     #[ORM\JoinColumn(name: 'blog_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?Blog $blog = null;
@@ -100,6 +108,7 @@ class Task implements EntityInterface
         $this->id = $this->createUuid();
         $this->taskRequests = new ArrayCollection();
         $this->assignees = new ArrayCollection();
+        $this->subTasks = new ArrayCollection();
     }
 
     #[Override]
@@ -140,6 +149,45 @@ class Task implements EntityInterface
     public function setBlog(?Blog $blog): self
     {
         $this->blog = $blog;
+
+        return $this;
+    }
+
+    public function getParentTask(): ?self
+    {
+        return $this->parentTask;
+    }
+
+    public function setParentTask(?self $parentTask): self
+    {
+        $this->parentTask = $parentTask;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, self>|ArrayCollection<int, self>
+     */
+    public function getSubTasks(): Collection|ArrayCollection
+    {
+        return $this->subTasks;
+    }
+
+    public function addSubTask(self $subTask): self
+    {
+        if (!$this->subTasks->contains($subTask)) {
+            $this->subTasks->add($subTask);
+            $subTask->setParentTask($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSubTask(self $subTask): self
+    {
+        if ($this->subTasks->removeElement($subTask) && $subTask->getParentTask() === $this) {
+            $subTask->setParentTask(null);
+        }
 
         return $this;
     }
