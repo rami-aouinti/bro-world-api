@@ -156,6 +156,10 @@ services:
         arguments:
             $serializer: '@app.serializer.external_message'
 
+    App\Media\Application\Service\MediaUploaderService:
+        arguments:
+            $publicBaseUrl: '%env(default::APP_PUBLIC_BASE_URL)%'
+
 
     App\Shop\Application\Monitoring\ShopMonitoringService:
         arguments:
