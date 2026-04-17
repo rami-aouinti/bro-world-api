@@ -22,8 +22,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(Role::CRM_MANAGER->value)]
 final readonly class PutGeneralSprintAssigneeController
 {
-    public function __construct(private SprintRepository $sprintRepository)
-    {
+    public function __construct(
+        private SprintRepository $sprintRepository
+    ) {
     }
 
     /**
@@ -34,8 +35,8 @@ final readonly class PutGeneralSprintAssigneeController
     #[OA\Parameter(name: 'sprint', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Put(
-        summary: 'General - Add Sprint Assignee',
-        description: 'Ajoute un assignee à un sprint dans le périmètre CRM général.',
+        summary: 'Add Sprint Assignee (General)',
+        description: 'Exécute l action metier Add Sprint Assignee dans le perimetre CRM general.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_NO_CONTENT, description: 'Assignee ajouté avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Authentification requise.'),
