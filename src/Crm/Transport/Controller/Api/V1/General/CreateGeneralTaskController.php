@@ -9,6 +9,7 @@ use App\Crm\Domain\Enum\TaskPriority;
 use App\Crm\Domain\Enum\TaskStatus;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
 use App\Crm\Infrastructure\Repository\SprintRepository;
+use App\Crm\Infrastructure\Repository\TaskRepository;
 use App\Role\Domain\Enum\Role;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
@@ -33,11 +34,12 @@ final readonly class CreateGeneralTaskController
         private EntityManagerInterface $entityManager,
         private ProjectRepository $projectRepository,
         private SprintRepository $sprintRepository,
+        private TaskRepository $taskRepository,
     ) {
     }
 
     #[Route('/v1/crm/general/tasks', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'General - Create Task', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['projectId' => 'uuid', 'title' => 'Configurer CI', 'priority' => 'high'])), responses: [new OA\Response(response: 201, description: 'Task créée', content: new OA\JsonContent(example: ['id' => 'uuid']))])]
+    #[OA\Post(summary: 'General - Create Task', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['projectId' => 'uuid', 'title' => 'Configurer CI', 'priority' => 'high', 'parentTaskId' => 'uuid'])), responses: [new OA\Response(response: 201, description: 'Task créée', content: new OA\JsonContent(example: ['id' => 'uuid']))])]
     public function __invoke(Request $request): JsonResponse
     {
         $payload = $this->decodePayload($request);
@@ -72,6 +74,25 @@ final readonly class CreateGeneralTaskController
             $sprint = $this->sprintRepository->find($payload['sprintId']);
             if ($sprint !== null) {
                 $task->setSprint($sprint);
+            }
+        }
+
+        if (isset($payload['parentTaskId'])) {
+            if ($payload['parentTaskId'] === null || $payload['parentTaskId'] === '') {
+                $task->setParentTask(null);
+            } elseif (!is_string($payload['parentTaskId'])) {
+                return $this->badRequest('Field "parentTaskId" must be a UUID string or null.');
+            } else {
+                $parentTask = $this->taskRepository->find($payload['parentTaskId']);
+                if ($parentTask === null) {
+                    throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Parent task not found.');
+                }
+
+                if ($parentTask->getProject()?->getId() !== $project->getId()) {
+                    throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Provided "parentTaskId" does not belong to the provided "projectId".');
+                }
+
+                $task->setParentTask($parentTask);
             }
         }
 

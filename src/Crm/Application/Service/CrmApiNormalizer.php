@@ -37,11 +37,23 @@ final readonly class CrmApiNormalizer
             'projectName' => $task->getProject()?->getName(),
             'sprintId' => $task->getSprint()?->getId(),
             'sprintName' => $task->getSprint()?->getName(),
+            'parentTaskId' => $task->getParentTask()?->getId(),
             'dueAt' => $this->normalizeDate($task->getDueAt()),
             'estimatedHours' => $task->getEstimatedHours(),
             'updatedAt' => $this->normalizeDate($task->getUpdatedAt()),
             'attachments' => $task->getAttachments(),
             'assignees' => $assignees,
+            'subTasks' => array_map(
+                static fn (Task $subTask): array => [
+                    'id' => $subTask->getId(),
+                    'title' => $subTask->getTitle(),
+                    'status' => $subTask->getStatus()->value,
+                    'priority' => $subTask->getPriority()->value,
+                    'parentTaskId' => $subTask->getParentTask()?->getId(),
+                    'projectId' => $subTask->getProject()?->getId(),
+                ],
+                $task->getSubTasks()->toArray()
+            ),
             'children' => array_map(
                 static fn (TaskRequest $taskRequest) => [
                     'id' => $taskRequest->getId(),
