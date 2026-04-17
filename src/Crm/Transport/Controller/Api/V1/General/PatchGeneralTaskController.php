@@ -8,6 +8,7 @@ use App\Crm\Application\Service\TaskParentRelationGuard;
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Domain\Enum\TaskPriority;
 use App\Crm\Domain\Enum\TaskStatus;
+use App\Crm\Infrastructure\Repository\ProjectRepository;
 use App\Crm\Infrastructure\Repository\TaskRepository;
 use App\Role\Domain\Enum\Role;
 use Doctrine\ORM\EntityManagerInterface;
@@ -32,6 +33,7 @@ final readonly class PatchGeneralTaskController
     public function __construct(
         private EntityManagerInterface $entityManager,
         private TaskRepository $taskRepository,
+        private ProjectRepository $projectRepository,
         private TaskParentRelationGuard $taskParentRelationGuard,
     ) {}
 
@@ -68,6 +70,10 @@ final readonly class PatchGeneralTaskController
             $task->setEstimatedHours((float) $payload['estimatedHours']);
         }
 
+        if (array_key_exists('projectId', $payload)) {
+            $this->assignProject($task, $payload['projectId']);
+        }
+
         if (array_key_exists('parentTaskId', $payload)) {
             $this->assignParentTask($task, $payload['parentTaskId']);
         }
@@ -96,5 +102,24 @@ final readonly class PatchGeneralTaskController
 
         $this->taskParentRelationGuard->assertCanAssignParent($task, $parentTask, 'Provided "parentTaskId" must belong to the same project.');
         $task->setParentTask($parentTask);
+    }
+
+    private function assignProject(Task $task, mixed $projectId): void
+    {
+        if (!is_string($projectId)) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "projectId" must be a UUID string.');
+        }
+
+        $project = $this->projectRepository->find($projectId);
+        if ($project === null) {
+            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Project not found.');
+        }
+
+        $task->setProject($project);
+
+        $sprint = $task->getSprint();
+        if ($sprint !== null && $sprint->getProject()?->getId() !== $project->getId()) {
+            $task->setSprint(null);
+        }
     }
 }
