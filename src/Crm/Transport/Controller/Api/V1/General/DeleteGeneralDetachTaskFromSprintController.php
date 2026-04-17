@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Crm\Transport\Controller\Api\V1\General;
 
 use App\Crm\Domain\Entity\Sprint;
-use App\Crm\Domain\Entity\Task;
+use App\Crm\Infrastructure\Repository\SprintRepository;
 use App\Crm\Infrastructure\Repository\TaskRepository;
 use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\Role\Domain\Enum\Role;
@@ -24,6 +24,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class DeleteGeneralDetachTaskFromSprintController
 {
     public function __construct(
+        private SprintRepository $sprintRepository,
         private TaskRepository $taskRepository,
         private CrmApiErrorResponseFactory $errorResponseFactory,
     ) {
@@ -47,14 +48,24 @@ final readonly class DeleteGeneralDetachTaskFromSprintController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(Sprint $sprint, Task $task): JsonResponse
+    public function __invoke(string $sprint, string $task): JsonResponse
     {
-        if ($task->getProject()?->getId() !== $sprint->getProject()?->getId()) {
+        $sprintEntity = $this->sprintRepository->find($sprint);
+        if (!$sprintEntity instanceof Sprint) {
+            return $this->errorResponseFactory->notFoundReference('sprint');
+        }
+
+        $taskEntity = $this->taskRepository->find($task);
+        if ($taskEntity === null) {
+            return $this->errorResponseFactory->notFoundReference('task');
+        }
+
+        if ($taskEntity->getProject()?->getId() !== $sprintEntity->getProject()?->getId()) {
             return $this->errorResponseFactory->outOfScopeReference('Task and sprint must belong to the same project.');
         }
 
-        $task->setSprint(null);
-        $this->taskRepository->save($task);
+        $taskEntity->setSprint(null);
+        $this->taskRepository->save($taskEntity);
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
     }

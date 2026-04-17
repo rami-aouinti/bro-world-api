@@ -50,14 +50,24 @@ final class GeneralSprintTaskControllerTest extends WebTestCase
         $managerClient = $this->getTestClient('john-crm_manager', 'password-crm_manager');
 
         foreach ([
-            sprintf('%s/v1/crm/general/sprints/%s/tasks/%s', self::API_URL_PREFIX, self::UNKNOWN_UUID, $taskId),
-            sprintf('%s/v1/crm/general/sprints/%s/tasks/%s', self::API_URL_PREFIX, $sprintId, self::UNKNOWN_UUID),
-        ] as $path) {
-            $managerClient->request('PUT', $path);
+            [
+                'path' => sprintf('%s/v1/crm/general/sprints/%s/tasks/%s', self::API_URL_PREFIX, self::UNKNOWN_UUID, $taskId),
+                'message' => 'Unknown "sprint" in this CRM scope.',
+            ],
+            [
+                'path' => sprintf('%s/v1/crm/general/sprints/%s/tasks/%s', self::API_URL_PREFIX, $sprintId, self::UNKNOWN_UUID),
+                'message' => 'Unknown "task" in this CRM scope.',
+            ],
+        ] as $testCase) {
+            $managerClient->request('PUT', $testCase['path']);
             self::assertSame(Response::HTTP_NOT_FOUND, $managerClient->getResponse()->getStatusCode());
+            $payload = $this->decodeJsonResponse($managerClient->getResponse()->getContent());
+            self::assertSame($testCase['message'], $payload['message'] ?? null);
 
-            $managerClient->request('DELETE', $path);
+            $managerClient->request('DELETE', $testCase['path']);
             self::assertSame(Response::HTTP_NOT_FOUND, $managerClient->getResponse()->getStatusCode());
+            $payload = $this->decodeJsonResponse($managerClient->getResponse()->getContent());
+            self::assertSame($testCase['message'], $payload['message'] ?? null);
         }
     }
 
