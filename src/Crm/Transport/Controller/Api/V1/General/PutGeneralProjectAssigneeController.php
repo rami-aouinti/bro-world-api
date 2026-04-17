@@ -22,8 +22,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(Role::CRM_MANAGER->value)]
 final readonly class PutGeneralProjectAssigneeController
 {
-    public function __construct(private ProjectRepository $projectRepository)
-    {
+    public function __construct(
+        private ProjectRepository $projectRepository
+    ) {
     }
 
     /**
@@ -34,8 +35,8 @@ final readonly class PutGeneralProjectAssigneeController
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Put(
-        summary: 'General - Add Project Assignee',
-        description: 'Ajoute un assignee à un project dans le périmètre CRM général.',
+        summary: 'Add Project Assignee (General)',
+        description: 'Exécute l action metier Add Project Assignee dans le perimetre CRM general.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_NO_CONTENT, description: 'Assignee ajouté avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Authentification requise.'),

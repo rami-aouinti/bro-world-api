@@ -22,8 +22,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(Role::CRM_MANAGER->value)]
 final readonly class DeleteGeneralProjectAssigneeController
 {
-    public function __construct(private ProjectRepository $projectRepository)
-    {
+    public function __construct(
+        private ProjectRepository $projectRepository
+    ) {
     }
 
     /**
@@ -34,8 +35,8 @@ final readonly class DeleteGeneralProjectAssigneeController
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(
-        summary: 'General - Remove Project Assignee',
-        description: 'Retire un assignee d un project dans le périmètre CRM général.',
+        summary: 'Remove Project Assignee (General)',
+        description: 'Exécute l action metier Remove Project Assignee dans le perimetre CRM general.',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_NO_CONTENT, description: 'Assignee retiré avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Authentification requise.'),
