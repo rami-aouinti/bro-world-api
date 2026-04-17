@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\General;
 
+use App\Crm\Application\Service\TaskParentRelationGuard;
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Domain\Enum\TaskPriority;
 use App\Crm\Domain\Enum\TaskStatus;
@@ -28,7 +29,11 @@ final readonly class PatchGeneralTaskController
 {
     use GeneralCrudApiTrait;
 
-    public function __construct(private EntityManagerInterface $entityManager, private TaskRepository $taskRepository) {}
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private TaskRepository $taskRepository,
+        private TaskParentRelationGuard $taskParentRelationGuard,
+    ) {}
 
     #[Route('/v1/crm/general/tasks/{task}', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(summary: 'General - Update Task', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['status' => 'in_progress', 'estimatedHours' => 4.5, 'parentTaskId' => 'uuid'])), responses: [new OA\Response(response: 200, description: 'Task mise à jour', content: new OA\JsonContent(example: ['id' => 'uuid']))])]
@@ -89,32 +94,7 @@ final readonly class PatchGeneralTaskController
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Parent task not found.');
         }
 
-        if ($parentTask->getId() === $task->getId()) {
-            throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Task cannot be its own parent.');
-        }
-
-        if ($parentTask->getProject()?->getId() !== $task->getProject()?->getId()) {
-            throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Provided "parentTaskId" must belong to the same project.');
-        }
-
-        if ($this->isDescendantOf($parentTask, $task)) {
-            throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Circular parent relation is not allowed.');
-        }
-
+        $this->taskParentRelationGuard->assertCanAssignParent($task, $parentTask, 'Provided "parentTaskId" must belong to the same project.');
         $task->setParentTask($parentTask);
-    }
-
-    private function isDescendantOf(Task $candidate, Task $task): bool
-    {
-        $current = $candidate->getParentTask();
-        while ($current !== null) {
-            if ($current->getId() === $task->getId()) {
-                return true;
-            }
-
-            $current = $current->getParentTask();
-        }
-
-        return false;
     }
 }

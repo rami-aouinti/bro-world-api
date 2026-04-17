@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\General;
 
+use App\Crm\Application\Service\TaskParentRelationGuard;
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Domain\Enum\TaskPriority;
 use App\Crm\Domain\Enum\TaskStatus;
@@ -31,6 +32,7 @@ final readonly class PatchGeneralSubTaskController
     public function __construct(
         private EntityManagerInterface $entityManager,
         private TaskRepository $taskRepository,
+        private TaskParentRelationGuard $taskParentRelationGuard,
     ) {
     }
 
@@ -97,15 +99,7 @@ final readonly class PatchGeneralSubTaskController
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Parent task not found.');
         }
 
-        if ($parentTask->getId() === $subtask->getId()) {
-            throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Task cannot be its own parent.');
-        }
-
-        if ($parentTask->getProject()?->getId() !== $subtask->getProject()?->getId()) {
-            throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Provided "parentTaskId" must belong to the same project.');
-        }
-
+        $this->taskParentRelationGuard->assertCanAssignParent($subtask, $parentTask, 'Provided "parentTaskId" must belong to the same project.');
         $subtask->setParentTask($parentTask);
     }
 }
-

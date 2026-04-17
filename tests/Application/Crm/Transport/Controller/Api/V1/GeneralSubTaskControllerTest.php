@@ -114,6 +114,43 @@ final class GeneralSubTaskControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_NOT_FOUND, $managerClient->getResponse()->getStatusCode());
     }
 
+    public function testDedicatedGeneralSubTaskAttachDetachEndpointsAndBusinessValidations(): void
+    {
+        $companyId = $this->createGeneralCompany();
+        $projectId = $this->createGeneralProject($companyId);
+        $rootTaskId = $this->createGeneralTask($projectId, 'Root task');
+        $childTaskId = $this->createGeneralTask($projectId, 'Child task');
+        $grandChildTaskId = $this->createGeneralTask($projectId, 'Grand child task');
+
+        $secondCompanyId = $this->createGeneralCompany();
+        $secondProjectId = $this->createGeneralProject($secondCompanyId);
+        $otherProjectTaskId = $this->createGeneralTask($secondProjectId, 'Task from another project');
+
+        $managerClient = $this->getTestClient('john-crm_manager', 'password-crm_manager');
+        $managerClient->request('PUT', sprintf('%s/v1/crm/general/tasks/%s/subtasks/%s', self::API_URL_PREFIX, $rootTaskId, $childTaskId));
+        self::assertSame(Response::HTTP_NO_CONTENT, $managerClient->getResponse()->getStatusCode());
+
+        $managerClient->request('PUT', sprintf('%s/v1/crm/general/tasks/%s/subtasks/%s', self::API_URL_PREFIX, $childTaskId, $grandChildTaskId));
+        self::assertSame(Response::HTTP_NO_CONTENT, $managerClient->getResponse()->getStatusCode());
+
+        $managerClient->request('PUT', sprintf('%s/v1/crm/general/tasks/%s/subtasks/%s', self::API_URL_PREFIX, $grandChildTaskId, $rootTaskId));
+        self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $managerClient->getResponse()->getStatusCode());
+
+        $managerClient->request('PUT', sprintf('%s/v1/crm/general/tasks/%s/subtasks/%s', self::API_URL_PREFIX, $rootTaskId, $otherProjectTaskId));
+        self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $managerClient->getResponse()->getStatusCode());
+
+        $managerClient->request('DELETE', sprintf('%s/v1/crm/general/tasks/%s/subtasks/%s', self::API_URL_PREFIX, $rootTaskId, $childTaskId));
+        self::assertSame(Response::HTTP_NO_CONTENT, $managerClient->getResponse()->getStatusCode());
+
+        $managerClient->request('GET', sprintf('%s/v1/crm/general/tasks/%s', self::API_URL_PREFIX, $childTaskId));
+        self::assertSame(Response::HTTP_OK, $managerClient->getResponse()->getStatusCode());
+        $childPayload = $this->decodeJsonResponse($managerClient->getResponse()->getContent());
+        self::assertNull($childPayload['parentTaskId'] ?? null);
+
+        $managerClient->request('DELETE', sprintf('%s/v1/crm/general/tasks/%s/subtasks/%s', self::API_URL_PREFIX, $rootTaskId, $childTaskId));
+        self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $managerClient->getResponse()->getStatusCode());
+    }
+
     private function createGeneralCompany(): string
     {
         $client = $this->getTestClient('john-crm_manager', 'password-crm_manager');
@@ -188,4 +225,3 @@ final class GeneralSubTaskControllerTest extends WebTestCase
         return $decoded;
     }
 }
-

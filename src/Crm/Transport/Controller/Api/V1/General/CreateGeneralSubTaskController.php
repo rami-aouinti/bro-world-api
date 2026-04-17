@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\General;
 
+use App\Crm\Application\Service\TaskParentRelationGuard;
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Domain\Enum\TaskPriority;
 use App\Crm\Domain\Enum\TaskStatus;
@@ -31,6 +32,7 @@ final readonly class CreateGeneralSubTaskController
     public function __construct(
         private EntityManagerInterface $entityManager,
         private SprintRepository $sprintRepository,
+        private TaskParentRelationGuard $taskParentRelationGuard,
     ) {
     }
 
@@ -50,12 +52,13 @@ final readonly class CreateGeneralSubTaskController
 
         $subTask = (new Task())
             ->setProject($task->getProject())
-            ->setParentTask($task)
             ->setTitle($title)
             ->setDescription($this->nullableString($payload['description'] ?? null))
             ->setStatus(TaskStatus::tryFrom((string) ($payload['status'] ?? 'todo')) ?? TaskStatus::TODO)
             ->setPriority(TaskPriority::tryFrom((string) ($payload['priority'] ?? 'medium')) ?? TaskPriority::MEDIUM)
             ->setDueAt($this->parseNullableDate($payload['dueAt'] ?? null));
+        $this->taskParentRelationGuard->assertCanAssignParent($subTask, $task, 'Provided parent task must belong to the same project.');
+        $subTask->setParentTask($task);
 
         if (isset($payload['estimatedHours']) && is_numeric($payload['estimatedHours'])) {
             $subTask->setEstimatedHours((float) $payload['estimatedHours']);
@@ -78,4 +81,3 @@ final readonly class CreateGeneralSubTaskController
         return new JsonResponse(['id' => $subTask->getId()], JsonResponse::HTTP_CREATED);
     }
 }
-

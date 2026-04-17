@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Crm\Transport\Controller\Api\V1\General;
 
+use App\Crm\Application\Service\TaskParentRelationGuard;
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Domain\Enum\TaskPriority;
 use App\Crm\Domain\Enum\TaskStatus;
@@ -35,6 +36,7 @@ final readonly class CreateGeneralTaskController
         private ProjectRepository $projectRepository,
         private SprintRepository $sprintRepository,
         private TaskRepository $taskRepository,
+        private TaskParentRelationGuard $taskParentRelationGuard,
     ) {
     }
 
@@ -88,10 +90,7 @@ final readonly class CreateGeneralTaskController
                     throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Parent task not found.');
                 }
 
-                if ($parentTask->getProject()?->getId() !== $project->getId()) {
-                    throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Provided "parentTaskId" does not belong to the provided "projectId".');
-                }
-
+                $this->taskParentRelationGuard->assertCanAssignParent($task, $parentTask, 'Provided "parentTaskId" does not belong to the provided "projectId".');
                 $task->setParentTask($parentTask);
             }
         }
