@@ -52,7 +52,7 @@ readonly class UserStoryService
         $cacheKey = $this->cacheKeyConventionService->buildPrivateStoryListKey($loggedInUser->getId(), $limit);
 
         /** @var array<int, array<string, mixed>> $stories */
-        $stories = $this->cache->get($cacheKey, function (ItemInterface $item) use ($loggedInUser, $visibleUsers, $visibleUserIds, $limit): array {
+        $stories = $this->cache->get($cacheKey, function (ItemInterface $item) use ($loggedInUser, $visibleUserIds, $limit): array {
             $item->expiresAfter(60);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->tagPrivateStoryList());
@@ -63,7 +63,7 @@ readonly class UserStoryService
                 return [];
             }
 
-            return $this->findActiveStories($loggedInUser, $visibleUsers, $limit, $esIds);
+            return $this->findActiveStories($loggedInUser, $visibleUserIds, $limit, $esIds);
         });
 
         return $stories;
@@ -113,12 +113,12 @@ readonly class UserStoryService
     }
 
     /**
-     * @param array<int, User> $visibleUsers
+     * @param array<int, string> $visibleUserIds
      * @param array<int, string>|null $esIds
      *
      * @return array<int, array<string, mixed>>
      */
-    private function findActiveStories(User $loggedInUser, array $visibleUsers, int $limit, ?array $esIds): array
+    private function findActiveStories(User $loggedInUser, array $visibleUserIds, int $limit, ?array $esIds): array
     {
         $since = new DateTimeImmutable('-24 hours');
 
@@ -126,7 +126,9 @@ readonly class UserStoryService
             ->select('story', 'user')
             ->innerJoin('story.user', 'user')
             ->andWhere('story.createdAt >= :since')
+            ->andWhere('user.id IN (:visibleUserIds)')
             ->setParameter('since', $since)
+            ->setParameter('visibleUserIds', $visibleUserIds)
             ->orderBy('story.createdAt', 'DESC')
             ->setMaxResults($limit);
 
