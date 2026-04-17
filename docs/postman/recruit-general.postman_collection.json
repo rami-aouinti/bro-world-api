@@ -1,0 +1,1604 @@
+{
+  "info": {
+    "name": "Bro World API - Recruit General",
+    "description": "Collection Postman copier-coller pour tous les endpoints Recruit General (V1). Inclut exemples de body et exemples de réponses attendues.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_BEARER_TOKEN"
+    },
+    {
+      "key": "jobSlug",
+      "value": "backend-engineer-lyon"
+    },
+    {
+      "key": "applicationId",
+      "value": "0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9aa"
+    },
+    {
+      "key": "resumeId",
+      "value": "0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9aa"
+    },
+    {
+      "key": "applicantId",
+      "value": "0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9ab"
+    },
+    {
+      "key": "jobId",
+      "value": "0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9ac"
+    },
+    {
+      "key": "applicationSlug",
+      "value": "bro-world"
+    },
+    {
+      "key": "offerId",
+      "value": "0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9b0"
+    },
+    {
+      "key": "interviewId",
+      "value": "0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9b2"
+    }
+  ],
+  "item": [
+    {
+      "name": "GET /v1/recruit/general/jobs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/v1/recruit/general/jobs?page=1&limit=20&q=backend&location=lyon&workMode=Remote&contractType=CDI&experienceLevel=Senior",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "recruit",
+            "general",
+            "jobs"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "20"
+            },
+            {
+              "key": "q",
+              "value": "backend"
+            },
+            {
+              "key": "location",
+              "value": "lyon"
+            },
+            {
+              "key": "workMode",
+              "value": "Remote"
+            },
+            {
+              "key": "contractType",
+              "value": "CDI"
+            },
+            {
+              "key": "experienceLevel",
+              "value": "Senior"
+            }
+          ]
+        },
+        "description": "Liste publique paginée/filtrée des jobs publiés."
+      },
+      "response": [
+        {
+          "name": "200 OK",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"items\": [\n    {\n      \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9ac\",\n      \"slug\": \"backend-engineer-lyon\",\n      \"title\": \"Backend Engineer\",\n      \"company\": {\n        \"name\": \"BroWorld Tech\",\n        \"logo\": \"https://cdn.example.com/logo.png\",\n        \"sector\": \"Software\",\n        \"size\": \"50-200\"\n      },\n      \"location\": \"Lyon\",\n      \"contractType\": \"CDI\",\n      \"workMode\": \"REMOTE\",\n      \"schedule\": \"FULL_TIME\",\n      \"experienceLevel\": \"SENIOR\",\n      \"yearsExperienceMin\": 4,\n      \"yearsExperienceMax\": 8,\n      \"salary\": {\n        \"min\": 50000,\n        \"max\": 65000,\n        \"currency\": \"EUR\",\n        \"period\": \"year\"\n      },\n      \"postedAtLabel\": \"3d\",\n      \"summary\": \"Build and maintain APIs\",\n      \"matchScore\": 82,\n      \"badges\": [\"Urgent\", \"Top company\"],\n      \"tags\": [\"Symfony\", \"API\"],\n      \"missionTitle\": \"Build scalable backend\",\n      \"missionDescription\": \"Design robust microservices\",\n      \"responsibilities\": \"Code reviews, mentoring\",\n      \"profile\": \"Strong PHP/Symfony background\",\n      \"benefits\": \"Remote, meal vouchers\"\n    }\n  ],\n  \"pagination\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"totalItems\": 1,\n    \"totalPages\": 1\n  },\n  \"meta\": {\n    \"scope\": \"general\",\n    \"filters\": {\n      \"contractType\": \"CDI\",\n      \"workMode\": \"Remote\",\n      \"experienceLevel\": \"Senior\",\n      \"location\": \"lyon\",\n      \"q\": \"backend\"\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "GET /v1/recruit/general/jobs/{jobSlug}",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/v1/recruit/general/jobs/{{jobSlug}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "recruit",
+            "general",
+            "jobs",
+            "{{jobSlug}}"
+          ]
+        },
+        "description": "Détail public d'un job + jobs similaires indexés."
+      },
+      "response": [
+        {
+          "name": "200 OK",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"job\": {\n    \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9ac\",\n    \"slug\": \"backend-engineer-lyon\",\n    \"title\": \"Backend Engineer\",\n    \"company\": {\n      \"name\": \"BroWorld Tech\",\n      \"logo\": \"https://cdn.example.com/logo.png\",\n      \"sector\": \"Software\",\n      \"size\": \"50-200\"\n    },\n    \"location\": \"Lyon\",\n    \"contractType\": \"CDI\",\n    \"workMode\": \"REMOTE\",\n    \"schedule\": \"FULL_TIME\",\n    \"experienceLevel\": \"SENIOR\",\n    \"yearsExperienceMin\": 4,\n    \"yearsExperienceMax\": 8,\n    \"salary\": {\n      \"min\": 50000,\n      \"max\": 65000,\n      \"currency\": \"EUR\",\n      \"period\": \"year\"\n    },\n    \"summary\": \"Build and maintain APIs\",\n    \"matchScore\": 82,\n    \"badges\": [\"Urgent\"],\n    \"tags\": [\"Symfony\", \"API\"],\n    \"missionTitle\": \"Build scalable backend\",\n    \"missionDescription\": \"Design robust microservices\",\n    \"responsibilities\": \"Code reviews, mentoring\",\n    \"profile\": \"Strong PHP/Symfony background\",\n    \"benefits\": \"Remote, meal vouchers\"\n  },\n  \"similarJobs\": [\n    {\n      \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9ad\",\n      \"slug\": \"php-developer-paris\",\n      \"title\": \"PHP Developer\",\n      \"company\": {\n        \"name\": \"BroWorld Labs\",\n        \"logo\": \"\",\n        \"sector\": \"Software\",\n        \"size\": \"10-50\"\n      },\n      \"location\": \"Paris\",\n      \"contractType\": \"CDI\",\n      \"workMode\": \"HYBRID\",\n      \"schedule\": \"FULL_TIME\",\n      \"experienceLevel\": \"MID\",\n      \"yearsExperienceMin\": 2,\n      \"yearsExperienceMax\": 5,\n      \"salary\": {\n        \"min\": 42000,\n        \"max\": 52000,\n        \"currency\": \"EUR\",\n        \"period\": \"year\"\n      },\n      \"summary\": \"Develop robust APIs\",\n      \"matchScore\": 76,\n      \"badges\": [],\n      \"tags\": [\"PHP\"],\n      \"missionTitle\": \"Improve platform\",\n      \"missionDescription\": \"Contribute to backend roadmap\",\n      \"responsibilities\": \"Implementation, testing\",\n      \"profile\": \"2+ years experience\",\n      \"benefits\": \"Mutuelle\"\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "GET /v1/recruit/general/private/me/jobs",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/v1/recruit/general/private/me/jobs",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "recruit",
+            "general",
+            "private",
+            "me",
+            "jobs"
+          ]
+        },
+        "description": "Retourne les jobs créés + jobs postulés par l'utilisateur connecté."
+      },
+      "response": [
+        {
+          "name": "200 OK",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"createdJobs\": [\n    {\n      \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9ac\",\n      \"slug\": \"backend-engineer-lyon\",\n      \"title\": \"Backend Engineer\",\n      \"company\": \"BroWorld Tech\",\n      \"location\": \"Lyon\",\n      \"contractType\": \"CDI\",\n      \"workMode\": \"REMOTE\",\n      \"schedule\": \"FULL_TIME\",\n      \"createdAt\": \"2026-04-16T10:30:00+00:00\",\n      \"owner\": true,\n      \"apply\": false\n    }\n  ],\n  \"appliedJobs\": [\n    {\n      \"applicationId\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9ae\",\n      \"status\": \"INTERVIEW_PLANNED\",\n      \"appliedAt\": \"2026-04-15T09:15:00+00:00\",\n      \"job\": {\n        \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9af\",\n        \"slug\": \"frontend-dev-remote\",\n        \"title\": \"Frontend Developer\",\n        \"company\": \"BroWorld Studio\",\n        \"location\": \"Remote\",\n        \"contractType\": \"CDD\",\n        \"workMode\": \"REMOTE\",\n        \"schedule\": \"FULL_TIME\",\n        \"owner\": false,\n        \"apply\": true\n      }\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "GET /v1/recruit/general/private/me/resumes",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/v1/recruit/general/private/me/resumes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "recruit",
+            "general",
+            "private",
+            "me",
+            "resumes"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "200 OK",
+          "status": "OK",
+          "code": 200,
+          "body": "[\n  {\n    \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9aa\",\n    \"documentUrl\": \"https://localhost/uploads/resumes/0af6fe1514bdbce22f637d970a6e6042.pdf\",\n    \"experiences\": [{\"id\": \"...\", \"title\": \"Backend Developer\", \"description\": \"Symfony API\"}],\n    \"educations\": [],\n    \"skills\": [{\"id\": \"...\", \"title\": \"PHP\", \"description\": \"8.x\"}],\n    \"languages\": [],\n    \"certifications\": [],\n    \"projects\": [],\n    \"references\": [],\n    \"hobbies\": []\n  }\n]"
+        }
+      ]
+    },
+    {
+      "name": "GET /v1/recruit/general/applicants",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/v1/recruit/general/applicants",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "recruit",
+            "general",
+            "applicants"
+          ]
+        },
+        "description": "Liste brute des applicants du user (retour repository getArrayResult)."
+      },
+      "response": [
+        {
+          "name": "200 OK",
+          "status": "OK",
+          "code": 200,
+          "body": "[\n  {\n    \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9ab\",\n    \"coverLetter\": \"Je suis motivé pour ce poste.\",\n    \"createdAt\": \"2026-04-16T08:25:00+00:00\",\n    \"updatedAt\": \"2026-04-16T08:25:00+00:00\"\n  }\n]"
+        }
+      ]
+    },
+    {
+      "name": "GET /v1/recruit/general/private/job-applications",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/v1/recruit/general/private/job-applications?jobId={{jobId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "recruit",
+            "general",
+            "private",
+            "job-applications"
+          ],
+          "query": [
+            {
+              "key": "jobId",
+              "value": "{{jobId}}"
+            }
+          ]
+        },
+        "description": "Liste privée des candidatures d'un job (owner requis)."
+      },
+      "response": [
+        {
+          "name": "200 OK",
+          "status": "OK",
+          "code": 200,
+          "body": "[\n  {\n    \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9ae\",\n    \"status\": \"SCREENING\",\n    \"createdAt\": \"2026-04-16T08:45:00+00:00\",\n    \"applicant\": {\n      \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9ab\",\n      \"coverLetter\": \"Je suis motivé pour ce poste.\",\n      \"user\": {\n        \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9b1\",\n        \"username\": \"john.doe\",\n        \"firstName\": \"John\",\n        \"lastName\": \"Doe\",\n        \"email\": \"john@example.com\"\n      },\n      \"resume\": {\n        \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9aa\"\n      }\n    }\n  }\n]"
+        }
+      ]
+    },
+    {
+      "name": "POST /v1/recruit/general/resumes (JSON)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"experiences\": [{\"title\": \"Backend Developer\", \"description\": \"Symfony API\"}],\n  \"skills\": [{\"title\": \"PHP\", \"description\": \"8.x\"}],\n  \"languages\": [{\"title\": \"French\", \"description\": \"Native\"}]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/v1/recruit/general/resumes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "recruit",
+            "general",
+            "resumes"
+          ]
+        },
+        "description": "Crée un CV sans fichier."
+      },
+      "response": [
+        {
+          "name": "201 Created",
+          "status": "Created",
+          "code": 201,
+          "body": "{\n  \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9aa\",\n  \"documentUrl\": null\n}"
+        }
+      ]
+    },
+    {
+      "name": "POST /v1/recruit/general/resumes (multipart avec attach PDF)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "document",
+              "type": "file",
+              "src": "/path/to/cv.pdf"
+            },
+            {
+              "key": "skills",
+              "value": "[{\"title\":\"PHP\",\"description\":\"8.x\"}]",
+              "type": "text"
+            },
+            {
+              "key": "experiences",
+              "value": "[{\"title\":\"Backend Developer\",\"description\":\"Symfony API\"}]",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/v1/recruit/general/resumes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "recruit",
+            "general",
+            "resumes"
+          ]
+        },
+        "description": "Crée un CV avec attachement PDF (champ `document`)."
+      },
+      "response": [
+        {
+          "name": "201 Created",
+          "status": "Created",
+          "code": 201,
+          "body": "{\n  \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9aa\",\n  \"documentUrl\": \"https://localhost/uploads/resumes/0af6fe1514bdbce22f637d970a6e6042.pdf\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "POST /v1/recruit/general/applicants",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"resumeId\": \"{{resumeId}}\",\n  \"coverLetter\": \"Je suis motivé pour ce poste.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/v1/recruit/general/applicants",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "recruit",
+            "general",
+            "applicants"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "201 Created",
+          "status": "Created",
+          "code": 201,
+          "body": "{\n  \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9ab\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "POST /v1/recruit/general/applications",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"applicantId\": \"{{applicantId}}\",\n  \"jobId\": \"{{jobId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/v1/recruit/general/applications",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "recruit",
+            "general",
+            "applications"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "201 Created",
+          "status": "Created",
+          "code": 201,
+          "body": "{\n  \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9ae\",\n  \"status\": \"WAITING\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "PATCH /v1/recruit/general/private/applications/{applicationId}/status",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"INTERVIEW_PLANNED\",\n  \"comment\": \"Profil validé, entretien planifié.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/v1/recruit/general/private/applications/{{applicationId}}/status",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "recruit",
+            "general",
+            "private",
+            "applications",
+            "{{applicationId}}",
+            "status"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "200 OK",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"id\": \"0195f9b4-7c29-7dd2-89f6-2f7d3ef2e9ae\",\n  \"status\": \"INTERVIEW_PLANNED\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Recruit V1 - endpoints ajoutés (hors /general)",
+      "item": [
+        {
+          "name": "GET /v1/recruit/applications/{applicationSlug}/private/analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/analytics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "analytics"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /v1/recruit/applications/{applicationSlug}/applicants",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/applicants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "applicants"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicantId\": \"{{applicantId}}\",\n  \"jobId\": \"{{jobId}}\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 201,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /v1/recruit/applications/{applicationSlug}/applications",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "applications"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicantId\": \"{{applicantId}}\",\n  \"jobId\": \"{{jobId}}\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 201,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /v1/recruit/applications/{applicationSlug}/private/applications/{applicationId}/status-history",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/applications/{{applicationId}}/status-history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "applications",
+                "{{applicationId}}",
+                "status-history"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /v1/recruit/applications/{applicationSlug}/private/job-applications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/job-applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "job-applications"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /v1/recruit/private/{applicationSlug}/pipeline",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/private/{{applicationSlug}}/pipeline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "private",
+                "{{applicationSlug}}",
+                "pipeline"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /v1/recruit/private/applications/{applicationId}/interviews",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/interviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "private",
+                "applications",
+                "{{applicationId}}",
+                "interviews"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicantId\": \"{{applicantId}}\",\n  \"jobId\": \"{{jobId}}\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 201,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /v1/recruit/private/interviews/{interviewId}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/private/interviews/{{interviewId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "private",
+                "interviews",
+                "{{interviewId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /v1/recruit/private/applications/{applicationId}/interviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/interviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "private",
+                "applications",
+                "{{applicationId}}",
+                "interviews"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /v1/recruit/private/interviews/{interviewId}",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/private/interviews/{{interviewId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "private",
+                "interviews",
+                "{{interviewId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startsAt\": \"2026-04-18T10:00:00+00:00\",\n  \"type\": \"VIDEO\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /v1/recruit/private/applications/{applicationId}/decision-summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/decision-summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "private",
+                "applications",
+                "{{applicationId}}",
+                "decision-summary"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /v1/recruit/applications/{applicationSlug}/jobs",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "jobs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicantId\": \"{{applicantId}}\",\n  \"jobId\": \"{{jobId}}\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 201,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /v1/recruit/applications/{applicationSlug}/jobs/{jobId}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/jobs/{{jobId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "jobs",
+                "{{jobId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /v1/recruit/applications/{applicationSlug}/jobs/{jobId}",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/jobs/{{jobId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "jobs",
+                "{{jobId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicantId\": \"{{applicantId}}\",\n  \"jobId\": \"{{jobId}}\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /v1/recruit/applications/{applicationSlug}/private/jobs/{jobId}",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/jobs/{{jobId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "jobs",
+                "{{jobId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicantId\": \"{{applicantId}}\",\n  \"jobId\": \"{{jobId}}\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /v1/recruit/applications/{applicationSlug}/private/me/jobs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/me/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "me",
+                "jobs"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /v1/recruit/applications/{applicationSlug}/private/jobs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "jobs"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /v1/recruit/applications/{applicationSlug}/private/jobs/stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/jobs/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "jobs",
+                "stats"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /v1/recruit/applications/{applicationSlug}/public/jobs/{jobSlug}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/public/jobs/{{jobSlug}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "public",
+                "jobs",
+                "{{jobSlug}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /v1/recruit/applications/{applicationSlug}/public/jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/public/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "public",
+                "jobs"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /v1/recruit/applications/{applicationSlug}/private/applications/{applicationId}/offers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/applications/{{applicationId}}/offers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "applications",
+                "{{applicationId}}",
+                "offers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"sample payload (adjust according to endpoint contract)\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 201,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /v1/recruit/applications/{applicationSlug}/private/offers/{offerId}/send",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/offers/{{offerId}}/send",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "offers",
+                "{{offerId}}",
+                "send"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"sample payload (adjust according to endpoint contract)\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 201,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /v1/recruit/applications/{applicationSlug}/private/offers/{offerId}/accept",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/offers/{{offerId}}/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "offers",
+                "{{offerId}}",
+                "accept"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"sample payload (adjust according to endpoint contract)\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 201,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /v1/recruit/applications/{applicationSlug}/private/offers/{offerId}/decline",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/offers/{{offerId}}/decline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "offers",
+                "{{offerId}}",
+                "decline"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"sample payload (adjust according to endpoint contract)\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 201,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /v1/recruit/applications/{applicationSlug}/private/offers/{offerId}/withdraw",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/offers/{{offerId}}/withdraw",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "offers",
+                "{{offerId}}",
+                "withdraw"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"sample payload (adjust according to endpoint contract)\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 201,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /v1/recruit/applications/{applicationSlug}/private/me/resumes/{resumeId}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/me/resumes/{{resumeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "me",
+                "resumes",
+                "{{resumeId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /v1/recruit/applications/{applicationSlug}/private/me/resumes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/me/resumes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "me",
+                "resumes"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /v1/recruit/applications/{applicationSlug}/private/me/resumes/{resumeId}",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/me/resumes/{{resumeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "private",
+                "me",
+                "resumes",
+                "{{resumeId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicantId\": \"{{applicantId}}\",\n  \"jobId\": \"{{jobId}}\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /v1/recruit/applications/{applicationSlug}/resumes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/resumes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "recruit",
+                "applications",
+                "{{applicationSlug}}",
+                "resumes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicantId\": \"{{applicantId}}\",\n  \"jobId\": \"{{jobId}}\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample success",
+              "status": "OK",
+              "code": 201,
+              "body": "{\n  \"message\": \"Exemple de réponse. Voir contrat endpoint.\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
