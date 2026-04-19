@@ -23,16 +23,17 @@ final readonly class ListTasksBySprintController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/tasks/by-sprint', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/applications/{applicationSlug}/tasks/by-sprint/{sprint}', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'sprint', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
         summary: 'List Tasks By Sprint',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Board payload grouped by sprint with sprint.name.'),
         ],
     )]
-    public function __invoke(string $applicationSlug): JsonResponse
+    public function __invoke(string $applicationSlug, string $sprint): JsonResponse
     {
-        return new JsonResponse($this->taskBoardService->listBySprint($applicationSlug));
+        return new JsonResponse($this->taskBoardService->listBySprint($applicationSlug, $sprint));
     }
 }

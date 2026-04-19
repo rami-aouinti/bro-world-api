@@ -8,7 +8,7 @@
 - `GET /v1/crm/applications/{applicationSlug}/sprints` — filters: `q`, `status`; pagination: `page`, `limit`.
 - `GET /v1/crm/applications/{applicationSlug}/tasks` — filters: `q`, `title`, `status`, `priority`; pagination: `page`, `limit`.
 - `GET /v1/crm/applications/{applicationSlug}/task-requests` — filters: `q`, `status`; pagination: `page`, `limit`.
-- `GET /v1/crm/applications/{applicationSlug}/tasks/by-sprint` — business filters: board/sprint scope.
+- `GET /v1/crm/applications/{applicationSlug}/tasks/by-sprint/{sprint}` — business filters: board/sprint scope.
 - `GET /v1/crm/applications/{applicationSlug}/sprints/{sprint}/tasks` — business filters: sprint scope.
 - `GET /v1/crm/applications/{applicationSlug}/me/tasks` — business filters: current user tasks.
 

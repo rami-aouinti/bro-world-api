@@ -25,7 +25,7 @@ final readonly class TaskBoardService
     /**
      * @return array{items:list<array<string,mixed>>}
      */
-    public function listBySprint(string $applicationSlug): array
+    public function listBySprint(string $applicationSlug, string $sprintId): array
     {
         $crm = $this->applicationScopeResolver->resolveOrFail($applicationSlug);
 
@@ -38,7 +38,9 @@ final readonly class TaskBoardService
             ->leftJoin('task.project', 'project')
             ->leftJoin('project.company', 'company')
             ->andWhere('company.crm = :crm')
+            ->andWhere('sprint.id = :sprintId')
             ->setParameter('crm', $crm->getId(), UuidBinaryOrderedTimeType::NAME)
+            ->setParameter('sprintId', $sprintId, UuidBinaryOrderedTimeType::NAME)
             ->orderBy('sprint.createdAt', 'DESC')
             ->addOrderBy('task.createdAt', 'DESC')
             ->addOrderBy('taskRequest.createdAt', 'DESC')
