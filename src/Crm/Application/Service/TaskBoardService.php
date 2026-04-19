@@ -135,7 +135,7 @@ final readonly class TaskBoardService
                         'startDate' => $latestSprint->getStartDate()?->format(DATE_ATOM),
                         'endDate' => $latestSprint->getEndDate()?->format(DATE_ATOM),
                     ],
-                    'tasks' => array_map(fn (Task $task): array => $this->normalizeTask($task), $tasks),
+                    'tasks' => array_map(fn (Task $task): array => $this->normalizeTaskForBoard($task), $tasks),
                 ],
             ],
             'meta' => [
@@ -228,6 +228,44 @@ final readonly class TaskBoardService
             }
 
             $items[$sprintId]['tasks'][] = $this->normalizeTask($task);
+        }
+
+        return [
+            'items' => array_values($items),
+        ];
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    private function normalizeTaskForBoard(Task $task): array
+    {
+        return $this->crmApiNormalizer->normalizeTaskForBoard($task);
+    }
+
+    /**
+     * @param list<Task> $tasks
+     * @return array{items:list<array<string,mixed>>}
+     */
+    private function groupTasksBySprint(array $tasks): array
+    {
+        $items = [];
+        foreach ($tasks as $task) {
+            $sprintId = $task->getSprint()?->getId() ?? 'no-sprint';
+            if (!isset($items[$sprintId])) {
+                $items[$sprintId] = [
+                    'sprint' => [
+                        'id' => $task->getSprint()?->getId(),
+                        'name' => $task->getSprint()?->getName(),
+                        'status' => $task->getSprint()?->getStatus()->value,
+                        'startDate' => $task->getSprint()?->getStartDate()?->format(DATE_ATOM),
+                        'endDate' => $task->getSprint()?->getEndDate()?->format(DATE_ATOM),
+                    ],
+                    'tasks' => [],
+                ];
+            }
+
+            $items[$sprintId]['tasks'][] = $this->normalizeTaskForBoard($task);
         }
 
         return [
