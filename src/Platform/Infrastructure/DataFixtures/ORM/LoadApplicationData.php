@@ -147,6 +147,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'key' => 'shop-ops-center',
             'title' => 'Shop Ops Center',
             'description' => 'Pilotage des operations e-commerce quotidiennes.',
+            'photo' => 'https://bro-world.org/img/platform/general/shop.png',
             'status' => PlatformStatus::ACTIVE,
             'private' => false,
             'ownerReference' => 'User-john-root',
@@ -456,6 +457,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'key' => 'general',
             'title' => 'General',
             'description' => 'Espace general pour les modules transverses declenches par les utilisateurs.',
+            'photo' => 'https://bro-world.org/img/platform/general/learning.png',
             'status' => PlatformStatus::ACTIVE,
             'private' => false,
             'ownerReference' => 'User-john-root',
@@ -533,10 +535,32 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             ],
         ],
         [
+            'uuid' => '60000000-0000-1000-8000-000000000017',
+            'key' => 'shop-general-core',
+            'title' => 'Shop General Core',
+            'description' => 'Scope general Shop pour les endpoints transverses.',
+            'photo' => 'https://bro-world.org/img/platform/general/shop.png',
+            'status' => PlatformStatus::ACTIVE,
+            'private' => false,
+            'ownerReference' => 'User-john-root',
+            'platformReference' => 'Platform-SH-Shop Principal',
+            'appConfigurations' => [
+                [
+                    'uuid' => '61000000-0000-1000-8000-000000000017',
+                    'key' => 'application.shop.general',
+                    'value' => [
+                        'enabled' => true,
+                    ],
+                ],
+            ],
+            'plugins' => [],
+        ],
+        [
             'uuid' => '60000000-0000-1000-8000-000000000014',
             'key' => 'crm-general-core',
             'title' => 'CRM General Core',
             'description' => 'Scope general CRM pour les endpoints transverses.',
+            'photo' => 'https://bro-world.org/img/platform/general/crm.png',
             'status' => PlatformStatus::ACTIVE,
             'private' => false,
             'ownerReference' => 'User-john-root',
@@ -557,6 +581,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'key' => 'school-general-core',
             'title' => 'School General Core',
             'description' => 'Scope general School pour les endpoints transverses.',
+            'photo' => 'https://bro-world.org/img/platform/general/learning.png',
             'status' => PlatformStatus::ACTIVE,
             'private' => false,
             'ownerReference' => 'User-john-root',
@@ -577,6 +602,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'key' => 'recruit-general-core',
             'title' => 'Recruit General Core',
             'description' => 'Scope general Recruit pour les endpoints transverses.',
+            'photo' => 'https://bro-world.org/img/platform/general/job.png',
             'status' => PlatformStatus::ACTIVE,
             'private' => false,
             'ownerReference' => 'User-john-root',
@@ -614,6 +640,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
         'crm-general-core' => '60000000-0000-1000-8000-000000000014',
         'school-general-core' => '60000000-0000-1000-8000-000000000015',
         'recruit-general-core' => '60000000-0000-1000-8000-000000000016',
+        'shop-general-core' => '60000000-0000-1000-8000-000000000017',
     ];
 
     /**
@@ -634,6 +661,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                 ->setPlatform($platform)
                 ->setTitle($item['title'])
                 ->setDescription($item['description'])
+                ->setPhoto($item['photo'] ?? '')
                 ->setStatus($item['status'])
                 ->setPrivate($item['private']);
 
