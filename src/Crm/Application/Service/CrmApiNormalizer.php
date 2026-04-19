@@ -26,9 +26,27 @@ final readonly class CrmApiNormalizer
      */
     public function normalizeTask(Task $task): array
     {
+        return $this->normalizeTaskWithOptions($task, true);
+    }
+
+    /**
+     * Board-safe variant that skips blog hydration.
+     *
+     * @return array<string,mixed>
+     */
+    public function normalizeTaskForBoard(Task $task): array
+    {
+        return $this->normalizeTaskWithOptions($task, false);
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    private function normalizeTaskWithOptions(Task $task, bool $includeBlog): array
+    {
         $assignees = $this->mapUserAssignees($task->getAssignees());
 
-        return [
+        $payload = [
             'id' => $task->getId(),
             'title' => $task->getTitle(),
             'status' => $task->getStatus()->value,
@@ -44,14 +62,27 @@ final readonly class CrmApiNormalizer
             'attachments' => $task->getAttachments(),
             'assignees' => $assignees,
             'subTasks' => array_map(
-                static fn (Task $subTask): array => [
-                    'id' => $subTask->getId(),
-                    'title' => $subTask->getTitle(),
-                    'status' => $subTask->getStatus()->value,
-                    'priority' => $subTask->getPriority()->value,
-                    'parentTaskId' => $subTask->getParentTask()?->getId(),
-                    'projectId' => $subTask->getProject()?->getId(),
-                ],
+                function (Task $subTask): array {
+                    $subTaskAssignees = $this->mapUserAssignees($subTask->getAssignees());
+
+                    return [
+                        'id' => $subTask->getId(),
+                        'title' => $subTask->getTitle(),
+                        'description' => $subTask->getDescription(),
+                        'status' => $subTask->getStatus()->value,
+                        'priority' => $subTask->getPriority()->value,
+                        'parentTaskId' => $subTask->getParentTask()?->getId(),
+                        'projectId' => $subTask->getProject()?->getId(),
+                        'projectName' => $subTask->getProject()?->getName(),
+                        'sprintId' => $subTask->getSprint()?->getId(),
+                        'sprintName' => $subTask->getSprint()?->getName(),
+                        'dueAt' => $this->normalizeDate($subTask->getDueAt()),
+                        'estimatedHours' => $subTask->getEstimatedHours(),
+                        'updatedAt' => $this->normalizeDate($subTask->getUpdatedAt()),
+                        'attachments' => $subTask->getAttachments(),
+                        'assignees' => $subTaskAssignees,
+                    ];
+                },
                 $task->getSubTasks()->toArray()
             ),
             'children' => array_map(
@@ -63,8 +94,13 @@ final readonly class CrmApiNormalizer
                 ],
                 $task->getTaskRequests()->toArray()
             ),
-            'blog' => $this->crmBlogNormalizer->normalizeBlog($task->getBlog()),
         ];
+
+        if ($includeBlog) {
+            $payload['blog'] = $this->crmBlogNormalizer->normalizeBlog($task->getBlog());
+        }
+
+        return $payload;
     }
 
     /**
