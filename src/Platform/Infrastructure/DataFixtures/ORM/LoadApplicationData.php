@@ -550,10 +550,28 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                     'key' => 'application.shop.general',
                     'value' => [
                         'enabled' => true,
+                        'context' => 'bro-shop-general',
+                        'checkoutMode' => 'hybrid',
                     ],
                 ],
             ],
-            'plugins' => [],
+            'plugins' => [
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000023',
+                    'reference' => 'Plugin-CRM-Assistant',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000023',
+                            'key' => 'plugin.chat.general',
+                            'value' => [
+                                'realTime' => true,
+                                'transport' => 'mercure',
+                                'channels' => ['shop-support', 'order-escalation'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ],
         [
             'uuid' => '60000000-0000-1000-8000-000000000014',
@@ -571,10 +589,58 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                     'key' => 'application.crm.general',
                     'value' => [
                         'enabled' => true,
+                        'context' => 'bro-crm-general',
+                        'defaultPipeline' => 'enterprise',
                     ],
                 ],
             ],
-            'plugins' => [],
+            'plugins' => [
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000024',
+                    'reference' => 'Plugin-Analytics-Booster',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000024',
+                            'key' => 'plugin.calendar.general',
+                            'value' => [
+                                'realTime' => false,
+                                'syncProvider' => 'internal',
+                                'workingDays' => ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000025',
+                    'reference' => 'Plugin-Knowledge-Base-Connector',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000025',
+                            'key' => 'plugin.blog.general',
+                            'value' => [
+                                'realTime' => true,
+                                'transport' => 'mercure',
+                                'moderation' => 'post',
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000026',
+                    'reference' => 'Plugin-CRM-Assistant',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000026',
+                            'key' => 'plugin.chat.general',
+                            'value' => [
+                                'realTime' => true,
+                                'transport' => 'mercure',
+                                'channels' => ['crm-general', 'lead-qualification'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ],
         [
             'uuid' => '60000000-0000-1000-8000-000000000015',
@@ -592,10 +658,58 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                     'key' => 'application.school.general',
                     'value' => [
                         'enabled' => true,
+                        'context' => 'bro-learning-general',
+                        'learningMode' => 'blended',
                     ],
                 ],
             ],
-            'plugins' => [],
+            'plugins' => [
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000027',
+                    'reference' => 'Plugin-Knowledge-Base-Connector',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000027',
+                            'key' => 'plugin.blog.learning',
+                            'value' => [
+                                'realTime' => false,
+                                'transport' => 'none',
+                                'editorialWorkflow' => 'teacher-review',
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000028',
+                    'reference' => 'Plugin-Analytics-Booster',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000028',
+                            'key' => 'plugin.calendar.learning',
+                            'value' => [
+                                'realTime' => true,
+                                'transport' => 'mercure',
+                                'reminderMinutesBefore' => 15,
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000029',
+                    'reference' => 'Plugin-CRM-Assistant',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000029',
+                            'key' => 'plugin.chat.learning',
+                            'value' => [
+                                'realTime' => true,
+                                'transport' => 'mercure',
+                                'channels' => ['learning-classroom', 'mentor-office-hours'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ],
         [
             'uuid' => '60000000-0000-1000-8000-000000000016',
@@ -613,10 +727,28 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                     'key' => 'application.recruit.general',
                     'value' => [
                         'enabled' => true,
+                        'context' => 'bro-job-general',
+                        'defaultLanguage' => 'fr',
                     ],
                 ],
             ],
-            'plugins' => [],
+            'plugins' => [
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000030',
+                    'reference' => 'Plugin-CRM-Assistant',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000030',
+                            'key' => 'plugin.chat.job',
+                            'value' => [
+                                'realTime' => true,
+                                'transport' => 'mercure',
+                                'channels' => ['candidate-ops', 'hiring-managers'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ],
     ];
 
