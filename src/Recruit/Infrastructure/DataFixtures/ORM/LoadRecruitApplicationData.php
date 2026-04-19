@@ -220,18 +220,23 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
     {
         $resume = (new Resume())->setOwner($owner);
         $resume
-            ->addExperience((new Experience())->setTitle('Senior Developer')->setDescription('8+ ans en développement web et API.'))
-            ->addExperience((new Experience())->setTitle('Lead Projet')->setDescription('Pilotage technique, mentoring et revue de code.'))
-            ->addEducation((new Education())->setTitle('Master Informatique')->setDescription('Spécialisation architecture logicielle.'))
-            ->addEducation((new Education())->setTitle('Certification Agile')->setDescription('Pratiques Scrum et delivery continue.'))
+            ->setInformationFullName($owner->getFirstName() . ' ' . $owner->getLastName())
+            ->setInformationEmail($owner->getEmail())
+            ->setInformationPhone($owner->getProfile()?->getPhone())
+            ->setInformationAddress($owner->getProfile()?->getLocation());
+        $resume
+            ->addExperience((new Experience())->setTitle('Senior Developer')->setDescription('8+ ans en développement web et API.')->setCompany('Bro World')->setStartDate(new \DateTimeImmutable('2018-01-01'))->setEndDate(new \DateTimeImmutable('2021-12-31')))
+            ->addExperience((new Experience())->setTitle('Lead Projet')->setDescription('Pilotage technique, mentoring et revue de code.')->setCompany('Bro World Labs')->setStartDate(new \DateTimeImmutable('2022-01-01')))
+            ->addEducation((new Education())->setTitle('Master Informatique')->setDescription('Spécialisation architecture logicielle.')->setSchool('Université de Paris')->setStartDate(new \DateTimeImmutable('2014-09-01'))->setEndDate(new \DateTimeImmutable('2016-06-30'))->setLocation('Paris'))
+            ->addEducation((new Education())->setTitle('Certification Agile')->setDescription('Pratiques Scrum et delivery continue.')->setSchool('Scrum Institute')->setStartDate(new \DateTimeImmutable('2017-01-01'))->setEndDate(new \DateTimeImmutable('2017-02-01'))->setLocation('Lyon'))
             ->addSkill((new Skill())->setTitle('PHP / Symfony')->setDescription('Conception DDD, CQRS et APIs robustes.'))
             ->addSkill((new Skill())->setTitle('TypeScript / React')->setDescription('UI complexes, tests front et accessibilité.'))
-            ->addLanguage((new Language())->setTitle('Français')->setDescription('Natif'))
-            ->addLanguage((new Language())->setTitle('Anglais')->setDescription('Professionnel'))
-            ->addCertification((new Certification())->setTitle('AWS Cloud Practitioner')->setDescription('Fondamentaux cloud et sécurité.'))
-            ->addCertification((new Certification())->setTitle('Doctrine ORM Expert')->setDescription('Optimisation des mappings et requêtes.'))
-            ->addProject((new Project())->setTitle('Plateforme RH')->setDescription('Mise en place d\'un ATS multi-tenant.'))
-            ->addProject((new Project())->setTitle('Suite API interne')->setDescription('Refonte et documentation OpenAPI.'))
+            ->addLanguage((new Language())->setTitle('Français')->setDescription('Natif')->setLevel('native'))
+            ->addLanguage((new Language())->setTitle('Anglais')->setDescription('Professionnel')->setLevel('b2'))
+            ->addCertification((new Certification())->setTitle('AWS Cloud Practitioner')->setDescription('Fondamentaux cloud et sécurité.')->setAttachments(['https://cdn.example.com/certs/aws-cloud.pdf']))
+            ->addCertification((new Certification())->setTitle('Doctrine ORM Expert')->setDescription('Optimisation des mappings et requêtes.')->setAttachments(['https://cdn.example.com/certs/doctrine-orm.pdf']))
+            ->addProject((new Project())->setTitle('Plateforme RH')->setDescription('Mise en place d\'un ATS multi-tenant.')->setHomePage('https://rh.example.com')->setAttachments(['https://cdn.example.com/projects/rh-spec.pdf']))
+            ->addProject((new Project())->setTitle('Suite API interne')->setDescription('Refonte et documentation OpenAPI.')->setHomePage('https://api.example.com')->setAttachments(['https://cdn.example.com/projects/api-docs.pdf']))
             ->addReference((new ResumeReference())->setTitle('CTO précédent')->setDescription('Référence managériale et technique.'))
             ->addReference((new ResumeReference())->setTitle('Product Owner')->setDescription('Référence orientée collaboration produit.'))
             ->addHobby((new Hobby())->setTitle('Open source')->setDescription('Contributions régulières sur des libs PHP.'))

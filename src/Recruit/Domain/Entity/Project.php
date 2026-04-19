@@ -39,6 +39,12 @@ class Project implements EntityInterface
     ])]
     private string $description = '';
 
+    #[ORM\Column(name: 'attachments', type: Types::JSON, nullable: true)]
+    private ?array $attachments = null;
+
+    #[ORM\Column(name: 'home_page', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $homePage = null;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
@@ -76,6 +82,26 @@ class Project implements EntityInterface
     public function setDescription(string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+    public function getAttachments(): ?array
+    {
+        return $this->attachments;
+    }
+    public function setAttachments(?array $attachments): self
+    {
+        $this->attachments = $attachments;
+
+        return $this;
+    }
+    public function getHomePage(): ?string
+    {
+        return $this->homePage;
+    }
+    public function setHomePage(?string $homePage): self
+    {
+        $this->homePage = $homePage;
 
         return $this;
     }

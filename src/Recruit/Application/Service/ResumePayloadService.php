@@ -13,6 +13,8 @@ use App\Recruit\Domain\Entity\Project;
 use App\Recruit\Domain\Entity\Reference;
 use App\Recruit\Domain\Entity\Resume;
 use App\Recruit\Domain\Entity\Skill;
+use App\User\Domain\Entity\User;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use JsonException;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -111,6 +113,53 @@ class ResumePayloadService
     /**
      * @param array<string, mixed> $payload
      */
+    public function applyResumeInformationForCreate(Resume $resume, array $payload, User $user): void
+    {
+        $input = $this->extractResumeInformationInput($payload);
+        $profile = $user->getProfile();
+
+        $defaultFullName = trim($user->getFirstName() . ' ' . $user->getLastName());
+        $resume->setInformationFullName($this->nullableTrimmedString($input['fullName'] ?? null) ?? ($defaultFullName !== '' ? $defaultFullName : null));
+        $resume->setInformationEmail($this->nullableTrimmedString($input['email'] ?? null) ?? $user->getEmail());
+        $resume->setInformationPhone($this->nullableTrimmedString($input['phone'] ?? null) ?? $profile?->getPhone());
+        $resume->setInformationHomepage($this->nullableTrimmedString($input['homepage'] ?? null));
+        $resume->setInformationRepoProfile($this->nullableTrimmedString($input['repo_profile'] ?? null));
+        $resume->setInformationAddress($this->nullableTrimmedString($input['adresse'] ?? null) ?? $profile?->getLocation());
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    public function applyResumeInformationForPatch(Resume $resume, array $payload): void
+    {
+        $input = $this->extractResumeInformationInput($payload);
+        if ($input === null) {
+            return;
+        }
+
+        if (array_key_exists('fullName', $input)) {
+            $resume->setInformationFullName($this->nullableTrimmedString($input['fullName']));
+        }
+        if (array_key_exists('email', $input)) {
+            $resume->setInformationEmail($this->nullableTrimmedString($input['email']));
+        }
+        if (array_key_exists('phone', $input)) {
+            $resume->setInformationPhone($this->nullableTrimmedString($input['phone']));
+        }
+        if (array_key_exists('homepage', $input)) {
+            $resume->setInformationHomepage($this->nullableTrimmedString($input['homepage']));
+        }
+        if (array_key_exists('repo_profile', $input)) {
+            $resume->setInformationRepoProfile($this->nullableTrimmedString($input['repo_profile']));
+        }
+        if (array_key_exists('adresse', $input)) {
+            $resume->setInformationAddress($this->nullableTrimmedString($input['adresse']));
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
     public function replaceResumeSections(Resume $resume, array $payload): void
     {
         foreach (self::RESUME_SECTION_FIELDS as $field) {
@@ -159,6 +208,33 @@ class ResumePayloadService
             $section = $this->newSection($field);
             $section->setTitle(trim($title));
             $section->setDescription(trim($description));
+
+            if ($field === 'languages' && $section instanceof Language) {
+                $section->setLevel($this->nullableTrimmedString($item['level'] ?? null));
+            }
+
+            if ($field === 'certifications' && $section instanceof Certification) {
+                $section->setAttachments($this->normalizeStringArray($item['attachments'] ?? null, 'attachments'));
+            }
+
+            if ($field === 'projects' && $section instanceof Project) {
+                $section->setAttachments($this->normalizeStringArray($item['attachments'] ?? null, 'attachments'));
+                $section->setHomePage($this->nullableTrimmedString($item['home_page'] ?? null));
+            }
+
+            if ($field === 'educations' && $section instanceof Education) {
+                $section->setSchool($this->nullableTrimmedString($item['school'] ?? null));
+                $section->setStartDate($this->nullableDate($item['startDate'] ?? null, 'startDate'));
+                $section->setEndDate($this->nullableDate($item['endDate'] ?? null, 'endDate'));
+                $section->setLocation($this->nullableTrimmedString($item['location'] ?? null));
+            }
+
+            if ($field === 'experiences' && $section instanceof Experience) {
+                $section->setCompany($this->nullableTrimmedString($item['company'] ?? null));
+                $section->setStartDate($this->nullableDate($item['startDate'] ?? null, 'startDate'));
+                $section->setEndDate($this->nullableDate($item['endDate'] ?? null, 'endDate'));
+            }
+
             $this->addSection($resume, $field, $section);
         }
     }
@@ -207,5 +283,90 @@ class ResumePayloadService
             'references' => $resume->addReference($section),
             'hobbies' => $resume->addHobby($section),
         };
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function nullableTrimmedString(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (!is_string($value)) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Expected a string or null value.');
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
+    }
+
+    /**
+     * @param mixed $value
+     * @return list<string>|null
+     */
+    private function normalizeStringArray(mixed $value, string $field): ?array
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (!is_array($value)) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "' . $field . '" must be an array of strings or null.');
+        }
+
+        $normalized = [];
+        foreach ($value as $item) {
+            if (!is_string($item)) {
+                throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "' . $field . '" must contain only strings.');
+            }
+
+            $trimmed = trim($item);
+            if ($trimmed !== '') {
+                $normalized[] = $trimmed;
+            }
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function nullableDate(mixed $value, string $field): ?DateTimeImmutable
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (!is_string($value) || trim($value) === '') {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "' . $field . '" must be a date string or null.');
+        }
+
+        try {
+            return new DateTimeImmutable(trim($value));
+        } catch (\Throwable) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "' . $field . '" must be a valid date string.');
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>|null
+     */
+    private function extractResumeInformationInput(array $payload): ?array
+    {
+        $input = $payload['resumeInformation'] ?? $payload['resume_infomation'] ?? null;
+        if ($input === null) {
+            return null;
+        }
+
+        if (!is_array($input)) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "resumeInformation" must be an object.');
+        }
+
+        return $input;
     }
 }

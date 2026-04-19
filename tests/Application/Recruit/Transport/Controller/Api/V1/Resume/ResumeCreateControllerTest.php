@@ -84,8 +84,11 @@ class ResumeCreateControllerTest extends WebTestCase
         $payload = JSON::decode($content, true);
         self::assertArrayHasKey('id', $payload);
         self::assertArrayHasKey('documentUrl', $payload);
+        self::assertArrayHasKey('resumeInformation', $payload);
         self::assertIsString($payload['documentUrl']);
         self::assertStringContainsString('/uploads/resumes/', $payload['documentUrl']);
+        self::assertNotEmpty($payload['resumeInformation']['fullName']);
+        self::assertNotEmpty($payload['resumeInformation']['email']);
 
         $documentPath = parse_url($payload['documentUrl'], PHP_URL_PATH);
         self::assertIsString($documentPath);
@@ -99,6 +102,7 @@ class ResumeCreateControllerTest extends WebTestCase
         $resume = $entityManager->getRepository(Resume::class)->find($payload['id']);
         self::assertInstanceOf(Resume::class, $resume);
         self::assertSame($payload['documentUrl'], $resume->getDocumentUrl());
+        self::assertSame($payload['resumeInformation']['email'], $resume->getInformationEmail());
 
         if (file_exists($absoluteDocumentPath)) {
             unlink($absoluteDocumentPath);

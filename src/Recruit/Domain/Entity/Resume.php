@@ -37,6 +37,24 @@ class Resume implements EntityInterface
     #[ORM\Column(name: 'document_url', type: 'string', length: 255, nullable: true)]
     private ?string $documentUrl = null;
 
+    #[ORM\Column(name: 'information_full_name', type: 'string', length: 255, nullable: true)]
+    private ?string $informationFullName = null;
+
+    #[ORM\Column(name: 'information_email', type: 'string', length: 255, nullable: true)]
+    private ?string $informationEmail = null;
+
+    #[ORM\Column(name: 'information_phone', type: 'string', length: 50, nullable: true)]
+    private ?string $informationPhone = null;
+
+    #[ORM\Column(name: 'information_homepage', type: 'string', length: 255, nullable: true)]
+    private ?string $informationHomepage = null;
+
+    #[ORM\Column(name: 'information_repo_profile', type: 'string', length: 255, nullable: true)]
+    private ?string $informationRepoProfile = null;
+
+    #[ORM\Column(name: 'information_address', type: 'string', length: 255, nullable: true)]
+    private ?string $informationAddress = null;
+
     /** @var Collection<int, Experience>|ArrayCollection<int, Experience> */
     #[ORM\OneToMany(targetEntity: Experience::class, mappedBy: 'resume', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection|ArrayCollection $experiences;
@@ -108,6 +126,66 @@ class Resume implements EntityInterface
     public function setDocumentUrl(?string $documentUrl): self
     {
         $this->documentUrl = $documentUrl;
+
+        return $this;
+    }
+    public function getInformationFullName(): ?string
+    {
+        return $this->informationFullName;
+    }
+    public function setInformationFullName(?string $informationFullName): self
+    {
+        $this->informationFullName = $informationFullName;
+
+        return $this;
+    }
+    public function getInformationEmail(): ?string
+    {
+        return $this->informationEmail;
+    }
+    public function setInformationEmail(?string $informationEmail): self
+    {
+        $this->informationEmail = $informationEmail;
+
+        return $this;
+    }
+    public function getInformationPhone(): ?string
+    {
+        return $this->informationPhone;
+    }
+    public function setInformationPhone(?string $informationPhone): self
+    {
+        $this->informationPhone = $informationPhone;
+
+        return $this;
+    }
+    public function getInformationHomepage(): ?string
+    {
+        return $this->informationHomepage;
+    }
+    public function setInformationHomepage(?string $informationHomepage): self
+    {
+        $this->informationHomepage = $informationHomepage;
+
+        return $this;
+    }
+    public function getInformationRepoProfile(): ?string
+    {
+        return $this->informationRepoProfile;
+    }
+    public function setInformationRepoProfile(?string $informationRepoProfile): self
+    {
+        $this->informationRepoProfile = $informationRepoProfile;
+
+        return $this;
+    }
+    public function getInformationAddress(): ?string
+    {
+        return $this->informationAddress;
+    }
+    public function setInformationAddress(?string $informationAddress): self
+    {
+        $this->informationAddress = $informationAddress;
 
         return $this;
     }

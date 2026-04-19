@@ -26,10 +26,16 @@ class MyResumePatchDeleteControllerTest extends WebTestCase
         $client = $this->getTestClient('john-root', 'password-root');
         $client->request('PATCH', self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/private/me/resumes/' . $resumeId, content: JSON::encode([
             'documentUrl' => 'https://localhost/uploads/resumes/updated.pdf',
+            'resumeInformation' => [
+                'fullName' => 'John Root Updated',
+                'phone' => '+1 555 000',
+            ],
             'experiences' => [
                 [
                     'title' => 'Staff Engineer',
                     'description' => 'Architecture API',
+                    'company' => 'Bro World',
+                    'startDate' => '2021-01-01',
                 ],
             ],
         ]));
@@ -41,6 +47,9 @@ class MyResumePatchDeleteControllerTest extends WebTestCase
 
         $payload = JSON::decode($content, true);
         self::assertSame('https://localhost/uploads/resumes/updated.pdf', $payload['documentUrl']);
+        self::assertSame('John Root Updated', $payload['resumeInformation']['fullName']);
+        self::assertSame('+1 555 000', $payload['resumeInformation']['phone']);
+        self::assertSame('Bro World', $payload['experiences'][0]['company']);
 
         self::bootKernel();
         /** @var EntityManagerInterface $entityManager */
@@ -48,6 +57,7 @@ class MyResumePatchDeleteControllerTest extends WebTestCase
         $resume = $entityManager->getRepository(Resume::class)->find($resumeId);
         self::assertInstanceOf(Resume::class, $resume);
         self::assertSame('https://localhost/uploads/resumes/updated.pdf', $resume->getDocumentUrl());
+        self::assertSame('John Root Updated', $resume->getInformationFullName());
         self::assertCount(1, $resume->getExperiences());
         self::assertSame('Staff Engineer', $resume->getExperiences()->first()->getTitle());
     }

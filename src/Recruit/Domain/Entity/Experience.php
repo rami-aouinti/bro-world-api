@@ -39,6 +39,15 @@ class Experience implements EntityInterface
     ])]
     private string $description = '';
 
+    #[ORM\Column(name: 'company', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $company = null;
+
+    #[ORM\Column(name: 'start_date', type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $startDate = null;
+
+    #[ORM\Column(name: 'end_date', type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $endDate = null;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
@@ -76,6 +85,36 @@ class Experience implements EntityInterface
     public function setDescription(string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+    public function getCompany(): ?string
+    {
+        return $this->company;
+    }
+    public function setCompany(?string $company): self
+    {
+        $this->company = $company;
+
+        return $this;
+    }
+    public function getStartDate(): ?\DateTimeImmutable
+    {
+        return $this->startDate;
+    }
+    public function setStartDate(?\DateTimeImmutable $startDate): self
+    {
+        $this->startDate = $startDate;
+
+        return $this;
+    }
+    public function getEndDate(): ?\DateTimeImmutable
+    {
+        return $this->endDate;
+    }
+    public function setEndDate(?\DateTimeImmutable $endDate): self
+    {
+        $this->endDate = $endDate;
 
         return $this;
     }

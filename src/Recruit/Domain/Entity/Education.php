@@ -39,6 +39,18 @@ class Education implements EntityInterface
     ])]
     private string $description = '';
 
+    #[ORM\Column(name: 'school', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $school = null;
+
+    #[ORM\Column(name: 'start_date', type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $startDate = null;
+
+    #[ORM\Column(name: 'end_date', type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $endDate = null;
+
+    #[ORM\Column(name: 'location', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $location = null;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
@@ -76,6 +88,46 @@ class Education implements EntityInterface
     public function setDescription(string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+    public function getSchool(): ?string
+    {
+        return $this->school;
+    }
+    public function setSchool(?string $school): self
+    {
+        $this->school = $school;
+
+        return $this;
+    }
+    public function getStartDate(): ?\DateTimeImmutable
+    {
+        return $this->startDate;
+    }
+    public function setStartDate(?\DateTimeImmutable $startDate): self
+    {
+        $this->startDate = $startDate;
+
+        return $this;
+    }
+    public function getEndDate(): ?\DateTimeImmutable
+    {
+        return $this->endDate;
+    }
+    public function setEndDate(?\DateTimeImmutable $endDate): self
+    {
+        $this->endDate = $endDate;
+
+        return $this;
+    }
+    public function getLocation(): ?string
+    {
+        return $this->location;
+    }
+    public function setLocation(?string $location): self
+    {
+        $this->location = $location;
 
         return $this;
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Recruit\Transport\Controller\Api\V1\Resume;
 
 use App\Recruit\Application\Service\ResumeDocumentUploaderService;
+use App\Recruit\Application\Service\ResumeNormalizerService;
 use App\Recruit\Application\Service\ResumePayloadService;
 use App\Recruit\Domain\Entity\Resume;
 use App\Recruit\Infrastructure\Repository\ResumeRepository;
@@ -27,6 +28,7 @@ readonly class ResumeCreateController
         private ResumeRepository $resumeRepository,
         private ResumeDocumentUploaderService $resumeDocumentUploaderService,
         private ResumePayloadService $resumePayloadService,
+        private ResumeNormalizerService $resumeNormalizerService,
     ) {
     }
 
@@ -104,6 +106,7 @@ readonly class ResumeCreateController
         $payload = $this->resumePayloadService->extractPayload($request);
 
         $resume = new Resume()->setOwner($loggedInUser);
+        $this->resumePayloadService->applyResumeInformationForCreate($resume, $payload, $loggedInUser);
 
         /** @var UploadedFile|null $document */
         $document = $request->files->get('document');
@@ -116,10 +119,7 @@ readonly class ResumeCreateController
 
         $this->resumeRepository->save($resume);
 
-        return new JsonResponse([
-            'id' => $resume->getId(),
-            'documentUrl' => $resume->getDocumentUrl(),
-        ], JsonResponse::HTTP_CREATED);
+        return new JsonResponse($this->resumeNormalizerService->normalize($resume), JsonResponse::HTTP_CREATED);
     }
 }
 

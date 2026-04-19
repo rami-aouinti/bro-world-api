@@ -51,6 +51,10 @@ class MyResumeListControllerTest extends WebTestCase
         $resume = $payload[0];
         self::assertArrayHasKey('id', $resume);
         self::assertArrayHasKey('documentUrl', $resume);
+        self::assertArrayHasKey('resumeInformation', $resume);
+        self::assertIsArray($resume['resumeInformation']);
+        self::assertArrayHasKey('fullName', $resume['resumeInformation']);
+        self::assertArrayHasKey('email', $resume['resumeInformation']);
 
         foreach (['experiences', 'educations', 'skills', 'languages', 'certifications', 'projects', 'references', 'hobbies'] as $field) {
             self::assertArrayHasKey($field, $resume);
@@ -61,5 +65,13 @@ class MyResumeListControllerTest extends WebTestCase
             self::assertArrayHasKey('title', $resume[$field][0]);
             self::assertArrayHasKey('description', $resume[$field][0]);
         }
+
+        self::assertArrayHasKey('level', $resume['languages'][0]);
+        self::assertArrayHasKey('attachments', $resume['certifications'][0]);
+        self::assertArrayHasKey('attachments', $resume['projects'][0]);
+        self::assertArrayHasKey('home_page', $resume['projects'][0]);
+        self::assertArrayHasKey('school', $resume['educations'][0]);
+        self::assertArrayHasKey('startDate', $resume['educations'][0]);
+        self::assertArrayHasKey('company', $resume['experiences'][0]);
     }
 }

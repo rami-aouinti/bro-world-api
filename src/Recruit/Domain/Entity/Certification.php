@@ -39,6 +39,9 @@ class Certification implements EntityInterface
     ])]
     private string $description = '';
 
+    #[ORM\Column(name: 'attachments', type: Types::JSON, nullable: true)]
+    private ?array $attachments = null;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
@@ -76,6 +79,16 @@ class Certification implements EntityInterface
     public function setDescription(string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+    public function getAttachments(): ?array
+    {
+        return $this->attachments;
+    }
+    public function setAttachments(?array $attachments): self
+    {
+        $this->attachments = $attachments;
 
         return $this;
     }

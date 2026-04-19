@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Recruit\Transport\Controller\Api\V1\Resume;
 
 use App\Recruit\Application\Service\ResumePayloadService;
+use App\Recruit\Application\Service\ResumeNormalizerService;
 use App\Recruit\Domain\Entity\Resume;
 use App\Recruit\Infrastructure\Repository\ResumeRepository;
 use App\User\Domain\Entity\User;
@@ -26,6 +27,7 @@ readonly class MyResumePatchController
     public function __construct(
         private ResumeRepository $resumeRepository,
         private ResumePayloadService $resumePayloadService,
+        private ResumeNormalizerService $resumeNormalizerService,
     ) {
     }
 
@@ -51,12 +53,10 @@ readonly class MyResumePatchController
         /** @var array<string, mixed> $payload */
         $payload = $request->toArray();
         $this->resumePayloadService->replaceResumeSections($resume, $payload);
+        $this->resumePayloadService->applyResumeInformationForPatch($resume, $payload);
 
         $this->resumeRepository->save($resume);
 
-        return new JsonResponse([
-            'id' => $resume->getId(),
-            'documentUrl' => $resume->getDocumentUrl(),
-        ]);
+        return new JsonResponse($this->resumeNormalizerService->normalize($resume));
     }
 }
