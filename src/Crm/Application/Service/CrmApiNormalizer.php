@@ -44,14 +44,27 @@ final readonly class CrmApiNormalizer
             'attachments' => $task->getAttachments(),
             'assignees' => $assignees,
             'subTasks' => array_map(
-                static fn (Task $subTask): array => [
-                    'id' => $subTask->getId(),
-                    'title' => $subTask->getTitle(),
-                    'status' => $subTask->getStatus()->value,
-                    'priority' => $subTask->getPriority()->value,
-                    'parentTaskId' => $subTask->getParentTask()?->getId(),
-                    'projectId' => $subTask->getProject()?->getId(),
-                ],
+                function (Task $subTask): array {
+                    $subTaskAssignees = $this->mapUserAssignees($subTask->getAssignees());
+
+                    return [
+                        'id' => $subTask->getId(),
+                        'title' => $subTask->getTitle(),
+                        'description' => $subTask->getDescription(),
+                        'status' => $subTask->getStatus()->value,
+                        'priority' => $subTask->getPriority()->value,
+                        'parentTaskId' => $subTask->getParentTask()?->getId(),
+                        'projectId' => $subTask->getProject()?->getId(),
+                        'projectName' => $subTask->getProject()?->getName(),
+                        'sprintId' => $subTask->getSprint()?->getId(),
+                        'sprintName' => $subTask->getSprint()?->getName(),
+                        'dueAt' => $this->normalizeDate($subTask->getDueAt()),
+                        'estimatedHours' => $subTask->getEstimatedHours(),
+                        'updatedAt' => $this->normalizeDate($subTask->getUpdatedAt()),
+                        'attachments' => $subTask->getAttachments(),
+                        'assignees' => $subTaskAssignees,
+                    ];
+                },
                 $task->getSubTasks()->toArray()
             ),
             'children' => array_map(
