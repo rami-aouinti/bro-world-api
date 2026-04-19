@@ -26,19 +26,19 @@ final class LoadPluginData extends Fixture implements OrderedFixtureInterface
             'uuid' => '50000000-0000-1000-8000-000000000001',
             'key' => 'CRM-Assistant',
             'pluginKey' => 'chat',
-            'name' => 'CRM Assistant',
+            'name' => 'Chat',
             'enabled' => true,
             'private' => false,
-            'description' => 'AI assistant to summarize conversations, suggest follow-ups, and improve CRM workflows.',
+            'description' => 'Messagerie collaborative pour support, entraide et conversations temps reel.',
         ],
         [
             'uuid' => '50000000-0000-1000-8000-000000000002',
             'key' => 'Analytics-Booster',
             'pluginKey' => 'calendar',
-            'name' => 'Analytics Booster',
+            'name' => 'Calendar',
             'enabled' => true,
             'private' => false,
-            'description' => 'Advanced analytics plugin with dashboards, KPIs, and custom reporting blocks.',
+            'description' => 'Calendrier partage pour planifier taches, evenements et synchronisation equipe.',
         ],
         [
             'uuid' => '50000000-0000-1000-8000-000000000003',
@@ -62,10 +62,10 @@ final class LoadPluginData extends Fixture implements OrderedFixtureInterface
             'uuid' => '50000000-0000-1000-8000-000000000005',
             'key' => 'Knowledge-Base-Connector',
             'pluginKey' => 'blog',
-            'name' => 'Knowledge Base Connector',
+            'name' => 'Blog',
             'enabled' => true,
             'private' => false,
-            'description' => 'Connector to sync articles and FAQs from external knowledge base systems.',
+            'description' => 'Publication de contenus, annonces et connaissances produit pour la communaute.',
         ],
         [
             'uuid' => '50000000-0000-1000-8000-000000000006',
@@ -81,12 +81,15 @@ final class LoadPluginData extends Fixture implements OrderedFixtureInterface
      * @var array<non-empty-string, non-empty-string>
      */
     public static array $uuids = [
-        'CRM Assistant' => '50000000-0000-1000-8000-000000000001',
-        'Analytics Booster' => '50000000-0000-1000-8000-000000000002',
+        'Chat' => '50000000-0000-1000-8000-000000000001',
+        'Calendar' => '50000000-0000-1000-8000-000000000002',
         'Private Beta Plugin' => '50000000-0000-1000-8000-000000000003',
         'Disabled Public Plugin' => '50000000-0000-1000-8000-000000000004',
-        'Knowledge Base Connector' => '50000000-0000-1000-8000-000000000005',
+        'Blog' => '50000000-0000-1000-8000-000000000005',
         'Quiz Master' => '50000000-0000-1000-8000-000000000006',
+        'CRM Assistant' => '50000000-0000-1000-8000-000000000001',
+        'Analytics Booster' => '50000000-0000-1000-8000-000000000002',
+        'Knowledge Base Connector' => '50000000-0000-1000-8000-000000000005',
     ];
 
     /**

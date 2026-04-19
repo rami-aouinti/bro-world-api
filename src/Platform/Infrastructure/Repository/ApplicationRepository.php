@@ -19,6 +19,16 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ApplicationRepository extends BaseRepository implements ApplicationRepositoryInterface
 {
+    /**
+     * @var array<int, string>
+     */
+    private const array GENERAL_APPLICATION_SLUGS = [
+        'crm-general-core',
+        'shop-general-core',
+        'recruit-general-core',
+        'school-general-core',
+    ];
+
     protected static string $entityName = Entity::class;
 
     protected static array $searchColumns = [
@@ -68,6 +78,34 @@ class ApplicationRepository extends BaseRepository implements ApplicationReposit
             ->resetDQLPart('orderBy')
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    public function findPublicGeneralApplications(): array
+    {
+        /** @var array<int, Entity> $applications */
+        $applications = $this->createQueryBuilder('application')
+            ->leftJoin('application.platform', 'platform')
+            ->leftJoin('application.applicationPlugins', 'applicationPlugin')
+            ->leftJoin('applicationPlugin.plugin', 'plugin')
+            ->leftJoin('application.configurations', 'applicationConfiguration')
+            ->leftJoin('applicationPlugin.configurations', 'pluginConfiguration')
+            ->addSelect(
+                'platform',
+                'applicationPlugin',
+                'plugin',
+                'applicationConfiguration',
+                'pluginConfiguration',
+            )
+            ->andWhere('application.private = :publicApplication')
+            ->andWhere('application.slug IN (:slugs)')
+            ->setParameter('publicApplication', false)
+            ->setParameter('slugs', self::GENERAL_APPLICATION_SLUGS)
+            ->orderBy('application.title', 'ASC')
+            ->addOrderBy('application.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $applications;
     }
 
     private function createListIdsQueryBuilder(array $filters, ?User $loggedInUser, ?array $esIds): QueryBuilder
