@@ -206,6 +206,36 @@ final readonly class TaskBoardService
     }
 
     /**
+     * @param list<Task> $tasks
+     * @return array{items:list<array<string,mixed>>}
+     */
+    private function groupTasksBySprint(array $tasks): array
+    {
+        $items = [];
+        foreach ($tasks as $task) {
+            $sprintId = $task->getSprint()?->getId() ?? 'no-sprint';
+            if (!isset($items[$sprintId])) {
+                $items[$sprintId] = [
+                    'sprint' => [
+                        'id' => $task->getSprint()?->getId(),
+                        'name' => $task->getSprint()?->getName(),
+                        'status' => $task->getSprint()?->getStatus()->value,
+                        'startDate' => $task->getSprint()?->getStartDate()?->format(DATE_ATOM),
+                        'endDate' => $task->getSprint()?->getEndDate()?->format(DATE_ATOM),
+                    ],
+                    'tasks' => [],
+                ];
+            }
+
+            $items[$sprintId]['tasks'][] = $this->normalizeTask($task);
+        }
+
+        return [
+            'items' => array_values($items),
+        ];
+    }
+
+    /**
      * @return array<string,mixed>
      */
     private function normalizeTaskForBoard(Task $task): array
