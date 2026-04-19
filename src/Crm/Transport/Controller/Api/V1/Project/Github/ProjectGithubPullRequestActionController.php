@@ -30,7 +30,6 @@ final readonly class ProjectGithubPullRequestActionController
      */
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/pull-requests/{number}/action', methods: [Request::METHOD_POST])]
     #[Route('/v1/crm/general/projects/{project}/github/pull-requests/{number}/action', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'number', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Post(

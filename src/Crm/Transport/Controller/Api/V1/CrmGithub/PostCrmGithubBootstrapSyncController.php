@@ -25,6 +25,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(Role::CRM_MANAGER->value)]
 final readonly class PostCrmGithubBootstrapSyncController
 {
+    private const string GENERAL_APPLICATION_SLUG = 'crm-general-core';
+
     public function __construct(
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmRequestHandler $crmRequestHandler,
@@ -38,7 +40,7 @@ final readonly class PostCrmGithubBootstrapSyncController
      */
     #[Route('/v1/crm/applications/{applicationSlug}/github/sync/bootstrap', methods: [Request::METHOD_POST])]
     #[Route('/v1/crm/general/github/sync/bootstrap', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
         summary: 'Queue CRM GitHub bootstrap sync',
         description: 'Synchronise les repositories et issues GitHub vers CRM selon issueTarget.'
@@ -176,15 +178,7 @@ final readonly class PostCrmGithubBootstrapSyncController
         }
 
         if ($applicationSlug === null) {
-            $resolvedApplicationSlug = $payload['applicationSlug'] ?? null;
-            if (!is_string($resolvedApplicationSlug) || trim($resolvedApplicationSlug) === '') {
-                return new JsonResponse([
-                    'message' => 'applicationSlug is required for general bootstrap sync route.',
-                    'errors' => [],
-                ], JsonResponse::HTTP_BAD_REQUEST);
-            }
-
-            $applicationSlug = trim($resolvedApplicationSlug);
+            $applicationSlug = self::GENERAL_APPLICATION_SLUG;
         }
 
         $this->scopeResolver->resolveOrFail($applicationSlug);
