@@ -49,6 +49,7 @@ final readonly class CreateTaskRequestGithubBranchController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/task-requests/{taskRequest}/github/branches', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/general/task-requests/{taskRequest}/github/branches', methods: [Request::METHOD_POST])]
     #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Parameter(
         name: 'taskRequest',
@@ -218,8 +219,9 @@ final readonly class CreateTaskRequestGithubBranchController
             ),
         ],
     )]
-    public function __invoke(string $applicationSlug, TaskRequest $taskRequest, Request $request): JsonResponse
+    public function __invoke(TaskRequest $taskRequest, Request $request, ?string $applicationSlug = null): JsonResponse
     {
+        $applicationSlug ??= (string)($taskRequest->getTask()?->getProject()?->getCompany()?->getCrm()?->getApplication()?->getSlug() ?? '');
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
         $scopedTaskRequest = $this->taskRequestRepository->findOneScopedById($taskRequest->getId(), $crm->getId());
         if ($scopedTaskRequest === null) {

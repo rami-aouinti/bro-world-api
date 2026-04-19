@@ -37,6 +37,7 @@ final readonly class PostCrmGithubBootstrapSyncController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/applications/{applicationSlug}/github/sync/bootstrap', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/general/github/sync/bootstrap', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
         summary: 'Queue CRM GitHub bootstrap sync',
@@ -167,14 +168,26 @@ final readonly class PostCrmGithubBootstrapSyncController
             ),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request, ?string $applicationSlug = null): JsonResponse
     {
-        $this->scopeResolver->resolveOrFail($applicationSlug);
-
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {
             return $payload;
         }
+
+        if ($applicationSlug === null) {
+            $resolvedApplicationSlug = $payload['applicationSlug'] ?? null;
+            if (!is_string($resolvedApplicationSlug) || trim($resolvedApplicationSlug) === '') {
+                return new JsonResponse([
+                    'message' => 'applicationSlug is required for general bootstrap sync route.',
+                    'errors' => [],
+                ], JsonResponse::HTTP_BAD_REQUEST);
+            }
+
+            $applicationSlug = trim($resolvedApplicationSlug);
+        }
+
+        $this->scopeResolver->resolveOrFail($applicationSlug);
 
         $input = $this->crmRequestHandler->mapAndValidate($payload, PostCrmGithubBootstrapSyncRequest::class);
         if ($input instanceof JsonResponse) {

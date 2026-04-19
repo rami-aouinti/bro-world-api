@@ -27,6 +27,7 @@ final readonly class GetCrmGithubSyncJobController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/github/sync/jobs/{jobId}', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/general/github/sync/jobs/{jobId}', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'jobId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
@@ -56,12 +57,14 @@ final readonly class GetCrmGithubSyncJobController
             new OA\Response(ref: '#/components/responses/NotFound404', response: JsonResponse::HTTP_NOT_FOUND),
         ],
     )]
-    public function __invoke(string $applicationSlug, string $jobId): JsonResponse
+    public function __invoke(string $jobId, ?string $applicationSlug = null): JsonResponse
     {
-        $this->scopeResolver->resolveOrFail($applicationSlug);
+        if ($applicationSlug !== null) {
+            $this->scopeResolver->resolveOrFail($applicationSlug);
+        }
 
         $job = $this->syncJobRepository->find($jobId);
-        if ($job === null || $job->getApplicationSlug() !== $applicationSlug) {
+        if ($job === null || ($applicationSlug !== null && $job->getApplicationSlug() !== $applicationSlug)) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Sync job not found for this CRM scope.');
         }
 
