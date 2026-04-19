@@ -28,4 +28,42 @@ final class CrmGithubSyncJobRepository extends BaseRepository
         protected ManagerRegistry $managerRegistry,
     ) {
     }
+
+    public function findLatestByApplicationSlug(string $applicationSlug): ?CrmGithubSyncJob
+    {
+        /** @var CrmGithubSyncJob|null $job */
+        $job = $this->createQueryBuilder('job')
+            ->andWhere('job.applicationSlug = :applicationSlug')
+            ->setParameter('applicationSlug', $applicationSlug)
+            ->orderBy('job.createdAt', 'DESC')
+            ->addOrderBy('job.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $job;
+    }
+
+    /**
+     * @return array<int, CrmGithubSyncJob>
+     */
+    public function findRecentByApplicationSlug(string $applicationSlug, int $limit = 20, ?string $status = null): array
+    {
+        $qb = $this->createQueryBuilder('job')
+            ->andWhere('job.applicationSlug = :applicationSlug')
+            ->setParameter('applicationSlug', $applicationSlug)
+            ->orderBy('job.createdAt', 'DESC')
+            ->addOrderBy('job.id', 'DESC')
+            ->setMaxResults($limit);
+
+        if ($status !== null && $status !== '') {
+            $qb->andWhere('job.status = :status')
+                ->setParameter('status', $status);
+        }
+
+        /** @var array<int, CrmGithubSyncJob> $items */
+        $items = $qb->getQuery()->getResult();
+
+        return $items;
+    }
 }
