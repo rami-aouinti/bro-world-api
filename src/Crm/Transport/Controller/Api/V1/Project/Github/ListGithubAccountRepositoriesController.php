@@ -25,6 +25,7 @@ final readonly class ListGithubAccountRepositoriesController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/account/repositories', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/general/projects/{project}/github/account/repositories', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1), example: 1)]
@@ -81,7 +82,7 @@ final readonly class ListGithubAccountRepositoriesController
             ),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project, Request $request): JsonResponse
+    public function __invoke(Project $project, Request $request): JsonResponse
     {
         return new JsonResponse($this->crmGithubService->listAccountRepositories(
             $project,

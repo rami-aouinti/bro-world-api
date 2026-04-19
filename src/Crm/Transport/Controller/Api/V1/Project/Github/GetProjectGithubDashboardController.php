@@ -25,6 +25,7 @@ final readonly class GetProjectGithubDashboardController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/dashboard', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/general/projects/{project}/github/dashboard', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
@@ -39,7 +40,7 @@ final readonly class GetProjectGithubDashboardController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project): JsonResponse
+    public function __invoke(Project $project): JsonResponse
     {
         return new JsonResponse($this->crmGithubService->getDashboard($project));
     }

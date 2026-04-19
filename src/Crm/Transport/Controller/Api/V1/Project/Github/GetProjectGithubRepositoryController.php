@@ -29,6 +29,7 @@ final readonly class GetProjectGithubRepositoryController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/repositories/{repository}', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/general/projects/{project}/github/repositories/{repository}', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'repository', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'rami-aouinti/bro-world-api')]
@@ -39,7 +40,7 @@ final readonly class GetProjectGithubRepositoryController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'GitHub API error.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project, string $repository): JsonResponse
+    public function __invoke(Project $project, string $repository): JsonResponse
     {
         return $this->withGithubApiErrors(fn (): JsonResponse => new JsonResponse(
             $this->crmGithubService->getRepository($project, $repository),

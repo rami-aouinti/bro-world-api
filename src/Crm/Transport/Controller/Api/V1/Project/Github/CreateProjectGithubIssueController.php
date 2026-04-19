@@ -32,6 +32,7 @@ final readonly class CreateProjectGithubIssueController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/issues', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/general/projects/{project}/github/issues', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Post(
@@ -102,7 +103,7 @@ final readonly class CreateProjectGithubIssueController
             ),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project, Request $request): JsonResponse
+    public function __invoke(Project $project, Request $request): JsonResponse
     {
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {

@@ -29,6 +29,7 @@ final readonly class ProjectGithubPullRequestActionController
      * @throws JsonException
      */
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/pull-requests/{number}/action', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/general/projects/{project}/github/pull-requests/{number}/action', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'number', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
@@ -44,7 +45,7 @@ final readonly class ProjectGithubPullRequestActionController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project, int $number, Request $request): JsonResponse
+    public function __invoke(Project $project, int $number, Request $request): JsonResponse
     {
         $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $repo = isset($payload['repo']) ? (string)$payload['repo'] : '';

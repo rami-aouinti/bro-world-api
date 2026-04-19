@@ -32,6 +32,7 @@ final readonly class UpdateProjectGithubIssueStateController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/issues/{number}', methods: [Request::METHOD_PATCH])]
+    #[Route('/v1/crm/general/projects/{project}/github/issues/{number}', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'number', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 42)]
@@ -52,7 +53,7 @@ final readonly class UpdateProjectGithubIssueStateController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'GitHub API error.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project, int $number, Request $request): JsonResponse
+    public function __invoke(Project $project, int $number, Request $request): JsonResponse
     {
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {

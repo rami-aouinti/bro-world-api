@@ -29,6 +29,7 @@ final readonly class ListProjectGithubProjectsController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/projects', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/general/projects/{project}/github/projects', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'repo', in: 'query', required: true, schema: new OA\Schema(type: 'string'), example: 'rami-aouinti/bro-world-api')]
@@ -80,7 +81,7 @@ final readonly class ListProjectGithubProjectsController
             ),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project, Request $request): JsonResponse
+    public function __invoke(Project $project, Request $request): JsonResponse
     {
         return $this->withGithubApiErrors(fn (): JsonResponse => new JsonResponse($this->crmGithubService->listRepositoryProjects(
             $project,

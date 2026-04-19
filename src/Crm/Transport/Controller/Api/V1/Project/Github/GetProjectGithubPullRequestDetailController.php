@@ -25,6 +25,7 @@ final readonly class GetProjectGithubPullRequestDetailController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/pull-requests/{number}', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/general/projects/{project}/github/pull-requests/{number}', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'number', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
@@ -40,7 +41,7 @@ final readonly class GetProjectGithubPullRequestDetailController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project, int $number, Request $request): JsonResponse
+    public function __invoke(Project $project, int $number, Request $request): JsonResponse
     {
         return new JsonResponse($this->crmGithubService->getPullRequest($project, (string)$request->query->get('repo', ''), $number));
     }

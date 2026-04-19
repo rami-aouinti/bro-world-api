@@ -32,6 +32,7 @@ final readonly class DeleteProjectGithubBranchController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/branches/delete', methods: [Request::METHOD_DELETE])]
+    #[Route('/v1/crm/general/projects/{project}/github/branches/delete', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(
         summary: 'Delete Project GitHub Branch',
         requestBody: new OA\RequestBody(
@@ -49,7 +50,7 @@ final readonly class DeleteProjectGithubBranchController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'GitHub API error.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project, Request $request): JsonResponse
+    public function __invoke(Project $project, Request $request): JsonResponse
     {
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {

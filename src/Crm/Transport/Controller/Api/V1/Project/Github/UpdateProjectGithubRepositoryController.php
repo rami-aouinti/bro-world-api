@@ -35,6 +35,7 @@ final readonly class UpdateProjectGithubRepositoryController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/repositories/{repositoryId}', methods: [Request::METHOD_PUT])]
+    #[Route('/v1/crm/general/projects/{project}/github/repositories/{repositoryId}', methods: [Request::METHOD_PUT])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'crm-sales-hub')]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'), example: 'ebf77366-d60c-4ac4-b204-9f91a7f7ee12')]
     #[OA\Parameter(name: 'repositoryId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'), example: '03463358-2e8f-4f63-a893-69d5313b05d2')]
@@ -75,7 +76,7 @@ final readonly class UpdateProjectGithubRepositoryController
             new OA\Response(response: 422, description: 'Validation échouée.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project, string $repositoryId, Request $request): JsonResponse
+    public function __invoke(Project $project, string $repositoryId, Request $request): JsonResponse
     {
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {

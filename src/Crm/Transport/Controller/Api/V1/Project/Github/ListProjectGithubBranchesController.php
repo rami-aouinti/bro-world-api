@@ -25,6 +25,7 @@ final readonly class ListProjectGithubBranchesController
     }
 
     #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/branches', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/general/projects/{project}/github/branches', methods: [Request::METHOD_GET])]
     #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(ref: '#/components/parameters/page')]
@@ -51,7 +52,7 @@ final readonly class ListProjectGithubBranchesController
             new OA\Response(ref: '#/components/responses/ValidationFailed422', response: 422),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project, Request $request): JsonResponse
+    public function __invoke(Project $project, Request $request): JsonResponse
     {
         $repo = (string)$request->query->get('repo', '');
 
