@@ -36,7 +36,6 @@ final readonly class GoogleCalendarSyncService
     ): array {
         if (!$timeMin instanceof DateTimeImmutable && !$timeMax instanceof DateTimeImmutable) {
             $timeMin = new DateTimeImmutable('first day of january this year 00:00:00', new DateTimeZone('UTC'));
-            $timeMax = new DateTimeImmutable('last day of december this year 23:59:59', new DateTimeZone('UTC'));
         }
 
         $pulled = $this->pullGoogleEvents($user, $accessToken, $calendarId, $timeMin, $timeMax);

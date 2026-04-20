@@ -10,6 +10,8 @@ use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\General\Domain\Service\Interfaces\MetricsCounterInterface;
 use App\User\Domain\Entity\User;
+use DateTimeImmutable;
+use DateTimeZone;
 use JsonException;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
@@ -46,6 +48,21 @@ final readonly class EventListService
     public function getByUser(User $user, array $filters = [], int $page = 1, int $limit = 20): array
     {
         return $this->getList('user', $filters, $page, $limit, $user, null);
+    }
+
+    /**
+     * @param array<string, string> $filters
+     *
+     * @return array<string, mixed>
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     */
+    public function getByUserForCurrentYear(User $user, array $filters = [], int $page = 1, int $limit = 20): array
+    {
+        $yearStart = new DateTimeImmutable('first day of january this year 00:00:00', new DateTimeZone('UTC'));
+        $yearEnd = new DateTimeImmutable('last day of december this year 23:59:59', new DateTimeZone('UTC'));
+
+        return $this->getList('user', $filters, $page, $limit, $user, null, $yearStart, $yearEnd);
     }
 
     /**
@@ -92,7 +109,16 @@ final readonly class EventListService
      * @throws InvalidArgumentException
      * @throws JsonException
      */
-    private function getList(string $accessContext, array $filters, int $page, int $limit, ?User $user, ?string $applicationSlug): array
+    private function getList(
+        string $accessContext,
+        array $filters,
+        int $page,
+        int $limit,
+        ?User $user,
+        ?string $applicationSlug,
+        ?DateTimeImmutable $startAtFrom = null,
+        ?DateTimeImmutable $startAtTo = null,
+    ): array
     {
         $page = max(1, $page);
         $limit = max(1, min(100, $limit));
@@ -110,6 +136,8 @@ final readonly class EventListService
             'page' => $page,
             'limit' => $limit,
             'filters' => $filters,
+            'startAtFrom' => $startAtFrom?->format(DATE_ATOM),
+            'startAtTo' => $startAtTo?->format(DATE_ATOM),
         ];
 
         $cacheKey = $user !== null
@@ -117,7 +145,7 @@ final readonly class EventListService
             : 'event_list_' . md5((string)json_encode($cachePayload, JSON_THROW_ON_ERROR));
 
         /** @var array<string, mixed> $result */
-        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($accessContext, $user, $applicationSlug, $filters, $page, $limit): array {
+        $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($accessContext, $user, $applicationSlug, $filters, $page, $limit, $startAtFrom, $startAtTo): array {
             $item->expiresAfter(120);
             if ($user !== null && method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->tagPrivateEvents($user->getId()));
@@ -140,8 +168,8 @@ final readonly class EventListService
             }
 
             if ($accessContext === 'user') {
-                $events = $this->eventRepository->findByUser($user, $filters, $page, $limit, $esIds);
-                $totalItems = $this->eventRepository->countByUser($user, $filters, $esIds);
+                $events = $this->eventRepository->findByUser($user, $filters, $page, $limit, $esIds, $startAtFrom, $startAtTo);
+                $totalItems = $this->eventRepository->countByUser($user, $filters, $esIds, $startAtFrom, $startAtTo);
             } elseif ($accessContext === 'application_private') {
                 $events = $this->eventRepository->findByApplicationSlugAndUser($applicationSlug, $user, $filters, $page, $limit, $esIds);
                 $totalItems = $this->eventRepository->countByApplicationSlugAndUser($applicationSlug, $user, $filters, $esIds);
