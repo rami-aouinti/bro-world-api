@@ -18,6 +18,11 @@ final class CreateExamInput
     #[Assert\Uuid]
     public string $classId = '';
 
+
+    #[Assert\NotBlank]
+    #[Assert\Uuid]
+    public string $courseId = '';
+
     #[Assert\NotBlank]
     #[Assert\Uuid]
     public string $teacherId = '';

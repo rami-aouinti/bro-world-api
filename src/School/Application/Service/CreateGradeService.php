@@ -32,6 +32,7 @@ final readonly class CreateGradeService
         $grade = (new Grade())->setScore($score);
         $grade->setStudent($student);
         $grade->setExam($exam);
+        $grade->setCourse($exam->getCourse());
 
         $this->entityManager->persist($grade);
         $this->entityManager->flush();

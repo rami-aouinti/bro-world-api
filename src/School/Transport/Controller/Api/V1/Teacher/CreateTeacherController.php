@@ -43,14 +43,14 @@ final readonly class CreateTeacherController
         $payload = $request->toArray();
 
         $input = new CreateTeacherInput();
-        $input->name = (string)($payload['name'] ?? '');
+        $input->userId = is_string($payload['userId'] ?? null) ? $payload['userId'] : '';
 
         $validationResponse = $this->inputValidator->validate($input);
         if ($validationResponse instanceof JsonResponse) {
             return $validationResponse;
         }
 
-        $teacher = $this->createTeacherService->create($input->name);
+        $teacher = $this->createTeacherService->create($input->userId);
 
         return new JsonResponse([
             'id' => $teacher->getId(),
