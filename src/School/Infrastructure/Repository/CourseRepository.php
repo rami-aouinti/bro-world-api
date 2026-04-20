@@ -6,6 +6,7 @@ namespace App\School\Infrastructure\Repository;
 
 use App\General\Infrastructure\Repository\BaseRepository;
 use App\School\Domain\Entity\Course;
+use App\School\Domain\Entity\Course as Entity;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -13,8 +14,14 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 final class CourseRepository extends BaseRepository
 {
-    public function __construct(ManagerRegistry $registry)
-    {
-        parent::__construct($registry, Course::class);
+    protected static string $entityName = Entity::class;
+
+    protected static array $searchColumns = [
+        'id',
+    ];
+
+    public function __construct(
+        protected ManagerRegistry $managerRegistry
+    ) {
     }
 }

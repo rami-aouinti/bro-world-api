@@ -22,7 +22,7 @@ final readonly class ListGeneralCoursesController
     ) {
     }
 
-    #[Route('/v1/school/general/courses', methods: [Request::METHOD_GET], defaults: ['applicationSlug' => 'general'])]
+    #[Route('/v1/school/general/courses', defaults: ['applicationSlug' => 'general'], methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'Lister globalement les cours school (scope General en lecture seule)')]
     public function __invoke(Request $request): JsonResponse
     {
