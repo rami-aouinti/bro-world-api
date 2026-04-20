@@ -18,7 +18,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'School')]
-#[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class SchoolApplicationResourceListController
 {
     public function __construct(
@@ -28,12 +27,12 @@ final readonly class SchoolApplicationResourceListController
     ) {
     }
 
-    #[Route('/v1/school/applications/{applicationSlug}/{resource}', methods: [Request::METHOD_GET], requirements: [
+    #[Route('/v1/school/applications/{applicationSlug}/{resource}', requirements: [
         'resource' => 'students|teachers|exams|grades',
-    ])]
+    ], methods: [Request::METHOD_GET])]
     #[OA\Get(
-        summary: 'Lister les ressources school par application',
         description: 'Retourne une collection d\'items selon la ressource demandée (students, teachers, exams, grades) dans le scope de l\'application.',
+        summary: 'Lister les ressources school par application',
         parameters: [
             new OA\Parameter(name: 'resource', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['students', 'teachers', 'exams', 'grades'])),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, default: 1), description: 'Pagination (si supportée par la ressource).'),

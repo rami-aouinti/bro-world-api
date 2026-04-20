@@ -19,7 +19,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'School')]
-#[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class GetSchoolApplicationResourceController
 {
     public function __construct(
@@ -28,9 +27,9 @@ final readonly class GetSchoolApplicationResourceController
         private SchoolResourceViewService $resourceViewService,
     ) {
     }
-    #[Route('/v1/school/applications/{applicationSlug}/{resource}/{id}', methods: [Request::METHOD_GET], requirements: [
+    #[Route('/v1/school/applications/{applicationSlug}/{resource}/{id}', requirements: [
         'resource' => 'classes|students|teachers|exams|grades',
-    ])]
+    ], methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'Détail d\'une ressource school dans le scope application',
         parameters: [
@@ -46,7 +45,7 @@ final readonly class GetSchoolApplicationResourceController
             new OA\Response(response: 404, description: 'Ressource introuvable dans ce scope application.'),
         ],
     )]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $resource, string $id, ?User $loggedInUser): JsonResponse
     {
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);

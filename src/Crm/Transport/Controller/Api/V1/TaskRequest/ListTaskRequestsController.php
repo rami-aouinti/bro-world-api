@@ -15,7 +15,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Crm TaskRequest')]
-#[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class ListTaskRequestsController
 {
     public function __construct(

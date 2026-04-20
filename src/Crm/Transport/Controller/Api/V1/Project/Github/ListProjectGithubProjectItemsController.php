@@ -17,7 +17,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Crm Github')]
-#[IsGranted(Role::CRM_MANAGER->value)]
 final readonly class ListProjectGithubProjectItemsController
 {
     use HandlesGithubApiExceptions;

@@ -15,7 +15,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'School')]
-#[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class GetGeneralSchoolResourceController
 {
     public function __construct(
@@ -23,9 +22,9 @@ final readonly class GetGeneralSchoolResourceController
     ) {
     }
 
-    #[Route('/v1/school/general/{resource}/{id}', methods: [Request::METHOD_GET], requirements: [
+    #[Route('/v1/school/general/{resource}/{id}', requirements: [
         'resource' => 'classes|students|teachers|exams|grades',
-    ])]
+    ], methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'Détail global d\'une ressource school (scope General en lecture seule)')]
     public function __invoke(string $resource, string $id): JsonResponse
     {

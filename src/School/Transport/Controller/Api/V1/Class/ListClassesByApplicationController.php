@@ -19,7 +19,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'School')]
-#[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class ListClassesByApplicationController
 {
     public function __construct(
@@ -32,14 +31,14 @@ final readonly class ListClassesByApplicationController
      * @throws InvalidArgumentException
      * @throws JsonException
      */
-    #[Route('/v1/school/applications/{applicationSlug}/classes', methods: [Request::METHOD_GET], defaults: ['applicationSlug' => 'general'])]
-    #[Route('/v1/school/classes', methods: [Request::METHOD_GET], defaults: ['applicationSlug' => 'general'])]
+    #[Route('/v1/school/applications/{applicationSlug}/classes', defaults: ['applicationSlug' => 'general'], methods: [Request::METHOD_GET])]
+    #[Route('/v1/school/classes', defaults: ['applicationSlug' => 'general'], methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'Lister les classes d\'une application',
         parameters: [
-            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, default: 1)),
-            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 20)),
-            new OA\Parameter(name: 'q', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filtre partiel sur le nom de classe.'),
+            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1, minimum: 1)),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20, maximum: 100, minimum: 1)),
+            new OA\Parameter(name: 'q', description: 'Filtre partiel sur le nom de classe.', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
         ],
         responses: [
             new OA\Response(response: 200, description: 'Liste des classes.', content: new OA\JsonContent(example: [
@@ -64,7 +63,7 @@ final readonly class ListClassesByApplicationController
             new OA\Response(response: 422, description: 'Pagination ou filtres invalides.'),
         ],
     )]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, Request $request, ?User $loggedInUser): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);

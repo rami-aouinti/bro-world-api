@@ -21,7 +21,6 @@ use function array_map;
 
 #[AsController]
 #[OA\Tag(name: 'Crm TaskRequest')]
-#[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class ListTaskRequestGithubBranchesController
 {
     public function __construct(
