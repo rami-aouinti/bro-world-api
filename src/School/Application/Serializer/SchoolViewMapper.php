@@ -34,6 +34,7 @@ final readonly class SchoolViewMapper
             'id' => $class->getId(),
             'name' => $class->getName(),
             'schoolId' => $class->getSchool()?->getId(),
+            'schoolName' => $class->getSchool()?->getName(),
         ];
     }
 
@@ -60,6 +61,7 @@ final readonly class SchoolViewMapper
             'name' => $student->getDisplayName(),
             'userId' => $student->getUser()?->getId(),
             'classId' => $student->getSchoolClass()?->getId(),
+            'className' => $student->getSchoolClass()?->getName(),
         ];
     }
 
@@ -144,6 +146,11 @@ final readonly class SchoolViewMapper
             'id' => $grade->getId(),
             'score' => $grade->getScore(),
             'studentId' => $grade->getStudent()?->getId(),
+            'student' => [
+                'id' => $grade->getStudent()?->getId(),
+                'name' => $grade->getStudent()?->getDisplayName(),
+                'photo' => $grade->getStudent()?->getUser()?->getPhoto(),
+            ],
             'examId' => $grade->getExam()?->getId(),
             'courseId' => $grade->getCourse()?->getId(),
             'courseName' => $grade->getCourse()?->getName(),

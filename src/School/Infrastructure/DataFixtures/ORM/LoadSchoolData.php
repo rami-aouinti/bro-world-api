@@ -48,6 +48,24 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
         $terms = Term::cases();
         $applicationKeys = self::APPLICATION_KEYS_BY_PLATFORM[PlatformKey::SCHOOL->value] ?? [];
 
+        $userPool = [
+            $this->getReference('User-alice', User::class),
+            $this->getReference('User-bruno', User::class),
+            $this->getReference('User-clara', User::class),
+            $this->getReference('User-bob', User::class),
+            $this->getReference('User-charlie', User::class),
+            $this->getReference('User-diana', User::class),
+            $this->getReference('User-emma', User::class),
+            $this->getReference('User-felix', User::class),
+            $this->getReference('User-grace', User::class),
+            $this->getReference('User-john-user', User::class),
+            $this->getReference('User-john-logged', User::class),
+            $this->getReference('User-john-api', User::class),
+            $this->getReference('User-john-admin', User::class),
+            $this->getReference('User-john-root', User::class),
+        ];
+        $userCursor = 0;
+
         foreach ($this->getApplicationsByPlatform(PlatformKey::SCHOOL) as $applicationIndex => $application) {
             $appKey = $applicationKeys[$applicationIndex] ?? $application->getSlug();
 
