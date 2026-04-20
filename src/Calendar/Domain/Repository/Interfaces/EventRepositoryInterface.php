@@ -6,15 +6,30 @@ namespace App\Calendar\Domain\Repository\Interfaces;
 
 use App\Calendar\Domain\Entity\Event;
 use App\User\Domain\Entity\User;
+use DateTimeImmutable;
 
 interface EventRepositoryInterface
 {
     /**
      * @return array<int, Event>
      */
-    public function findByUser(User $user, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array;
+    public function findByUser(
+        User $user,
+        array $filters = [],
+        int $page = 1,
+        int $limit = 20,
+        ?array $esIds = null,
+        ?DateTimeImmutable $startAtFrom = null,
+        ?DateTimeImmutable $startAtTo = null,
+    ): array;
 
-    public function countByUser(User $user, array $filters = [], ?array $esIds = null): int;
+    public function countByUser(
+        User $user,
+        array $filters = [],
+        ?array $esIds = null,
+        ?DateTimeImmutable $startAtFrom = null,
+        ?DateTimeImmutable $startAtTo = null,
+    ): int;
 
     /**
      * @return array<int, Event>

@@ -36,7 +36,7 @@ final class GoogleCalendarSyncServiceTest extends TestCase
                     $query = $options['query'] ?? [];
 
                     return ($query['timeMin'] ?? null) === sprintf('%s-01-01T00:00:00+00:00', $currentYear)
-                        && ($query['timeMax'] ?? null) === sprintf('%s-12-31T23:59:59+00:00', $currentYear);
+                        && !isset($query['timeMax']);
                 }),
             )
             ->willReturn($response);

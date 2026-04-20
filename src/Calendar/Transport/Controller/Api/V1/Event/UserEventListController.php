@@ -59,6 +59,6 @@ readonly class UserEventListController
             'location' => trim((string)$request->query->get('location', '')),
         ];
 
-        return new JsonResponse($this->eventListService->getByUser($loggedInUser, $filters, $page, $limit));
+        return new JsonResponse($this->eventListService->getByUserForCurrentYear($loggedInUser, $filters, $page, $limit));
     }
 }
