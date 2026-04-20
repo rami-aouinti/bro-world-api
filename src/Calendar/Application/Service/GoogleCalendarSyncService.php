@@ -12,6 +12,7 @@ use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Throwable;
 
@@ -33,12 +34,29 @@ final readonly class GoogleCalendarSyncService
         ?DateTimeImmutable $timeMax = null,
     ): array {
         $pulled = $this->pullGoogleEvents($user, $accessToken, $calendarId, $timeMin, $timeMax);
-        $pushed = $this->pushLocalEvents($user, $accessToken, $calendarId);
 
-        return [
+        $pushed = 0;
+        $warnings = [];
+        try {
+            $pushed = $this->pushLocalEvents($user, $accessToken, $calendarId);
+        } catch (HttpExceptionInterface $exception) {
+            if (!$this->isInsufficientScopeError($exception)) {
+                throw $exception;
+            }
+
+            $warnings[] = 'Google token does not include write scope. Local events were not pushed to Google Calendar.';
+        }
+
+        $result = [
             'pulledFromGoogle' => $pulled,
             'pushedToGoogle' => $pushed,
         ];
+
+        if ($warnings !== []) {
+            $result['warnings'] = $warnings;
+        }
+
+        return $result;
     }
 
     public function pushLocalEvent(Event $event): void
@@ -243,10 +261,51 @@ final readonly class GoogleCalendarSyncService
         }
 
         if ($status < 200 || $status >= 300) {
-            throw new HttpException(JsonResponse::HTTP_BAD_GATEWAY, 'Google Calendar request failed with status ' . $status . '.');
+            $googleMessage = $this->extractGoogleErrorMessage($data);
+            $message = 'Google Calendar request failed with status ' . $status . '.';
+            if ($googleMessage !== null) {
+                $message .= ' Google says: ' . $googleMessage;
+            }
+
+            $httpStatus = match ($status) {
+                JsonResponse::HTTP_UNAUTHORIZED,
+                JsonResponse::HTTP_FORBIDDEN,
+                JsonResponse::HTTP_NOT_FOUND => $status,
+                default => JsonResponse::HTTP_BAD_GATEWAY,
+            };
+
+            throw new HttpException($httpStatus, $message);
         }
 
         return is_array($data) ? $data : [];
+    }
+
+    private function extractGoogleErrorMessage(mixed $data): ?string
+    {
+        if (!is_array($data)) {
+            return null;
+        }
+
+        $error = $data['error'] ?? null;
+        if (!is_array($error)) {
+            return null;
+        }
+
+        $message = $error['message'] ?? null;
+        if (is_string($message) && trim($message) !== '') {
+            return trim($message);
+        }
+
+        return null;
+    }
+
+    private function isInsufficientScopeError(HttpExceptionInterface $exception): bool
+    {
+        if ($exception->getStatusCode() !== JsonResponse::HTTP_FORBIDDEN) {
+            return false;
+        }
+
+        return str_contains(strtolower($exception->getMessage()), 'insufficient authentication scopes');
     }
 
     private function parseGoogleDateTime(mixed $value): ?DateTimeImmutable
