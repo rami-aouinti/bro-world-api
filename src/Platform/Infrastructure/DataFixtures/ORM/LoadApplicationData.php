@@ -552,10 +552,31 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                         'enabled' => true,
                         'context' => 'bro-shop-general',
                         'checkoutMode' => 'hybrid',
+                        'migrations' => [
+                            'shopware' => true,
+                            'shopify' => false,
+                            'oroEcommerce' => true,
+                            'sylius' => false,
+                        ],
                     ],
                 ],
             ],
             'plugins' => [
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000031',
+                    'reference' => 'Plugin-Analytics-Booster',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000031',
+                            'key' => 'plugin.calendar.general',
+                            'value' => [
+                                'realTime' => true,
+                                'transport' => 'mercure',
+                                'googleCalendarMigration' => true,
+                            ],
+                        ],
+                    ],
+                ],
                 [
                     'uuid' => '62000000-0000-1000-8000-000000000023',
                     'reference' => 'Plugin-CRM-Assistant',
@@ -567,6 +588,22 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                                 'realTime' => true,
                                 'transport' => 'mercure',
                                 'channels' => ['shop-support', 'order-escalation'],
+                                'slackSynchronization' => false,
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000032',
+                    'reference' => 'Plugin-Knowledge-Base-Connector',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000032',
+                            'key' => 'plugin.blog.general',
+                            'value' => [
+                                'realTime' => true,
+                                'transport' => 'mercure',
+                                'contentMigration' => true,
                             ],
                         ],
                     ],
@@ -591,6 +628,11 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                         'enabled' => true,
                         'context' => 'bro-crm-general',
                         'defaultPipeline' => 'enterprise',
+                        'migrations' => [
+                            'github' => true,
+                            'google' => false,
+                            'azure' => true,
+                        ],
                     ],
                 ],
             ],
@@ -606,6 +648,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                                 'realTime' => false,
                                 'syncProvider' => 'internal',
                                 'workingDays' => ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+                                'googleCalendarMigration' => true,
                             ],
                         ],
                     ],
@@ -621,6 +664,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                                 'realTime' => true,
                                 'transport' => 'mercure',
                                 'moderation' => 'post',
+                                'contentMigration' => false,
                             ],
                         ],
                     ],
@@ -636,6 +680,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                                 'realTime' => true,
                                 'transport' => 'mercure',
                                 'channels' => ['crm-general', 'lead-qualification'],
+                                'slackSynchronization' => true,
                             ],
                         ],
                     ],
@@ -660,6 +705,11 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                         'enabled' => true,
                         'context' => 'bro-learning-general',
                         'learningMode' => 'blended',
+                        'migrations' => [
+                            'github' => false,
+                            'google' => true,
+                            'azure' => false,
+                        ],
                     ],
                 ],
             ],
@@ -675,6 +725,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                                 'realTime' => false,
                                 'transport' => 'none',
                                 'editorialWorkflow' => 'teacher-review',
+                                'contentMigration' => true,
                             ],
                         ],
                     ],
@@ -690,6 +741,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                                 'realTime' => true,
                                 'transport' => 'mercure',
                                 'reminderMinutesBefore' => 15,
+                                'googleCalendarMigration' => false,
                             ],
                         ],
                     ],
@@ -705,6 +757,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                                 'realTime' => true,
                                 'transport' => 'mercure',
                                 'channels' => ['learning-classroom', 'mentor-office-hours'],
+                                'slackSynchronization' => true,
                             ],
                         ],
                     ],
@@ -729,10 +782,45 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                         'enabled' => true,
                         'context' => 'bro-job-general',
                         'defaultLanguage' => 'fr',
+                        'migrations' => [
+                            'github' => true,
+                            'google' => true,
+                            'azure' => false,
+                        ],
                     ],
                 ],
             ],
             'plugins' => [
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000033',
+                    'reference' => 'Plugin-Analytics-Booster',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000033',
+                            'key' => 'plugin.calendar.job',
+                            'value' => [
+                                'realTime' => true,
+                                'transport' => 'mercure',
+                                'googleCalendarMigration' => true,
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000034',
+                    'reference' => 'Plugin-Knowledge-Base-Connector',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000034',
+                            'key' => 'plugin.blog.job',
+                            'value' => [
+                                'realTime' => true,
+                                'transport' => 'mercure',
+                                'contentMigration' => true,
+                            ],
+                        ],
+                    ],
+                ],
                 [
                     'uuid' => '62000000-0000-1000-8000-000000000030',
                     'reference' => 'Plugin-CRM-Assistant',
@@ -744,6 +832,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                                 'realTime' => true,
                                 'transport' => 'mercure',
                                 'channels' => ['candidate-ops', 'hiring-managers'],
+                                'slackSynchronization' => false,
                             ],
                         ],
                     ],
