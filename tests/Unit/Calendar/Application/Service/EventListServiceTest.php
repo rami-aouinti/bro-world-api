@@ -88,8 +88,8 @@ final class EventListServiceTest extends TestCase
     {
         $user = $this->mockUser();
         $repo = $this->createMock(EventRepositoryInterface::class);
-        $repo->expects(self::once())->method('findByUser')->with(self::anything(), self::anything(), 1, 20, null)->willReturn([]);
-        $repo->expects(self::once())->method('countByUser')->with(self::anything(), self::anything(), null)->willReturn(0);
+        $repo->expects(self::once())->method('findByUser')->with(self::anything(), self::anything(), 1, 20, null, null, null)->willReturn([]);
+        $repo->expects(self::once())->method('countByUser')->with(self::anything(), self::anything(), null, null, null)->willReturn(0);
 
         $elastic = $this->createMock(ElasticsearchServiceInterface::class);
         $elastic->expects(self::once())->method('search')->willThrowException(new \RuntimeException('ES down'));
@@ -122,8 +122,8 @@ final class EventListServiceTest extends TestCase
     {
         $user = $this->mockUser();
         $repo = $this->createMock(EventRepositoryInterface::class);
-        $repo->expects(self::once())->method('findByUser')->with(self::anything(), self::anything(), 2, 20, null)->willReturn([]);
-        $repo->expects(self::once())->method('countByUser')->with(self::anything(), self::anything(), null)->willReturn(1450);
+        $repo->expects(self::once())->method('findByUser')->with(self::anything(), self::anything(), 2, 20, null, null, null)->willReturn([]);
+        $repo->expects(self::once())->method('countByUser')->with(self::anything(), self::anything(), null, null, null)->willReturn(1450);
 
         $elastic = $this->createMock(ElasticsearchServiceInterface::class);
         $elastic->expects(self::once())->method('search')->willReturn([
@@ -275,6 +275,45 @@ final class EventListServiceTest extends TestCase
         $service->getByUser($user, [
             'title' => 'foo',
         ], 1, 20);
+    }
+
+    public function testGetByUserForCurrentYearAppliesYearBoundaries(): void
+    {
+        $user = $this->mockUser();
+        $repo = $this->createMock(EventRepositoryInterface::class);
+        $repo->expects(self::once())
+            ->method('findByUser')
+            ->with(
+                self::anything(),
+                self::anything(),
+                1,
+                20,
+                null,
+                self::callback(static fn ($value): bool => $value instanceof \DateTimeImmutable && $value->format(DATE_ATOM) === (new \DateTimeImmutable('first day of january this year 00:00:00', new \DateTimeZone('UTC')))->format(DATE_ATOM)),
+                self::callback(static fn ($value): bool => $value instanceof \DateTimeImmutable && $value->format(DATE_ATOM) === (new \DateTimeImmutable('last day of december this year 23:59:59', new \DateTimeZone('UTC')))->format(DATE_ATOM)),
+            )
+            ->willReturn([]);
+        $repo->expects(self::once())
+            ->method('countByUser')
+            ->willReturn(0);
+
+        $elastic = $this->createMock(ElasticsearchServiceInterface::class);
+
+        $item = $this->createMock(ItemInterface::class);
+        $item->expects(self::once())->method('expiresAfter')->with(120);
+
+        $cache = $this->createMock(CacheInterface::class);
+        $cache->expects(self::once())->method('get')->willReturnCallback(static function (string $key, callable $callback) use ($item): array {
+            return $callback($item);
+        });
+
+        $cacheKeyConvention = $this->createMock(CacheKeyConventionService::class);
+        $cacheKeyConvention->expects(self::once())->method('buildPrivateEventKey')->willReturn('private_event_key');
+        $cacheKeyConvention->expects(self::never())->method('tagPrivateEvents');
+        $cacheKeyConvention->expects(self::never())->method('tagPublicEventsByApplication');
+
+        $service = new EventListService($repo, $cache, $elastic, $cacheKeyConvention, $this->createMock(LoggerInterface::class), $this->createMock(MetricsCounterInterface::class));
+        $service->getByUserForCurrentYear($user, [], 1, 20);
     }
 
     private function mockUser(): User
