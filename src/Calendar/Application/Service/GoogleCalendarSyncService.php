@@ -118,69 +118,83 @@ final readonly class GoogleCalendarSyncService
 
     private function pullGoogleEvents(User $user, string $accessToken, string $calendarId, ?DateTimeImmutable $timeMin, ?DateTimeImmutable $timeMax): int
     {
-        $query = [
+        $baseQuery = [
             'singleEvents' => 'true',
             'maxResults' => '2500',
-            'orderBy' => 'updated',
+            'orderBy' => 'startTime',
         ];
 
         if ($timeMin instanceof DateTimeImmutable) {
-            $query['timeMin'] = $timeMin->format(DATE_ATOM);
+            $baseQuery['timeMin'] = $timeMin->format(DATE_ATOM);
         }
         if ($timeMax instanceof DateTimeImmutable) {
-            $query['timeMax'] = $timeMax->format(DATE_ATOM);
-        }
-
-        $response = $this->requestGoogle(
-            'GET',
-            sprintf('/calendars/%s/events', rawurlencode($calendarId)),
-            $accessToken,
-            ['query' => $query],
-        );
-
-        $items = $response['items'] ?? [];
-        if (!is_array($items)) {
-            return 0;
+            $baseQuery['timeMax'] = $timeMax->format(DATE_ATOM);
         }
 
         $count = 0;
-        foreach ($items as $googleEvent) {
-            if (!is_array($googleEvent)) {
-                continue;
+
+        $pageToken = null;
+        do {
+            $query = $baseQuery;
+            if (is_string($pageToken) && $pageToken !== '') {
+                $query['pageToken'] = $pageToken;
             }
 
-            $googleEventId = (string)($googleEvent['id'] ?? '');
-            if ($googleEventId === '') {
-                continue;
+            $response = $this->requestGoogle(
+                'GET',
+                sprintf('/calendars/%s/events', rawurlencode($calendarId)),
+                $accessToken,
+                ['query' => $query],
+            );
+
+            $items = $response['items'] ?? [];
+            if (!is_array($items)) {
+                $items = [];
             }
 
-            $startAt = $this->parseGoogleDateTime($googleEvent['start']['dateTime'] ?? $googleEvent['start']['date'] ?? null);
-            $endAt = $this->parseGoogleDateTime($googleEvent['end']['dateTime'] ?? $googleEvent['end']['date'] ?? null);
-            if (!$startAt instanceof DateTimeImmutable || !$endAt instanceof DateTimeImmutable) {
-                continue;
+            foreach ($items as $googleEvent) {
+                if (!is_array($googleEvent)) {
+                    continue;
+                }
+
+                $googleEventId = (string)($googleEvent['id'] ?? '');
+                if ($googleEventId === '') {
+                    continue;
+                }
+
+                $startAt = $this->parseGoogleDateTime($googleEvent['start']['dateTime'] ?? $googleEvent['start']['date'] ?? null);
+                $endAt = $this->parseGoogleDateTime($googleEvent['end']['dateTime'] ?? $googleEvent['end']['date'] ?? null);
+                if (!$startAt instanceof DateTimeImmutable || !$endAt instanceof DateTimeImmutable) {
+                    continue;
+                }
+
+                $event = $this->eventRepository->findOneByGoogleEventIdAndUserId($googleEventId, $user->getId());
+                if (!$event instanceof Event) {
+                    $event = (new Event())->setUser($user);
+                }
+
+                $event
+                    ->setGoogleEventId($googleEventId)
+                    ->setGoogleCalendarId($calendarId)
+                    ->setTitle(trim((string)($googleEvent['summary'] ?? 'Untitled event')))
+                    ->setDescription((string)($googleEvent['description'] ?? ''))
+                    ->setStartAt($startAt)
+                    ->setEndAt($endAt)
+                    ->setLocation(isset($googleEvent['location']) ? (string)$googleEvent['location'] : null)
+                    ->setTimezone(isset($googleEvent['start']['timeZone']) ? (string)$googleEvent['start']['timeZone'] : null)
+                    ->setVisibility(EventVisibility::PRIVATE)
+                    ->setStatus(($googleEvent['status'] ?? '') === 'cancelled' ? EventStatus::CANCELLED : EventStatus::CONFIRMED)
+                    ->setIsCancelled(($googleEvent['status'] ?? '') === 'cancelled');
+
+                $this->eventRepository->save($event);
+                ++$count;
             }
 
-            $event = $this->eventRepository->findOneByGoogleEventIdAndUserId($googleEventId, $user->getId());
-            if (!$event instanceof Event) {
-                $event = (new Event())->setUser($user);
-            }
-
-            $event
-                ->setGoogleEventId($googleEventId)
-                ->setGoogleCalendarId($calendarId)
-                ->setTitle(trim((string)($googleEvent['summary'] ?? 'Untitled event')))
-                ->setDescription((string)($googleEvent['description'] ?? ''))
-                ->setStartAt($startAt)
-                ->setEndAt($endAt)
-                ->setLocation(isset($googleEvent['location']) ? (string)$googleEvent['location'] : null)
-                ->setTimezone(isset($googleEvent['start']['timeZone']) ? (string)$googleEvent['start']['timeZone'] : null)
-                ->setVisibility(EventVisibility::PRIVATE)
-                ->setStatus(($googleEvent['status'] ?? '') === 'cancelled' ? EventStatus::CANCELLED : EventStatus::CONFIRMED)
-                ->setIsCancelled(($googleEvent['status'] ?? '') === 'cancelled');
-
-            $this->eventRepository->save($event);
-            ++$count;
-        }
+            $nextPageToken = $response['nextPageToken'] ?? null;
+            $pageToken = is_string($nextPageToken) && trim($nextPageToken) !== ''
+                ? trim($nextPageToken)
+                : null;
+        } while ($pageToken !== null);
 
         return $count;
     }

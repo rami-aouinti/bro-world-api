@@ -36,10 +36,62 @@ final class GoogleCalendarSyncServiceTest extends TestCase
                     $query = $options['query'] ?? [];
 
                     return ($query['timeMin'] ?? null) === sprintf('%s-01-01T00:00:00+00:00', $currentYear)
+                        && ($query['orderBy'] ?? null) === 'startTime'
                         && !isset($query['timeMax']);
                 }),
             )
             ->willReturn($response);
+
+        $service = new GoogleCalendarSyncService($eventRepository, $httpClient);
+
+        $user = $this->createMock(User::class);
+        $service->syncBidirectional($user, 'token');
+    }
+
+    public function testSyncBidirectionalPullsAllGooglePagesIncludingFutureEvents(): void
+    {
+        $eventRepository = $this->createMock(EventRepository::class);
+        $eventRepository->expects(self::once())
+            ->method('findByUser')
+            ->willReturn([]);
+
+        $firstPageResponse = $this->createMock(ResponseInterface::class);
+        $firstPageResponse->expects(self::once())->method('getStatusCode')->willReturn(200);
+        $firstPageResponse->expects(self::once())->method('toArray')->with(false)->willReturn([
+            'items' => [],
+            'nextPageToken' => 'next-page',
+        ]);
+
+        $secondPageResponse = $this->createMock(ResponseInterface::class);
+        $secondPageResponse->expects(self::once())->method('getStatusCode')->willReturn(200);
+        $secondPageResponse->expects(self::once())->method('toArray')->with(false)->willReturn([
+            'items' => [],
+        ]);
+
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient->expects(self::exactly(2))
+            ->method('request')
+            ->withConsecutive(
+                [
+                    'GET',
+                    'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+                    self::callback(static function (array $options): bool {
+                        $query = $options['query'] ?? [];
+
+                        return !isset($query['pageToken']);
+                    }),
+                ],
+                [
+                    'GET',
+                    'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+                    self::callback(static function (array $options): bool {
+                        $query = $options['query'] ?? [];
+
+                        return ($query['pageToken'] ?? null) === 'next-page';
+                    }),
+                ],
+            )
+            ->willReturnOnConsecutiveCalls($firstPageResponse, $secondPageResponse);
 
         $service = new GoogleCalendarSyncService($eventRepository, $httpClient);
 
