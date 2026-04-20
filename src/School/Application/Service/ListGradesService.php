@@ -29,6 +29,7 @@ final readonly class ListGradesService
         $qb = $this->gradeRepository->createQueryBuilder('grade')
             ->innerJoin('grade.exam', 'exam')
             ->innerJoin('grade.student', 'student')
+            ->innerJoin('student.user', 'studentUser')
             ->orderBy('grade.createdAt', 'DESC')
             ->setFirstResult($queryOptions->offset())
             ->setMaxResults($queryOptions->limit);
@@ -39,14 +40,15 @@ final readonly class ListGradesService
                 ->setParameter('schoolId', $school->getId());
         }
         if ($queryOptions->filters['q'] !== '') {
-            $qb->andWhere('LOWER(exam.title) LIKE LOWER(:q) OR LOWER(student.name) LIKE LOWER(:q)')->setParameter('q', '%' . $queryOptions->filters['q'] . '%');
+            $qb->andWhere('LOWER(exam.title) LIKE LOWER(:q) OR LOWER(studentUser.firstName) LIKE LOWER(:q) OR LOWER(studentUser.lastName) LIKE LOWER(:q)')->setParameter('q', '%' . $queryOptions->filters['q'] . '%');
         }
 
         $items = $this->viewMapper->mapGradeCollection($qb->getQuery()->getResult());
 
         $countQb = $this->gradeRepository->createQueryBuilder('grade')->select('COUNT(grade.id)')
             ->innerJoin('grade.exam', 'exam')
-            ->innerJoin('grade.student', 'student');
+            ->innerJoin('grade.student', 'student')
+            ->innerJoin('student.user', 'studentUser');
         if ($school !== null) {
             $countQb->innerJoin('exam.schoolClass', 'class')
                 ->innerJoin('class.school', 'school')
@@ -54,7 +56,7 @@ final readonly class ListGradesService
                 ->setParameter('schoolId', $school->getId());
         }
         if ($queryOptions->filters['q'] !== '') {
-            $countQb->andWhere('LOWER(exam.title) LIKE LOWER(:q) OR LOWER(student.name) LIKE LOWER(:q)')->setParameter('q', '%' . $queryOptions->filters['q'] . '%');
+            $countQb->andWhere('LOWER(exam.title) LIKE LOWER(:q) OR LOWER(studentUser.firstName) LIKE LOWER(:q) OR LOWER(studentUser.lastName) LIKE LOWER(:q)')->setParameter('q', '%' . $queryOptions->filters['q'] . '%');
         }
         $totalItems = (int)$countQb->getQuery()->getSingleScalarResult();
 

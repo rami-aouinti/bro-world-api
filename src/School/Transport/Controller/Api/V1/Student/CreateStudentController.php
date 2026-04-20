@@ -37,9 +37,9 @@ final readonly class CreateStudentController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['name', 'classId'],
+                required: ['userId', 'classId'],
                 properties: [
-                    new OA\Property(property: 'name', type: 'string', example: 'Alice Martin'),
+                    new OA\Property(property: 'userId', type: 'string', format: 'uuid', example: '7600e750-f92f-4f9f-883a-26404b538f66'),
                     new OA\Property(property: 'classId', type: 'string', format: 'uuid', example: '7600e750-f92f-4f9f-883a-26404b538f66'),
                 ],
             ),
@@ -61,7 +61,7 @@ final readonly class CreateStudentController
         $payload = $request->toArray();
 
         $input = new CreateStudentInput();
-        $input->name = (string)($payload['name'] ?? '');
+        $input->userId = is_string($payload['userId'] ?? null) ? $payload['userId'] : '';
         $input->classId = is_string($payload['classId'] ?? null) ? $payload['classId'] : '';
 
         $validationResponse = $this->inputValidator->validate($input);
@@ -69,7 +69,7 @@ final readonly class CreateStudentController
             return $validationResponse;
         }
 
-        $student = $this->createStudentService->create($school, $input->name, $input->classId);
+        $student = $this->createStudentService->create($school, $input->userId, $input->classId);
 
         return new JsonResponse([
             'id' => $student->getId(),

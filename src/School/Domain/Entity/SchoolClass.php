@@ -48,12 +48,17 @@ class SchoolClass implements EntityInterface
     #[ORM\OneToMany(targetEntity: Exam::class, mappedBy: 'schoolClass')]
     private Collection|ArrayCollection $exams;
 
+    /** @var Collection<int, Course>|ArrayCollection<int, Course> */
+    #[ORM\OneToMany(targetEntity: Course::class, mappedBy: 'schoolClass')]
+    private Collection|ArrayCollection $courses;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
         $this->students = new ArrayCollection();
         $this->teachers = new ArrayCollection();
         $this->exams = new ArrayCollection();
+        $this->courses = new ArrayCollection();
     }
 
     #[Override]
@@ -103,4 +108,13 @@ class SchoolClass implements EntityInterface
     {
         return $this->exams;
     }
+
+    /**
+     * @return Collection<int, Course>|ArrayCollection<int, Course>
+     */
+    public function getCourses(): Collection|ArrayCollection
+    {
+        return $this->courses;
+    }
 }
+

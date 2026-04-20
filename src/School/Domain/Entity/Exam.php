@@ -22,6 +22,7 @@ use Ramsey\Uuid\UuidInterface;
 #[ORM\Table(name: 'school_exam')]
 #[ORM\Index(name: 'idx_school_exam_class_id', columns: ['class_id'])]
 #[ORM\Index(name: 'idx_school_exam_teacher_id', columns: ['teacher_id'])]
+#[ORM\Index(name: 'idx_school_exam_course_id', columns: ['course_id'])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class Exam implements EntityInterface
 {
@@ -35,6 +36,10 @@ class Exam implements EntityInterface
     #[ORM\ManyToOne(targetEntity: SchoolClass::class, inversedBy: 'exams')]
     #[ORM\JoinColumn(name: 'class_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?SchoolClass $schoolClass = null;
+
+    #[ORM\ManyToOne(targetEntity: Course::class, inversedBy: 'exams')]
+    #[ORM\JoinColumn(name: 'course_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    private ?Course $course = null;
 
     #[ORM\ManyToOne(targetEntity: Teacher::class)]
     #[ORM\JoinColumn(name: 'teacher_id', referencedColumnName: 'id', nullable: false, onDelete: 'RESTRICT')]
@@ -56,10 +61,15 @@ class Exam implements EntityInterface
     #[ORM\OneToMany(targetEntity: Grade::class, mappedBy: 'exam')]
     private Collection|ArrayCollection $grades;
 
+    /** @var Collection<int, LearningSessionNote>|ArrayCollection<int, LearningSessionNote> */
+    #[ORM\OneToMany(targetEntity: LearningSessionNote::class, mappedBy: 'exam')]
+    private Collection|ArrayCollection $learningSessionNotes;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
         $this->grades = new ArrayCollection();
+        $this->learningSessionNotes = new ArrayCollection();
     }
 
     #[Override]
@@ -74,6 +84,16 @@ class Exam implements EntityInterface
     public function setSchoolClass(?SchoolClass $schoolClass): self
     {
         $this->schoolClass = $schoolClass;
+
+        return $this;
+    }
+    public function getCourse(): ?Course
+    {
+        return $this->course;
+    }
+    public function setCourse(?Course $course): self
+    {
+        $this->course = $course;
 
         return $this;
     }

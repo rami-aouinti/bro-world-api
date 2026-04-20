@@ -9,7 +9,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 final class CreateStudentInput
 {
     #[Assert\NotBlank]
-    public string $name = '';
+    #[Assert\Uuid]
+    public string $userId = '';
 
     #[Assert\NotBlank]
     #[Assert\Uuid]
