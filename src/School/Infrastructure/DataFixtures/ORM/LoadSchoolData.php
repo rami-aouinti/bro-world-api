@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\School\Infrastructure\DataFixtures\ORM;
 
+use App\General\Domain\Enum\Language;
+use App\General\Domain\Enum\Locale;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PlatformKey;
 use App\School\Domain\Entity\Course;
@@ -105,9 +107,9 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
             }
             $this->addReference('SchoolClass-' . $appKey . '-1', $classes['small']);
 
-            $teacherMath = (new Teacher())->setUser($this->pickUser($userPool, $userCursor));
-            $teacherFrench = (new Teacher())->setUser($this->pickUser($userPool, $userCursor));
-            $teacherHead = (new Teacher())->setUser($this->pickUser($userPool, $userCursor));
+            $teacherMath = (new Teacher())->setUser($this->createSchoolUser($manager, $appKey . '-teacher-math', 'Teacher', 'Math'));
+            $teacherFrench = (new Teacher())->setUser($this->createSchoolUser($manager, $appKey . '-teacher-french', 'Teacher', 'French'));
+            $teacherHead = (new Teacher())->setUser($this->createSchoolUser($manager, $appKey . '-teacher-head', 'Teacher', 'Head'));
 
             $teacherMath->getClasses()->add($classes['small']);
             $teacherMath->getClasses()->add($classes['large']);
@@ -121,11 +123,6 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
             $manager->persist($teacherFrench);
             $manager->persist($teacherHead);
 
-            $teachersByLabel = [
-                'math' => $teacherMath,
-                'french' => $teacherFrench,
-                'head' => $teacherHead,
-            ];
 
             $this->addReference('Teacher-' . $appKey . '-math', $teacherMath);
             $this->addReference('Teacher-' . $appKey . '-french', $teacherFrench);
@@ -154,9 +151,16 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
                 ] as $classLabel => $count
             ) {
                 for ($i = 1; $i <= $count; $i++) {
+                    $studentUser = $this->createSchoolUser(
+                        $manager,
+                        $appKey . '-student-' . $classLabel . '-' . $i,
+                        'Student',
+                        ucfirst($classLabel) . (string)$i,
+                    );
+
                     $student = (new Student())
                         ->setSchoolClass($classes[$classLabel])
-                        ->setUser($this->pickUser($userPool, $userCursor));
+                        ->setUser($studentUser);
                     $manager->persist($student);
 
                     $students[$classLabel][] = $student;
@@ -241,13 +245,20 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
         return $applications;
     }
 
-    /**
-     * @param array<int, User> $users
-     */
-    private function pickUser(array $users, int &$cursor): User
+    private function createSchoolUser(ObjectManager $manager, string $key, string $firstName, string $lastName): User
     {
-        $user = $users[$cursor % count($users)];
-        $cursor++;
+        $username = 'school-' . strtolower($key);
+
+        $user = (new User())
+            ->setUsername($username)
+            ->setFirstName($firstName)
+            ->setLastName($lastName)
+            ->setEmail($username . '@test.com')
+            ->setLanguage(Language::EN)
+            ->setLocale(Locale::EN)
+            ->setPlainPassword('password-' . $username);
+
+        $manager->persist($user);
 
         return $user;
     }

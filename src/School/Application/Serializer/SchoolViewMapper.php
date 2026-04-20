@@ -59,7 +59,6 @@ final readonly class SchoolViewMapper
         return [
             'id' => $student->getId(),
             'name' => $student->getDisplayName(),
-            'photo' => $student->getUser()?->getPhoto(),
             'userId' => $student->getUser()?->getId(),
             'classId' => $student->getSchoolClass()?->getId(),
             'className' => $student->getSchoolClass()?->getName(),
@@ -88,7 +87,6 @@ final readonly class SchoolViewMapper
             'id' => $teacher->getId(),
             'name' => $teacher->getDisplayName(),
             'userId' => $teacher->getUser()?->getId(),
-            'photo' => $teacher->getUser()?->getPhoto(),
         ];
     }
 
@@ -154,7 +152,6 @@ final readonly class SchoolViewMapper
                 'photo' => $grade->getStudent()?->getUser()?->getPhoto(),
             ],
             'examId' => $grade->getExam()?->getId(),
-            'examName' => $grade->getExam()?->getTitle(),
             'courseId' => $grade->getCourse()?->getId(),
             'courseName' => $grade->getCourse()?->getName(),
         ];
