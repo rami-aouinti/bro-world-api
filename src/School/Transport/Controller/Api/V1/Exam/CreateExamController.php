@@ -55,6 +55,7 @@ final readonly class CreateExamController
         ],
     )]
     #[Route('/v1/school/applications/{applicationSlug}/exams', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
+    #[Route('/v1/school/general/exams', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
     #[Route('/v1/school/exams', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, ?User $loggedInUser, Request $request): JsonResponse

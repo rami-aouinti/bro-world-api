@@ -91,4 +91,24 @@ final class SchoolCrudValidationPaginationTest extends WebTestCase
         $client->request('DELETE', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes/' . $createdClassId);
         self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
     }
+
+    #[TestDox('School general scope exposes POST, PUT and DELETE endpoints for CRUD workflows.')]
+    public function testSchoolGeneralPostPutDeleteRoutes(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/general/classes', [], [], [], JSON::encode([
+            'name' => 'Classe General CRUD',
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
+        $classId = JSON::decode((string)$client->getResponse()->getContent(), true)['id'];
+
+        $client->request('PUT', self::API_URL_PREFIX . '/v1/school/general/classes/' . $classId, [], [], [], JSON::encode([
+            'name' => 'Classe General CRUD Updated',
+        ]));
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $client->request('DELETE', self::API_URL_PREFIX . '/v1/school/general/classes/' . $classId);
+        self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
+    }
 }

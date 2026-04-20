@@ -30,6 +30,7 @@ final readonly class CreateTeacherController
     }
 
     #[Route('/v1/school/applications/{applicationSlug}/teachers', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
+    #[Route('/v1/school/general/teachers', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
     #[Route('/v1/school/teachers', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/SchoolError'))]
