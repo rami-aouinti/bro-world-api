@@ -112,6 +112,38 @@ final class SchoolCrudValidationPaginationTest extends WebTestCase
         self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
     }
 
+    #[TestDox('School general scope allows course creation with HTML content.')]
+    public function testSchoolGeneralCourseCreateRoute(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('GET', self::API_URL_PREFIX . '/v1/school/general/classes?page=1&limit=1');
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $classId = JSON::decode((string)$client->getResponse()->getContent(), true)['items'][0]['id'];
+
+        $client->request('GET', self::API_URL_PREFIX . '/v1/school/general/teachers?page=1&limit=1');
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $teacherId = JSON::decode((string)$client->getResponse()->getContent(), true)['items'][0]['id'];
+
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/general/courses', [], [], [], JSON::encode([
+            'name' => 'Course General API',
+            'classId' => $classId,
+            'teacherId' => $teacherId,
+            'contentHtml' => '<h2>Lesson</h2><p>Test content</p>',
+        ]));
+        self::assertSame(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
+        $courseId = JSON::decode((string)$client->getResponse()->getContent(), true)['id'];
+
+        $client->request('GET', self::API_URL_PREFIX . '/v1/school/general/courses/' . $courseId);
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $courseDetail = JSON::decode((string)$client->getResponse()->getContent(), true);
+
+        self::assertSame('Course General API', $courseDetail['name']);
+        self::assertSame('<h2>Lesson</h2><p>Test content</p>', $courseDetail['contentHtml']);
+        self::assertArrayHasKey('attachments', $courseDetail);
+        self::assertIsArray($courseDetail['attachments']);
+    }
+
     #[TestDox('School general scope exposes courses listing and detail endpoints with rich payload.')]
     public function testSchoolGeneralCoursesListAndDetailRoutes(): void
     {

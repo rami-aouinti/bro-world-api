@@ -131,6 +131,8 @@ final readonly class SchoolViewMapper
             'schoolId' => $course->getSchoolClass()?->getSchool()?->getId(),
             'schoolName' => $course->getSchoolClass()?->getSchool()?->getName(),
             'teacherId' => $course->getTeacher()?->getId(),
+            'contentHtml' => $course->getContentHtml(),
+            'attachments' => $course->getAttachments(),
             'teacher' => [
                 'id' => $course->getTeacher()?->getId(),
                 'name' => $course->getTeacher()?->getDisplayName(),
