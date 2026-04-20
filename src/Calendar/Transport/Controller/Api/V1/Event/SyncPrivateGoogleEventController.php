@@ -32,6 +32,8 @@ use Throwable;
                 new OA\Property(property: 'calendarId', type: 'string', example: 'primary'),
                 new OA\Property(property: 'timeMin', type: 'string', format: 'date-time', example: '2026-01-01T00:00:00+00:00', nullable: true),
                 new OA\Property(property: 'timeMax', type: 'string', format: 'date-time', example: '2026-12-31T23:59:59+00:00', nullable: true),
+                new OA\Property(property: 'includeAllCalendars', type: 'boolean', example: true, nullable: true),
+                new OA\Property(property: 'includeHolidayCalendars', type: 'boolean', example: true, nullable: true),
             ]
         )
     ),
@@ -77,12 +79,17 @@ readonly class SyncPrivateGoogleEventController
             ? new DateTimeImmutable((string)$payload['timeMax'])
             : null;
 
+        $includeAllCalendars = (bool)($payload['includeAllCalendars'] ?? false);
+        $includeHolidayCalendars = (bool)($payload['includeHolidayCalendars'] ?? false);
+
         $result = $this->googleCalendarSyncService->syncBidirectional(
             user: $loggedInUser,
             accessToken: $accessToken,
             calendarId: $calendarId,
             timeMin: $timeMin,
             timeMax: $timeMax,
+            includeAllCalendars: $includeAllCalendars,
+            includeHolidays: $includeHolidayCalendars,
         );
 
         return new JsonResponse($result, JsonResponse::HTTP_OK);

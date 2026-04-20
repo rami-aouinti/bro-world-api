@@ -33,12 +33,48 @@ final readonly class GoogleCalendarSyncService
         string $calendarId = 'primary',
         ?DateTimeImmutable $timeMin = null,
         ?DateTimeImmutable $timeMax = null,
+        bool $includeAllCalendars = false,
+        bool $includeHolidays = false,
     ): array {
         if (!$timeMin instanceof DateTimeImmutable && !$timeMax instanceof DateTimeImmutable) {
             $timeMin = new DateTimeImmutable('first day of january this year 00:00:00', new DateTimeZone('UTC'));
         }
 
-        $pulled = $this->pullGoogleEvents($user, $accessToken, $calendarId, $timeMin, $timeMax);
+        $calendarsToSync = [
+            [
+                'id' => $calendarId,
+                'summary' => $calendarId,
+            ],
+        ];
+
+        if ($includeAllCalendars) {
+            $calendarsToSync = $this->listGoogleCalendars($accessToken, $includeHolidays);
+            if ($calendarsToSync === []) {
+                $calendarsToSync = [
+                    [
+                        'id' => $calendarId,
+                        'summary' => $calendarId,
+                    ],
+                ];
+            }
+        }
+
+        $pulled = 0;
+        foreach ($calendarsToSync as $calendarToSync) {
+            $currentCalendarId = (string)($calendarToSync['id'] ?? '');
+            if ($currentCalendarId === '') {
+                continue;
+            }
+
+            $pulled += $this->pullGoogleEvents(
+                $user,
+                $accessToken,
+                $currentCalendarId,
+                $timeMin,
+                $timeMax,
+                $calendarToSync,
+            );
+        }
 
         $pushed = 0;
         $warnings = [];
@@ -55,6 +91,7 @@ final readonly class GoogleCalendarSyncService
         $result = [
             'pulledFromGoogle' => $pulled,
             'pushedToGoogle' => $pushed,
+            'syncedCalendars' => array_values(array_map(static fn (array $calendar): string => (string)($calendar['id'] ?? ''), $calendarsToSync)),
         ];
 
         if ($warnings !== []) {
@@ -116,7 +153,14 @@ final readonly class GoogleCalendarSyncService
         }
     }
 
-    private function pullGoogleEvents(User $user, string $accessToken, string $calendarId, ?DateTimeImmutable $timeMin, ?DateTimeImmutable $timeMax): int
+    private function pullGoogleEvents(
+        User $user,
+        string $accessToken,
+        string $calendarId,
+        ?DateTimeImmutable $timeMin,
+        ?DateTimeImmutable $timeMax,
+        array $sourceCalendar = [],
+    ): int
     {
         $baseQuery = [
             'singleEvents' => 'true',
@@ -180,11 +224,37 @@ final readonly class GoogleCalendarSyncService
                     ->setDescription((string)($googleEvent['description'] ?? ''))
                     ->setStartAt($startAt)
                     ->setEndAt($endAt)
+                    ->setUrl(isset($googleEvent['htmlLink']) ? (string)$googleEvent['htmlLink'] : null)
                     ->setLocation(isset($googleEvent['location']) ? (string)$googleEvent['location'] : null)
                     ->setTimezone(isset($googleEvent['start']['timeZone']) ? (string)$googleEvent['start']['timeZone'] : null)
+                    ->setIsAllDay(isset($googleEvent['start']['date']) && !isset($googleEvent['start']['dateTime']))
+                    ->setColor(isset($googleEvent['colorId']) ? (string)$googleEvent['colorId'] : null)
+                    ->setOrganizerName(isset($googleEvent['organizer']['displayName']) ? (string)$googleEvent['organizer']['displayName'] : null)
+                    ->setOrganizerEmail(isset($googleEvent['organizer']['email']) ? (string)$googleEvent['organizer']['email'] : null)
+                    ->setAttendees($this->normalizeGoogleAttendees($googleEvent['attendees'] ?? null))
+                    ->setRrule($this->normalizeGoogleRecurrenceRule($googleEvent['recurrence'] ?? null))
+                    ->setReminders($this->normalizeGoogleReminders($googleEvent['reminders'] ?? null))
                     ->setVisibility(EventVisibility::PRIVATE)
                     ->setStatus(($googleEvent['status'] ?? '') === 'cancelled' ? EventStatus::CANCELLED : EventStatus::CONFIRMED)
                     ->setIsCancelled(($googleEvent['status'] ?? '') === 'cancelled');
+
+                $metadata = $event->getMetadata() ?? [];
+                $metadata['googleSync'] = [
+                    'calendarId' => $calendarId,
+                    'accessToken' => $accessToken,
+                ];
+                $metadata['googleSourceCalendar'] = [
+                    'id' => $calendarId,
+                    'summary' => (string)($sourceCalendar['summary'] ?? ''),
+                    'timeZone' => isset($sourceCalendar['timeZone']) ? (string)$sourceCalendar['timeZone'] : null,
+                    'backgroundColor' => isset($sourceCalendar['backgroundColor']) ? (string)$sourceCalendar['backgroundColor'] : null,
+                    'foregroundColor' => isset($sourceCalendar['foregroundColor']) ? (string)$sourceCalendar['foregroundColor'] : null,
+                    'primary' => (bool)($sourceCalendar['primary'] ?? false),
+                ];
+                $metadata['googleEventType'] = (string)($googleEvent['eventType'] ?? 'default');
+                $metadata['googleConferenceData'] = is_array($googleEvent['conferenceData'] ?? null) ? $googleEvent['conferenceData'] : null;
+                $metadata['googleRawEvent'] = $googleEvent;
+                $event->setMetadata($metadata);
 
                 $this->eventRepository->save($event);
                 ++$count;
@@ -197,6 +267,143 @@ final readonly class GoogleCalendarSyncService
         } while ($pageToken !== null);
 
         return $count;
+    }
+
+    /**
+     * @return list<array{id:string,summary?:string,timeZone?:string,backgroundColor?:string,foregroundColor?:string,primary?:bool}>
+     */
+    private function listGoogleCalendars(string $accessToken, bool $includeHolidays): array
+    {
+        $calendars = [];
+        $pageToken = null;
+
+        do {
+            $query = [
+                'minAccessRole' => 'reader',
+                'showHidden' => 'true',
+                'showDeleted' => 'false',
+            ];
+            if (is_string($pageToken) && $pageToken !== '') {
+                $query['pageToken'] = $pageToken;
+            }
+
+            $response = $this->requestGoogle(
+                'GET',
+                '/users/me/calendarList',
+                $accessToken,
+                ['query' => $query],
+            );
+
+            $items = $response['items'] ?? [];
+            if (is_array($items)) {
+                foreach ($items as $item) {
+                    if (!is_array($item)) {
+                        continue;
+                    }
+
+                    $id = isset($item['id']) ? trim((string)$item['id']) : '';
+                    if ($id === '') {
+                        continue;
+                    }
+
+                    if (!$includeHolidays && $this->isHolidayCalendarId($id)) {
+                        continue;
+                    }
+
+                    $calendars[] = [
+                        'id' => $id,
+                        'summary' => isset($item['summary']) ? (string)$item['summary'] : null,
+                        'timeZone' => isset($item['timeZone']) ? (string)$item['timeZone'] : null,
+                        'backgroundColor' => isset($item['backgroundColor']) ? (string)$item['backgroundColor'] : null,
+                        'foregroundColor' => isset($item['foregroundColor']) ? (string)$item['foregroundColor'] : null,
+                        'primary' => (bool)($item['primary'] ?? false),
+                    ];
+                }
+            }
+
+            $nextPageToken = $response['nextPageToken'] ?? null;
+            $pageToken = is_string($nextPageToken) && trim($nextPageToken) !== ''
+                ? trim($nextPageToken)
+                : null;
+        } while ($pageToken !== null);
+
+        return $calendars;
+    }
+
+    private function isHolidayCalendarId(string $calendarId): bool
+    {
+        $id = strtolower($calendarId);
+
+        return str_contains($id, 'holiday')
+            || str_contains($id, '#holiday@group.v.calendar.google.com')
+            || str_contains($id, 'group.v.calendar.google.com');
+    }
+
+    /**
+     * @return list<array<string, mixed>>|null
+     */
+    private function normalizeGoogleAttendees(mixed $attendees): ?array
+    {
+        if (!is_array($attendees)) {
+            return null;
+        }
+
+        $normalized = [];
+        foreach ($attendees as $attendee) {
+            if (!is_array($attendee)) {
+                continue;
+            }
+
+            $normalized[] = [
+                'email' => isset($attendee['email']) ? (string)$attendee['email'] : null,
+                'displayName' => isset($attendee['displayName']) ? (string)$attendee['displayName'] : null,
+                'responseStatus' => isset($attendee['responseStatus']) ? (string)$attendee['responseStatus'] : null,
+                'optional' => (bool)($attendee['optional'] ?? false),
+                'organizer' => (bool)($attendee['organizer'] ?? false),
+                'self' => (bool)($attendee['self'] ?? false),
+                'resource' => (bool)($attendee['resource'] ?? false),
+            ];
+        }
+
+        return $normalized === [] ? null : $normalized;
+    }
+
+    private function normalizeGoogleRecurrenceRule(mixed $recurrence): ?string
+    {
+        if (!is_array($recurrence)) {
+            return null;
+        }
+
+        $rules = array_values(array_filter(array_map(static function (mixed $item): ?string {
+            if (!is_string($item)) {
+                return null;
+            }
+
+            $rule = trim($item);
+
+            return $rule !== '' ? $rule : null;
+        }, $recurrence)));
+
+        if ($rules === []) {
+            return null;
+        }
+
+        return implode("\n", $rules);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function normalizeGoogleReminders(mixed $reminders): ?array
+    {
+        if (!is_array($reminders)) {
+            return null;
+        }
+
+        return [
+            'useDefault' => (bool)($reminders['useDefault'] ?? false),
+            'overrides' => is_array($reminders['overrides'] ?? null) ? $reminders['overrides'] : [],
+        ];
     }
 
     private function pushLocalEvents(User $user, string $accessToken, string $calendarId): int

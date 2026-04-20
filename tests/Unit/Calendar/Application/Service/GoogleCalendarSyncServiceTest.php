@@ -98,4 +98,66 @@ final class GoogleCalendarSyncServiceTest extends TestCase
         $user = $this->createMock(User::class);
         $service->syncBidirectional($user, 'token');
     }
+
+    public function testSyncBidirectionalCanSyncAllCalendarsIncludingHolidays(): void
+    {
+        $eventRepository = $this->createMock(EventRepository::class);
+        $eventRepository->expects(self::once())
+            ->method('findByUser')
+            ->willReturn([]);
+
+        $calendarListResponse = $this->createMock(ResponseInterface::class);
+        $calendarListResponse->expects(self::once())->method('getStatusCode')->willReturn(200);
+        $calendarListResponse->expects(self::once())->method('toArray')->with(false)->willReturn([
+            'items' => [
+                ['id' => 'primary', 'summary' => 'Primary'],
+                ['id' => 'en.fr#holiday@group.v.calendar.google.com', 'summary' => 'Holidays'],
+            ],
+        ]);
+
+        $primaryEventsResponse = $this->createMock(ResponseInterface::class);
+        $primaryEventsResponse->expects(self::once())->method('getStatusCode')->willReturn(200);
+        $primaryEventsResponse->expects(self::once())->method('toArray')->with(false)->willReturn(['items' => []]);
+
+        $holidayEventsResponse = $this->createMock(ResponseInterface::class);
+        $holidayEventsResponse->expects(self::once())->method('getStatusCode')->willReturn(200);
+        $holidayEventsResponse->expects(self::once())->method('toArray')->with(false)->willReturn(['items' => []]);
+
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient->expects(self::exactly(3))
+            ->method('request')
+            ->withConsecutive(
+                [
+                    'GET',
+                    'https://www.googleapis.com/calendar/v3/users/me/calendarList',
+                    self::anything(),
+                ],
+                [
+                    'GET',
+                    'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+                    self::anything(),
+                ],
+                [
+                    'GET',
+                    'https://www.googleapis.com/calendar/v3/calendars/en.fr%23holiday%40group.v.calendar.google.com/events',
+                    self::anything(),
+                ],
+            )
+            ->willReturnOnConsecutiveCalls($calendarListResponse, $primaryEventsResponse, $holidayEventsResponse);
+
+        $service = new GoogleCalendarSyncService($eventRepository, $httpClient);
+
+        $user = $this->createMock(User::class);
+        $result = $service->syncBidirectional(
+            $user,
+            'token',
+            includeAllCalendars: true,
+            includeHolidays: true,
+        );
+
+        self::assertSame([
+            'primary',
+            'en.fr#holiday@group.v.calendar.google.com',
+        ], $result['syncedCalendars']);
+    }
 }
