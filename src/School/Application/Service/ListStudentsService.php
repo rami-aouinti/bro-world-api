@@ -7,6 +7,8 @@ namespace App\School\Application\Service;
 use App\School\Application\Serializer\SchoolViewMapper;
 use App\School\Domain\Entity\School;
 use App\School\Infrastructure\Repository\StudentRepository;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Symfony\Component\HttpFoundation\Request;
 
 final readonly class ListStudentsService
@@ -20,7 +22,11 @@ final readonly class ListStudentsService
     }
 
     /**
+     * @param Request $request
+     * @param School|null $school
      * @return array<string,mixed>
+     * @throws NoResultException
+     * @throws NonUniqueResultException
      */
     public function list(Request $request, ?School $school = null): array
     {

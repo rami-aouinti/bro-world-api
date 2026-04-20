@@ -17,8 +17,8 @@ use Ramsey\Uuid\UuidInterface;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'school_course')]
-#[ORM\Index(name: 'idx_school_course_class_id', columns: ['class_id'])]
-#[ORM\Index(name: 'idx_school_course_teacher_id', columns: ['teacher_id'])]
+#[ORM\Index(columns: ['class_id'], name: 'idx_school_course_class_id')]
+#[ORM\Index(columns: ['teacher_id'], name: 'idx_school_course_teacher_id')]
 #[ORM\UniqueConstraint(name: 'uniq_school_course_class_name', columns: ['class_id', 'name'])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class Course implements EntityInterface

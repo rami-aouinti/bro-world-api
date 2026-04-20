@@ -9,6 +9,7 @@ use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
 use App\School\Application\Projection\SchoolExamProjection;
 use App\School\Application\Serializer\SchoolViewMapper;
 use App\School\Infrastructure\Repository\ExamRepository;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -29,7 +30,11 @@ readonly class ExamListService
     }
 
     /**
+     * @param Request $request
+     * @param string|null $schoolId
      * @return array<string,mixed>
+     * @throws \JsonException
+     * @throws InvalidArgumentException
      */
     public function list(Request $request, ?string $schoolId = null): array
     {

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\School\Transport\Controller\Api\V1\General;
 
 use App\School\Application\Service\ListGradesService;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,7 +24,11 @@ final readonly class ListGeneralGradesController
     ) {
     }
 
-    #[Route('/v1/school/general/grades', methods: [Request::METHOD_GET], defaults: ['applicationSlug' => 'general'])]
+    /**
+     * @throws NonUniqueResultException
+     * @throws NoResultException
+     */
+    #[Route('/v1/school/general/grades', defaults: ['applicationSlug' => 'general'], methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'Lister globalement les notes school (scope General en lecture seule)')]
     public function __invoke(Request $request): JsonResponse
     {

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\School\Transport\Controller\Api\V1\General;
 
 use App\School\Application\Service\ListStudentsService;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,7 +24,11 @@ final readonly class ListGeneralStudentsController
     ) {
     }
 
-    #[Route('/v1/school/general/students', methods: [Request::METHOD_GET], defaults: ['applicationSlug' => 'general'])]
+    /**
+     * @throws NonUniqueResultException
+     * @throws NoResultException
+     */
+    #[Route('/v1/school/general/students', defaults: ['applicationSlug' => 'general'], methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'Lister globalement les étudiants school (scope General en lecture seule)')]
     public function __invoke(Request $request): JsonResponse
     {

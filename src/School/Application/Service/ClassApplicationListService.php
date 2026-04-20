@@ -70,6 +70,7 @@ readonly class ClassApplicationListService
             ];
             if ($school !== null) {
                 $meta['schoolId'] = $school->getId();
+                $meta['schoolName'] = $school->getName();
             }
 
             return $this->listResponseFactory->create(
