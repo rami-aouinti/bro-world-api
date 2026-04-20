@@ -53,11 +53,23 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
         return $event;
     }
 
-    public function findByUser(User $user, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array
+    public function findByUser(
+        User $user,
+        array $filters = [],
+        int $page = 1,
+        int $limit = 20,
+        ?array $esIds = null,
+        ?DateTimeImmutable $startAtFrom = null,
+        ?DateTimeImmutable $startAtTo = null,
+    ): array
     {
         $offset = max(0, ($page - 1) * $limit);
 
-        return $this->applyListFilters($this->createBaseQueryBuilder(), $filters, $esIds)
+        return $this->applyTimeWindow(
+            $this->applyListFilters($this->createBaseQueryBuilder(), $filters, $esIds),
+            $startAtFrom,
+            $startAtTo,
+        )
             ->andWhere('event.user = :user OR calendar.user = :user')
             ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
             ->orderBy('event.startAt', 'ASC')
@@ -67,9 +79,19 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
             ->getResult();
     }
 
-    public function countByUser(User $user, array $filters = [], ?array $esIds = null): int
+    public function countByUser(
+        User $user,
+        array $filters = [],
+        ?array $esIds = null,
+        ?DateTimeImmutable $startAtFrom = null,
+        ?DateTimeImmutable $startAtTo = null,
+    ): int
     {
-        return (int)$this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds)
+        return (int)$this->applyTimeWindow(
+            $this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds),
+            $startAtFrom,
+            $startAtTo,
+        )
             ->andWhere('event.user = :user OR calendar.user = :user')
             ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME)
             ->getQuery()
@@ -207,6 +229,26 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
             $queryBuilder
                 ->andWhere('LOWER(event.location) LIKE LOWER(:location)')
                 ->setParameter('location', '%' . $filters['location'] . '%');
+        }
+
+        return $queryBuilder;
+    }
+
+    private function applyTimeWindow(
+        QueryBuilder $queryBuilder,
+        ?DateTimeImmutable $startAtFrom,
+        ?DateTimeImmutable $startAtTo,
+    ): QueryBuilder {
+        if ($startAtFrom instanceof DateTimeImmutable) {
+            $queryBuilder
+                ->andWhere('event.startAt >= :startAtFrom')
+                ->setParameter('startAtFrom', $startAtFrom);
+        }
+
+        if ($startAtTo instanceof DateTimeImmutable) {
+            $queryBuilder
+                ->andWhere('event.startAt <= :startAtTo')
+                ->setParameter('startAtTo', $startAtTo);
         }
 
         return $queryBuilder;
