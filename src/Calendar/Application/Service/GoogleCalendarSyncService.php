@@ -10,6 +10,7 @@ use App\Calendar\Domain\Enum\EventVisibility;
 use App\Calendar\Infrastructure\Repository\EventRepository;
 use App\User\Domain\Entity\User;
 use DateTimeImmutable;
+use DateTimeZone;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -33,6 +34,11 @@ final readonly class GoogleCalendarSyncService
         ?DateTimeImmutable $timeMin = null,
         ?DateTimeImmutable $timeMax = null,
     ): array {
+        if (!$timeMin instanceof DateTimeImmutable && !$timeMax instanceof DateTimeImmutable) {
+            $timeMin = new DateTimeImmutable('first day of january this year 00:00:00', new DateTimeZone('UTC'));
+            $timeMax = new DateTimeImmutable('last day of december this year 23:59:59', new DateTimeZone('UTC'));
+        }
+
         $pulled = $this->pullGoogleEvents($user, $accessToken, $calendarId, $timeMin, $timeMax);
 
         $pushed = 0;
