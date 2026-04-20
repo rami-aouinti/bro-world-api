@@ -17,7 +17,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Crm Github')]
-#[IsGranted(Role::CRM_MANAGER->value)]
 final readonly class GetCrmGithubSyncJobController
 {
     public function __construct(
@@ -54,7 +53,6 @@ final readonly class GetCrmGithubSyncJobController
                     type: 'object',
                 )
             ),
-            new OA\Response(ref: '#/components/responses/NotFound404', response: JsonResponse::HTTP_NOT_FOUND),
         ],
     )]
     public function __invoke(string $jobId, ?string $applicationSlug = null): JsonResponse

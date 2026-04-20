@@ -17,7 +17,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Crm Github')]
-#[IsGranted(Role::CRM_MANAGER->value)]
 final readonly class GetCrmGithubLatestSyncJobController
 {
     private const string GENERAL_APPLICATION_SLUG = 'crm-general-core';
@@ -36,13 +35,7 @@ final readonly class GetCrmGithubLatestSyncJobController
         responses: [
             new OA\Response(
                 response: JsonResponse::HTTP_OK,
-                description: 'Latest sync job or null when there is no history.',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'item', ref: '#/components/schemas/CrmGithubSyncJob', nullable: true),
-                    ],
-                    type: 'object',
-                )
+                description: 'Latest sync job or null when there is no history.'
             ),
         ],
     )]

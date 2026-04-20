@@ -20,7 +20,6 @@ use function min;
 
 #[AsController]
 #[OA\Tag(name: 'Crm Github')]
-#[IsGranted(Role::CRM_MANAGER->value)]
 final readonly class ListCrmGithubSyncJobsController
 {
     private const string GENERAL_APPLICATION_SLUG = 'crm-general-core';
@@ -43,9 +42,6 @@ final readonly class ListCrmGithubSyncJobsController
                 response: JsonResponse::HTTP_OK,
                 description: 'List of sync jobs for CRM scope.',
                 content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'items', type: 'array', items: new OA\Items(ref: '#/components/schemas/CrmGithubSyncJob')),
-                    ],
                     type: 'object',
                 )
             ),

@@ -18,7 +18,6 @@ use function array_map;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
-#[IsGranted(Role::CRM_MANAGER->value)]
 final readonly class ListGeneralTaskRequestsController
 {
     use GeneralCrudApiTrait;

@@ -42,7 +42,6 @@ final readonly class PostCrmGithubBootstrapSyncController
     #[Route('/v1/crm/general/github/sync/bootstrap', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
-        summary: 'Queue CRM GitHub bootstrap sync',
         description: 'Synchronise les repositories et issues GitHub vers CRM selon issueTarget.'
             . "\n\nRègles de mapping:"
             . "\n- issueTarget=task: issue -> crm_task (title/body/state + estimation priority via labels)."
@@ -50,10 +49,10 @@ final readonly class PostCrmGithubBootstrapSyncController
             . "\n\nConversion de statut:"
             . "\n- issue open => TaskStatus::TODO / TaskRequestStatus::PENDING."
             . "\n- issue closed => TaskStatus::DONE et TaskRequestStatus::APPROVED, ou REJECTED si label rejected/reject/declined/crm:rejected ou state_reason=not_planned|rejected.",
+        summary: 'Queue CRM GitHub bootstrap sync',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                ref: '#/components/schemas/CrmGithubBootstrapSyncRequest',
                 examples: [
                     'bootstrapSyncTask' => new OA\Examples(
                         example: 'bootstrapSyncTask',
@@ -74,7 +73,6 @@ final readonly class PostCrmGithubBootstrapSyncController
                 response: JsonResponse::HTTP_ACCEPTED,
                 description: 'Job queued.',
                 content: new OA\JsonContent(
-                    ref: '#/components/schemas/JobAcceptedResponse',
                     examples: [
                         'queued' => new OA\Examples(
                             example: 'queued',
@@ -104,13 +102,13 @@ final readonly class PostCrmGithubBootstrapSyncController
                             ],
                         ),
                     ],
+                    ref: '#/components/schemas/JobAcceptedResponse',
                 ),
             ),
             new OA\Response(
                 response: JsonResponse::HTTP_BAD_REQUEST,
                 description: 'Invalid payload.',
                 content: new OA\JsonContent(
-                    ref: '#/components/schemas/ErrorResponse',
                     examples: [
                         'invalidJson' => new OA\Examples(
                             example: 'invalidJson',
@@ -121,6 +119,7 @@ final readonly class PostCrmGithubBootstrapSyncController
                             ],
                         ),
                     ],
+                    ref: '#/components/schemas/ErrorResponse',
                 ),
             ),
             new OA\Response(
@@ -149,7 +148,6 @@ final readonly class PostCrmGithubBootstrapSyncController
                 response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY,
                 description: 'Business consistency/import error.',
                 content: new OA\JsonContent(
-                    ref: '#/components/schemas/ErrorResponse',
                     examples: [
                         'ownerOutOfScope' => new OA\Examples(
                             example: 'ownerOutOfScope',
@@ -166,6 +164,7 @@ final readonly class PostCrmGithubBootstrapSyncController
                             ],
                         ),
                     ],
+                    ref: '#/components/schemas/ErrorResponse',
                 ),
             ),
         ],
