@@ -23,7 +23,7 @@ final readonly class ListGeneralStudentsController
     ) {
     }
 
-    #[Route('/v1/school/general/students', methods: [Request::METHOD_GET])]
+    #[Route('/v1/school/general/students', methods: [Request::METHOD_GET], defaults: ['applicationSlug' => 'general'])]
     #[OA\Get(summary: 'Lister globalement les étudiants school (scope General en lecture seule)')]
     public function __invoke(Request $request): JsonResponse
     {

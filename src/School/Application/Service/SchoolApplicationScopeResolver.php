@@ -15,6 +15,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 final readonly class SchoolApplicationScopeResolver
 {
+    private const string GENERAL_APPLICATION_SLUG = 'school-general-core';
+
     public function __construct(
         private SchoolRepository $schoolRepository,
         private EntityManagerInterface $entityManager
@@ -23,6 +25,10 @@ final readonly class SchoolApplicationScopeResolver
 
     public function resolveOrCreateSchoolByApplicationSlug(string $applicationSlug, ?User $user): School
     {
+        if ($applicationSlug === 'general' || $applicationSlug === '') {
+            $applicationSlug = self::GENERAL_APPLICATION_SLUG;
+        }
+
         $school = $this->schoolRepository->findOneByApplicationSlug($applicationSlug);
         if ($school instanceof School) {
             $this->assertApplicationAccess($school->getApplication(), PlatformKey::SCHOOL, $user);

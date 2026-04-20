@@ -313,4 +313,25 @@ final class SchoolApplicationScopedRoutesTest extends WebTestCase
         $client->request('DELETE', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes/' . $classId);
         self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
     }
+
+    #[TestDox('School routes without application slug fallback to school general scope.')]
+    public function testRoutesWithoutApplicationSlugFallbackToSchoolGeneralScope(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('GET', self::API_URL_PREFIX . '/v1/school/classes?page=1&limit=100');
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $withoutSlug = JSON::decode((string)$client->getResponse()->getContent(), true);
+
+        $client->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-general-core/classes?page=1&limit=100');
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $withGeneralSlug = JSON::decode((string)$client->getResponse()->getContent(), true);
+
+        self::assertSame(
+            array_column($withGeneralSlug['items'], 'id'),
+            array_column($withoutSlug['items'], 'id'),
+        );
+        self::assertSame('general', $withoutSlug['meta']['applicationSlug']);
+        self::assertSame('school-general-core', $withGeneralSlug['meta']['applicationSlug']);
+    }
 }

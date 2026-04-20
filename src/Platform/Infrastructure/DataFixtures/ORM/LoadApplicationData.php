@@ -103,7 +103,7 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
             'status' => PlatformStatus::ACTIVE,
             'private' => false,
             'ownerReference' => 'User-john-root',
-            'platformReference' => 'Platform-CR-CRM 2',
+            'platformReference' => 'Platform-CR-CRM 1',
             'appConfigurations' => [
                 [
                     'uuid' => '61000000-0000-1000-8000-000000000003',
