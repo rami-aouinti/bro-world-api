@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\School\Application\Serializer;
 
 use App\School\Application\Serializer\SchoolViewMapper;
+use App\School\Domain\Entity\Course;
 use App\School\Domain\Entity\Exam;
 use App\School\Domain\Entity\SchoolClass;
 use App\School\Domain\Entity\Teacher;
@@ -32,5 +33,32 @@ final class SchoolViewMapperTest extends TestCase
         self::assertSame('FINAL', $result[0]['type']);
         self::assertSame('PUBLISHED', $result[0]['status']);
         self::assertSame('TERM_2', $result[0]['term']);
+    }
+
+    public function testMapCourseIncludesHtmlContentAndAttachments(): void
+    {
+        $schoolClass = (new SchoolClass())->setName('Classe B - Informatique');
+        $teacher = (new Teacher())->setName('M. Dupont');
+        $course = (new Course())
+            ->setName('Algorithmique avancée')
+            ->setSchoolClass($schoolClass)
+            ->setTeacher($teacher)
+            ->setContentHtml('<h2>Chapitre 1</h2><p>Introduction</p>')
+            ->setAttachments([
+                [
+                    'url' => '/uploads/school/courses/intro.pdf',
+                    'originalName' => 'intro.pdf',
+                    'mimeType' => 'application/pdf',
+                    'size' => 12345,
+                    'extension' => 'pdf',
+                    'uploadedAt' => '2026-01-15T08:15:00+00:00',
+                ],
+            ]);
+
+        $result = (new SchoolViewMapper())->mapCourse($course);
+
+        self::assertSame('<h2>Chapitre 1</h2><p>Introduction</p>', $result['contentHtml']);
+        self::assertCount(1, $result['attachments']);
+        self::assertSame('/uploads/school/courses/intro.pdf', $result['attachments'][0]['url']);
     }
 }

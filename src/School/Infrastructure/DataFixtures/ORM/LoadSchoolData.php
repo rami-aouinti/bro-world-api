@@ -132,10 +132,33 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
             $coursesByClass = [];
             foreach ($classes as $classLabel => $class) {
                 foreach (['Algorithmique', 'Base de Données', 'Réseaux'] as $index => $courseLabel) {
+                    $isGeneralSchool = $appKey === 'school-general-core';
+                    $normalizedClassLabel = $classLabel;
+                    $normalizedCourseLabel = strtolower(str_replace(' ', '-', $courseLabel));
+
                     $course = (new Course())
                         ->setSchoolClass($class)
                         ->setTeacher($index === 1 ? $teacherFrench : $teacherMath)
-                        ->setName($courseLabel . ' - ' . $classLabel . ' - ' . $applicationIndex);
+                        ->setName($courseLabel . ' - ' . $classLabel . ' - ' . $applicationIndex)
+                        ->setContentHtml($isGeneralSchool ? '<h2>' . $courseLabel . '</h2><p>Programme détaillé pour la classe ' . $class->getName() . '.</p><ul><li>Objectifs</li><li>Exercices</li><li>Évaluation continue</li></ul>' : null)
+                        ->setAttachments($isGeneralSchool ? [
+                            [
+                                'url' => '/uploads/school/fixtures/' . $appKey . '/' . $normalizedClassLabel . '/' . $normalizedCourseLabel . '-plan.pdf',
+                                'originalName' => $courseLabel . '-plan.pdf',
+                                'mimeType' => 'application/pdf',
+                                'size' => 124500 + ($index * 1042),
+                                'extension' => 'pdf',
+                                'uploadedAt' => '2026-01-15T08:15:00+00:00',
+                            ],
+                            [
+                                'url' => '/uploads/school/fixtures/' . $appKey . '/' . $normalizedClassLabel . '/' . $normalizedCourseLabel . '-slides.pptx',
+                                'originalName' => $courseLabel . '-slides.pptx',
+                                'mimeType' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                                'size' => 280900 + ($index * 2048),
+                                'extension' => 'pptx',
+                                'uploadedAt' => '2026-01-15T08:20:00+00:00',
+                            ],
+                        ] : []);
                     $manager->persist($course);
                     $coursesByClass[$classLabel][] = $course;
                 }

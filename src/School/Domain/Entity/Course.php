@@ -41,6 +41,15 @@ class Course implements EntityInterface
     #[ORM\Column(name: 'name', type: Types::STRING, length: 255)]
     private string $name = '';
 
+    #[ORM\Column(name: 'content_html', type: Types::TEXT, nullable: true)]
+    private ?string $contentHtml = null;
+
+    /**
+     * @var list<array<string,mixed>>
+     */
+    #[ORM\Column(name: 'attachments', type: Types::JSON)]
+    private array $attachments = [];
+
     /** @var Collection<int, Exam>|ArrayCollection<int, Exam> */
     #[ORM\OneToMany(targetEntity: Exam::class, mappedBy: 'course')]
     private Collection|ArrayCollection $exams;
@@ -93,6 +102,46 @@ class Course implements EntityInterface
     public function setName(string $name): self
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getContentHtml(): ?string
+    {
+        return $this->contentHtml;
+    }
+
+    public function setContentHtml(?string $contentHtml): self
+    {
+        $this->contentHtml = $contentHtml;
+
+        return $this;
+    }
+
+    /**
+     * @return list<array<string,mixed>>
+     */
+    public function getAttachments(): array
+    {
+        return $this->attachments;
+    }
+
+    /**
+     * @param list<array<string,mixed>> $attachments
+     */
+    public function setAttachments(array $attachments): self
+    {
+        $this->attachments = $attachments;
+
+        return $this;
+    }
+
+    /**
+     * @param array<string,mixed> $attachment
+     */
+    public function addAttachment(array $attachment): self
+    {
+        $this->attachments[] = $attachment;
 
         return $this;
     }

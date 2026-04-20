@@ -39,6 +39,16 @@ final class SchoolCreateReferenceValidationTest extends WebTestCase
         self::assertSame('SCHOOL_RELATION_NOT_FOUND', $payload['code']);
         self::assertSame([], $payload['details']);
 
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/courses', [], [], [], JSON::encode([
+            'name' => 'Cours invalide',
+            'classId' => self::UNKNOWN_UUID,
+        ]));
+        self::assertSame(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode());
+        $payload = $this->responsePayload($client);
+        self::assertSame('classId not found', $payload['message']);
+        self::assertSame('SCHOOL_RELATION_NOT_FOUND', $payload['code']);
+        self::assertSame([], $payload['details']);
+
         $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams', [], [], [], JSON::encode([
             'title' => 'Examen API',
             'classId' => self::UNKNOWN_UUID,
@@ -72,6 +82,17 @@ final class SchoolCreateReferenceValidationTest extends WebTestCase
 
         $campusClassId = $this->firstResourceId($client, '/v1/school/applications/school-campus-core/classes');
         $courseTeacherId = $this->firstResourceId($client, '/v1/school/applications/school-course-flow/teachers');
+
+        $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/courses', [], [], [], JSON::encode([
+            'name' => 'Cours incoherent',
+            'classId' => $campusClassId,
+            'teacherId' => $courseTeacherId,
+        ]));
+        self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $client->getResponse()->getStatusCode());
+        $payload = $this->responsePayload($client);
+        self::assertSame('teacherId is not assigned to classId', $payload['message']);
+        self::assertSame('SCHOOL_RELATION_UNPROCESSABLE', $payload['code']);
+        self::assertSame([], $payload['details']);
 
         $client->request('POST', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/exams', [], [], [], JSON::encode([
             'title' => 'Examen incoherent',
