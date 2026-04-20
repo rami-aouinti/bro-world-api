@@ -31,14 +31,6 @@ final class LoadPlatformData extends Fixture implements OrderedFixtureInterface
             'description' => 'Complete CRM module to centralize customer relationships, track opportunities, and structure commercial activity.',
         ],
         [
-            'uuid' => '40000000-0000-1000-8000-000000000002',
-            'code' => 'CR',
-            'platformKey' => 'crm',
-            'name' => 'CRM 2',
-            'enabled' => true,
-            'description' => 'Complete CRM module to centralize customer relationships, track opportunities, and structure commercial activity.',
-        ],
-        [
             'uuid' => '40000000-0000-1000-8000-000000000003',
             'code' => 'SH',
             'platformKey' => 'shop',

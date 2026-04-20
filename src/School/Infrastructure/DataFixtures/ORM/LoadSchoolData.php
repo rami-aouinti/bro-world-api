@@ -61,6 +61,7 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
             $this->addReference('School-' . $appKey, $school);
             if ($appKey === 'school-general-core') {
                 $this->addReference('School-General-Core', $school);
+                $this->addReference('School-general', $school);
             }
 
             $classes = [];
@@ -78,6 +79,9 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
 
                 $classes[$label] = $class;
                 $this->addReference('SchoolClass-' . $appKey . '-' . $label, $class);
+                if ($appKey === 'school-general-core') {
+                    $this->addReference('SchoolClass-general-' . $label, $class);
+                }
             }
             $this->addReference('SchoolClass-' . $appKey . '-1', $classes['small']);
 

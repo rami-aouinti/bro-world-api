@@ -26,7 +26,8 @@ final readonly class DeleteClassController
     ) {
     }
 
-    #[Route('/v1/school/applications/{applicationSlug}/classes/{id}', methods: [Request::METHOD_DELETE])]
+    #[Route('/v1/school/applications/{applicationSlug}/classes/{id}', methods: [Request::METHOD_DELETE], defaults: ['applicationSlug' => 'general'])]
+    #[Route('/v1/school/classes/{id}', methods: [Request::METHOD_DELETE], defaults: ['applicationSlug' => 'general'])]
     #[OA\Delete(
         summary: 'Supprimer une classe',
         parameters: [

@@ -29,7 +29,8 @@ final readonly class CreateClassByApplicationController
     ) {
     }
 
-    #[Route('/v1/school/applications/{applicationSlug}/classes', methods: [Request::METHOD_POST])]
+    #[Route('/v1/school/applications/{applicationSlug}/classes', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
+    #[Route('/v1/school/classes', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
     #[OA\Post(
         summary: 'Créer une classe dans une application',
         requestBody: new OA\RequestBody(

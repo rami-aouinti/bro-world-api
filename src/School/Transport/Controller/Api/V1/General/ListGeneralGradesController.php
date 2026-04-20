@@ -23,7 +23,7 @@ final readonly class ListGeneralGradesController
     ) {
     }
 
-    #[Route('/v1/school/general/grades', methods: [Request::METHOD_GET])]
+    #[Route('/v1/school/general/grades', methods: [Request::METHOD_GET], defaults: ['applicationSlug' => 'general'])]
     #[OA\Get(summary: 'Lister globalement les notes school (scope General en lecture seule)')]
     public function __invoke(Request $request): JsonResponse
     {
