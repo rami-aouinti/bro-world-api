@@ -6,6 +6,7 @@ namespace App\School\Application\Serializer;
 
 use App\School\Domain\Entity\Exam;
 use App\School\Domain\Entity\Grade;
+use App\School\Domain\Entity\Course;
 use App\School\Domain\Entity\SchoolClass;
 use App\School\Domain\Entity\Student;
 use App\School\Domain\Entity\Teacher;
@@ -100,6 +101,43 @@ final readonly class SchoolViewMapper
                 'photo' => $teacher->getUser()?->getPhoto(),
                 'firstName' => $teacher->getUser()?->getFirstName(),
                 'lastName' => $teacher->getUser()?->getLastName(),
+            ],
+        ];
+    }
+
+    /** @param array<int,Course> $courses
+     * @return array<int,array<string,mixed>>
+     */
+    public function mapCourseCollection(array $courses): array
+    {
+        $items = [];
+        foreach ($courses as $course) {
+            $items[] = $this->mapCourse($course);
+        }
+
+        return $items;
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function mapCourse(Course $course): array
+    {
+        return [
+            'id' => $course->getId(),
+            'name' => $course->getName(),
+            'classId' => $course->getSchoolClass()?->getId(),
+            'className' => $course->getSchoolClass()?->getName(),
+            'schoolId' => $course->getSchoolClass()?->getSchool()?->getId(),
+            'schoolName' => $course->getSchoolClass()?->getSchool()?->getName(),
+            'teacherId' => $course->getTeacher()?->getId(),
+            'teacher' => [
+                'id' => $course->getTeacher()?->getId(),
+                'name' => $course->getTeacher()?->getDisplayName(),
+                'email' => $course->getTeacher()?->getUser()?->getEmail(),
+                'photo' => $course->getTeacher()?->getUser()?->getPhoto(),
+                'firstName' => $course->getTeacher()?->getUser()?->getFirstName(),
+                'lastName' => $course->getTeacher()?->getUser()?->getLastName(),
             ],
         ];
     }
