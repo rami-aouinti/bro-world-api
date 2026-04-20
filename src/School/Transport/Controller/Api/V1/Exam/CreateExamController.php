@@ -37,11 +37,12 @@ final readonly class CreateExamController
         summary: 'Créer un examen',
         tags: ['School'],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
-            required: ['title', 'classId', 'teacherId', 'type', 'status', 'term'],
+            required: ['title', 'classId', 'courseId', 'teacherId', 'type', 'status', 'term'],
             properties: [
                 new OA\Property(property: 'title', type: 'string', example: 'Examen Mathematiques - Trimestre 1'),
                 new OA\Property(property: 'classId', type: 'string', format: 'uuid'),
-                new OA\Property(property: 'teacherId', type: 'string', format: 'uuid'),
+                new OA\Property(property: 'courseId', type: 'string', format: 'uuid'),
+                    new OA\Property(property: 'teacherId', type: 'string', format: 'uuid'),
                 new OA\Property(property: 'type', type: 'string', enum: ['QUIZ', 'MIDTERM', 'FINAL', 'ORAL'], example: 'QUIZ'),
                 new OA\Property(property: 'status', type: 'string', enum: ['DRAFT', 'PUBLISHED', 'CLOSED'], example: 'DRAFT'),
                 new OA\Property(property: 'term', type: 'string', enum: ['TERM_1', 'TERM_2', 'TERM_3'], example: 'TERM_1'),
@@ -67,6 +68,7 @@ final readonly class CreateExamController
         $input = new CreateExamInput();
         $input->title = (string)($payload['title'] ?? '');
         $input->classId = is_string($payload['classId'] ?? null) ? $payload['classId'] : '';
+        $input->courseId = is_string($payload['courseId'] ?? null) ? $payload['courseId'] : '';
         $input->teacherId = is_string($payload['teacherId'] ?? null) ? $payload['teacherId'] : '';
         $input->type = is_string($payload['type'] ?? null) ? $payload['type'] : '';
         $input->status = is_string($payload['status'] ?? null) ? $payload['status'] : '';
@@ -81,6 +83,7 @@ final readonly class CreateExamController
             $school,
             $input->title,
             $input->classId,
+            $input->courseId,
             $input->teacherId,
             ExamType::from($input->type),
             ExamStatus::from($input->status),

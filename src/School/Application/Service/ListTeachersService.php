@@ -38,7 +38,9 @@ final readonly class ListTeachersService
                 ->setParameter('schoolId', $school->getId());
         }
         if ($queryOptions->filters['q'] !== '') {
-            $qb->andWhere('LOWER(teacher.name) LIKE LOWER(:q)')->setParameter('q', '%' . $queryOptions->filters['q'] . '%');
+            $qb->innerJoin('teacher.user', 'teacherUser')
+                ->andWhere('LOWER(teacherUser.firstName) LIKE LOWER(:q) OR LOWER(teacherUser.lastName) LIKE LOWER(:q) OR LOWER(teacherUser.email) LIKE LOWER(:q)')
+                ->setParameter('q', '%' . $queryOptions->filters['q'] . '%');
         }
 
         $items = $this->viewMapper->mapTeacherCollection($qb->getQuery()->getResult());
@@ -51,7 +53,9 @@ final readonly class ListTeachersService
                 ->setParameter('schoolId', $school->getId());
         }
         if ($queryOptions->filters['q'] !== '') {
-            $countQb->andWhere('LOWER(teacher.name) LIKE LOWER(:q)')->setParameter('q', '%' . $queryOptions->filters['q'] . '%');
+            $countQb->innerJoin('teacher.user', 'teacherUser')
+                ->andWhere('LOWER(teacherUser.firstName) LIKE LOWER(:q) OR LOWER(teacherUser.lastName) LIKE LOWER(:q) OR LOWER(teacherUser.email) LIKE LOWER(:q)')
+                ->setParameter('q', '%' . $queryOptions->filters['q'] . '%');
         }
         $totalItems = (int)$countQb->getQuery()->getSingleScalarResult();
 

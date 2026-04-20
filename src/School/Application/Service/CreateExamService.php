@@ -27,13 +27,19 @@ final readonly class CreateExamService
         School $school,
         string $title,
         ?string $classId,
+        ?string $courseId,
         ?string $teacherId,
         ExamType $type,
         ExamStatus $status,
         Term $term,
     ): Exam {
         $class = $this->referenceResolver->resolveClassInSchool($school, $classId);
+        $course = $this->referenceResolver->resolveCourseInSchool($school, $courseId);
         $teacher = $this->referenceResolver->resolveTeacherInSchool($school, $teacherId);
+
+        if ($course->getSchoolClass()?->getId() !== $class->getId()) {
+            throw SchoolRelationException::unprocessable('courseId must belong to classId');
+        }
 
         if (!$teacher->getClasses()->contains($class)) {
             throw SchoolRelationException::unprocessable('teacherId is not assigned to classId');
@@ -45,6 +51,7 @@ final readonly class CreateExamService
             ->setStatus($status)
             ->setTerm($term)
             ->setSchoolClass($class)
+            ->setCourse($course)
             ->setTeacher($teacher);
 
         $this->entityManager->persist($exam);

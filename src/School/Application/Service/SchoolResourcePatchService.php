@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\School\Application\Service;
 
+use App\School\Domain\Entity\Course;
 use App\School\Domain\Entity\Exam;
 use App\School\Domain\Entity\Grade;
 use App\School\Domain\Entity\SchoolClass;
@@ -12,11 +13,14 @@ use App\School\Domain\Entity\Teacher;
 use App\School\Domain\Enum\ExamStatus;
 use App\School\Domain\Enum\ExamType;
 use App\School\Domain\Enum\Term;
+use App\School\Infrastructure\Repository\CourseRepository;
 use App\School\Infrastructure\Repository\ExamRepository;
 use App\School\Infrastructure\Repository\GradeRepository;
 use App\School\Infrastructure\Repository\SchoolClassRepository;
 use App\School\Infrastructure\Repository\StudentRepository;
 use App\School\Infrastructure\Repository\TeacherRepository;
+use App\User\Domain\Entity\User;
+use App\User\Infrastructure\Repository\UserRepository;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -27,6 +31,8 @@ final readonly class SchoolResourcePatchService
         private SchoolClassRepository $classRepository,
         private StudentRepository $studentRepository,
         private TeacherRepository $teacherRepository,
+        private CourseRepository $courseRepository,
+        private UserRepository $userRepository,
         private ExamRepository $examRepository,
         private GradeRepository $gradeRepository,
     ) {
@@ -76,12 +82,8 @@ final readonly class SchoolResourcePatchService
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Invalid resource payload.');
         }
 
-        if (array_key_exists('name', $payload)) {
-            $name = trim((string)$payload['name']);
-            if ($name === '') {
-                throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Field "name" cannot be blank.');
-            }
-            $entity->setName($name);
+        if (array_key_exists('userId', $payload)) {
+            $entity->setUser($this->resolveUser((string)$payload['userId']));
         }
 
         if (array_key_exists('classId', $payload)) {
@@ -108,12 +110,8 @@ final readonly class SchoolResourcePatchService
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Invalid resource payload.');
         }
 
-        if (array_key_exists('name', $payload)) {
-            $name = trim((string)$payload['name']);
-            if ($name === '') {
-                throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Field "name" cannot be blank.');
-            }
-            $entity->setName($name);
+        if (array_key_exists('userId', $payload)) {
+            $entity->setUser($this->resolveUser((string)$payload['userId']));
         }
 
         $this->teacherRepository->save($entity);
@@ -146,6 +144,18 @@ final readonly class SchoolResourcePatchService
                 throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Class not found.');
             }
             $entity->setSchoolClass($class);
+        }
+
+        if (array_key_exists('courseId', $payload)) {
+            $courseId = (string)$payload['courseId'];
+            if (!Uuid::isValid($courseId)) {
+                throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Field "courseId" must be a valid UUID.');
+            }
+            $course = $this->courseRepository->find($courseId);
+            if (!$course instanceof Course) {
+                throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Course not found.');
+            }
+            $entity->setCourse($course);
         }
 
         if (array_key_exists('teacherId', $payload)) {
@@ -196,6 +206,18 @@ final readonly class SchoolResourcePatchService
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Invalid resource payload.');
         }
 
+        if (array_key_exists('courseId', $payload)) {
+            $courseId = (string)$payload['courseId'];
+            if (!Uuid::isValid($courseId)) {
+                throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Field "courseId" must be a valid UUID.');
+            }
+            $course = $this->courseRepository->find($courseId);
+            if (!$course instanceof Course) {
+                throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Course not found.');
+            }
+            $entity->setCourse($course);
+        }
+
         if (array_key_exists('score', $payload)) {
             if (!is_numeric($payload['score'])) {
                 throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Field "score" must be numeric.');
@@ -204,5 +226,19 @@ final readonly class SchoolResourcePatchService
         }
 
         $this->gradeRepository->save($entity);
+    }
+
+    private function resolveUser(string $userId): User
+    {
+        if (!Uuid::isValid($userId)) {
+            throw new HttpException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Field "userId" must be a valid UUID.');
+        }
+
+        $user = $this->userRepository->find($userId);
+        if (!$user instanceof User) {
+            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'User not found.');
+        }
+
+        return $user;
     }
 }

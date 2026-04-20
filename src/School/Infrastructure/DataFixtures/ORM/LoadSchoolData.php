@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\School\Infrastructure\DataFixtures\ORM;
 
+use App\General\Domain\Enum\Language;
+use App\General\Domain\Enum\Locale;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PlatformKey;
+use App\School\Domain\Entity\Course;
 use App\School\Domain\Entity\Exam;
 use App\School\Domain\Entity\Grade;
+use App\School\Domain\Entity\LearningSessionNote;
 use App\School\Domain\Entity\School;
 use App\School\Domain\Entity\SchoolClass;
 use App\School\Domain\Entity\Student;
@@ -66,9 +70,9 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
 
             $classes = [];
             $classesByLabel = [
-                'small' => 'Classe A - Sciences',
-                'medium' => 'Classe B - Langues',
-                'large' => 'Classe C - Technologies',
+                'small' => 'Informatique - Grad 1',
+                'medium' => 'Informatique - Grad 2',
+                'large' => 'Informatique - Grad 3',
             ];
 
             foreach ($classesByLabel as $label => $name) {
@@ -85,9 +89,9 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
             }
             $this->addReference('SchoolClass-' . $appKey . '-1', $classes['small']);
 
-            $teacherMath = (new Teacher())->setName('Mme Martin - ' . $applicationIndex);
-            $teacherFrench = (new Teacher())->setName('M. Dubois - ' . $applicationIndex);
-            $teacherHead = (new Teacher())->setName('Dr. Principal - ' . $applicationIndex);
+            $teacherMath = (new Teacher())->setUser($this->createSchoolUser($manager, $appKey . '-teacher-math', 'Teacher', 'Math'));
+            $teacherFrench = (new Teacher())->setUser($this->createSchoolUser($manager, $appKey . '-teacher-french', 'Teacher', 'French'));
+            $teacherHead = (new Teacher())->setUser($this->createSchoolUser($manager, $appKey . '-teacher-head', 'Teacher', 'Head'));
 
             $teacherMath->getClasses()->add($classes['small']);
             $teacherMath->getClasses()->add($classes['large']);
@@ -101,10 +105,23 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
             $manager->persist($teacherFrench);
             $manager->persist($teacherHead);
 
+
             $this->addReference('Teacher-' . $appKey . '-math', $teacherMath);
             $this->addReference('Teacher-' . $appKey . '-french', $teacherFrench);
             $this->addReference('Teacher-' . $appKey . '-head', $teacherHead);
             $this->addReference('Teacher-' . $appKey . '-1', $teacherMath);
+
+            $coursesByClass = [];
+            foreach ($classes as $classLabel => $class) {
+                foreach (['Algorithmique', 'Base de Données', 'Réseaux'] as $index => $courseLabel) {
+                    $course = (new Course())
+                        ->setSchoolClass($class)
+                        ->setTeacher($index === 1 ? $teacherFrench : $teacherMath)
+                        ->setName($courseLabel . ' - ' . $classLabel . ' - ' . $applicationIndex);
+                    $manager->persist($course);
+                    $coursesByClass[$classLabel][] = $course;
+                }
+            }
 
             $students = [];
             $studentCounter = 1;
@@ -116,9 +133,16 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
                 ] as $classLabel => $count
             ) {
                 for ($i = 1; $i <= $count; $i++) {
+                    $studentUser = $this->createSchoolUser(
+                        $manager,
+                        $appKey . '-student-' . $classLabel . '-' . $i,
+                        'Student',
+                        ucfirst($classLabel) . (string)$i,
+                    );
+
                     $student = (new Student())
                         ->setSchoolClass($classes[$classLabel])
-                        ->setName('Student ' . $applicationIndex . '-' . $classLabel . '-' . $i);
+                        ->setUser($studentUser);
                     $manager->persist($student);
 
                     $students[$classLabel][] = $student;
@@ -131,8 +155,10 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
             $examCounter = 1;
             foreach ($classes as $classLabel => $class) {
                 for ($i = 0; $i < 4; $i++) {
+                    $course = $coursesByClass[$classLabel][$i % count($coursesByClass[$classLabel])];
                     $exam = (new Exam())
                         ->setSchoolClass($class)
+                        ->setCourse($course)
                         ->setTeacher($i % 2 === 0 ? $teacherMath : $teacherHead)
                         ->setTitle('Examen ' . $classLabel . ' #' . ($i + 1) . ' - ' . $applicationIndex)
                         ->setType($examTypes[($applicationIndex + $i) % count($examTypes)])
@@ -150,25 +176,24 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
             foreach ($exams as $classLabel => $classExams) {
                 foreach ($classExams as $examIndex => $exam) {
                     foreach ($students[$classLabel] as $studentIndex => $student) {
-                        $score = 20.0;
-                        if ($studentIndex === 0 && $examIndex === 0) {
-                            $score = 0.0;
-                        } elseif ($studentIndex === 1 && $examIndex === 1) {
-                            $score = -1.0;
-                        } elseif ($studentIndex === 2 && $examIndex === 2) {
-                            $score = 25.0;
-                        } elseif ($studentIndex === 3 && $examIndex === 3) {
-                            $score = 9.999;
-                        } else {
-                            $score = (float)(($studentIndex + $examIndex + $applicationIndex) % 21);
-                        }
+                        $score = (float)(($studentIndex + $examIndex + $applicationIndex) % 21);
 
                         $grade = (new Grade())
                             ->setStudent($student)
                             ->setExam($exam)
+                            ->setCourse($exam->getCourse())
                             ->setScore($score);
                         $manager->persist($grade);
                         $this->addReference('Grade-' . $appKey . '-' . $gradeCounter, $grade);
+
+                        $note = (new LearningSessionNote())
+                            ->setStudent($student)
+                            ->setExam($exam)
+                            ->setCourse($exam->getCourse())
+                            ->setScore($score)
+                            ->setPassed($score >= 10.0);
+                        $manager->persist($note);
+
                         $gradeCounter++;
                     }
                 }
@@ -200,5 +225,23 @@ final class LoadSchoolData extends Fixture implements OrderedFixtureInterface
         }
 
         return $applications;
+    }
+
+    private function createSchoolUser(ObjectManager $manager, string $key, string $firstName, string $lastName): User
+    {
+        $username = 'school-' . strtolower($key);
+
+        $user = (new User())
+            ->setUsername($username)
+            ->setFirstName($firstName)
+            ->setLastName($lastName)
+            ->setEmail($username . '@test.com')
+            ->setLanguage(Language::EN)
+            ->setLocale(Locale::EN)
+            ->setPlainPassword('password-' . $username);
+
+        $manager->persist($user);
+
+        return $user;
     }
 }

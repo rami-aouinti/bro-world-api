@@ -7,10 +7,12 @@ namespace App\School\Application\Service;
 use App\School\Application\Exception\SchoolRelationException;
 use App\School\Domain\Entity\Exam;
 use App\School\Domain\Entity\School;
+use App\School\Domain\Entity\Course;
 use App\School\Domain\Entity\SchoolClass;
 use App\School\Domain\Entity\Student;
 use App\School\Domain\Entity\Teacher;
 use App\School\Infrastructure\Repository\ExamRepository;
+use App\School\Infrastructure\Repository\CourseRepository;
 use App\School\Infrastructure\Repository\SchoolClassRepository;
 use App\School\Infrastructure\Repository\StudentRepository;
 use App\School\Infrastructure\Repository\TeacherRepository;
@@ -20,6 +22,7 @@ final readonly class SchoolReferenceResolver
 {
     public function __construct(
         private SchoolClassRepository $classRepository,
+        private CourseRepository $courseRepository,
         private TeacherRepository $teacherRepository,
         private StudentRepository $studentRepository,
         private ExamRepository $examRepository,
@@ -38,6 +41,21 @@ final readonly class SchoolReferenceResolver
         }
 
         return $class;
+    }
+
+
+    public function resolveCourseInSchool(School $school, ?string $courseId, string $reference = 'courseId'): Course
+    {
+        if (!is_string($courseId) || $courseId === '') {
+            throw SchoolRelationException::unprocessable($reference . ' is required');
+        }
+
+        $course = $this->courseRepository->find($courseId);
+        if (!$course instanceof Course || $course->getSchoolClass()?->getSchool()?->getId() !== $school->getId()) {
+            throw SchoolRelationException::notFound($reference);
+        }
+
+        return $course;
     }
 
     public function resolveTeacherInSchool(School $school, ?string $teacherId, string $reference = 'teacherId'): Teacher

@@ -14,13 +14,13 @@ use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 use Ramsey\Uuid\UuidInterface;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'school_grade')]
-#[ORM\Index(name: 'idx_school_grade_student_id', columns: ['student_id'])]
-#[ORM\Index(name: 'idx_school_grade_exam_id', columns: ['exam_id'])]
-#[ORM\Index(name: 'idx_school_grade_course_id', columns: ['course_id'])]
-#[ORM\UniqueConstraint(name: 'uniq_school_grade_exam_student', columns: ['exam_id', 'student_id'])]
+#[ORM\Table(name: 'school_learning_session_note')]
+#[ORM\Index(name: 'idx_school_lsn_student_id', columns: ['student_id'])]
+#[ORM\Index(name: 'idx_school_lsn_exam_id', columns: ['exam_id'])]
+#[ORM\Index(name: 'idx_school_lsn_course_id', columns: ['course_id'])]
+#[ORM\UniqueConstraint(name: 'uniq_school_lsn_exam_student', columns: ['exam_id', 'student_id'])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
-class Grade implements EntityInterface
+class LearningSessionNote implements EntityInterface
 {
     use Timestampable;
     use Uuid;
@@ -29,20 +29,23 @@ class Grade implements EntityInterface
     #[ORM\Column(name: 'id', type: UuidBinaryOrderedTimeType::NAME, unique: true)]
     private UuidInterface $id;
 
-    #[ORM\ManyToOne(targetEntity: Student::class, inversedBy: 'grades')]
+    #[ORM\ManyToOne(targetEntity: Student::class, inversedBy: 'learningSessionNotes')]
     #[ORM\JoinColumn(name: 'student_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Student $student = null;
 
-    #[ORM\ManyToOne(targetEntity: Exam::class, inversedBy: 'grades')]
+    #[ORM\ManyToOne(targetEntity: Exam::class, inversedBy: 'learningSessionNotes')]
     #[ORM\JoinColumn(name: 'exam_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Exam $exam = null;
 
-    #[ORM\ManyToOne(targetEntity: Course::class, inversedBy: 'grades')]
+    #[ORM\ManyToOne(targetEntity: Course::class, inversedBy: 'learningSessionNotes')]
     #[ORM\JoinColumn(name: 'course_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Course $course = null;
 
     #[ORM\Column(name: 'score', type: Types::FLOAT)]
     private float $score = 0.0;
+
+    #[ORM\Column(name: 'passed', type: Types::BOOLEAN)]
+    private bool $passed = false;
 
     public function __construct()
     {
@@ -54,19 +57,11 @@ class Grade implements EntityInterface
     {
         return $this->id->toString();
     }
-    public function getStudent(): ?Student
-    {
-        return $this->student;
-    }
     public function setStudent(?Student $student): self
     {
         $this->student = $student;
 
         return $this;
-    }
-    public function getExam(): ?Exam
-    {
-        return $this->exam;
     }
     public function setExam(?Exam $exam): self
     {
@@ -74,23 +69,21 @@ class Grade implements EntityInterface
 
         return $this;
     }
-    public function getCourse(): ?Course
-    {
-        return $this->course;
-    }
     public function setCourse(?Course $course): self
     {
         $this->course = $course;
 
         return $this;
     }
-    public function getScore(): float
-    {
-        return $this->score;
-    }
     public function setScore(float $score): self
     {
         $this->score = $score;
+
+        return $this;
+    }
+    public function setPassed(bool $passed): self
+    {
+        $this->passed = $passed;
 
         return $this;
     }
