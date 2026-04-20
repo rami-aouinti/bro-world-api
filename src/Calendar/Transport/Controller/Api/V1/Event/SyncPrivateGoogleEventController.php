@@ -39,6 +39,9 @@ use Throwable;
     responses: [
         new OA\Response(response: 200, description: 'Synchronisation terminée'),
         new OA\Response(response: 400, description: 'Payload invalide'),
+        new OA\Response(response: 401, description: 'Token Google invalide ou expiré'),
+        new OA\Response(response: 403, description: 'Permissions Google insuffisantes'),
+        new OA\Response(response: 404, description: 'Calendrier Google introuvable'),
         new OA\Response(response: 502, description: 'Erreur Google Calendar'),
     ]
 )]
