@@ -111,4 +111,31 @@ final class SchoolCrudValidationPaginationTest extends WebTestCase
         $client->request('DELETE', self::API_URL_PREFIX . '/v1/school/general/classes/' . $classId);
         self::assertSame(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());
     }
+
+    #[TestDox('School general scope exposes courses listing and detail endpoints with rich payload.')]
+    public function testSchoolGeneralCoursesListAndDetailRoutes(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('GET', self::API_URL_PREFIX . '/v1/school/general/courses?page=1&limit=5');
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $listPayload = JSON::decode((string)$client->getResponse()->getContent(), true);
+        self::assertArrayHasKey('items', $listPayload);
+        self::assertNotEmpty($listPayload['items']);
+
+        $firstCourse = $listPayload['items'][0];
+        self::assertArrayHasKey('id', $firstCourse);
+        self::assertArrayHasKey('name', $firstCourse);
+        self::assertArrayHasKey('classId', $firstCourse);
+        self::assertArrayHasKey('schoolId', $firstCourse);
+        self::assertArrayHasKey('teacher', $firstCourse);
+
+        $client->request('GET', self::API_URL_PREFIX . '/v1/school/general/courses/' . $firstCourse['id']);
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $detailPayload = JSON::decode((string)$client->getResponse()->getContent(), true);
+
+        self::assertSame($firstCourse['id'], $detailPayload['id']);
+        self::assertArrayHasKey('teacherId', $detailPayload);
+        self::assertArrayHasKey('teacher', $detailPayload);
+    }
 }
