@@ -43,9 +43,58 @@ readonly class PrivateApplicationListController
                 description: 'Liste filtrée et paginée avec indicateur de propriété (isOwner).',
                 content: new JsonContent(
                     properties: [
-                        new Property(property: 'items', type: 'array', items: new OA\Items(type: 'object')),
-                        new Property(property: 'pagination', type: 'object'),
-                        new Property(property: 'filters', type: 'object'),
+                        new Property(
+                            property: 'items',
+                            type: 'array',
+                            items: new OA\Items(
+                                properties: [
+                                    new Property(property: 'id', type: 'string', example: 'fcb1f1e0-5f6f-4f5b-b7f2-4f5c64f42ea9'),
+                                    new Property(property: 'title', type: 'string', example: 'CRM Lite'),
+                                    new Property(property: 'slug', type: 'string', example: 'crm-lite'),
+                                    new Property(property: 'description', type: 'string', example: 'Application CRM pour équipes commerciales'),
+                                    new Property(property: 'photo', type: 'string', nullable: true),
+                                    new Property(property: 'status', type: 'string', example: 'active'),
+                                    new Property(property: 'private', type: 'boolean', example: true),
+                                    new Property(property: 'platformId', type: 'string', nullable: true),
+                                    new Property(property: 'platformName', type: 'string', example: 'CRM'),
+                                    new Property(property: 'platformKey', type: 'string', example: 'crm'),
+                                    new Property(property: 'calendarId', type: 'string', nullable: true, example: '6fdcb5de-57ac-4863-afec-1dd8bb3ef8f6'),
+                                    new Property(property: 'chatId', type: 'string', nullable: true, example: 'e233f52e-2dc3-4de5-bc5c-f65c1db4191e'),
+                                    new Property(property: 'pluginKeys', type: 'array', items: new OA\Items(type: 'string', example: 'analytics')),
+                                    new Property(
+                                        property: 'author',
+                                        properties: [
+                                            new Property(property: 'id', type: 'string', nullable: true),
+                                            new Property(property: 'firstName', type: 'string'),
+                                            new Property(property: 'lastName', type: 'string'),
+                                            new Property(property: 'photo', type: 'string'),
+                                        ],
+                                        type: 'object',
+                                    ),
+                                    new Property(property: 'createdAt', type: 'string', example: '2026-03-06T09:00:00+00:00', nullable: true),
+                                    new Property(property: 'isOwner', type: 'boolean', example: true),
+                                ],
+                                type: 'object',
+                            ),
+                        ),
+                        new Property(
+                            property: 'pagination',
+                            properties: [
+                                new Property(property: 'page', type: 'integer', example: 1),
+                                new Property(property: 'limit', type: 'integer', example: 10),
+                                new Property(property: 'totalItems', type: 'integer', example: 2),
+                                new Property(property: 'totalPages', type: 'integer', example: 1),
+                            ],
+                            type: 'object',
+                        ),
+                        new Property(
+                            property: 'filters',
+                            properties: [
+                                new Property(property: 'title', type: 'string', example: 'crm'),
+                                new Property(property: 'platformKey', type: 'string', example: 'crm'),
+                            ],
+                            type: 'object',
+                        ),
                     ],
                     type: 'object',
                 ),

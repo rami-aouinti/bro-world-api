@@ -57,6 +57,8 @@ readonly class PublicApplicationListController
                                     new Property(property: 'platformId', type: 'string'),
                                     new Property(property: 'platformName', type: 'string', example: 'Shop'),
                                     new Property(property: 'platformKey', type: 'string', example: 'shop'),
+                                    new Property(property: 'calendarId', type: 'string', nullable: true, example: '6fdcb5de-57ac-4863-afec-1dd8bb3ef8f6'),
+                                    new Property(property: 'chatId', type: 'string', nullable: true, example: 'e233f52e-2dc3-4de5-bc5c-f65c1db4191e'),
                                     new Property(property: 'pluginKeys', type: 'array', items: new OA\Items(type: 'string', example: 'analytics')),
                                     new Property(
                                         property: 'author',
