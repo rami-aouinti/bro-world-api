@@ -6,6 +6,7 @@ namespace App\Chat\Transport\Controller\Api\V1\Conversation;
 
 use App\Chat\Application\Service\ChatApplicationScopeValidator;
 use App\Chat\Application\Service\ConversationListService;
+use App\Chat\Domain\Entity\Chat;
 use JsonException;
 use OpenApi\Attributes as OA;
 use Psr\Cache\InvalidArgumentException;
@@ -44,10 +45,10 @@ readonly class ApplicationConversationListController
      * @throws JsonException
      * @throws InvalidArgumentException
      */
-    #[Route(path: '/v1/chat/{applicationSlug}/chats/{chatId}/conversations', methods: [Request::METHOD_GET])]
-    public function __invoke(string $applicationSlug, string $chatId, Request $request): JsonResponse
+    #[Route(path: '/v1/chat/{applicationSlug}/chats/{chat}/conversations', methods: [Request::METHOD_GET])]
+    public function __invoke(string $applicationSlug, Chat $chat, Request $request): JsonResponse
     {
-        $this->chatApplicationScopeValidator->validate($chatId, $applicationSlug);
+        $this->chatApplicationScopeValidator->validate($chat->getId(), $applicationSlug);
 
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
@@ -56,7 +57,7 @@ readonly class ApplicationConversationListController
         ];
 
         return ConversationJsonResponseFactory::create(
-            $this->conversationListService->getByChatId($chatId, $filters, $page, $limit)
+            $this->conversationListService->getByChatId($chat->getId(), $filters, $page, $limit)
         );
     }
 }
