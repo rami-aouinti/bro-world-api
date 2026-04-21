@@ -9,10 +9,13 @@ use App\General\Transport\Command\Traits\SymfonyStyleTrait;
 use App\Tool\Application\DTO\Warmup\WarmupEndpointConfig;
 use App\Tool\Application\Service\Elastic\Interfaces\ReindexAllDomainsServiceInterface;
 use App\Tool\Application\Service\Warmup\WarmupPublicEndpointsConfigProvider;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Lock\LockFactory;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -41,6 +44,8 @@ final class WarmupPublicEndpointsCommand extends Command
         private readonly HttpClientInterface $httpClient,
         private readonly WarmupPublicEndpointsConfigProvider $configProvider,
         private readonly string $warmupPublicEndpointsBaseUrl,
+        private readonly LockFactory $lockFactory,
+        private readonly LoggerInterface $logger,
     ) {
         parent::__construct();
     }
@@ -49,6 +54,24 @@ final class WarmupPublicEndpointsCommand extends Command
     {
         $io = $this->getSymfonyStyle($input, $output);
         $totalStart = microtime(true);
+        $lock = $this->lockFactory->createLock(self::NAME);
+
+        if (!$lock->acquire()) {
+            $io->warning('Another warmup process is already running.');
+            $this->logger->warning('Skipped public endpoints warmup because another execution is already running.');
+
+            return Command::FAILURE;
+        }
+
+        try {
+            return $this->executeWarmup($input, $output, $io, $totalStart);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    private function executeWarmup(InputInterface $input, OutputInterface $output, SymfonyStyle $io, float $totalStart): int
+    {
 
         $config = $this->configProvider->getConfig();
 
@@ -60,6 +83,7 @@ final class WarmupPublicEndpointsCommand extends Command
         $reindexStatus = $this->reindexAllDomainsService->reindexAllDomains($input, $output);
         if ($reindexStatus !== Command::SUCCESS) {
             $io->error('Elasticsearch reindex step failed.');
+            $this->logger->error('Public endpoints warmup aborted because Elasticsearch reindex step failed.');
 
             return Command::FAILURE;
         }
