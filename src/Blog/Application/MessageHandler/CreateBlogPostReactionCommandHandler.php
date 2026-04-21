@@ -55,6 +55,11 @@ final readonly class CreateBlogPostReactionCommandHandler
         if ($existingReaction instanceof BlogReaction) {
             $existingReaction->setType($command->type);
             $this->reactionRepository->save($existingReaction);
+            $this->blogNotificationService->publishBlogEvent($post, 'blog.post.reaction.updated', [
+                'reactionId' => $existingReaction->getId(),
+                'reactionType' => $command->type->value,
+                'actorUserId' => $user->getId(),
+            ]);
 
             $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
 
@@ -86,6 +91,11 @@ final readonly class CreateBlogPostReactionCommandHandler
 
             $existingReaction->setType($command->type);
             $this->reactionRepository->save($existingReaction);
+            $this->blogNotificationService->publishBlogEvent($post, 'blog.post.reaction.updated', [
+                'reactionId' => $existingReaction->getId(),
+                'reactionType' => $command->type->value,
+                'actorUserId' => $user->getId(),
+            ]);
 
             $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
 
@@ -93,6 +103,11 @@ final readonly class CreateBlogPostReactionCommandHandler
         }
 
         $this->blogNotificationService->notifyPostReactionCreated($post, $user, $command->type->value);
+        $this->blogNotificationService->publishBlogEvent($post, 'blog.post.reaction.created', [
+            'reactionId' => $reaction->getId(),
+            'reactionType' => $command->type->value,
+            'actorUserId' => $user->getId(),
+        ]);
         $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
 
         return $reaction->getId();

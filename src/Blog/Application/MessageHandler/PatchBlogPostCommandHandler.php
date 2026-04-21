@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Blog\Application\MessageHandler;
 
 use App\Blog\Application\Message\PatchBlogPostCommand;
+use App\Blog\Application\Service\BlogNotificationService;
 use App\Blog\Domain\Entity\BlogPost;
 use App\Blog\Infrastructure\Repository\BlogPostRepository;
 use App\General\Application\Service\CacheInvalidationService;
@@ -19,6 +20,7 @@ final readonly class PatchBlogPostCommandHandler
 {
     public function __construct(
         private BlogPostRepository $postRepository,
+        private BlogNotificationService $blogNotificationService,
         private CacheInvalidationService $cacheInvalidationService
     ) {
     }
@@ -61,6 +63,9 @@ final readonly class PatchBlogPostCommandHandler
         }
 
         $this->postRepository->save($post);
+        $this->blogNotificationService->publishBlogEvent($post, 'blog.post.updated', [
+            'actorUserId' => $command->actorUserId,
+        ]);
         $affectedUserIds = array_values(array_filter(array_unique([$command->actorUserId, $post->getAuthor()->getId()]), static fn (?string $userId): bool => $userId !== null && $userId !== ''));
         $this->cacheInvalidationService->invalidateBlogCaches($post->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
     }

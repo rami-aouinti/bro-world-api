@@ -78,6 +78,15 @@ final readonly class CreateBlogCommentCommandHandler
 
         $this->commentRepository->save($comment);
         $this->blogNotificationService->notifyCommentCreated($comment);
+        $this->blogNotificationService->publishBlogEvent(
+            $post,
+            $command->parentCommentId === null ? 'blog.comment.created' : 'blog.comment.reply.created',
+            [
+                'commentId' => $comment->getId(),
+                'parentCommentId' => $comment->getParent()?->getId(),
+                'actorUserId' => $user->getId(),
+            ],
+        );
 
         $affectedUserIds = array_values(array_filter(array_unique([
             $command->actorUserId,

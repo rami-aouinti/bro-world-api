@@ -6,9 +6,11 @@ namespace App\Blog\Application\Service;
 
 use App\Blog\Domain\Entity\BlogComment;
 use App\Blog\Domain\Entity\BlogPost;
+use App\General\Application\Service\MercurePublisher;
 use App\Notification\Application\Service\NotificationPublisher;
 use App\User\Domain\Entity\User;
 
+use DateTimeImmutable;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use JsonException;
@@ -18,10 +20,35 @@ use function trim;
 final readonly class BlogNotificationService
 {
     public const string BLOG_NOTIFICATION_TYPE = 'blog_notification';
+    public const string BLOG_EVENT_TYPE = 'blog_event';
 
     public function __construct(
-        private NotificationPublisher $notificationPublisher
+        private NotificationPublisher $notificationPublisher,
+        private MercurePublisher $mercurePublisher,
     ) {
+    }
+
+    /**
+     * @param array<string, mixed> $extra
+     * @throws JsonException
+     */
+    public function publishBlogEvent(BlogPost $post, string $event, array $extra = []): void
+    {
+        $blog = $post->getBlog();
+        $scope = $blog->getApplication()?->getSlug() ?? 'general';
+        $payload = array_merge([
+            'type' => self::BLOG_EVENT_TYPE,
+            'event' => $event,
+            'blogId' => $blog->getId(),
+            'blogSlug' => $blog->getSlug(),
+            'scope' => $scope,
+            'postId' => $post->getId(),
+            'occurredAt' => (new DateTimeImmutable())->format(DATE_ATOM),
+        ], $extra);
+
+        $this->mercurePublisher->publish('/blogs/' . $blog->getId() . '/events', $payload);
+        $this->mercurePublisher->publish('/blogs/scopes/' . $scope . '/events', $payload);
+        $this->mercurePublisher->publish('/blogs/' . $blog->getId() . '/posts/' . $post->getId() . '/events', $payload);
     }
 
     public function notifyCommentCreated(BlogComment $comment): void
