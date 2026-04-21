@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Crm\Transport\Controller\Api\V1\Sprint;
 
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Application\Service\CrmEntityBlogProvisioningService;
 use App\Crm\Domain\Entity\Sprint;
 use App\Crm\Domain\Enum\SprintStatus;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
@@ -34,6 +35,7 @@ final readonly class CreateSprintController
         private ProjectRepository $projectRepository,
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
+        private CrmEntityBlogProvisioningService $crmEntityBlogProvisioningService,
         private ValidatorInterface $validator,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
@@ -65,6 +67,7 @@ final readonly class CreateSprintController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '220670e1-4bc3-40da-92bb-89d5dca347a8'),
+                        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true, example: '1d2f3a4b-5c6d-7e8f-9012-3456789abcde'),
                     ],
                 ),
             ),
@@ -160,6 +163,7 @@ final readonly class CreateSprintController
         }
 
         $this->entityManager->persist($sprint);
+        $this->crmEntityBlogProvisioningService->provision($sprint);
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityCreated('crm_sprint', $sprint->getId(), context: [
             'applicationSlug' => $applicationSlug,
@@ -168,6 +172,7 @@ final readonly class CreateSprintController
 
         return new JsonResponse([
             'id' => $sprint->getId(),
+            'blogId' => $sprint->getBlog()?->getId(),
         ], JsonResponse::HTTP_CREATED);
     }
 

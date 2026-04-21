@@ -6,7 +6,7 @@ namespace App\Crm\Transport\Controller\Api\V1\TaskRequest;
 
 use App\Crm\Application\Message\ProvisionTaskRequestGithubIssue;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
-use App\Crm\Application\Service\CrmTaskBlogProvisioningService;
+use App\Crm\Application\Service\CrmEntityBlogProvisioningService;
 use App\Crm\Domain\Entity\TaskRequest;
 use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\Crm\Infrastructure\Repository\CrmProjectRepositoryRepository;
@@ -38,7 +38,7 @@ final readonly class CreateTaskRequestController
         private CrmProjectRepositoryRepository $crmProjectRepositoryRepository,
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
-        private CrmTaskBlogProvisioningService $crmTaskBlogProvisioningService,
+        private CrmEntityBlogProvisioningService $crmEntityBlogProvisioningService,
         private CrmRequestHandler $crmRequestHandler,
         private CrmDateParser $crmDateParser,
         private EntityManagerInterface $entityManager,
@@ -64,6 +64,7 @@ final readonly class CreateTaskRequestController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'string', format: 'uuid', example: 'a8ebfd5d-0fa8-4346-8ca2-ff5b7b1f6657'),
+                        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true, example: '1d2f3a4b-5c6d-7e8f-9012-3456789abcde'),
                     ],
                 ),
             ),
@@ -142,7 +143,7 @@ final readonly class CreateTaskRequestController
         }
 
         $this->entityManager->persist($taskRequest);
-        $this->crmTaskBlogProvisioningService->provision($taskRequest);
+        $this->crmEntityBlogProvisioningService->provision($taskRequest);
         $this->entityManager->flush();
         $this->messageBus->dispatch(new ProvisionTaskRequestGithubIssue($taskRequest->getId()));
         $this->messageBus->dispatch(new EntityCreated('crm_task_request', $taskRequest->getId(), context: [
@@ -151,6 +152,7 @@ final readonly class CreateTaskRequestController
 
         return new JsonResponse([
             'id' => $taskRequest->getId(),
+            'blogId' => $taskRequest->getBlog()?->getId(),
         ], JsonResponse::HTTP_CREATED);
     }
 }

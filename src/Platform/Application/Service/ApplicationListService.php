@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Platform\Application\Service;
 
+use App\Calendar\Infrastructure\Repository\CalendarRepository;
+use App\Chat\Infrastructure\Repository\ChatRepository;
 use App\Configuration\Domain\Entity\Configuration;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
@@ -24,6 +26,8 @@ readonly class ApplicationListService
 {
     public function __construct(
         private ApplicationRepositoryInterface $applicationRepository,
+        private CalendarRepository $calendarRepository,
+        private ChatRepository $chatRepository,
         private CacheInterface $cache,
         private ElasticsearchServiceInterface $elasticsearchService,
         private CacheKeyConventionService $cacheKeyConventionService,
@@ -103,6 +107,9 @@ readonly class ApplicationListService
             $items = [];
             /** @var Application $application */
             foreach ($query->getResult() as $application) {
+                $calendar = $this->calendarRepository->findOneByApplication($application);
+                $chat = $this->chatRepository->findOneByApplication($application);
+
                 $pluginKeys = [];
                 foreach ($application->getApplicationPlugins() as $applicationPlugin) {
                     $pluginKey = $applicationPlugin->getPlugin()?->getPluginKeyValue();
@@ -122,6 +129,8 @@ readonly class ApplicationListService
                     'platformId' => $application->getPlatform()?->getId(),
                     'platformName' => $application->getPlatform()?->getName(),
                     'platformKey' => $application->getPlatform()?->getPlatformKeyValue(),
+                    'calendarId' => $calendar?->getId(),
+                    'chatId' => $chat?->getId(),
                     'pluginKeys' => array_keys($pluginKeys),
                     'plugins' => array_map(static fn (ApplicationPlugin $applicationPlugin) => [
                         'id' => $applicationPlugin->getId(),

@@ -10,7 +10,7 @@ use App\Crm\Application\Exception\CrmOutOfScopeException;
 use App\Crm\Application\Exception\CrmReferenceNotFoundException;
 use App\Crm\Application\Service\CreateTaskHandler;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
-use App\Crm\Application\Service\CrmTaskBlogProvisioningService;
+use App\Crm\Application\Service\CrmEntityBlogProvisioningService;
 use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\Crm\Transport\Request\CrmDateParser;
 use App\Crm\Transport\Request\CrmRequestHandler;
@@ -34,7 +34,7 @@ final readonly class CreateTaskController
     public function __construct(
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
-        private CrmTaskBlogProvisioningService $crmTaskBlogProvisioningService,
+        private CrmEntityBlogProvisioningService $crmEntityBlogProvisioningService,
         private CrmRequestHandler $crmRequestHandler,
         private CrmDateParser $crmDateParser,
         private CreateTaskHandler $createTaskHandler,
@@ -88,6 +88,7 @@ final readonly class CreateTaskController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '8f6a3550-9a07-4f69-9f75-0089f7d83e7f'),
+                        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true, example: '1d2f3a4b-5c6d-7e8f-9012-3456789abcde'),
                     ],
                 ),
             ),
@@ -140,12 +141,15 @@ final readonly class CreateTaskController
         }
 
         $this->entityManager->persist($task);
-        $this->crmTaskBlogProvisioningService->provision($task);
+        $this->crmEntityBlogProvisioningService->provision($task);
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityCreated('crm_task', $task->getId(), context: [
             'applicationSlug' => $applicationSlug,
         ]));
 
-        return new JsonResponse(new EntityIdResponseDto($task->getId())->toArray(), JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $task->getId(),
+            'blogId' => $task->getBlog()?->getId(),
+        ], JsonResponse::HTTP_CREATED);
     }
 }

@@ -45,6 +45,7 @@ final readonly class ListSprintsController
                             [
                                 'id' => '8f6a3550-9a07-4f69-9f75-0089f7d83e7f',
                                 'label' => 'CRM item',
+                                'blogId' => '1d2f3a4b-5c6d-7e8f-9012-3456789abcde',
                             ],
                         ],
                         'pagination' => [

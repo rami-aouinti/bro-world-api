@@ -33,6 +33,9 @@ services:
             $jwtBindClientFingerprint: '%env(bool:JWT_BIND_CLIENT_FINGERPRINT)%'
             $warmupPublicEndpointsBaseUrl: '%env(default:DEFAULT_URI:APP_WARMUP_PUBLIC_ENDPOINTS_BASE_URL)%'
             $warmupPublicEndpointsConfigPath: '%kernel.project_dir%/config/warmup/public_endpoints.yaml'
+            $warmupCriticalFailureWindowSeconds: '%env(int:default:7200:APP_WARMUP_CRITICAL_FAILURE_WINDOW_SECONDS)%'
+            $warmupCriticalFailureAlertThreshold: '%env(int:default:3:APP_WARMUP_CRITICAL_FAILURE_ALERT_THRESHOLD)%'
+            $warmupCriticalFailureSlackWebhook: '%env(default::APP_WARMUP_CRITICAL_FAILURE_SLACK_WEBHOOK)%'
     _instanceof:
         App\General\Application\Rest\Interfaces\RestResourceInterface:
             tags: [ 'app.rest.resource', 'app.stopwatch' ]
@@ -161,6 +164,13 @@ services:
     App\Tool\Application\Service\Warmup\WarmupPublicEndpointsConfigProvider:
         arguments:
             $configPath: '%warmupPublicEndpointsConfigPath%'
+
+
+    App\Tool\Application\Service\Warmup\WarmupPublicEndpointsObservabilityService:
+        arguments:
+            $monitoringLogger: '@monolog.logger.monitoring'
+            $appCache: '@cache.app'
+            $notifier: '@?notifier'
 
     App\Media\Application\Service\MediaUploaderService:
         arguments:

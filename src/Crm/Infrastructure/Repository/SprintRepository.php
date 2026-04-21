@@ -78,7 +78,7 @@ class SprintRepository extends BaseRepository
     public function findScopedProjection(string $crmId, int $limit, int $offset, array $filters = []): array
     {
         $qb = $this->createQueryBuilder('sprint')
-            ->select('sprint.id, sprint.name, sprint.status, sprint.startDate, sprint.endDate, IDENTITY(sprint.project) AS projectId')
+            ->select('sprint.id, sprint.name, sprint.status, sprint.startDate, sprint.endDate, IDENTITY(sprint.project) AS projectId, IDENTITY(sprint.blog) AS blogId')
             ->leftJoin('sprint.project', 'project')
             ->leftJoin('project.company', 'company')
             ->andWhere('company.crm = :crmId')
