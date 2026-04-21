@@ -1,0 +1,11 @@
+critical:
+  - path: '/api/health'
+  - path: '/api/version'
+  - path: '/api/v1/localization/language'
+secondary:
+  - path: '/api/v1/localization/locale'
+  - path: '/api/v1/localization/timezone'
+max_concurrency: 3
+timeout_seconds: 2.5
+retry_max: 2
+success_threshold_ms: 600

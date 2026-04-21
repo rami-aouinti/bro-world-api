@@ -6,14 +6,18 @@ namespace App\Tool\Transport\Command;
 
 use App\General\Application\Service\CacheInvalidationService;
 use App\General\Transport\Command\Traits\SymfonyStyleTrait;
+use App\Tool\Application\DTO\Warmup\WarmupEndpointConfig;
 use App\Tool\Application\Service\Elastic\Interfaces\ReindexAllDomainsServiceInterface;
+use App\Tool\Application\Service\Warmup\WarmupPublicEndpointsConfigProvider;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
 
+use function array_chunk;
 use function array_filter;
 use function count;
 use function microtime;
@@ -31,24 +35,11 @@ final class WarmupPublicEndpointsCommand extends Command
 
     final public const string NAME = 'app:warmup:public-endpoints';
 
-    private const float REQUEST_TIMEOUT = 2.5;
-    private const int MAX_ATTEMPTS = 2;
-
-    /**
-     * @var list<array{path: string, critical: bool}>
-     */
-    private const array ENDPOINTS = [
-        ['path' => '/api/health', 'critical' => true],
-        ['path' => '/api/version', 'critical' => true],
-        ['path' => '/api/v1/localization/language', 'critical' => true],
-        ['path' => '/api/v1/localization/locale', 'critical' => false],
-        ['path' => '/api/v1/localization/timezone', 'critical' => false],
-    ];
-
     public function __construct(
         private readonly CacheInvalidationService $cacheInvalidationService,
         private readonly ReindexAllDomainsServiceInterface $reindexAllDomainsService,
         private readonly HttpClientInterface $httpClient,
+        private readonly WarmupPublicEndpointsConfigProvider $configProvider,
         private readonly string $warmupPublicEndpointsBaseUrl,
     ) {
         parent::__construct();
@@ -58,6 +49,8 @@ final class WarmupPublicEndpointsCommand extends Command
     {
         $io = $this->getSymfonyStyle($input, $output);
         $totalStart = microtime(true);
+
+        $config = $this->configProvider->getConfig();
 
         $io->section('1/4 Cache invalidation');
         $this->invalidateTargetedCaches();
@@ -73,11 +66,8 @@ final class WarmupPublicEndpointsCommand extends Command
         $io->success('Elasticsearch reindex completed.');
 
         $io->section('3/4 HTTP endpoints warmup');
-        $results = [];
-        foreach (self::ENDPOINTS as $endpoint) {
-            $result = $this->warmEndpoint($endpoint['path'], $endpoint['critical']);
-            $results[] = $result;
-
+        $results = $this->warmEndpoints($config->endpoints, $config->maxConcurrency, $config->timeoutSeconds, $config->retryMax, $config->successThresholdMs);
+        foreach ($results as $result) {
             $state = $result['success'] ? 'OK' : 'FAIL';
             $io->writeln(sprintf(
                 '[%s] %s (status=%s, attempts=%d, latency=%sms)',
@@ -134,51 +124,89 @@ final class WarmupPublicEndpointsCommand extends Command
     }
 
     /**
-     * @return array{url: string, statusCode: int|null, success: bool, critical: bool, attempts: int, latencyMs: float}
+     * @param list<WarmupEndpointConfig> $endpoints
+     *
+     * @return list<array{url: string, statusCode: int|null, success: bool, critical: bool, attempts: int, latencyMs: float}>
      */
-    private function warmEndpoint(string $path, bool $critical): array
+    private function warmEndpoints(array $endpoints, int $maxConcurrency, float $timeoutSeconds, int $retryMax, ?float $globalSuccessThresholdMs): array
     {
-        $url = rtrim($this->warmupPublicEndpointsBaseUrl, '/') . $path;
-        $statusCode = null;
-        $success = false;
-        $latencyMs = 0.0;
+        $resultsByPath = [];
 
-        for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; ++$attempt) {
-            $startedAt = microtime(true);
-            try {
-                $response = $this->httpClient->request('GET', $url, [
-                    'timeout' => self::REQUEST_TIMEOUT,
-                    'headers' => [
-                        'User-Agent' => 'warmup-bot',
-                    ],
-                ]);
+        for ($attempt = 1; $attempt <= $retryMax; ++$attempt) {
+            $remaining = [];
+            foreach ($endpoints as $endpoint) {
+                if (!isset($resultsByPath[$endpoint->path]) || !$resultsByPath[$endpoint->path]['success']) {
+                    $remaining[] = $endpoint;
+                }
+            }
 
-                $statusCode = $response->getStatusCode();
-                $latencyMs = (microtime(true) - $startedAt) * 1000;
-                if ($statusCode >= 200 && $statusCode < 400) {
-                    $success = true;
+            if ($remaining === []) {
+                break;
+            }
 
-                    return [
+            foreach (array_chunk($remaining, $maxConcurrency) as $chunk) {
+                $responses = [];
+                foreach ($chunk as $endpoint) {
+                    $url = rtrim($this->warmupPublicEndpointsBaseUrl, '/') . $endpoint->path;
+                    $responses[$endpoint->path] = [
+                        'endpoint' => $endpoint,
                         'url' => $url,
+                        'startedAt' => microtime(true),
+                        'response' => $this->httpClient->request('GET', $url, [
+                            'timeout' => $timeoutSeconds,
+                            'headers' => [
+                                'User-Agent' => 'warmup-bot',
+                            ],
+                        ]),
+                    ];
+                }
+
+                foreach ($responses as $path => $responseData) {
+                    $endpoint = $responseData['endpoint'];
+                    $statusCode = null;
+                    $success = false;
+                    $latencyMs = 0.0;
+
+                    try {
+                        $response = $responseData['response'];
+                        if ($response instanceof ResponseInterface) {
+                            $statusCode = $response->getStatusCode();
+                        }
+                        $latencyMs = (microtime(true) - $responseData['startedAt']) * 1000;
+                        $successThresholdMs = $endpoint->successThresholdMs ?? $globalSuccessThresholdMs;
+
+                        $success = $statusCode !== null
+                            && $statusCode >= 200
+                            && $statusCode < 400
+                            && ($successThresholdMs === null || $latencyMs <= $successThresholdMs);
+                    } catch (ExceptionInterface) {
+                        $latencyMs = (microtime(true) - $responseData['startedAt']) * 1000;
+                    }
+
+                    $resultsByPath[$path] = [
+                        'url' => $responseData['url'],
                         'statusCode' => $statusCode,
                         'success' => $success,
-                        'critical' => $critical,
+                        'critical' => $endpoint->critical,
                         'attempts' => $attempt,
                         'latencyMs' => $latencyMs,
                     ];
                 }
-            } catch (ExceptionInterface) {
-                $latencyMs = (microtime(true) - $startedAt) * 1000;
             }
         }
 
-        return [
-            'url' => $url,
-            'statusCode' => $statusCode,
-            'success' => $success,
-            'critical' => $critical,
-            'attempts' => self::MAX_ATTEMPTS,
-            'latencyMs' => $latencyMs,
-        ];
+        $orderedResults = [];
+        foreach ($endpoints as $endpoint) {
+            $orderedResults[] = $resultsByPath[$endpoint->path] ?? [
+                'url' => rtrim($this->warmupPublicEndpointsBaseUrl, '/') . $endpoint->path,
+                'statusCode' => null,
+                'success' => false,
+                'critical' => $endpoint->critical,
+                'attempts' => $retryMax,
+                'latencyMs' => 0.0,
+            ];
+        }
+
+        return $orderedResults;
     }
 }
