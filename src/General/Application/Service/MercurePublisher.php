@@ -19,8 +19,6 @@ final readonly class MercurePublisher
         private LoggerInterface $logger,
         #[Autowire('%env(string:MERCURE_PUBLISH_URL)%')]
         private string $mercurePublishUrl,
-        #[Autowire('%env(string:MERCURE_JWT_SECRET)%')]
-        private string $mercureJwtSecret,
     ) {
     }
 
@@ -43,7 +41,6 @@ final readonly class MercurePublisher
 
         try {
             $this->httpClient->request('POST', $this->mercurePublishUrl, [
-                'auth_bearer' => $this->mercureJwtSecret,
                 'body' => $payload,
             ])->getStatusCode();
         } catch (ExceptionInterface $exception) {
