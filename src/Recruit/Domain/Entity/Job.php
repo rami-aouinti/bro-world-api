@@ -7,6 +7,7 @@ namespace App\Recruit\Domain\Entity;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use App\Quiz\Domain\Entity\Quiz;
 use App\Recruit\Domain\Enum\ContractType;
 use App\Recruit\Domain\Enum\ExperienceLevel;
 use App\Recruit\Domain\Enum\Schedule;
@@ -71,6 +72,10 @@ class Job implements EntityInterface
     #[ORM\JoinColumn(name: 'salary_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     #[Groups(['Job', 'Job.salary'])]
     private ?Salary $salary = null;
+
+    #[ORM\ManyToOne(targetEntity: Quiz::class)]
+    #[ORM\JoinColumn(name: 'quiz_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?Quiz $quiz = null;
 
     #[ORM\Column(name: 'location', type: Types::STRING, length: 255, options: [
         'default' => '',
@@ -263,6 +268,24 @@ class Job implements EntityInterface
     public function setSalary(?Salary $salary): self
     {
         $this->salary = $salary;
+
+        return $this;
+    }
+
+    #[Groups(['Job', 'Job.quizId'])]
+    public function getQuizId(): ?string
+    {
+        return $this->quiz?->getId();
+    }
+
+    public function getQuiz(): ?Quiz
+    {
+        return $this->quiz;
+    }
+
+    public function setQuiz(?Quiz $quiz): self
+    {
+        $this->quiz = $quiz;
 
         return $this;
     }

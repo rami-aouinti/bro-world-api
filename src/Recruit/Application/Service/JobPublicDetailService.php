@@ -194,6 +194,7 @@ readonly class JobPublicDetailService
     {
         return [
             'id' => $job->getId(),
+            'quizId' => $job->getQuizId(),
             'slug' => $job->getSlug(),
             'title' => $job->getTitle(),
             'company' => [

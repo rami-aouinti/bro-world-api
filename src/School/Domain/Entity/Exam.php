@@ -7,6 +7,7 @@ namespace App\School\Domain\Entity;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use App\Quiz\Domain\Entity\Quiz;
 use App\School\Domain\Enum\ExamStatus;
 use App\School\Domain\Enum\ExamType;
 use App\School\Domain\Enum\Term;
@@ -23,6 +24,7 @@ use Ramsey\Uuid\UuidInterface;
 #[ORM\Index(name: 'idx_school_exam_class_id', columns: ['class_id'])]
 #[ORM\Index(name: 'idx_school_exam_teacher_id', columns: ['teacher_id'])]
 #[ORM\Index(name: 'idx_school_exam_course_id', columns: ['course_id'])]
+#[ORM\Index(name: 'idx_school_exam_quiz_id', columns: ['quiz_id'])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class Exam implements EntityInterface
 {
@@ -56,6 +58,10 @@ class Exam implements EntityInterface
 
     #[ORM\Column(name: 'term', type: Types::STRING, length: 32, enumType: Term::class)]
     private Term $term = Term::TERM_1;
+
+    #[ORM\ManyToOne(targetEntity: Quiz::class)]
+    #[ORM\JoinColumn(name: 'quiz_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?Quiz $quiz = null;
 
     /** @var Collection<int, Grade>|ArrayCollection<int, Grade> */
     #[ORM\OneToMany(targetEntity: Grade::class, mappedBy: 'exam')]
@@ -144,6 +150,18 @@ class Exam implements EntityInterface
     public function setTerm(Term $term): self
     {
         $this->term = $term;
+
+        return $this;
+    }
+
+    public function getQuiz(): ?Quiz
+    {
+        return $this->quiz;
+    }
+
+    public function setQuiz(?Quiz $quiz): self
+    {
+        $this->quiz = $quiz;
 
         return $this;
     }

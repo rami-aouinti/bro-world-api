@@ -18,6 +18,7 @@ final readonly class CreateExamService
 {
     public function __construct(
         private SchoolReferenceResolver $referenceResolver,
+        private SchoolExamQuizProvisioningService $schoolExamQuizProvisioningService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -55,6 +56,11 @@ final readonly class CreateExamService
             ->setTeacher($teacher);
 
         $this->entityManager->persist($exam);
+
+        if ($type === ExamType::QUIZ) {
+            $this->schoolExamQuizProvisioningService->provision($exam);
+        }
+
         $this->entityManager->flush();
         $applicationSlug = $class->getSchool()?->getApplication()?->getSlug();
         $this->messageBus->dispatch(new EntityCreated('school_exam', $exam->getId(), context: [

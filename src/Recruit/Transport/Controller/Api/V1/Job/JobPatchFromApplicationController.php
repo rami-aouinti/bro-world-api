@@ -62,6 +62,7 @@ readonly class JobPatchFromApplicationController
             'recruitId' => $recruit->getId(),
             'slug' => $job->getSlug(),
             'title' => $job->getTitle(),
+            'quizId' => $job->getQuiz()?->getId(),
         ]);
     }
 }

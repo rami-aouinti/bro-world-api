@@ -92,6 +92,7 @@ final readonly class CreateExamController
 
         return new JsonResponse([
             'id' => $exam->getId(),
+            'quizId' => $exam->getQuiz()?->getId(),
         ], JsonResponse::HTTP_CREATED);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Platform\Application\Service\PluginProvisioning;
 
 use App\Platform\Domain\Entity\Application;
+use App\Platform\Domain\Enum\PlatformKey;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Quiz\Domain\Entity\QuizQuestion;
 use App\Quiz\Domain\Enum\QuizLevel;
@@ -25,6 +26,11 @@ final readonly class QuizPluginProvisioner
 
     public function provision(Application $application): void
     {
+        $platformKey = $application->getPlatform()?->getPlatformKey();
+        if ($platformKey === PlatformKey::SCHOOL || $platformKey === PlatformKey::RECRUIT) {
+            return;
+        }
+
         $quiz = $this->quizRepository->findOneByApplication($application);
         if (!$quiz instanceof Quiz) {
             $quiz = (new Quiz())
