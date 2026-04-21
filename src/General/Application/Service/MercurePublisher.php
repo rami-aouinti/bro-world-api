@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\General\Application\Service;
 
+use JsonException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
@@ -24,7 +25,10 @@ final readonly class MercurePublisher
     }
 
     /**
+     * @param string $topic
      * @param array<string, mixed> $data
+     * @param bool $private
+     * @throws JsonException
      */
     public function publish(string $topic, array $data, bool $private = true): void
     {

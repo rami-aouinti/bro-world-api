@@ -107,9 +107,9 @@ final readonly class FindOrCreateConversationWithUserCommandHandler
             'created' => $result['created'],
         ];
 
-        $this->mercurePublisher->publish('/users/' . $result['actorUserId'] . '/conversations', $payload);
+        $this->mercurePublisher->publish('/users/' . $result['actorUserId'] . '/conversations', $payload, false);
         if ($result['targetUserId'] !== $result['actorUserId']) {
-            $this->mercurePublisher->publish('/users/' . $result['targetUserId'] . '/conversations', $payload);
+            $this->mercurePublisher->publish('/users/' . $result['targetUserId'] . '/conversations', $payload, false);
         }
     }
 }

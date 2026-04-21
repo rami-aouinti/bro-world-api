@@ -81,6 +81,7 @@ final readonly class CreateNotificationCommandHandler
             'recipientId' => $notification->getRecipient()->getId(),
             'fromId' => $notification->getFrom()?->getId(),
             'createdAt' => $notification->getCreatedAt()?->format(DATE_ATOM),
+            false
         ]);
     }
 }

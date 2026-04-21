@@ -9,6 +9,9 @@ use App\Blog\Domain\Entity\BlogPost;
 use App\Notification\Application\Service\NotificationPublisher;
 use App\User\Domain\Entity\User;
 
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
+use JsonException;
 use function mb_strimwidth;
 use function trim;
 
@@ -89,6 +92,11 @@ final readonly class BlogNotificationService
         }
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws JsonException
+     * @throws ORMException
+     */
     public function notifyPostReactionCreated(BlogPost $post, User $actor, string $reactionType): void
     {
         $actionLabel = $reactionType === 'like' ? 'liked' : ('reacted (' . $reactionType . ') to');
@@ -108,7 +116,7 @@ final readonly class BlogNotificationService
 
     private function buildPostLinkDescription(BlogPost $post): string
     {
-        return '/blog/post/' . $post->getId();
+        return '/blog/post/' . $post->getSlug();
     }
 
     private function buildTitle(User $actor, string $action, string $target): string

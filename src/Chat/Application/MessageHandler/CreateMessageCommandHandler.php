@@ -75,6 +75,7 @@ final readonly class CreateMessageCommandHandler
             'content' => $result['message']->getContent(),
             'attachments' => $result['message']->getAttachments(),
             'createdAt' => $result['message']->getCreatedAt()?->format(DATE_ATOM),
+            false
         ]);
 
         return $result['message']->getId();

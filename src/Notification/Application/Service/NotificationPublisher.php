@@ -48,6 +48,7 @@ final readonly class NotificationPublisher
             'recipientId' => $recipient->getId(),
             'fromId' => $from->getId(),
             'createdAt' => $notification->getCreatedAt()?->format(DATE_ATOM),
+            false
         ]);
     }
 }

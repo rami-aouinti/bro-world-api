@@ -36,8 +36,8 @@ final readonly class GetGeneralCartController
     #[Route('/v1/shop/general/carts/{shopId}', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'shopId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: 'f95da407-b9f0-4d5f-a14e-15c4b22af6e3'))]
     #[OA\Get(
-        summary: 'Get the authenticated user active cart for a global shop.',
         description: 'Manual /api/doc chain step 2/6: GET /v1/shop/general/carts/{shopId}. Reuse shopId=f95da407-b9f0-4d5f-a14e-15c4b22af6e3 from step 1 and verify cart totals before checkout in step 3.',
+        summary: 'Get the authenticated user active cart for a global shop.',
         security: [['Bearer' => []]],
     )]
     #[OA\Response(
