@@ -57,6 +57,12 @@ final readonly class CreateBlogReactionCommandHandler
         if ($existingReaction instanceof BlogReaction) {
             $existingReaction->setType($command->type);
             $this->reactionRepository->save($existingReaction);
+            $this->blogNotificationService->publishBlogEvent($comment->getPost(), 'blog.comment.reaction.updated', [
+                'reactionId' => $existingReaction->getId(),
+                'commentId' => $comment->getId(),
+                'reactionType' => $command->type->value,
+                'actorUserId' => $user->getId(),
+            ]);
 
             $this->cacheInvalidationService->invalidateBlogCaches($comment->getPost()->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
 
@@ -88,6 +94,12 @@ final readonly class CreateBlogReactionCommandHandler
 
             $existingReaction->setType($command->type);
             $this->reactionRepository->save($existingReaction);
+            $this->blogNotificationService->publishBlogEvent($comment->getPost(), 'blog.comment.reaction.updated', [
+                'reactionId' => $existingReaction->getId(),
+                'commentId' => $comment->getId(),
+                'reactionType' => $command->type->value,
+                'actorUserId' => $user->getId(),
+            ]);
 
             $this->cacheInvalidationService->invalidateBlogCaches($comment->getPost()->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
 
@@ -95,6 +107,12 @@ final readonly class CreateBlogReactionCommandHandler
         }
 
         $this->blogNotificationService->notifyReactionCreated($comment, $user, $command->type->value);
+        $this->blogNotificationService->publishBlogEvent($comment->getPost(), 'blog.comment.reaction.created', [
+            'reactionId' => $reaction->getId(),
+            'commentId' => $comment->getId(),
+            'reactionType' => $command->type->value,
+            'actorUserId' => $user->getId(),
+        ]);
         $this->cacheInvalidationService->invalidateBlogCaches($comment->getPost()->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
 
         return $reaction->getId();

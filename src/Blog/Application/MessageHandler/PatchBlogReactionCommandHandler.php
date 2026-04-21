@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Blog\Application\MessageHandler;
 
 use App\Blog\Application\Message\PatchBlogReactionCommand;
+use App\Blog\Application\Service\BlogNotificationService;
 use App\Blog\Domain\Entity\BlogReaction;
 use App\Blog\Infrastructure\Repository\BlogReactionRepository;
 use App\General\Application\Service\CacheInvalidationService;
@@ -19,6 +20,7 @@ final readonly class PatchBlogReactionCommandHandler
 {
     public function __construct(
         private BlogReactionRepository $reactionRepository,
+        private BlogNotificationService $blogNotificationService,
         private CacheInvalidationService $cacheInvalidationService
     ) {
     }
@@ -41,7 +43,15 @@ final readonly class PatchBlogReactionCommandHandler
 
         $reaction->setType($command->type);
         $this->reactionRepository->save($reaction);
-        $post = $reaction->getPost();
+        $post = $reaction->getPost() ?? $reaction->getComment()?->getPost();
+        if ($post !== null) {
+            $this->blogNotificationService->publishBlogEvent($post, 'blog.reaction.updated', [
+                'reactionId' => $reaction->getId(),
+                'reactionType' => $reaction->getType()->value,
+                'commentId' => $reaction->getComment()?->getId(),
+                'actorUserId' => $command->actorUserId,
+            ]);
+        }
         $affectedUserIds = array_values(array_filter(array_unique([$command->actorUserId, $reaction->getAuthor()->getId(), $post?->getAuthor()->getId(), $reaction->getComment()?->getAuthor()->getId(), $reaction->getComment()?->getParent()?->getAuthor()->getId()]), static fn (?string $userId): bool => $userId !== null && $userId !== ''));
         $this->cacheInvalidationService->invalidateBlogCaches($post?->getBlog()->getApplication()?->getSlug(), $affectedUserIds);
     }
