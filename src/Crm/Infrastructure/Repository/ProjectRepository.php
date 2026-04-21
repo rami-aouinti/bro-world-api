@@ -78,7 +78,7 @@ class ProjectRepository extends BaseRepository
     public function findScopedProjection(string $crmId, int $limit, int $offset, array $filters = []): array
     {
         $qb = $this->createQueryBuilder('project')
-            ->select('project.id, project.name, project.status, project.provisioningStatus, project.githubResourceIds, COUNT(repository.id) AS githubRepositoriesCount')
+            ->select('project.id, project.name, project.status, IDENTITY(project.blog) AS blogId, project.provisioningStatus, project.githubResourceIds, COUNT(repository.id) AS githubRepositoriesCount')
             ->leftJoin('project.company', 'company')
             ->leftJoin('project.repositories', 'repository')
             ->andWhere('company.crm = :crmId')

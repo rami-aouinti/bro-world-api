@@ -73,6 +73,7 @@ final readonly class CreateProjectController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'string', format: 'uuid', example: 'ebf77366-d60c-4ac4-b204-9f91a7f7ee12'),
+                        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true, example: '1d2f3a4b-5c6d-7e8f-9012-3456789abcde'),
                         new OA\Property(property: 'provisioning', type: 'object', properties: [
                             new OA\Property(property: 'state', type: 'string', enum: ['pending', 'provisioned', 'failed'], example: 'pending'),
                             new OA\Property(property: 'error', type: 'object', nullable: true, properties: [
@@ -200,6 +201,7 @@ final readonly class CreateProjectController
 
         return new JsonResponse([
             'id' => $project->getId(),
+            'blogId' => $project->getBlog()?->getId(),
             'provisioning' => [
                 'state' => 'pending',
                 'error' => null,

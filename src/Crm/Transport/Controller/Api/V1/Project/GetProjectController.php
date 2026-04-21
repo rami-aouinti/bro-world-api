@@ -32,7 +32,16 @@ final readonly class GetProjectController
         summary: 'Get Project',
         description: 'Exécute l action metier Get Project dans le perimetre de l application CRM.',
         responses: [
-            new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),
+            new OA\Response(
+                response: JsonResponse::HTTP_OK,
+                description: 'Opération exécutée avec succès.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+                        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true),
+                    ],
+                ),
+            ),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
             new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Authentification requise.'),
             new OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Accès refusé.'),
