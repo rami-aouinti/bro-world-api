@@ -6,6 +6,7 @@ namespace App\Crm\Transport\Controller\Api\V1\Project;
 
 use App\Crm\Application\Message\ProjectCreated;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Application\Service\CrmEntityBlogProvisioningService;
 use App\Crm\Domain\Entity\Project;
 use App\Crm\Domain\Enum\ProjectStatus;
 use App\Crm\Infrastructure\Repository\CompanyRepository;
@@ -36,6 +37,7 @@ final readonly class CreateProjectController
         private CompanyRepository $companyRepository,
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
+        private CrmEntityBlogProvisioningService $crmEntityBlogProvisioningService,
         private ValidatorInterface $validator,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
@@ -186,6 +188,7 @@ final readonly class CreateProjectController
         }
 
         $this->entityManager->persist($project);
+        $this->crmEntityBlogProvisioningService->provision($project);
         $this->entityManager->flush();
 
         $this->messageBus->dispatch(new ProjectCreated($project->getId(), $applicationSlug));

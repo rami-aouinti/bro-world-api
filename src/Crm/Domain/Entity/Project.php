@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Crm\Domain\Entity;
 
+use App\Blog\Domain\Entity\Blog;
 use App\Crm\Domain\Enum\ProjectStatus;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
@@ -78,6 +79,10 @@ class Project implements EntityInterface
 
     #[ORM\Column(name: 'github_token', type: Types::STRING, length: 255, nullable: true)]
     private ?string $githubToken = null;
+
+    #[ORM\OneToOne(targetEntity: Blog::class, cascade: ['persist'])]
+    #[ORM\JoinColumn(name: 'blog_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?Blog $blog = null;
 
     #[ORM\Column(name: 'provisioning_status', type: Types::STRING, length: 40, options: [
         'default' => 'pending',
@@ -275,6 +280,18 @@ class Project implements EntityInterface
     public function setGithubToken(?string $githubToken): self
     {
         $this->githubToken = $githubToken;
+
+        return $this;
+    }
+
+    public function getBlog(): ?Blog
+    {
+        return $this->blog;
+    }
+
+    public function setBlog(?Blog $blog): self
+    {
+        $this->blog = $blog;
 
         return $this;
     }
