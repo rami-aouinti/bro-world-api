@@ -9,6 +9,7 @@ use App\General\Transport\Command\Traits\SymfonyStyleTrait;
 use App\Tool\Application\DTO\Warmup\WarmupEndpointConfig;
 use App\Tool\Application\Service\Elastic\Interfaces\ReindexAllDomainsServiceInterface;
 use App\Tool\Application\Service\Warmup\WarmupPublicEndpointsConfigProvider;
+use App\Tool\Application\Service\Warmup\WarmupPublicEndpointsObservabilityService;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -46,6 +47,7 @@ final class WarmupPublicEndpointsCommand extends Command
         private readonly string $warmupPublicEndpointsBaseUrl,
         private readonly LockFactory $lockFactory,
         private readonly LoggerInterface $logger,
+        private readonly WarmupPublicEndpointsObservabilityService $observabilityService,
     ) {
         parent::__construct();
     }
@@ -74,6 +76,7 @@ final class WarmupPublicEndpointsCommand extends Command
     {
 
         $config = $this->configProvider->getConfig();
+        $runId = $this->observabilityService->createRunId();
 
         $io->section('1/4 Cache invalidation');
         $this->invalidateTargetedCaches();
@@ -90,7 +93,7 @@ final class WarmupPublicEndpointsCommand extends Command
         $io->success('Elasticsearch reindex completed.');
 
         $io->section('3/4 HTTP endpoints warmup');
-        $results = $this->warmEndpoints($config->endpoints, $config->maxConcurrency, $config->timeoutSeconds, $config->retryMax, $config->successThresholdMs);
+        $results = $this->warmEndpoints($runId, $config->endpoints, $config->maxConcurrency, $config->timeoutSeconds, $config->retryMax, $config->successThresholdMs);
         foreach ($results as $result) {
             $state = $result['success'] ? 'OK' : 'FAIL';
             $io->writeln(sprintf(
@@ -110,6 +113,14 @@ final class WarmupPublicEndpointsCommand extends Command
             $results,
             static fn (array $item): bool => $item['critical'] && !$item['success']
         ));
+        $criticalOk = count(array_filter(
+            $results,
+            static fn (array $item): bool => $item['critical'] && $item['success']
+        ));
+        $secondaryFailures = count(array_filter(
+            $results,
+            static fn (array $item): bool => !$item['critical'] && !$item['success']
+        ));
 
         $totalLatencyMs = 0.0;
         foreach ($results as $item) {
@@ -118,6 +129,9 @@ final class WarmupPublicEndpointsCommand extends Command
 
         $averageLatencyMs = $results !== [] ? ($totalLatencyMs / count($results)) : 0.0;
         $durationMs = (microtime(true) - $totalStart) * 1000;
+
+        $this->observabilityService->logRunCompleted($runId, $criticalOk, $criticalFailures, $secondaryFailures, $durationMs);
+        $this->observabilityService->trackCriticalFailuresAndAlert($runId, $criticalFailures);
 
         $io->definitionList(
             ['Successes' => (string) $successCount],
@@ -152,7 +166,7 @@ final class WarmupPublicEndpointsCommand extends Command
      *
      * @return list<array{url: string, statusCode: int|null, success: bool, critical: bool, attempts: int, latencyMs: float}>
      */
-    private function warmEndpoints(array $endpoints, int $maxConcurrency, float $timeoutSeconds, int $retryMax, ?float $globalSuccessThresholdMs): array
+    private function warmEndpoints(string $runId, array $endpoints, int $maxConcurrency, float $timeoutSeconds, int $retryMax, ?float $globalSuccessThresholdMs): array
     {
         $resultsByPath = [];
 
@@ -190,6 +204,7 @@ final class WarmupPublicEndpointsCommand extends Command
                     $statusCode = null;
                     $success = false;
                     $latencyMs = 0.0;
+                    $result = 'transport_error';
 
                     try {
                         $response = $responseData['response'];
@@ -198,14 +213,33 @@ final class WarmupPublicEndpointsCommand extends Command
                         }
                         $latencyMs = (microtime(true) - $responseData['startedAt']) * 1000;
                         $successThresholdMs = $endpoint->successThresholdMs ?? $globalSuccessThresholdMs;
+                        $isFastEnough = $successThresholdMs === null || $latencyMs <= $successThresholdMs;
 
                         $success = $statusCode !== null
                             && $statusCode >= 200
                             && $statusCode < 400
-                            && ($successThresholdMs === null || $latencyMs <= $successThresholdMs);
+                            && $isFastEnough;
+
+                        if ($success) {
+                            $result = 'success';
+                        } elseif ($statusCode === null || $statusCode < 200 || $statusCode >= 400) {
+                            $result = 'http_error';
+                        } else {
+                            $result = 'slow_response';
+                        }
                     } catch (ExceptionInterface) {
                         $latencyMs = (microtime(true) - $responseData['startedAt']) * 1000;
                     }
+
+                    $this->observabilityService->logAttempt(
+                        runId: $runId,
+                        endpoint: $path,
+                        group: $endpoint->critical ? 'critical' : 'secondary',
+                        attempt: $attempt,
+                        statusCode: $statusCode,
+                        durationMs: $latencyMs,
+                        result: $result,
+                    );
 
                     $resultsByPath[$path] = [
                         'url' => $responseData['url'],
