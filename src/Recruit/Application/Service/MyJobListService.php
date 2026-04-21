@@ -55,6 +55,7 @@ readonly class MyJobListService
         return [
             'createdJobs' => array_map(static fn (Job $job): array => [
                 'id' => $job->getId(),
+                'quizId' => $job->getQuizId(),
                 'slug' => $job->getSlug(),
                 'title' => $job->getTitle(),
                 'company' => $job->getCompany()?->getName() ?? '',
@@ -72,6 +73,7 @@ readonly class MyJobListService
                 'appliedAt' => $application->getCreatedAt()?->format(DATE_ATOM),
                 'job' => [
                     'id' => $application->getJob()->getId(),
+                    'quizId' => $application->getJob()->getQuizId(),
                     'slug' => $application->getJob()->getSlug(),
                     'title' => $application->getJob()->getTitle(),
                     'company' => $application->getJob()->getCompany()?->getName() ?? '',

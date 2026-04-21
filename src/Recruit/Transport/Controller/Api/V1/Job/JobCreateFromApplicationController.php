@@ -8,6 +8,7 @@ use App\General\Application\Message\EntityCreated;
 use App\Recruit\Application\Security\RecruitPermissions;
 use App\Recruit\Application\Service\ApplicationJobAccessService;
 use App\Recruit\Application\Service\JobPayloadHydratorService;
+use App\Recruit\Application\Service\RecruitJobQuizProvisioningService;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Infrastructure\Repository\JobRepository;
 use App\User\Domain\Entity\User;
@@ -38,6 +39,7 @@ readonly class JobCreateFromApplicationController
         private JobRepository $jobRepository,
         private MessageBusInterface $messageBus,
         private JobPayloadHydratorService $jobPayloadHydratorService,
+        private RecruitJobQuizProvisioningService $recruitJobQuizProvisioningService,
     ) {
     }
 
@@ -71,6 +73,7 @@ readonly class JobCreateFromApplicationController
             ->setTitle(trim($title));
 
         $this->jobPayloadHydratorService->applyJobFields($job, $payload);
+        $this->recruitJobQuizProvisioningService->provision($job);
 
         $this->jobRepository->save($job);
         $this->messageBus->dispatch(new EntityCreated('recruit_job', $job->getId(), context: [
@@ -83,6 +86,7 @@ readonly class JobCreateFromApplicationController
             'applicationSlug' => $application?->getSlug() ?? '',
             'slug' => $job->getSlug(),
             'title' => $job->getTitle(),
+            'quizId' => $job->getQuiz()?->getId(),
         ], JsonResponse::HTTP_CREATED);
     }
 }

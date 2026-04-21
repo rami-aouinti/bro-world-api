@@ -196,6 +196,7 @@ readonly class JobPublicListService
                 $ownerId = $job->getOwner()?->getId();
                 $jobPayload = [
                     'id' => $job->getId(),
+                    'quizId' => $job->getQuizId(),
                     'slug' => $job->getSlug(),
                     'title' => $job->getTitle(),
                     'company' => [
@@ -365,6 +366,7 @@ readonly class JobPublicListService
             foreach ($paginator as $job) {
                 $items[] = [
                     'id' => $job->getId(),
+                    'quizId' => $job->getQuizId(),
                     'slug' => $job->getSlug(),
                     'title' => $job->getTitle(),
                     'company' => [
