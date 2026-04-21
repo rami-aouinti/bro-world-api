@@ -10,8 +10,10 @@ use App\Blog\Domain\Entity\BlogTag;
 use App\Blog\Infrastructure\Repository\BlogPostRepository;
 use App\Blog\Infrastructure\Repository\BlogRepository;
 use App\Blog\Infrastructure\Repository\BlogTagRepository;
+use App\Platform\Application\Service\PlatformBusinessKeyResolver;
 use App\Platform\Application\Service\PluginProvisioning\BlogPluginProvisioner;
 use App\Platform\Domain\Entity\Application;
+use App\Platform\Domain\Enum\PlatformKey;
 use App\User\Domain\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
@@ -53,11 +55,15 @@ final class BlogPluginProvisionerTest extends TestCase
                 $persisted[] = $entity;
             });
 
+        $platformBusinessKeyResolver = $this->createMock(PlatformBusinessKeyResolver::class);
+        $platformBusinessKeyResolver->method('resolve')->willReturn(null);
+
         $provisioner = new BlogPluginProvisioner(
             blogRepository: $blogRepository,
             blogPostRepository: $blogPostRepository,
             blogTagRepository: $blogTagRepository,
             entityManager: $entityManager,
+            platformBusinessKeyResolver: $platformBusinessKeyResolver,
         );
 
         $provisioner->provision($application);
@@ -96,17 +102,44 @@ final class BlogPluginProvisionerTest extends TestCase
                 $persisted[] = $entity;
             });
 
+        $platformBusinessKeyResolver = $this->createMock(PlatformBusinessKeyResolver::class);
+        $platformBusinessKeyResolver->method('resolve')->willReturn(null);
+
         $provisioner = new BlogPluginProvisioner(
             blogRepository: $blogRepository,
             blogPostRepository: $blogPostRepository,
             blogTagRepository: $blogTagRepository,
             entityManager: $entityManager,
+            platformBusinessKeyResolver: $platformBusinessKeyResolver,
         );
 
         $provisioner->provision($application);
 
         $blog = self::findPersistedEntity($persisted, Blog::class);
         self::assertMatchesRegularExpression('/^app-[a-f0-9]{8}-blog$/', $blog->getSlug());
+    }
+
+    public function testProvisionSkipsBootstrapForSchoolAndRecruitBusinessPlatforms(): void
+    {
+        $application = (new Application())
+            ->setTitle('Learning App')
+            ->setUser(new User());
+
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects(self::never())->method('persist');
+
+        $platformBusinessKeyResolver = $this->createMock(PlatformBusinessKeyResolver::class);
+        $platformBusinessKeyResolver->method('resolve')->willReturn(PlatformKey::SCHOOL);
+
+        $provisioner = new BlogPluginProvisioner(
+            blogRepository: $this->createMock(BlogRepository::class),
+            blogPostRepository: $this->createMock(BlogPostRepository::class),
+            blogTagRepository: $this->createMock(BlogTagRepository::class),
+            entityManager: $entityManager,
+            platformBusinessKeyResolver: $platformBusinessKeyResolver,
+        );
+
+        $provisioner->provision($application);
     }
 
     /**

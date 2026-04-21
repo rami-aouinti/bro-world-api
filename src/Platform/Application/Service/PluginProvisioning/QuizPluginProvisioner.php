@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Platform\Application\Service\PluginProvisioning;
 
 use App\Platform\Domain\Entity\Application;
+use App\Platform\Application\Service\PlatformBusinessKeyResolver;
 use App\Platform\Domain\Enum\PlatformKey;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Quiz\Domain\Entity\QuizQuestion;
@@ -21,12 +22,13 @@ final readonly class QuizPluginProvisioner
         private QuizQuestionRepository $quizQuestionRepository,
         private QuizCategoryRepository $quizCategoryRepository,
         private EntityManagerInterface $entityManager,
+        private PlatformBusinessKeyResolver $platformBusinessKeyResolver,
     ) {
     }
 
     public function provision(Application $application): void
     {
-        $platformKey = $application->getPlatform()?->getPlatformKey();
+        $platformKey = $this->platformBusinessKeyResolver->resolve($application);
         if ($platformKey === PlatformKey::SCHOOL || $platformKey === PlatformKey::RECRUIT) {
             return;
         }
