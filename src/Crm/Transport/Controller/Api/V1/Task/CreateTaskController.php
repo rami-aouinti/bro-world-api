@@ -88,6 +88,7 @@ final readonly class CreateTaskController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '8f6a3550-9a07-4f69-9f75-0089f7d83e7f'),
+                        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true, example: '1d2f3a4b-5c6d-7e8f-9012-3456789abcde'),
                     ],
                 ),
             ),
@@ -146,6 +147,9 @@ final readonly class CreateTaskController
             'applicationSlug' => $applicationSlug,
         ]));
 
-        return new JsonResponse(new EntityIdResponseDto($task->getId())->toArray(), JsonResponse::HTTP_CREATED);
+        return new JsonResponse([
+            'id' => $task->getId(),
+            'blogId' => $task->getBlog()?->getId(),
+        ], JsonResponse::HTTP_CREATED);
     }
 }

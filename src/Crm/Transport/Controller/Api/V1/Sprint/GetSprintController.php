@@ -26,7 +26,16 @@ final readonly class GetSprintController
         summary: 'Get Sprint',
         description: 'Exécute l action metier Get Sprint dans le perimetre de l application CRM.',
         responses: [
-            new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),
+            new OA\Response(
+                response: JsonResponse::HTTP_OK,
+                description: 'Opération exécutée avec succès.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+                        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true),
+                    ],
+                ),
+            ),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
             new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Authentification requise.'),
             new OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Accès refusé.'),
@@ -48,6 +57,7 @@ final readonly class GetSprintController
             'name' => $sprint->getName(),
             'goal' => $sprint->getGoal(),
             'status' => $sprint->getStatus()->value,
+            'blogId' => $sprint->getBlog()?->getId(),
             'startDate' => $sprint->getStartDate()?->format('Y-m-d'),
             'endDate' => $sprint->getEndDate()?->format('Y-m-d'),
             'tasks' => array_map(

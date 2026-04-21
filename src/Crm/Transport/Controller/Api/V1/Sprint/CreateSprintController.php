@@ -67,6 +67,7 @@ final readonly class CreateSprintController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '220670e1-4bc3-40da-92bb-89d5dca347a8'),
+                        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true, example: '1d2f3a4b-5c6d-7e8f-9012-3456789abcde'),
                     ],
                 ),
             ),
@@ -171,6 +172,7 @@ final readonly class CreateSprintController
 
         return new JsonResponse([
             'id' => $sprint->getId(),
+            'blogId' => $sprint->getBlog()?->getId(),
         ], JsonResponse::HTTP_CREATED);
     }
 

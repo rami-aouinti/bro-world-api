@@ -104,6 +104,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'id', type: 'string', format: 'uuid'),
         new OA\Property(property: 'name', type: 'string'),
         new OA\Property(property: 'status', type: 'string'),
+        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true),
     ],
     type: 'object'
 )]
@@ -120,6 +121,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'projectId', type: 'string', format: 'uuid'),
         new OA\Property(property: 'sprintId', type: 'string', format: 'uuid', nullable: true),
         new OA\Property(property: 'assigneeIds', type: 'array', items: new OA\Items(type: 'string', format: 'uuid'), nullable: true),
+        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true),
     ],
     type: 'object'
 )]
@@ -134,6 +136,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'taskId', type: 'string', format: 'uuid'),
         new OA\Property(property: 'repositoryId', type: 'string', format: 'uuid'),
         new OA\Property(property: 'assigneeIds', type: 'array', items: new OA\Items(type: 'string', format: 'uuid'), nullable: true),
+        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true),
     ],
     type: 'object'
 )]

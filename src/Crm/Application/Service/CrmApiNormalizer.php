@@ -60,6 +60,7 @@ final readonly class CrmApiNormalizer
             'estimatedHours' => $task->getEstimatedHours(),
             'updatedAt' => $this->normalizeDate($task->getUpdatedAt()),
             'attachments' => $task->getAttachments(),
+            'blogId' => $task->getBlog()?->getId(),
             'assignees' => $assignees,
             'subTasks' => array_map(
                 function (Task $subTask): array {
@@ -80,6 +81,7 @@ final readonly class CrmApiNormalizer
                         'estimatedHours' => $subTask->getEstimatedHours(),
                         'updatedAt' => $this->normalizeDate($subTask->getUpdatedAt()),
                         'attachments' => $subTask->getAttachments(),
+                        'blogId' => $subTask->getBlog()?->getId(),
                         'assignees' => $subTaskAssignees,
                     ];
                 },
@@ -119,6 +121,7 @@ final readonly class CrmApiNormalizer
             'requestedAt' => $this->normalizeDate($taskRequest->getRequestedAt()),
             'resolvedAt' => $this->normalizeDate($taskRequest->getResolvedAt()),
             'attachments' => $taskRequest->getAttachments(),
+            'blogId' => $taskRequest->getBlog()?->getId(),
             'assignees' => $assignees,
             'githubIssue' => $taskRequest->getGithubIssue()?->toArray(),
             'githubBranches' => array_map(static fn (TaskRequestGithubBranch $branch): array => $branch->toArray(), $taskRequest->getGithubBranches()->toArray()),
@@ -137,6 +140,7 @@ final readonly class CrmApiNormalizer
             'status' => ($item['status'] ?? ''),
             'startDate' => $this->normalizeDateValue($item['startDate'] ?? null),
             'endDate' => $this->normalizeDateValue($item['endDate'] ?? null),
+            'blogId' => $item['blogId'] ?? null,
         ];
     }
 
@@ -154,6 +158,7 @@ final readonly class CrmApiNormalizer
             'id' => (string)($item['id'] ?? ''),
             'name' => (string)($item['name'] ?? ''),
             'status' => ($item['status'] ?? ''),
+            'blogId' => $item['blogId'] ?? null,
             'githubRepositoriesCount' => $repositoriesCount,
             'provisioning' => [
                 'state' => $provisioningState,
@@ -175,6 +180,7 @@ final readonly class CrmApiNormalizer
             'status' => ($item['status'] ?? ''),
             'requestedAt' => $this->normalizeDateValue($item['requestedAt'] ?? null),
             'resolvedAt' => $this->normalizeDateValue($item['resolvedAt'] ?? null),
+            'blogId' => $item['blogId'] ?? null,
             'assignees' => $this->mapTaskRequestAssigneesProjection((array)($item['assignees'] ?? [])),
             'githubIssue' => [
                 'provider' => $item['githubIssueProvider'] ?? null,

@@ -64,6 +64,7 @@ final readonly class CreateTaskRequestController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'string', format: 'uuid', example: 'a8ebfd5d-0fa8-4346-8ca2-ff5b7b1f6657'),
+                        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true, example: '1d2f3a4b-5c6d-7e8f-9012-3456789abcde'),
                     ],
                 ),
             ),
@@ -151,6 +152,7 @@ final readonly class CreateTaskRequestController
 
         return new JsonResponse([
             'id' => $taskRequest->getId(),
+            'blogId' => $taskRequest->getBlog()?->getId(),
         ], JsonResponse::HTTP_CREATED);
     }
 }
