@@ -10,7 +10,7 @@ use App\Crm\Application\Exception\CrmOutOfScopeException;
 use App\Crm\Application\Exception\CrmReferenceNotFoundException;
 use App\Crm\Application\Service\CreateTaskHandler;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
-use App\Crm\Application\Service\CrmTaskBlogProvisioningService;
+use App\Crm\Application\Service\CrmEntityBlogProvisioningService;
 use App\Crm\Transport\Request\CrmApiErrorResponseFactory;
 use App\Crm\Transport\Request\CrmDateParser;
 use App\Crm\Transport\Request\CrmRequestHandler;
@@ -34,7 +34,7 @@ final readonly class CreateTaskController
     public function __construct(
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
-        private CrmTaskBlogProvisioningService $crmTaskBlogProvisioningService,
+        private CrmEntityBlogProvisioningService $crmEntityBlogProvisioningService,
         private CrmRequestHandler $crmRequestHandler,
         private CrmDateParser $crmDateParser,
         private CreateTaskHandler $createTaskHandler,
@@ -140,7 +140,7 @@ final readonly class CreateTaskController
         }
 
         $this->entityManager->persist($task);
-        $this->crmTaskBlogProvisioningService->provision($task);
+        $this->crmEntityBlogProvisioningService->provision($task);
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityCreated('crm_task', $task->getId(), context: [
             'applicationSlug' => $applicationSlug,

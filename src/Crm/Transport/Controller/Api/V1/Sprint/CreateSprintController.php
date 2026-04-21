@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Crm\Transport\Controller\Api\V1\Sprint;
 
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
+use App\Crm\Application\Service\CrmEntityBlogProvisioningService;
 use App\Crm\Domain\Entity\Sprint;
 use App\Crm\Domain\Enum\SprintStatus;
 use App\Crm\Infrastructure\Repository\ProjectRepository;
@@ -34,6 +35,7 @@ final readonly class CreateSprintController
         private ProjectRepository $projectRepository,
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
+        private CrmEntityBlogProvisioningService $crmEntityBlogProvisioningService,
         private ValidatorInterface $validator,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
@@ -160,6 +162,7 @@ final readonly class CreateSprintController
         }
 
         $this->entityManager->persist($sprint);
+        $this->crmEntityBlogProvisioningService->provision($sprint);
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityCreated('crm_sprint', $sprint->getId(), context: [
             'applicationSlug' => $applicationSlug,

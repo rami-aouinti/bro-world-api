@@ -8,6 +8,8 @@ enum BlogType: string
 {
     case GENERAL = 'general';
     case APPLICATION = 'application';
+    case PROJECT = 'project';
+    case SPRINT = 'sprint';
     case TASK = 'task';
     case TASK_REQUEST = 'task_request';
 }

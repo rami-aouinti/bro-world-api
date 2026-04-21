@@ -6,7 +6,7 @@ namespace App\Crm\Transport\Controller\Api\V1\TaskRequest;
 
 use App\Crm\Application\Message\ProvisionTaskRequestGithubIssue;
 use App\Crm\Application\Service\CrmApplicationScopeResolver;
-use App\Crm\Application\Service\CrmTaskBlogProvisioningService;
+use App\Crm\Application\Service\CrmEntityBlogProvisioningService;
 use App\Crm\Domain\Entity\TaskRequest;
 use App\Crm\Domain\Enum\TaskRequestStatus;
 use App\Crm\Infrastructure\Repository\CrmProjectRepositoryRepository;
@@ -38,7 +38,7 @@ final readonly class CreateTaskRequestController
         private CrmProjectRepositoryRepository $crmProjectRepositoryRepository,
         private CrmApplicationScopeResolver $scopeResolver,
         private CrmApiErrorResponseFactory $errorResponseFactory,
-        private CrmTaskBlogProvisioningService $crmTaskBlogProvisioningService,
+        private CrmEntityBlogProvisioningService $crmEntityBlogProvisioningService,
         private CrmRequestHandler $crmRequestHandler,
         private CrmDateParser $crmDateParser,
         private EntityManagerInterface $entityManager,
@@ -142,7 +142,7 @@ final readonly class CreateTaskRequestController
         }
 
         $this->entityManager->persist($taskRequest);
-        $this->crmTaskBlogProvisioningService->provision($taskRequest);
+        $this->crmEntityBlogProvisioningService->provision($taskRequest);
         $this->entityManager->flush();
         $this->messageBus->dispatch(new ProvisionTaskRequestGithubIssue($taskRequest->getId()));
         $this->messageBus->dispatch(new EntityCreated('crm_task_request', $taskRequest->getId(), context: [

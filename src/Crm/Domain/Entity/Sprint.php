@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Crm\Domain\Entity;
 
+use App\Blog\Domain\Entity\Blog;
 use App\Crm\Domain\Enum\SprintStatus;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
@@ -53,6 +54,10 @@ class Sprint implements EntityInterface
         'default' => SprintStatus::PLANNED->value,
     ])]
     private SprintStatus $status = SprintStatus::PLANNED;
+
+    #[ORM\OneToOne(targetEntity: Blog::class, cascade: ['persist'])]
+    #[ORM\JoinColumn(name: 'blog_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?Blog $blog = null;
 
     /** @var Collection<int, Task>|ArrayCollection<int, Task> */
     #[ORM\OneToMany(targetEntity: Task::class, mappedBy: 'sprint')]
@@ -149,6 +154,18 @@ class Sprint implements EntityInterface
     public function setStatus(SprintStatus $status): self
     {
         $this->status = $status;
+
+        return $this;
+    }
+
+    public function getBlog(): ?Blog
+    {
+        return $this->blog;
+    }
+
+    public function setBlog(?Blog $blog): self
+    {
+        $this->blog = $blog;
 
         return $this;
     }
