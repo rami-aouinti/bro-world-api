@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Nouveau message de contact</title>
+</head>
+<body style="font-family:Arial,sans-serif;background:#f7f9fc;padding:24px;color:#1f2937;">
+<div style="max-width:680px;margin:0 auto;background:#ffffff;border-radius:10px;padding:24px;border:1px solid #e5e7eb;">
+    <h1 style="font-size:22px;margin:0 0 16px;">Nouveau message depuis le formulaire public</h1>
+    <p style="margin:0 0 16px;">Un visiteur a soumis une demande de contact.</p>
+
+    <table style="width:100%;border-collapse:collapse;">
+        <tr>
+            <td style="padding:8px 0;font-weight:600;width:180px;">Prénom</td>
+            <td style="padding:8px 0;">{{ contactRequest.firstName }}</td>
+        </tr>
+        <tr>
+            <td style="padding:8px 0;font-weight:600;">Nom</td>
+            <td style="padding:8px 0;">{{ contactRequest.lastName }}</td>
+        </tr>
+        <tr>
+            <td style="padding:8px 0;font-weight:600;">Email</td>
+            <td style="padding:8px 0;">{{ contactRequest.email }}</td>
+        </tr>
+        <tr>
+            <td style="padding:8px 0;font-weight:600;">Type</td>
+            <td style="padding:8px 0;">{{ contactRequest.type }}</td>
+        </tr>
+        <tr>
+            <td style="padding:8px 0;font-weight:600;vertical-align:top;">Message</td>
+            <td style="padding:8px 0;white-space:pre-line;">{{ contactRequest.message }}</td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>
