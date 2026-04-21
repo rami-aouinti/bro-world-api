@@ -351,6 +351,7 @@ migrate-cron-jobs: ## Creates cron job tasks (cleanup logs, failed old messenger
 	@make exec cmd="php bin/console scheduler:cleanup-messenger-messages"
 	@make exec cmd="php bin/console scheduler:recruit-index-similar-jobs"
 	@make exec cmd="php bin/console scheduler:elastic-reindex-domains"
+	@make exec cmd="php bin/console scheduler:warmup-public-endpoints"
 
 fixtures: ## Runs all fixtures for test database without --append option (tables will be dropped and recreated)
 	@make exec cmd="php bin/console doctrine:fixtures:load --env=test --no-interaction"
