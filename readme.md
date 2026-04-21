@@ -364,3 +364,16 @@ Note: You can find git flow detail example [here](https://danielkummer.github.io
 
 ## License
 [The MIT License (MIT)](LICENSE)
+
+## Platform orchestration guardrails (blog/quiz provisioning)
+To avoid product ambiguity when orchestration metadata is interpreted from configuration keys, use the business mapping below:
+
+- `learning` -> `PlatformKey::SCHOOL`
+- `job` -> `PlatformKey::RECRUIT`
+
+Implementation rule:
+- Mapping is centralized in `PlatformBusinessKeyResolver` and must be reused by blog/quiz provisioning flows.
+- Do not duplicate `if/else` mappings in controllers, fixtures, or plugin provisioners.
+
+Regression rule:
+- Any new orchestration alias must be added to the centralized resolver first, with unit tests, before being consumed by provisioning logic.

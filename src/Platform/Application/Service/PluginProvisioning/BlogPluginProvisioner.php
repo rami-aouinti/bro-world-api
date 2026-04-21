@@ -11,10 +11,13 @@ use App\Blog\Domain\Enum\BlogType;
 use App\Blog\Infrastructure\Repository\BlogPostRepository;
 use App\Blog\Infrastructure\Repository\BlogRepository;
 use App\Blog\Infrastructure\Repository\BlogTagRepository;
+use App\Platform\Application\Service\PlatformBusinessKeyResolver;
 use App\Platform\Domain\Entity\Application;
+use App\Platform\Domain\Enum\PlatformKey;
 use Doctrine\ORM\EntityManagerInterface;
 
 use function iconv;
+use function in_array;
 use function is_string;
 use function preg_replace;
 use function strlen;
@@ -29,11 +32,17 @@ final readonly class BlogPluginProvisioner
         private BlogPostRepository $blogPostRepository,
         private BlogTagRepository $blogTagRepository,
         private EntityManagerInterface $entityManager,
+        private PlatformBusinessKeyResolver $platformBusinessKeyResolver,
     ) {
     }
 
     public function provision(Application $application): void
     {
+        $platformKey = $this->platformBusinessKeyResolver->resolve($application);
+        if (in_array($platformKey, [PlatformKey::SCHOOL, PlatformKey::RECRUIT], true)) {
+            return;
+        }
+
         $blog = $this->blogRepository->findOneByApplication($application);
         if (!$blog instanceof Blog) {
             $blogSlug = $this->generateUniqueBlogSlug($application);
