@@ -15,6 +15,7 @@ use App\Recruit\Domain\Repository\Interfaces\ApplicationRepositoryInterface;
 use DateInterval;
 use DateTimeImmutable;
 use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -215,6 +216,68 @@ class ApplicationRepository extends BaseRepository implements ApplicationReposit
             ApplicationStatus::OFFER_SENT->value => $offerCount,
             ApplicationStatus::HIRED->value => $hiredCount,
         ];
+    }
+
+    /**
+     * @return list<array{status: string, statusCount: int, avgAgingDays: float}>
+     */
+    public function findPipelineStatusMetrics(QueryBuilder $pipelineQueryBuilder): array
+    {
+        $aggregateQueryBuilder = clone $pipelineQueryBuilder;
+
+        try {
+            $rows = $aggregateQueryBuilder
+                ->select(
+                    'application.status AS status',
+                    'COUNT(application.id) AS statusCount',
+                    'AVG(TIMESTAMPDIFF(DAY, application.createdAt, CURRENT_TIMESTAMP())) AS avgAgingDays'
+                )
+                ->groupBy('application.status')
+                ->getQuery()
+                ->getArrayResult();
+
+            return array_map(static fn (array $row): array => [
+                'status' => (string)($row['status'] ?? ''),
+                'statusCount' => (int)($row['statusCount'] ?? 0),
+                'avgAgingDays' => round((float)($row['avgAgingDays'] ?? 0), 2),
+            ], $rows);
+        } catch (\Throwable) {
+            $rows = (clone $pipelineQueryBuilder)
+                ->select('application.status AS status', 'application.createdAt AS createdAt')
+                ->getQuery()
+                ->getArrayResult();
+
+            $now = new DateTimeImmutable();
+            $counts = [];
+            $agingSums = [];
+
+            foreach ($rows as $row) {
+                $status = (string)($row['status'] ?? '');
+                if ($status === '') {
+                    continue;
+                }
+
+                $counts[$status] = ($counts[$status] ?? 0) + 1;
+
+                $createdAt = $row['createdAt'] ?? null;
+                if (!$createdAt instanceof DateTimeImmutable) {
+                    continue;
+                }
+
+                $agingSums[$status] = ($agingSums[$status] ?? 0.0) + max(0, (float)$createdAt->diff($now)->days);
+            }
+
+            $result = [];
+            foreach ($counts as $status => $count) {
+                $result[] = [
+                    'status' => $status,
+                    'statusCount' => $count,
+                    'avgAgingDays' => round(($agingSums[$status] ?? 0.0) / max(1, $count), 2),
+                ];
+            }
+
+            return $result;
+        }
     }
 
     /**

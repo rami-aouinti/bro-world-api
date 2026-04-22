@@ -15,6 +15,7 @@ use App\Recruit\Domain\Enum\ApplicationStatus;
 use App\Tests\TestCase\WebTestCase;
 use App\User\Domain\Entity\User;
 use DateTime;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\HttpFoundation\Response;
@@ -81,6 +82,24 @@ class PrivatePipelineControllerTest extends WebTestCase
         self::assertCount(1, $filteredCandidates);
         self::assertSame($jobId, $filteredCandidates[0]['job']['id'] ?? null);
         self::assertSame('manual', $filteredCandidates[0]['source'] ?? null);
+
+        $filterDate = (new DateTimeImmutable('-3 days'))->format('Y-m-d');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/private/' . $applicationSlug . '/pipeline?date=' . $filterDate . '&limit=10&page=1');
+        $datePayload = JSON::decode((string)$client->getResponse()->getContent(), true);
+
+        self::assertSame($filterDate, $datePayload['filters']['date'] ?? null);
+        self::assertSame(1, $datePayload['pagination']['total'] ?? null);
+        self::assertSame(1, $datePayload['pagination']['pages'] ?? null);
+
+        $dateFilteredCandidates = [];
+        foreach ($datePayload['columns'] as $column) {
+            foreach ($column['candidates'] ?? [] as $candidate) {
+                $dateFilteredCandidates[] = $candidate;
+            }
+        }
+
+        self::assertCount(1, $dateFilteredCandidates);
+        self::assertStringStartsWith($filterDate, (string)($dateFilteredCandidates[0]['createdAt'] ?? ''));
     }
 
     /**
