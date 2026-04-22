@@ -185,6 +185,15 @@
 	},
 	"prefer-stable": true,
 	"scripts": {
+		"docker": [
+			"php bin/console scheduler:cleanup-logs",
+			"php bin/console scheduler:cleanup-messenger-messages",
+			"php bin/console scheduler:recruit-index-similar-jobs",
+			"php bin/console scheduler:elastic-reindex-domains",
+			"php bin/console scheduler:warmup-public-endpoints",
+			"php bin/console messenger:setup-transports",
+			"php bin/console elastic:create-or-update-template"
+		],
 		"prepare": [
 			"php bin/console doctrine:database:drop --if-exists --force",
 			"php bin/console doctrine:database:create",
