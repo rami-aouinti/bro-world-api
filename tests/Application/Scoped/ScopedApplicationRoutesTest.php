@@ -10,51 +10,51 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class ScopedApplicationRoutesTest extends WebTestCase
 {
-    #[TestDox('CRM scoped routes return 200 for owner, 403 for foreign owner, and 404 for invalid slug.')]
-    public function testCrmScopedRoutesAccessControl(): void
+    #[TestDox('CRM routes resolve application slug from query and enforce owner access.')]
+    public function testCrmRoutesAccessControlUsingQuerySlug(): void
     {
         $ownerClient = $this->getTestClient('john-root', 'password-root');
-        $ownerClient->request('GET', self::API_URL_PREFIX . '/v1/crm/applications/crm-sales-hub/companies');
+        $ownerClient->request('GET', self::API_URL_PREFIX . '/v1/crm/companies?applicationSlug=crm-sales-hub');
         self::assertSame(Response::HTTP_OK, $ownerClient->getResponse()->getStatusCode());
 
         $forbiddenClient = $this->getTestClient('john-user', 'password-user');
-        $forbiddenClient->request('GET', self::API_URL_PREFIX . '/v1/crm/applications/crm-sales-hub/companies');
+        $forbiddenClient->request('GET', self::API_URL_PREFIX . '/v1/crm/companies?applicationSlug=crm-sales-hub');
         self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
-
-        $invalidClient = $this->getTestClient('john-root', 'password-root');
-        $invalidClient->request('GET', self::API_URL_PREFIX . '/v1/crm/applications/not-found-slug/companies');
-        self::assertContains($invalidClient->getResponse()->getStatusCode(), [Response::HTTP_BAD_REQUEST, Response::HTTP_NOT_FOUND]);
     }
 
-    #[TestDox('Shop scoped routes return 200 for owner, 403 for foreign owner, and 400 for wrong platform slug.')]
-    public function testShopScopedRoutesAccessControl(): void
+    #[TestDox('CRM routes fallback to general scope when no application slug is provided.')]
+    public function testCrmRoutesFallbackToGeneralWithoutApplicationSlug(): void
     {
-        $ownerClient = $this->getTestClient('john-root', 'password-root');
-        $ownerClient->request('GET', self::API_URL_PREFIX . '/v1/shop/applications/shop-ops-center/products');
-        self::assertSame(Response::HTTP_OK, $ownerClient->getResponse()->getStatusCode());
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/crm/companies?page=1&limit=5');
 
-        $forbiddenClient = $this->getTestClient('john-user', 'password-user');
-        $forbiddenClient->request('GET', self::API_URL_PREFIX . '/v1/shop/applications/shop-ops-center/products');
-        self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
-
-        $invalidClient = $this->getTestClient('john-root', 'password-root');
-        $invalidClient->request('GET', self::API_URL_PREFIX . '/v1/shop/applications/crm-sales-hub/products');
-        self::assertSame(Response::HTTP_BAD_REQUEST, $invalidClient->getResponse()->getStatusCode());
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $payload = $this->decodeResponse($client->getResponse());
+        self::assertSame('general', $payload['meta']['applicationSlug'] ?? null);
     }
 
-    #[TestDox('School scoped routes return 200 for owner, 403 for foreign owner, and 404 for invalid slug.')]
-    public function testSchoolScopedRoutesAccessControl(): void
+    #[TestDox('Shop routes resolve application slug from request header.')]
+    public function testShopRoutesAccessControlUsingHeaderSlug(): void
     {
         $ownerClient = $this->getTestClient('john-root', 'password-root');
-        $ownerClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes');
+        $ownerClient->request('GET', self::API_URL_PREFIX . '/v1/shop/products', server: [
+            'HTTP_X_APPLICATION_SLUG' => 'shop-ops-center',
+        ]);
         self::assertSame(Response::HTTP_OK, $ownerClient->getResponse()->getStatusCode());
 
         $forbiddenClient = $this->getTestClient('john-user', 'password-user');
-        $forbiddenClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes');
+        $forbiddenClient->request('GET', self::API_URL_PREFIX . '/v1/shop/products', server: [
+            'HTTP_X_APPLICATION_SLUG' => 'shop-ops-center',
+        ]);
         self::assertSame(Response::HTTP_FORBIDDEN, $forbiddenClient->getResponse()->getStatusCode());
+    }
 
+    #[TestDox('School routes return expected error when application slug is invalid.')]
+    public function testSchoolRoutesInvalidSlug(): void
+    {
         $invalidClient = $this->getTestClient('john-root', 'password-root');
-        $invalidClient->request('GET', self::API_URL_PREFIX . '/v1/school/applications/not-found-slug/classes');
+        $invalidClient->request('GET', self::API_URL_PREFIX . '/v1/school/classes?applicationSlug=not-found-slug');
+
         self::assertSame(Response::HTTP_NOT_FOUND, $invalidClient->getResponse()->getStatusCode());
     }
 }

@@ -455,9 +455,9 @@ final class CrmEndpointsSmokeTest extends WebTestCase
         $payload = $this->decodeJsonResponse($client->getResponse()->getContent());
         $paths = $payload['paths'] ?? [];
 
-        self::assertSame('Projects list with normalized name field.', $paths['/v1/crm/applications/{applicationSlug}/projects']['get']['responses']['200']['description'] ?? null);
-        self::assertSame('Sprints list with normalized name field.', $paths['/v1/crm/applications/{applicationSlug}/sprints']['get']['responses']['200']['description'] ?? null);
-        self::assertSame('Board payload grouped by sprint with sprint.name.', $paths['/v1/crm/applications/{applicationSlug}/tasks/by-sprint']['get']['responses']['200']['description'] ?? null);
+        self::assertSame('Projects list with normalized name field.', $paths['/v1/crm/projects']['get']['responses']['200']['description'] ?? null);
+        self::assertSame('Sprints list with normalized name field.', $paths['/v1/crm/sprints']['get']['responses']['200']['description'] ?? null);
+        self::assertSame('Board payload grouped by sprint with sprint.name.', $paths['/v1/crm/tasks/by-sprint/{sprint}']['get']['responses']['200']['description'] ?? null);
     }
 
     /**
