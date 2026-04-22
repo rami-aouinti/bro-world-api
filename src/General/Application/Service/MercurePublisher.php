@@ -58,11 +58,15 @@ final readonly class MercurePublisher
             $content = $response->getContent(false);
 
             $this->logger->info('Mercure publish success', [
+                'url' => $this->mercurePublishUrl,
                 'statusCode' => $statusCode,
                 'response' => $content,
             ]);
         } catch (\Throwable $exception) {
             $this->logger->error('Mercure publish failed', [
+                'url' => $this->mercurePublishUrl,
+                'topic' => $topic,
+                'private' => $private,
                 'error' => $exception->getMessage(),
             ]);
         }
