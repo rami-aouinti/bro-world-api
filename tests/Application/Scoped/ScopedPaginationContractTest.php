@@ -14,7 +14,7 @@ final class ScopedPaginationContractTest extends WebTestCase
     public function testCrmScopedPaginationContract(): void
     {
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('GET', self::API_URL_PREFIX . '/v1/crm/applications/crm-sales-hub/companies?page=1&limit=5&q=acme');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/crm/companies?page=1&limit=5&q=acme&applicationSlug=crm-sales-hub');
 
         self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $payload = $this->decodeResponse($client->getResponse());
@@ -30,7 +30,7 @@ final class ScopedPaginationContractTest extends WebTestCase
     public function testShopScopedPaginationContract(): void
     {
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('GET', self::API_URL_PREFIX . '/v1/shop/applications/shop-ops-center/products?page=1&limit=5&name=phone&q=phone');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/shop/products?page=1&limit=5&name=phone&q=phone&applicationSlug=shop-ops-center');
 
         self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $payload = $this->decodeResponse($client->getResponse());
@@ -46,7 +46,7 @@ final class ScopedPaginationContractTest extends WebTestCase
     public function testSchoolScopedPaginationContract(): void
     {
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('GET', self::API_URL_PREFIX . '/v1/school/applications/school-campus-core/classes?page=1&limit=5&q=classe');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/school/classes?page=1&limit=5&q=classe&applicationSlug=school-campus-core');
 
         self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $payload = $this->decodeResponse($client->getResponse());
@@ -62,7 +62,7 @@ final class ScopedPaginationContractTest extends WebTestCase
     public function testRecruitPublicPaginationContract(): void
     {
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/public/jobs?page=1&limit=5&q=dev');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/public/jobs?page=1&limit=5&q=dev&applicationSlug=recruit-talent-core');
 
         self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $payload = $this->decodeResponse($client->getResponse());
@@ -76,7 +76,7 @@ final class ScopedPaginationContractTest extends WebTestCase
     public function testRecruitPublicPaginationContractWithPostedAtLabelToday(): void
     {
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/public/jobs?page=1&limit=5&postedAtLabel=today');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/public/jobs?page=1&limit=5&postedAtLabel=today&applicationSlug=recruit-talent-core');
 
         self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $payload = $this->decodeResponse($client->getResponse());
@@ -88,7 +88,7 @@ final class ScopedPaginationContractTest extends WebTestCase
     public function testRecruitPublicPaginationContractWithPostedAtLabelSevenDays(): void
     {
         $client = $this->getTestClient('john-root', 'password-root');
-        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/applications/recruit-talent-core/public/jobs?page=1&limit=5&postedAtLabel=7d');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/public/jobs?page=1&limit=5&postedAtLabel=7d&applicationSlug=recruit-talent-core');
 
         self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $payload = $this->decodeResponse($client->getResponse());

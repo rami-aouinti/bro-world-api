@@ -33,8 +33,8 @@ class RecruitContractDocumentationTest extends WebTestCase
         $this->assertPathMethodContract($paths, '/v1/recruit/private/applications/{applicationId}/interviews', 'get', false, true);
         $this->assertPathMethodContract($paths, '/v1/recruit/private/interviews/{interviewId}', 'patch', true, true);
         $this->assertPathMethodContract($paths, '/v1/recruit/private/interviews/{interviewId}', 'delete', false, true);
-        $this->assertPathMethodContract($paths, '/v1/recruit/applications/{applicationSlug}/private/applications/{applicationId}/status', 'patch', true, true);
-        $this->assertPathMethodContract($paths, '/v1/recruit/applications/{applicationSlug}/private/applications/{applicationId}/status-history', 'get', false, true);
+        $this->assertPathMethodContract($paths, '/v1/recruit/private/applications/{applicationId}/status', 'patch', true, true);
+        $this->assertPathMethodContract($paths, '/v1/recruit/private/applications/{applicationId}/status-history', 'get', false, true);
     }
 
     /**
