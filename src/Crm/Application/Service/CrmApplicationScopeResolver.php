@@ -6,6 +6,7 @@ namespace App\Crm\Application\Service;
 
 use App\Crm\Domain\Entity\Crm;
 use App\Crm\Infrastructure\Repository\CrmRepository;
+use App\General\Application\Service\ApplicationScopeResolver;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PlatformKey;
 use Doctrine\ORM\EntityManagerInterface;
@@ -33,7 +34,7 @@ final readonly class CrmApplicationScopeResolver
             'slug' => $applicationSlug,
         ]);
         if (!$application instanceof Application) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Unknown "applicationSlug".');
+            throw ApplicationScopeResolver::createInvalidApplicationSlugException();
         }
 
         $this->assertApplicationAccess($application);
@@ -44,7 +45,7 @@ final readonly class CrmApplicationScopeResolver
     private function assertApplicationAccess(?Application $application): void
     {
         if (!$application instanceof Application || $application->getPlatform()?->getPlatformKey() !== PlatformKey::CRM) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Invalid "applicationSlug" for the requested platform.');
+            throw ApplicationScopeResolver::createInvalidApplicationSlugException();
         }
     }
 }

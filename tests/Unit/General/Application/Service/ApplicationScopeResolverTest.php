@@ -14,28 +14,39 @@ use Symfony\Component\HttpFoundation\Request;
 
 final class ApplicationScopeResolverTest extends TestCase
 {
-    public function testResolveApplicationSlugTrimsQueryValue(): void
+    public function testResolveFromRequestUsesGeneralWhenSlugIsAbsent(): void
+    {
+        $request = new Request();
+        $resolver = $this->createResolverExpectingLookup(ApplicationScopeResolver::DEFAULT_APPLICATION_SLUG, true);
+
+        $slug = $resolver->resolveFromRequest($request);
+
+        self::assertSame(ApplicationScopeResolver::DEFAULT_APPLICATION_SLUG, $slug);
+        self::assertSame(ApplicationScopeResolver::DEFAULT_APPLICATION_SLUG, $request->attributes->get('applicationSlug'));
+    }
+
+    public function testResolveFromRequestUsesGeneralWhenSlugIsEmpty(): void
+    {
+        $request = new Request(['applicationSlug' => '   ']);
+        $resolver = $this->createResolverExpectingLookup(ApplicationScopeResolver::DEFAULT_APPLICATION_SLUG, true);
+
+        $slug = $resolver->resolveFromRequest($request);
+
+        self::assertSame(ApplicationScopeResolver::DEFAULT_APPLICATION_SLUG, $slug);
+    }
+
+    public function testResolveFromRequestReturnsTrimmedValidSlug(): void
     {
         $request = new Request(['applicationSlug' => '  recruit-general-core  ']);
         $resolver = $this->createResolverExpectingLookup('recruit-general-core', true);
 
-        $slug = $resolver->resolveApplicationSlug($request);
+        $slug = $resolver->resolveFromRequest($request);
 
         self::assertSame('recruit-general-core', $slug);
         self::assertSame('recruit-general-core', $request->attributes->get('applicationSlug'));
     }
 
-    public function testResolveApplicationSlugFallsBackToGeneralWhenEmpty(): void
-    {
-        $request = new Request(['applicationSlug' => '   ']);
-        $resolver = $this->createResolverExpectingLookup(ApplicationScopeResolver::DEFAULT_APPLICATION_SLUG, true);
-
-        $slug = $resolver->resolveApplicationSlug($request);
-
-        self::assertSame(ApplicationScopeResolver::DEFAULT_APPLICATION_SLUG, $slug);
-    }
-
-    public function testResolveApplicationSlugThrowsWhenUnknown(): void
+    public function testResolveFromRequestThrowsWhenSlugIsInvalid(): void
     {
         $request = new Request(['applicationSlug' => 'unknown-scope']);
         $resolver = $this->createResolverExpectingLookup('unknown-scope', false);
@@ -44,15 +55,15 @@ final class ApplicationScopeResolverTest extends TestCase
         $this->expectExceptionCode(404);
         $this->expectExceptionMessage(ApplicationScopeResolver::UNKNOWN_APPLICATION_SLUG_MESSAGE);
 
-        $resolver->resolveApplicationSlug($request);
+        $resolver->resolveFromRequest($request);
     }
 
-    public function testResolveApplicationSlugUsesGeneralFromHeadersWhenMissingInQuery(): void
+    public function testResolveFromRequestUsesHeaderWhenMissingInQuery(): void
     {
         $request = new Request(server: ['HTTP_X_APPLICATION_SLUG' => '   general   ']);
         $resolver = $this->createResolverExpectingLookup('general', true);
 
-        $slug = $resolver->resolveApplicationSlug($request);
+        $slug = $resolver->resolveFromRequest($request);
 
         self::assertSame('general', $slug);
     }
