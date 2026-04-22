@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Shop\Transport\Controller\Api\V1\Product;
 
 use App\General\Application\Message\EntityCreated;
+use App\Shop\Application\Monitoring\ShopMonitoringService;
 use App\Shop\Application\Service\ProductHydratorService;
 use App\Shop\Application\Service\ShopApplicationResolverService;
 use App\Shop\Domain\Entity\Product;
@@ -32,13 +33,15 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class CreateProductController
 {
-    private const LEGACY_ROUTE_WARNING = 'Deprecated endpoint: use /v1/shop/legacy/products instead.';
+    private const LEGACY_ROUTE_WARNING = 'Deprecated endpoint: use /v1/shop/products?applicationSlug={applicationSlug} instead.';
+    private const LEGACY_ROUTE_COUNTER = 'shop.legacy_route.usage_total';
 
     public function __construct(
         private ProductHydratorService $productHydratorService,
         private ProductInputValidator $productInputValidator,
         private ShopApplicationResolverService $shopApplicationResolverService,
         private ShopRepository $shopRepository,
+        private ShopMonitoringService $shopMonitoringService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -57,6 +60,25 @@ final readonly class CreateProductController
     )]
     public function __invoke(Request $request): JsonResponse
     {
+        $this->shopMonitoringService->logStructured(
+            'shop.legacy_route.used',
+            'Legacy shop product create endpoint called.',
+            [
+                'legacy_route' => true,
+                'route' => '/v1/shop/legacy/products',
+                'method' => Request::METHOD_POST,
+                'replacement' => '/v1/shop/products?applicationSlug={applicationSlug}',
+                'sunset_at' => '2026-12-31T23:59:59Z',
+                'user_agent' => $request->headers->get('User-Agent'),
+            ],
+            'info'
+        );
+        $this->shopMonitoringService->incrementCounter(self::LEGACY_ROUTE_COUNTER, [
+            'module' => 'shop',
+            'route' => '/v1/shop/legacy/products',
+            'method' => Request::METHOD_POST,
+        ]);
+
         try {
             $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {

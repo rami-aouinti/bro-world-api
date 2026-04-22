@@ -18,6 +18,42 @@ Pour conserver la compatibilité avec les clients existants:
 3. **Phase 3**: journaliser les appels legacy (tag `legacy_route=true`) et contacter les clients restants.
 4. **Phase 4**: supprimer les routes legacy après la fenêtre de migration.
 
+## Décisions opérationnelles (validées)
+
+1. **Anciennes routes conservées temporairement (pas de suppression immédiate).**
+   - Statut: dépréciées.
+   - Signalement: en-têtes HTTP `Deprecation`, `Sunset`, `Warning`.
+   - Date de fin de support annoncée: **31 décembre 2026 à 23:59:59 GMT**.
+2. **Suivi d'usage obligatoire des endpoints legacy.**
+   - Logs structurés avec `event=shop.legacy_route.used` et `legacy_route=true`.
+   - Compteur monitoring `shop.legacy_route.usage_total` avec labels (`module`, `route`, `method`).
+3. **Communication client planifiée par lot de consommateurs.**
+   - Front web: annonce sprint N, rappel sprint N+1, bascule avant freeze release.
+   - Mobile: annonce au planning release mobile, suivi adoption par version.
+   - Intégrations externes: email + changelog + relance ciblée selon logs d'usage.
+4. **Suppression définitive après adoption.**
+   - Pré-requis: 0 appel legacy observé pendant 14 jours glissants.
+   - Action: suppression des routes legacy + retrait des couches de compatibilité + nettoyage documentation.
+
+## Plan de communication client
+
+### Cibles
+- Front web
+- Mobile (iOS/Android)
+- Intégrations externes / partenaires API
+
+### Cadence
+- **T0 (annonce)**: publication note de migration + date de sunset.
+- **T0 + 2 semaines**: rappel avec top endpoints legacy encore utilisés (basé logs/metrics).
+- **T0 + 6 semaines**: notification de pré-coupure.
+- **T0 + 8 semaines**: revue go/no-go sur la suppression (selon adoption mesurée).
+
+### Canaux
+- Changelog API
+- Message Slack/Teams équipes internes
+- Email aux intégrateurs externes
+- Ticket de suivi par client consommateur
+
 ## Recommandation technique
 Quand le slug n'est pas dérivable automatiquement, retourner `400` avec un message explicite pour forcer la migration client.
 

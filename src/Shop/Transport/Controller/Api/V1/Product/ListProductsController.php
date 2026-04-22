@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shop\Transport\Controller\Api\V1\Product;
 
+use App\Shop\Application\Monitoring\ShopMonitoringService;
 use App\Shop\Application\Service\ProductListService;
 use JsonException;
 use OpenApi\Attributes as OA;
@@ -20,10 +21,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class ListProductsController
 {
-    private const LEGACY_ROUTE_WARNING = 'Deprecated endpoint: use /v1/shop/legacy/products instead.';
+    private const LEGACY_ROUTE_WARNING = 'Deprecated endpoint: use /v1/shop/products?applicationSlug={applicationSlug} instead.';
+    private const LEGACY_ROUTE_COUNTER = 'shop.legacy_route.usage_total';
 
     public function __construct(
-        private ProductListService $productListService
+        private ProductListService $productListService,
+        private ShopMonitoringService $shopMonitoringService,
     ) {
     }
 
@@ -39,6 +42,25 @@ final readonly class ListProductsController
     )]
     public function __invoke(Request $request): JsonResponse
     {
+        $this->shopMonitoringService->logStructured(
+            'shop.legacy_route.used',
+            'Legacy shop product list endpoint called.',
+            [
+                'legacy_route' => true,
+                'route' => '/v1/shop/legacy/products',
+                'method' => Request::METHOD_GET,
+                'replacement' => '/v1/shop/products?applicationSlug={applicationSlug}',
+                'sunset_at' => '2026-12-31T23:59:59Z',
+                'user_agent' => $request->headers->get('User-Agent'),
+            ],
+            'info'
+        );
+        $this->shopMonitoringService->incrementCounter(self::LEGACY_ROUTE_COUNTER, [
+            'module' => 'shop',
+            'route' => '/v1/shop/legacy/products',
+            'method' => Request::METHOD_GET,
+        ]);
+
         $response = new JsonResponse($this->productListService->getList($request));
         $response->headers->set('Deprecation', 'true');
         $response->headers->set('Sunset', 'Wed, 31 Dec 2026 23:59:59 GMT');
