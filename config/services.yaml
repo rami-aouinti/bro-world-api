@@ -13,6 +13,7 @@ parameters:
     recruit.interview_invitation.template_update: '%env(default:recruit.interview_invitation.template_update_default:RECRUIT_INTERVIEW_TEMPLATE_UPDATE)%'
     crm.github.default_repository_owner: '%env(default:bro-world:CRM_GITHUB_DEFAULT_REPOSITORY_OWNER)%'
     crm.github.owner_by_application_slug: '%env(json:CRM_GITHUB_OWNER_BY_APPLICATION_SLUG)%'
+    warmupPublicEndpointsConfigPath: '%kernel.project_dir%/config/warmup/public_endpoints.yaml'
 
 services:
     # default configuration for services in *this* file

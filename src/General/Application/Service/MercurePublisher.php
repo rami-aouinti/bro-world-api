@@ -34,21 +34,35 @@ final readonly class MercurePublisher
     {
         $payload = [
             'topic' => $topic,
-            'data' => (string)json_encode($data, JSON_THROW_ON_ERROR),
+            'data' => (string) json_encode($data, JSON_THROW_ON_ERROR),
         ];
 
         if ($private) {
             $payload['private'] = 'on';
         }
 
+        $this->logger->info('Mercure publish start', [
+            'url' => $this->mercurePublishUrl,
+            'topic' => $topic,
+            'private' => $private,
+            'payload' => $payload,
+        ]);
+
         try {
-            $this->httpClient->request('POST', $this->mercurePublishUrl, [
+            $response = $this->httpClient->request('POST', $this->mercurePublishUrl, [
                 'auth_bearer' => $this->mercureJwtSecret,
                 'body' => $payload,
-            ])->getStatusCode();
-        } catch (ExceptionInterface $exception) {
-            $this->logger->error('Mercure publish failed.', [
-                'topic' => $topic,
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            $content = $response->getContent(false);
+
+            $this->logger->info('Mercure publish success', [
+                'statusCode' => $statusCode,
+                'response' => $content,
+            ]);
+        } catch (\Throwable $exception) {
+            $this->logger->error('Mercure publish failed', [
                 'error' => $exception->getMessage(),
             ]);
         }
