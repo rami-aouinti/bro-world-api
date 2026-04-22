@@ -233,11 +233,20 @@ final readonly class CrmGithubBootstrapSyncService
                     ->setName((string)($repositoryPayload['name'] ?? ''))
                     ->setFullName((string)($repositoryPayload['fullName'] ?? ''))
                     ->setDefaultBranch(isset($repositoryPayload['defaultBranch']) ? (string)$repositoryPayload['defaultBranch'] : null)
+                    ->setVisibility(isset($repositoryPayload['visibility']) ? (string)$repositoryPayload['visibility'] : null)
                     ->setIsPrivate((bool)($repositoryPayload['private'] ?? false))
+                    ->setPrimaryLanguage(isset($repositoryPayload['language']) ? (string)$repositoryPayload['language'] : null)
+                    ->setStarsCount((int)($repositoryPayload['stargazersCount'] ?? 0))
+                    ->setForksCount((int)($repositoryPayload['forksCount'] ?? 0))
+                    ->setWatchersCount((int)($repositoryPayload['watchersCount'] ?? 0))
+                    ->setOpenIssuesCount((int)($repositoryPayload['openIssuesCount'] ?? 0))
+                    ->setIsArchived((bool)($repositoryPayload['archived'] ?? false))
+                    ->setIsDisabled((bool)($repositoryPayload['disabled'] ?? false))
                     ->setHtmlUrl((string)($repositoryPayload['htmlUrl'] ?? ''))
                     ->setExternalId(isset($repositoryPayload['externalId']) ? (string)$repositoryPayload['externalId'] : null)
                     ->setSyncStatus('synced')
                     ->setLastSyncedAt(new DateTimeImmutable())
+                    ->setLastPushedAt($this->normalizeGithubDate($repositoryPayload['pushedAt'] ?? null))
                     ->setPayload($this->buildRepositoryImportPayload($repositoryPayload, null));
 
                 if (!$dryRun) {
@@ -257,11 +266,20 @@ final readonly class CrmGithubBootstrapSyncService
                     ->setName((string)($repositoryPayload['name'] ?? $existingRepository->getName()))
                     ->setFullName((string)($repositoryPayload['fullName'] ?? $existingRepository->getFullName()))
                     ->setDefaultBranch(isset($repositoryPayload['defaultBranch']) ? (string)$repositoryPayload['defaultBranch'] : null)
+                    ->setVisibility(isset($repositoryPayload['visibility']) ? (string)$repositoryPayload['visibility'] : $existingRepository->getVisibility())
                     ->setIsPrivate((bool)($repositoryPayload['private'] ?? $existingRepository->isPrivate()))
+                    ->setPrimaryLanguage(isset($repositoryPayload['language']) ? (string)$repositoryPayload['language'] : $existingRepository->getPrimaryLanguage())
+                    ->setStarsCount((int)($repositoryPayload['stargazersCount'] ?? $existingRepository->getStarsCount()))
+                    ->setForksCount((int)($repositoryPayload['forksCount'] ?? $existingRepository->getForksCount()))
+                    ->setWatchersCount((int)($repositoryPayload['watchersCount'] ?? $existingRepository->getWatchersCount()))
+                    ->setOpenIssuesCount((int)($repositoryPayload['openIssuesCount'] ?? $existingRepository->getOpenIssuesCount()))
+                    ->setIsArchived((bool)($repositoryPayload['archived'] ?? $existingRepository->isArchived()))
+                    ->setIsDisabled((bool)($repositoryPayload['disabled'] ?? $existingRepository->isDisabled()))
                     ->setHtmlUrl((string)($repositoryPayload['htmlUrl'] ?? $existingRepository->getHtmlUrl()))
                     ->setExternalId(isset($repositoryPayload['externalId']) ? (string)$repositoryPayload['externalId'] : $existingRepository->getExternalId())
                     ->setSyncStatus('synced')
                     ->setLastSyncedAt(new DateTimeImmutable())
+                    ->setLastPushedAt($this->normalizeGithubDate($repositoryPayload['pushedAt'] ?? null) ?? $existingRepository->getLastPushedAt())
                     ->setPayload($this->buildRepositoryImportPayload($repositoryPayload, $existingRepository->getPayload()));
 
                 if (!$dryRun) {
@@ -453,8 +471,17 @@ GRAPHQL, $ownerField);
                     'name' => (string)($repository['name'] ?? ''),
                     'fullName' => (string)($repository['full_name'] ?? ''),
                     'defaultBranch' => (string)($repository['default_branch'] ?? ''),
+                    'visibility' => isset($repository['visibility']) ? (string)$repository['visibility'] : null,
                     'private' => (bool)($repository['private'] ?? false),
+                    'language' => isset($repository['language']) ? (string)$repository['language'] : null,
+                    'stargazersCount' => (int)($repository['stargazers_count'] ?? 0),
+                    'forksCount' => (int)($repository['forks_count'] ?? 0),
+                    'watchersCount' => (int)($repository['watchers_count'] ?? 0),
+                    'openIssuesCount' => (int)($repository['open_issues_count'] ?? 0),
+                    'archived' => (bool)($repository['archived'] ?? false),
+                    'disabled' => (bool)($repository['disabled'] ?? false),
                     'htmlUrl' => (string)($repository['html_url'] ?? ''),
+                    'pushedAt' => isset($repository['pushed_at']) ? (string)$repository['pushed_at'] : null,
                     'owner' => (string)($repository['owner']['login'] ?? $owner),
                     'projectNodeId' => '',
                     'projectUrl' => '',
@@ -797,10 +824,32 @@ GRAPHQL, $ownerField);
         $payload['nodeId'] = (string)($repositoryPayload['nodeId'] ?? '');
         $payload['projectNodeId'] = (string)($repositoryPayload['projectNodeId'] ?? '');
         $payload['projectUrl'] = (string)($repositoryPayload['projectUrl'] ?? '');
+        $payload['visibility'] = $repositoryPayload['visibility'] ?? null;
+        $payload['language'] = $repositoryPayload['language'] ?? null;
+        $payload['stargazersCount'] = (int)($repositoryPayload['stargazersCount'] ?? 0);
+        $payload['forksCount'] = (int)($repositoryPayload['forksCount'] ?? 0);
+        $payload['watchersCount'] = (int)($repositoryPayload['watchersCount'] ?? 0);
+        $payload['openIssuesCount'] = (int)($repositoryPayload['openIssuesCount'] ?? 0);
+        $payload['archived'] = (bool)($repositoryPayload['archived'] ?? false);
+        $payload['disabled'] = (bool)($repositoryPayload['disabled'] ?? false);
+        $payload['pushedAt'] = $repositoryPayload['pushedAt'] ?? null;
         $payload['importSource'] = 'github-bootstrap';
         $payload['importedAt'] = (new DateTimeImmutable())->format(DATE_ATOM);
 
         return $payload;
+    }
+
+    private function normalizeGithubDate(mixed $value): ?DateTimeImmutable
+    {
+        if (!is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        try {
+            return new DateTimeImmutable(trim($value));
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**
