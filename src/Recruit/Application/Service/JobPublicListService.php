@@ -193,46 +193,15 @@ readonly class JobPublicListService
             /** @var Job $job */
             foreach ($paginator as $job) {
                 $jobIds[] = $job->getId();
-                $ownerId = $job->getOwner()?->getId();
-                $jobPayload = [
-                    'id' => $job->getId(),
-                    'quizId' => $job->getQuizId(),
-                    'slug' => $job->getSlug(),
-                    'title' => $job->getTitle(),
-                    'company' => [
-                        'name' => $job->getCompany()?->getName() ?? '',
-                        'logo' => $job->getCompany()?->getLogo() ?? '',
-                        'sector' => $job->getCompany()?->getSector() ?? '',
-                        'size' => $job->getCompany()?->getSize() ?? '',
-                    ],
-                    'location' => $job->getLocation(),
-                    'contractType' => $job->getContractTypeValue(),
-                    'workMode' => $job->getWorkModeValue(),
-                    'schedule' => $job->getScheduleValue(),
-                    'experienceLevel' => $job->getExperienceLevelValue(),
-                    'yearsExperienceMin' => $job->getYearsExperienceMin(),
-                    'yearsExperienceMax' => $job->getYearsExperienceMax(),
-                    'salary' => [
-                        'min' => $job->getSalary()?->getMin() ?? 0,
-                        'max' => $job->getSalary()?->getMax() ?? 0,
-                        'currency' => $job->getSalary()?->getCurrency() ?? 'EUR',
-                        'period' => $job->getSalary()?->getPeriod() ?? 'year',
-                    ],
-                    'postedAtLabel' => $this->buildPostedAtLabel($job->getCreatedAt()),
-                    'summary' => $job->getSummary(),
+                $jobPayload = $this->buildJobPayload($job, [
+                    'mode' => 'connected',
                     'matchScore' => $userSkillKeywords === []
                         ? $job->getMatchScore()
                         : $this->computeMatchScore($job, $userSkillKeywords),
-                    'badges' => array_map(static fn ($badge): string => $badge->getLabel(), $job->getBadges()->toArray()),
-                    'tags' => array_map(static fn ($tag): string => $tag->getLabel(), $job->getTags()->toArray()),
-                    'missionTitle' => $job->getMissionTitle(),
-                    'missionDescription' => $job->getMissionDescription(),
-                    'responsibilities' => $job->getResponsibilities(),
-                    'profile' => $job->getProfile(),
-                    'benefits' => $job->getBenefits(),
-                ];
+                ]);
 
                 if ($loggedInUser instanceof User) {
+                    $ownerId = $job->getOwner()?->getId();
                     $jobPayload['owner'] = $ownerId !== null && $ownerId === $loggedInUser->getId();
                 }
 
@@ -364,41 +333,9 @@ readonly class JobPublicListService
             $items = [];
             /** @var Job $job */
             foreach ($paginator as $job) {
-                $items[] = [
-                    'id' => $job->getId(),
-                    'quizId' => $job->getQuizId(),
-                    'slug' => $job->getSlug(),
-                    'title' => $job->getTitle(),
-                    'company' => [
-                        'name' => $job->getCompany()?->getName() ?? '',
-                        'logo' => $job->getCompany()?->getLogo() ?? '',
-                        'sector' => $job->getCompany()?->getSector() ?? '',
-                        'size' => $job->getCompany()?->getSize() ?? '',
-                    ],
-                    'location' => $job->getLocation(),
-                    'contractType' => $job->getContractTypeValue(),
-                    'workMode' => $job->getWorkModeValue(),
-                    'schedule' => $job->getScheduleValue(),
-                    'experienceLevel' => $job->getExperienceLevelValue(),
-                    'yearsExperienceMin' => $job->getYearsExperienceMin(),
-                    'yearsExperienceMax' => $job->getYearsExperienceMax(),
-                    'salary' => [
-                        'min' => $job->getSalary()?->getMin() ?? 0,
-                        'max' => $job->getSalary()?->getMax() ?? 0,
-                        'currency' => $job->getSalary()?->getCurrency() ?? 'EUR',
-                        'period' => $job->getSalary()?->getPeriod() ?? 'year',
-                    ],
-                    'postedAtLabel' => $this->buildPostedAtLabel($job->getCreatedAt()),
-                    'summary' => $job->getSummary(),
-                    'matchScore' => $job->getMatchScore(),
-                    'badges' => array_map(static fn ($badge): string => $badge->getLabel(), $job->getBadges()->toArray()),
-                    'tags' => array_map(static fn ($tag): string => $tag->getLabel(), $job->getTags()->toArray()),
-                    'missionTitle' => $job->getMissionTitle(),
-                    'missionDescription' => $job->getMissionDescription(),
-                    'responsibilities' => $job->getResponsibilities(),
-                    'profile' => $job->getProfile(),
-                    'benefits' => $job->getBenefits(),
-                ];
+                $items[] = $this->buildJobPayload($job, [
+                    'mode' => 'general',
+                ]);
             }
 
             return [
@@ -418,6 +355,54 @@ readonly class JobPublicListService
         ];
 
         return $result;
+    }
+
+    /**
+     * @param array<string, mixed>|null $context
+     *
+     * @return array<string, mixed>
+     */
+    private function buildJobPayload(Job $job, ?array $context = null): array
+    {
+        $mode = is_string($context['mode'] ?? null) ? $context['mode'] : 'general';
+
+        return [
+            'id' => $job->getId(),
+            'quizId' => $job->getQuizId(),
+            'slug' => $job->getSlug(),
+            'title' => $job->getTitle(),
+            'company' => [
+                'name' => $job->getCompany()?->getName() ?? '',
+                'logo' => $job->getCompany()?->getLogo() ?? '',
+                'sector' => $job->getCompany()?->getSector() ?? '',
+                'size' => $job->getCompany()?->getSize() ?? '',
+            ],
+            'location' => $job->getLocation(),
+            'contractType' => $job->getContractTypeValue(),
+            'workMode' => $job->getWorkModeValue(),
+            'schedule' => $job->getScheduleValue(),
+            'experienceLevel' => $job->getExperienceLevelValue(),
+            'yearsExperienceMin' => $job->getYearsExperienceMin(),
+            'yearsExperienceMax' => $job->getYearsExperienceMax(),
+            'salary' => [
+                'min' => $job->getSalary()?->getMin() ?? 0,
+                'max' => $job->getSalary()?->getMax() ?? 0,
+                'currency' => $job->getSalary()?->getCurrency() ?? 'EUR',
+                'period' => $job->getSalary()?->getPeriod() ?? 'year',
+            ],
+            'postedAtLabel' => $this->buildPostedAtLabel($job->getCreatedAt()),
+            'summary' => $job->getSummary(),
+            'matchScore' => $mode === 'connected' && isset($context['matchScore'])
+                ? (int)$context['matchScore']
+                : $job->getMatchScore(),
+            'badges' => array_map(static fn ($badge): string => $badge->getLabel(), $job->getBadges()->toArray()),
+            'tags' => array_map(static fn ($tag): string => $tag->getLabel(), $job->getTags()->toArray()),
+            'missionTitle' => $job->getMissionTitle(),
+            'missionDescription' => $job->getMissionDescription(),
+            'responsibilities' => $job->getResponsibilities(),
+            'profile' => $job->getProfile(),
+            'benefits' => $job->getBenefits(),
+        ];
     }
 
     private function buildPostedAtLabel(?DateTimeImmutable $createdAt): string

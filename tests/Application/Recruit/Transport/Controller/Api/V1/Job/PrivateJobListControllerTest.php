@@ -58,11 +58,11 @@ class PrivateJobListControllerTest extends WebTestCase
 
         $payload = JSON::decode($content, true);
 
-        self::assertArrayHasKey('jobs', $payload);
-        self::assertIsArray($payload['jobs']);
+        self::assertArrayHasKey('items', $payload);
+        self::assertIsArray($payload['items']);
 
         $jobPayload = null;
-        foreach ($payload['jobs'] as $job) {
+        foreach ($payload['items'] as $job) {
             if (($job['id'] ?? null) === $jobId) {
                 $jobPayload = $job;
                 break;
@@ -72,6 +72,35 @@ class PrivateJobListControllerTest extends WebTestCase
         self::assertIsArray($jobPayload);
         self::assertArrayHasKey('matchScore', $jobPayload);
         self::assertSame($expectedMatchScore, $jobPayload['matchScore']);
+    }
+
+    #[TestDox('Test that `GET /v1/recruit/applications/{applicationSlug}/private/jobs` keeps the expected payload structure.')]
+    public function testThatPrivateJobListKeepsExpectedPayloadStructure(): void
+    {
+        [$applicationSlug] = $this->getFixtureContext();
+
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/private/jobs?limit=1');
+
+        $response = $client->getResponse();
+        $content = $response->getContent();
+
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:\n" . $response);
+
+        $payload = JSON::decode($content, true);
+        self::assertIsArray($payload['items'] ?? null);
+        self::assertNotEmpty($payload['items']);
+
+        $item = $payload['items'][0];
+        self::assertIsArray($item);
+        self::assertArrayHasKey('missionTitle', $item);
+        self::assertArrayHasKey('missionDescription', $item);
+        self::assertArrayHasKey('responsibilities', $item);
+        self::assertArrayHasKey('benefits', $item);
+        self::assertArrayHasKey('matchScore', $item);
+        self::assertArrayHasKey('owner', $item);
+        self::assertArrayHasKey('apply', $item);
     }
 
     /**
