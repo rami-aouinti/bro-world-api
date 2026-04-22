@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\School\Transport\Controller\Api\V1\Application;
 
 use App\General\Application\Message\EntityPatched;
+use App\General\Application\Service\ApplicationScopeResolver;
 use App\School\Application\Service\SchoolApplicationScopeResolver;
 use App\School\Application\Service\SchoolResourceAccessService;
 use App\School\Application\Service\SchoolResourcePatchService;
@@ -26,6 +27,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class PatchSchoolApplicationResourceController
 {
     public function __construct(
+        private ApplicationScopeResolver $applicationScopeResolver,
         private SchoolApplicationScopeResolver $scopeResolver,
         private SchoolResourceAccessService $resourceAccessService,
         private SchoolResourceViewService $resourceViewService,
@@ -62,9 +64,9 @@ final readonly class PatchSchoolApplicationResourceController
         ],
     )]
     #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, string $resource, string $id, Request $request, ?User $loggedInUser): JsonResponse
+    public function __invoke(string $resource, string $id, Request $request, ?User $loggedInUser): JsonResponse
     {
-        $request->attributes->set('applicationSlug', $applicationSlug);
+        $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
         $entity = $this->resourceViewService->findOr404($resource, $id);
         if (!$this->resourceAccessService->belongsToSchool($entity, $school)) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\School\Transport\Controller\Api\V1;
 
+use App\General\Application\Service\ApplicationScopeResolver;
 use App\School\Application\Serializer\SchoolApiResponseSerializer;
 use App\School\Application\Service\SchoolApplicationResourceListService;
 use App\School\Application\Service\SchoolApplicationScopeResolver;
@@ -21,6 +22,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class SchoolApplicationResourceListController
 {
     public function __construct(
+        private ApplicationScopeResolver $applicationScopeResolver,
         private SchoolApplicationScopeResolver $scopeResolver,
         private SchoolApplicationResourceListService $resourceListService,
         private SchoolApiResponseSerializer $responseSerializer,
@@ -74,8 +76,9 @@ final readonly class SchoolApplicationResourceListController
         ],
     )]
     #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, string $resource, ?User $loggedInUser): JsonResponse
+    public function __invoke(Request $request, string $resource, ?User $loggedInUser): JsonResponse
     {
+        $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
         $items = $this->resourceListService->listByResource($resource, $school->getId());
 

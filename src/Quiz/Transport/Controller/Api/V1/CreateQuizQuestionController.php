@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Quiz\Transport\Controller\Api\V1;
 
+use App\General\Application\Service\ApplicationScopeResolver;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Infrastructure\Repository\ApplicationRepository;
 use App\Quiz\Application\Message\CreateQuizQuestionCommand;
@@ -26,14 +27,20 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[OA\Tag(name: 'Quiz')]
 final class CreateQuizQuestionController
 {
+    public function __construct(
+        private readonly ApplicationScopeResolver $applicationScopeResolver,
+    ) {
+    }
+
     /**
      * @throws ExceptionInterface
      * @throws JsonException
      */
     #[Route('/v1/quiz/questions', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'POST /v1/quiz/questions', tags: ['Quiz'])]
-    public function __invoke(string $applicationSlug, Request $request, MessageBusInterface $messageBus, User $loggedInUser, ApplicationRepository $applicationRepository, QuizRepository $quizRepository, QuizEditorAccessService $accessService): JsonResponse
+    public function __invoke(Request $request, MessageBusInterface $messageBus, User $loggedInUser, ApplicationRepository $applicationRepository, QuizRepository $quizRepository, QuizEditorAccessService $accessService): JsonResponse
     {
+        $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);
         $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         $application = $applicationRepository->findOneBy([

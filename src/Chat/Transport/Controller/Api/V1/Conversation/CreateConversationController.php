@@ -7,6 +7,7 @@ namespace App\Chat\Transport\Controller\Api\V1\Conversation;
 use App\Chat\Application\Message\CreateConversationCommand;
 use App\Chat\Application\Service\ChatApplicationScopeValidator;
 use App\Chat\Application\Service\ConversationPayloadService;
+use App\General\Application\Service\ApplicationScopeResolver;
 use App\General\Application\Service\OperationIdGeneratorService;
 use App\General\Domain\Service\Interfaces\MessageServiceInterface;
 use App\User\Domain\Entity\User;
@@ -30,6 +31,7 @@ readonly class CreateConversationController
         private ConversationPayloadService $conversationPayloadService,
         private OperationIdGeneratorService $operationIdGeneratorService,
         private ChatApplicationScopeValidator $chatApplicationScopeValidator,
+        private ApplicationScopeResolver $applicationScopeResolver,
     ) {
     }
 
@@ -37,8 +39,9 @@ readonly class CreateConversationController
      * @throws Throwable
      */
     #[Route(path: '/v1/chat/private/chats/{chatId}/conversations', methods: [Request::METHOD_POST])]
-    public function __invoke(string $applicationSlug, string $chatId, Request $request, User $loggedInUser): JsonResponse
+    public function __invoke(string $chatId, Request $request, User $loggedInUser): JsonResponse
     {
+        $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);
         $this->chatApplicationScopeValidator->validate($chatId, $applicationSlug);
 
         $targetUserId = $this->conversationPayloadService->extractRequiredUserId($request->toArray());

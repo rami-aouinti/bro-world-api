@@ -6,6 +6,7 @@ namespace App\Chat\Transport\Controller\Api\V1\Conversation;
 
 use App\Chat\Application\Service\ChatApplicationScopeValidator;
 use App\Chat\Application\Service\ConversationListService;
+use App\General\Application\Service\ApplicationScopeResolver;
 use App\User\Domain\Entity\User;
 use JsonException;
 use OpenApi\Attributes as OA;
@@ -40,7 +41,8 @@ readonly class ApplicationUserConversationListController
 {
     public function __construct(
         private ConversationListService $conversationListService,
-        private ChatApplicationScopeValidator $chatApplicationScopeValidator
+        private ChatApplicationScopeValidator $chatApplicationScopeValidator,
+        private ApplicationScopeResolver $applicationScopeResolver,
     ) {
     }
 
@@ -49,8 +51,9 @@ readonly class ApplicationUserConversationListController
      * @throws InvalidArgumentException
      */
     #[Route(path: '/v1/chat/private/chats/{chatId}/conversations', methods: [Request::METHOD_GET])]
-    public function __invoke(string $applicationSlug, string $chatId, Request $request, User $loggedInUser): JsonResponse
+    public function __invoke(string $chatId, Request $request, User $loggedInUser): JsonResponse
     {
+        $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);
         $this->chatApplicationScopeValidator->validate($chatId, $applicationSlug);
 
         $page = max(1, $request->query->getInt('page', 1));
