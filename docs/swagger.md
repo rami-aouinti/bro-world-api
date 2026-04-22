@@ -239,6 +239,9 @@ Réponse: `204 No Content`.
 
 ## Migration client (applicationSlug en query)
 
-Exemple de bascule :
-- Avant: `/v1/school/applications/school-crm/classes`
-- Après: `/v1/school/classes?applicationSlug=school-crm`
+| Ancien endpoint | Nouveau endpoint |
+|---|---|
+| `/v1/school/applications/{applicationSlug}/classes` | `/v1/school/classes?applicationSlug={applicationSlug}` |
+| `/v1/recruit/public/{applicationSlug}/jobs` | `/v1/recruit/public/jobs?applicationSlug={applicationSlug}` |
+| `/v1/recruit/private/{applicationSlug}/jobs` | `/v1/recruit/private/jobs?applicationSlug={applicationSlug}` |
+| `/v1/crm/applications/{applicationSlug}/companies` | `/v1/crm/companies?applicationSlug={applicationSlug}` |

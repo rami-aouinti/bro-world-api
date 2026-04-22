@@ -257,11 +257,13 @@ curl -X POST "http://localhost/api/v1/recruit/jobs?applicationSlug=my-app" \
 ```
 
 ### 2.5 Mettre à jour partiellement un job d'une application
-`PATCH /v1/recruit/applications/{applicationId}/jobs/{jobId}`
+`PATCH /v1/recruit/jobs/{jobId}`
 
 Path params:
-- `applicationId` (UUID)
 - `jobId` (UUID)
+
+Query params:
+- `applicationSlug` (string, requis)
 
 Body patchable:
 - `title`, `location`, `summary`, `missionTitle`, `missionDescription`
@@ -271,7 +273,7 @@ Body patchable:
 
 Exemple:
 ```bash
-curl -X PATCH "http://localhost/api/v1/recruit/applications/<applicationId>/jobs/<jobId>" \
+curl -X PATCH "http://localhost/api/v1/recruit/jobs/<jobId>?applicationSlug=my-app" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
@@ -279,15 +281,17 @@ curl -X PATCH "http://localhost/api/v1/recruit/applications/<applicationId>/jobs
 ```
 
 ### 2.6 Supprimer un job d'une application
-`DELETE /v1/recruit/applications/{applicationId}/jobs/{jobId}`
+`DELETE /v1/recruit/jobs/{jobId}`
 
 Path params:
-- `applicationId` (UUID)
 - `jobId` (UUID)
+
+Query params:
+- `applicationSlug` (string, requis)
 
 Exemple:
 ```bash
-curl -X DELETE "http://localhost/api/v1/recruit/applications/<applicationId>/jobs/<jobId>" \
+curl -X DELETE "http://localhost/api/v1/recruit/jobs/<jobId>?applicationSlug=my-app" \
   -H "Accept: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>"
 ```
@@ -468,7 +472,7 @@ Conserver le token dans `JWT_TOKEN`.
 ### Étape 2 — Lister les jobs privés
 
 ```bash
-curl -X GET "http://localhost/api/v1/recruit/private/recruit-talent-core/jobs?page=1&limit=20" \
+curl -X GET "http://localhost/api/v1/recruit/private/jobs?applicationSlug=recruit-talent-core&page=1&limit=20" \
   -H "Accept: application/json" \
   -H "Authorization: Bearer ${JWT_TOKEN}"
 ```
@@ -478,7 +482,7 @@ Vérifier qu'au moins un job est présent et récupérer un `jobId`.
 ### Étape 3 — Vérifier les candidatures multi-statuts
 
 ```bash
-curl -X GET "http://localhost/api/v1/recruit/applications/recruit-talent-core/private/job-applications?jobId={jobId}" \
+curl -X GET "http://localhost/api/v1/recruit/private/job-applications?applicationSlug=recruit-talent-core&jobId={jobId}" \
   -H "Accept: application/json" \
   -H "Authorization: Bearer ${JWT_TOKEN}"
 ```
@@ -505,7 +509,7 @@ Vérifier:
 Choisir une `applicationId` en `OFFER_SENT`:
 
 ```bash
-curl -X GET "http://localhost/api/v1/recruit/applications/recruit-talent-core/private/applications/{applicationId}/status-history" \
+curl -X GET "http://localhost/api/v1/recruit/private/applications/{applicationId}/status-history?applicationSlug=recruit-talent-core" \
   -H "Accept: application/json" \
   -H "Authorization: Bearer ${JWT_TOKEN}"
 ```
@@ -540,9 +544,9 @@ Permissions fonctionnelles:
 |---|---|---:|---:|---:|
 | `POST/PATCH/DELETE /v1/recruit/private/interviews/...` | `RECRUIT_INTERVIEW_MANAGE` | ✅ | ✅ | ❌ |
 | `GET /v1/recruit/private/applications/{id}/interviews` | `RECRUIT_INTERVIEW_VIEW` | ✅ | ✅ | ✅ |
-| `PATCH /v1/recruit/applications/{slug}/private/applications/{id}/status` | `RECRUIT_APPLICATION_STATUS_TRANSITION` | ✅ | ✅ | ❌ |
-| `GET /v1/recruit/applications/{slug}/private/applications/{id}/status-history` | `RECRUIT_APPLICATION_STATUS_HISTORY_VIEW` | ✅ | ✅ | ✅ |
-| `POST/PATCH/DELETE /v1/recruit/applications/{slug}/jobs/...` (offers) | `RECRUIT_OFFER_MANAGE` | ✅ | ✅ | ❌ |
+| `PATCH /v1/recruit/private/applications/{id}/status?applicationSlug={applicationSlug}` | `RECRUIT_APPLICATION_STATUS_TRANSITION` | ✅ | ✅ | ❌ |
+| `GET /v1/recruit/private/applications/{id}/status-history?applicationSlug={applicationSlug}` | `RECRUIT_APPLICATION_STATUS_HISTORY_VIEW` | ✅ | ✅ | ✅ |
+| `POST/PATCH/DELETE /v1/recruit/jobs/... ?applicationSlug={applicationSlug}` | `RECRUIT_OFFER_MANAGE` | ✅ | ✅ | ❌ |
 | Lecture de données sensibles (`CV`, `notes`, `feedback/comment`) | `RECRUIT_SENSITIVE_DATA_VIEW` | ✅ | ✅ | ❌ |
 
 ### Règles de confidentialité appliquées
@@ -559,6 +563,10 @@ Permissions fonctionnelles:
 
 ## Migration client (ancienne URL -> nouvelle URL)
 
-- `GET /v1/recruit/public/{applicationSlug}/jobs` -> `GET /v1/recruit/public/jobs?applicationSlug={applicationSlug}`
-- `GET /v1/recruit/private/{applicationSlug}/jobs` -> `GET /v1/recruit/private/jobs?applicationSlug={applicationSlug}`
-- `POST /v1/recruit/applications/{applicationSlug}/jobs` -> `POST /v1/recruit/jobs?applicationSlug={applicationSlug}`
+| Ancien endpoint | Nouveau endpoint |
+|---|---|
+| `GET /v1/recruit/public/{applicationSlug}/jobs` | `GET /v1/recruit/public/jobs?applicationSlug={applicationSlug}` |
+| `GET /v1/recruit/private/{applicationSlug}/jobs` | `GET /v1/recruit/private/jobs?applicationSlug={applicationSlug}` |
+| `POST /v1/recruit/applications/{applicationSlug}/jobs` | `POST /v1/recruit/jobs?applicationSlug={applicationSlug}` |
+| `PATCH /v1/recruit/applications/{applicationId}/jobs/{jobId}` | `PATCH /v1/recruit/jobs/{jobId}?applicationSlug={applicationSlug}` |
+| `DELETE /v1/recruit/applications/{applicationId}/jobs/{jobId}` | `DELETE /v1/recruit/jobs/{jobId}?applicationSlug={applicationSlug}` |

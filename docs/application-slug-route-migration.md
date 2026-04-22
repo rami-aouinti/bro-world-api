@@ -44,6 +44,10 @@ Action attendue côté clients: renseigner explicitement `applicationSlug` en qu
 | `/v1/recruit/applications/{applicationSlug}/jobs` | `/v1/recruit/jobs?applicationSlug={applicationSlug}` |
 | `/v1/recruit/applications/{applicationSlug}/private/jobs` | `/v1/recruit/private/jobs?applicationSlug={applicationSlug}` |
 | `/v1/recruit/public/{applicationSlug}/jobs` | `/v1/recruit/public/jobs?applicationSlug={applicationSlug}` |
+| `/v1/recruit/private/{applicationSlug}/jobs` | `/v1/recruit/private/jobs?applicationSlug={applicationSlug}` |
+| `/v1/recruit/applications/{applicationId}/jobs/{jobId}` | `/v1/recruit/jobs/{jobId}?applicationSlug={applicationSlug}` |
+| `/v1/crm/applications/{applicationSlug}/companies` | `/v1/crm/companies?applicationSlug={applicationSlug}` |
+| `/v1/crm/applications/{applicationSlug}/tasks` | `/v1/crm/tasks?applicationSlug={applicationSlug}` |
 
 Exemple concret:
 
