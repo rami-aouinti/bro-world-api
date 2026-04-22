@@ -27,7 +27,6 @@ final readonly class PatchGeneralCompanyController
     {
     }
 
-    #[Route('/v1/crm/general/companies/{company}', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(
         summary: 'General - Update Company',
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['name' => 'Acme Updated', 'industry' => 'Retail'])),

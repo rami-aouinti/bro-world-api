@@ -39,7 +39,7 @@ class CompanyPatchController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/applications/{applicationSlug}/company/{id}',
+        path: '/v1/recruit/company/{id}',
         requirements: [
             'id' => Requirement::UUID_V1,
         ],

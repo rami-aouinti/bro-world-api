@@ -26,7 +26,7 @@ class TagListController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/applications/{applicationSlug}/tag',
+        path: '/v1/recruit/tag',
         methods: [Request::METHOD_GET],
     )]
     #[IsGranted('ROLE_ROOT')]

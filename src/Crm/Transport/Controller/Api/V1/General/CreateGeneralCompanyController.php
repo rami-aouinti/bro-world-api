@@ -31,7 +31,6 @@ final readonly class CreateGeneralCompanyController
     ) {
     }
 
-    #[Route('/v1/crm/general/companies', methods: [Request::METHOD_POST])]
     #[OA\Post(
         summary: 'General - Create Company',
         description: 'Crée une company CRM dans le scope général.',

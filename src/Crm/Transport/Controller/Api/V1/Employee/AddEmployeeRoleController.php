@@ -34,7 +34,7 @@ final readonly class AddEmployeeRoleController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/employees/{employeeId}/roles', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/employees/{employeeId}/roles', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'employeeId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Post(

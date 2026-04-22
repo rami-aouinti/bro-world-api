@@ -29,8 +29,6 @@ final readonly class CreateStudentController
     ) {
     }
 
-    #[Route('/v1/school/applications/{applicationSlug}/students', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
-    #[Route('/v1/school/general/students', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
     #[Route('/v1/school/students', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
     #[OA\Post(
         summary: 'Créer un étudiant',

@@ -32,25 +32,25 @@ readonly class OfferStatusUpdateController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/applications/{applicationSlug}/private/offers/{offerId}/send', methods: [Request::METHOD_POST])]
+    #[Route(path: '/v1/recruit/private/offers/{offerId}/send', methods: [Request::METHOD_POST])]
     public function send(string $applicationSlug, string $offerId, Request $request, User $loggedInUser): JsonResponse
     {
         return $this->apply($applicationSlug, $offerId, $request, $loggedInUser, 'send');
     }
 
-    #[Route(path: '/v1/recruit/applications/{applicationSlug}/private/offers/{offerId}/accept', methods: [Request::METHOD_POST])]
+    #[Route(path: '/v1/recruit/private/offers/{offerId}/accept', methods: [Request::METHOD_POST])]
     public function accept(string $applicationSlug, string $offerId, Request $request, User $loggedInUser): JsonResponse
     {
         return $this->apply($applicationSlug, $offerId, $request, $loggedInUser, 'accept');
     }
 
-    #[Route(path: '/v1/recruit/applications/{applicationSlug}/private/offers/{offerId}/decline', methods: [Request::METHOD_POST])]
+    #[Route(path: '/v1/recruit/private/offers/{offerId}/decline', methods: [Request::METHOD_POST])]
     public function decline(string $applicationSlug, string $offerId, Request $request, User $loggedInUser): JsonResponse
     {
         return $this->apply($applicationSlug, $offerId, $request, $loggedInUser, 'decline');
     }
 
-    #[Route(path: '/v1/recruit/applications/{applicationSlug}/private/offers/{offerId}/withdraw', methods: [Request::METHOD_POST])]
+    #[Route(path: '/v1/recruit/private/offers/{offerId}/withdraw', methods: [Request::METHOD_POST])]
     public function withdraw(string $applicationSlug, string $offerId, Request $request, User $loggedInUser): JsonResponse
     {
         return $this->apply($applicationSlug, $offerId, $request, $loggedInUser, 'withdraw');

@@ -28,7 +28,6 @@ final readonly class PatchGeneralSprintController
     {
     }
 
-    #[Route('/v1/crm/general/sprints/{sprint}', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(summary: 'General - Update Sprint', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['status' => 'active', 'goal' => 'Livrer les stories critiques'])), responses: [new OA\Response(response: 200, description: 'Sprint mise à jour', content: new OA\JsonContent(example: ['id' => 'uuid']))])]
     public function __invoke(Sprint $sprint, Request $request): JsonResponse
     {

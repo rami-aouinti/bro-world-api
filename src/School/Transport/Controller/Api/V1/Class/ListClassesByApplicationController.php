@@ -31,7 +31,6 @@ final readonly class ListClassesByApplicationController
      * @throws InvalidArgumentException
      * @throws JsonException
      */
-    #[Route('/v1/school/applications/{applicationSlug}/classes', defaults: ['applicationSlug' => 'general'], methods: [Request::METHOD_GET])]
     #[Route('/v1/school/classes', defaults: ['applicationSlug' => 'general'], methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'Lister les classes d\'une application',

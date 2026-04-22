@@ -34,7 +34,7 @@ final readonly class PatchEmployeeController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/employees/{employeeId}', methods: [Request::METHOD_PATCH])]
+    #[Route('/v1/crm/employees/{employeeId}', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(
         summary: 'Patch Employee',
         description: 'Exécute l action metier Patch Employee dans le perimetre de l application CRM.',

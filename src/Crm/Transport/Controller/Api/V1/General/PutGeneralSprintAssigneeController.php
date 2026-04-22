@@ -31,7 +31,6 @@ final readonly class PutGeneralSprintAssigneeController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/crm/general/sprints/{sprint}/assignees/{user}', methods: [Request::METHOD_PUT])]
     #[OA\Parameter(name: 'sprint', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Put(

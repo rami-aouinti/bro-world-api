@@ -35,7 +35,7 @@ final readonly class PatchCompanyController
     /**
      * @throws ExceptionInterface
      */
-    #[Route('/v1/crm/applications/{applicationSlug}/companies/{companyId}', methods: [Request::METHOD_PATCH])]
+    #[Route('/v1/crm/companies/{companyId}', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'companyId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Patch(

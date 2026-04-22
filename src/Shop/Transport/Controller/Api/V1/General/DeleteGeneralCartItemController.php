@@ -36,7 +36,6 @@ final readonly class DeleteGeneralCartItemController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/shop/general/carts/{shopId}/items/{itemId}', methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'shopId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'itemId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Post(

@@ -37,7 +37,7 @@ final readonly class CreatePaymentIntentController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/shop/applications/{applicationSlug}/orders/{orderId}/payment-intent', methods: [Request::METHOD_POST])]
+    #[Route('/v1/shop/orders/{orderId}/payment-intent', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
         summary: 'Create a payment intent for an order (private endpoint, full authentication required).',

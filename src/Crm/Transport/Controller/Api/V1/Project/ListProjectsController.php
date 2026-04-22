@@ -23,7 +23,7 @@ final readonly class ListProjectsController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/projects', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/projects', methods: [Request::METHOD_GET])]
     #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Parameter(ref: '#/components/parameters/page')]
     #[OA\Parameter(ref: '#/components/parameters/limit')]

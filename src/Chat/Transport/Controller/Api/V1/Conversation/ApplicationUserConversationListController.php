@@ -20,7 +20,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[AsController]
 #[OA\Tag(name: 'Chat Conversation')]
 #[OA\Get(
-    path: '/v1/chat/{applicationSlug}/private/chats/{chatId}/conversations',
+    path: '/v1/chat/private/chats/{chatId}/conversations',
     operationId: 'chat_conversation_private_chat_list',
     summary: "Lister les conversations privées d'un chat pour l'utilisateur connecté",
     tags: ['Chat Conversation'],
@@ -48,7 +48,7 @@ readonly class ApplicationUserConversationListController
      * @throws JsonException
      * @throws InvalidArgumentException
      */
-    #[Route(path: '/v1/chat/{applicationSlug}/private/chats/{chatId}/conversations', methods: [Request::METHOD_GET])]
+    #[Route(path: '/v1/chat/private/chats/{chatId}/conversations', methods: [Request::METHOD_GET])]
     public function __invoke(string $applicationSlug, string $chatId, Request $request, User $loggedInUser): JsonResponse
     {
         $this->chatApplicationScopeValidator->validate($chatId, $applicationSlug);

@@ -36,7 +36,6 @@ final readonly class PatchGeneralSubTaskController
     ) {
     }
 
-    #[Route('/v1/crm/general/subtasks/{subtask}', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(
         summary: 'General - Update Subtask',
         parameters: [new OA\Parameter(name: 'subtask', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],

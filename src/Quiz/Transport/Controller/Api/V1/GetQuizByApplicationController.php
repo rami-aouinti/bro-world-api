@@ -18,7 +18,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[OA\Tag(name: 'Quiz')]
 final class GetQuizByApplicationController
 {
-    #[Route('/v1/quiz/applications/{applicationSlug}', methods: [Request::METHOD_GET])]
+    #[Route('/v1/quiz', methods: [Request::METHOD_GET])]
     public function __invoke(string $applicationSlug, Request $request, QuizReadService $quizReadService): JsonResponse
     {
         return new JsonResponse($quizReadService->getByApplicationSlug(

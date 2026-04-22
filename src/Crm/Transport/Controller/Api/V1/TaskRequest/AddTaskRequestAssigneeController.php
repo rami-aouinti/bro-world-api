@@ -31,7 +31,7 @@ final readonly class AddTaskRequestAssigneeController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/crm/applications/{applicationSlug}/task-requests/{taskRequest}/assignees/{user}', methods: [Request::METHOD_PUT])]
+    #[Route('/v1/crm/task-requests/{taskRequest}/assignees/{user}', methods: [Request::METHOD_PUT])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'taskRequest', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]

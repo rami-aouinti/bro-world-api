@@ -31,8 +31,7 @@ final readonly class PatchProjectGithubRepositoryController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/repositories/patch', methods: [Request::METHOD_PATCH])]
-    #[Route('/v1/crm/general/projects/{project}/github/repositories/patch', methods: [Request::METHOD_PATCH])]
+    #[Route('/v1/crm/projects/{project}/github/repositories/patch', methods: [Request::METHOD_PATCH])]
     public function __invoke(Project $project, Request $request): JsonResponse
     {
         $payload = $this->crmRequestHandler->decodeJson($request);

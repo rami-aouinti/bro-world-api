@@ -41,7 +41,7 @@ final readonly class CreateCourseController
     }
 
     #[OA\Post(
-        path: '/v1/school/applications/{applicationSlug}/courses',
+        path: '/v1/school/courses',
         summary: 'Créer un cours avec contenu HTML et pièces jointes optionnelles',
         tags: ['School'],
         requestBody: new OA\RequestBody(
@@ -81,8 +81,6 @@ final readonly class CreateCourseController
             new OA\Response(response: 422, description: 'Validation failed', content: new OA\JsonContent(ref: '#/components/schemas/SchoolValidationError')),
         ],
     )]
-    #[Route('/v1/school/applications/{applicationSlug}/courses', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
-    #[Route('/v1/school/general/courses', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
     #[Route('/v1/school/courses', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, ?User $loggedInUser, Request $request): JsonResponse

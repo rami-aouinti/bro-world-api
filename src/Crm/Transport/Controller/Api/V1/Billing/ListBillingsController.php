@@ -29,7 +29,7 @@ final readonly class ListBillingsController
      * @throws JsonException
      * @throws InvalidArgumentException
      */
-    #[Route('/v1/crm/applications/{applicationSlug}/billings', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/billings', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1), example: 1)]
     #[OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', maximum: 100, minimum: 1), example: 20)]

@@ -31,8 +31,7 @@ final readonly class MoveProjectGithubIssueController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/projects/{projectId}/items/{itemId}/move', methods: [Request::METHOD_POST])]
-    #[Route('/v1/crm/general/projects/{project}/github/projects/{projectId}/items/{itemId}/move', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/projects/{project}/github/projects/{projectId}/items/{itemId}/move', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'projectId', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'itemId', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]

@@ -23,7 +23,6 @@ final readonly class GetGeneralProjectController
     {
     }
 
-    #[Route('/v1/crm/general/projects/{project}', methods: [Request::METHOD_GET])]
     public function __invoke(Project $project): JsonResponse
     {
         $payload = $this->projectReadService->getDetailGlobal($project);

@@ -30,7 +30,6 @@ final readonly class CreateGeneralApplicationController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route(path: '/v1/recruit/general/applications', methods: [Request::METHOD_POST])]
     #[OA\Post(
         summary: 'Crée une candidature pour un job.',
         requestBody: new OA\RequestBody(

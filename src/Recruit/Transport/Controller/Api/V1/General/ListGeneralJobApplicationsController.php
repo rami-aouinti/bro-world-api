@@ -26,7 +26,6 @@ final readonly class ListGeneralJobApplicationsController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/general/private/job-applications', methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'Liste privée des candidatures d\'un job.',
         parameters: [

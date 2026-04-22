@@ -26,7 +26,6 @@ final readonly class ListGeneralContactsController
     /** @throws JsonException
      * @throws InvalidArgumentException
      */
-    #[Route('/v1/crm/general/contacts', methods: [Request::METHOD_GET])]
     public function __invoke(Request $request): JsonResponse
     {
         return new JsonResponse($this->contactReadService->listGlobal($request));

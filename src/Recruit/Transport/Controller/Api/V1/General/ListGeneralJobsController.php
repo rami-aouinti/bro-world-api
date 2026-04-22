@@ -26,7 +26,6 @@ final readonly class ListGeneralJobsController
      * @throws JsonException
      * @throws InvalidArgumentException
      */
-    #[Route(path: '/v1/recruit/general/jobs', methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'Liste publique générale des offres jobs publiées, paginée et filtrable.',
         security: [],

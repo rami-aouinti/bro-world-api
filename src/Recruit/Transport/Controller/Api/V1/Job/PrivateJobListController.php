@@ -24,7 +24,7 @@ readonly class PrivateJobListController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/applications/{applicationSlug}/private/jobs', methods: [Request::METHOD_GET])]
+    #[Route(path: '/v1/recruit/private/jobs', methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'Liste privée des offres jobs, paginée et filtrable.',
         parameters: [

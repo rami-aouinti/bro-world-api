@@ -27,7 +27,7 @@ final readonly class ListSprintsController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/sprints', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/sprints', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1), example: 1)]
     #[OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100), example: 20)]

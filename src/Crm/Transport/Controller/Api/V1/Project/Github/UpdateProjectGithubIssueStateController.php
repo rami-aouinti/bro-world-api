@@ -31,8 +31,7 @@ final readonly class UpdateProjectGithubIssueStateController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/issues/{number}', methods: [Request::METHOD_PATCH])]
-    #[Route('/v1/crm/general/projects/{project}/github/issues/{number}', methods: [Request::METHOD_PATCH])]
+    #[Route('/v1/crm/projects/{project}/github/issues/{number}', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'number', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 42)]
     #[OA\Patch(

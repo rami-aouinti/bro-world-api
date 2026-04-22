@@ -31,8 +31,7 @@ final readonly class DeleteProjectGithubBranchController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/branches/delete', methods: [Request::METHOD_DELETE])]
-    #[Route('/v1/crm/general/projects/{project}/github/branches/delete', methods: [Request::METHOD_DELETE])]
+    #[Route('/v1/crm/projects/{project}/github/branches/delete', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(
         summary: 'Delete Project GitHub Branch',
         requestBody: new OA\RequestBody(

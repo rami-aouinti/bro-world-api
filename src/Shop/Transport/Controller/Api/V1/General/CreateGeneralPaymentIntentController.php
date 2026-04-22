@@ -37,7 +37,6 @@ final readonly class CreateGeneralPaymentIntentController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/shop/general/orders/{orderId}/payment-intent', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'orderId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: 'ord_8cb7be4f-2d27-430d-bc16-5b9fc4f2ef1e'))]
     #[OA\Post(
         summary: 'Create a payment intent for an existing global-scope order.',

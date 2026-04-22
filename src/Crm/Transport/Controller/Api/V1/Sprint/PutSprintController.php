@@ -31,7 +31,7 @@ final readonly class PutSprintController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/sprints/{sprint}', methods: [Request::METHOD_PUT])]
+    #[Route('/v1/crm/sprints/{sprint}', methods: [Request::METHOD_PUT])]
     #[OA\Put(
         summary: 'Replace Sprint',
         responses: [

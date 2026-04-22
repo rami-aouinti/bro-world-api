@@ -31,7 +31,7 @@ final readonly class AddProjectAssigneeController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/assignees/{user}', methods: [Request::METHOD_PUT])]
+    #[Route('/v1/crm/projects/{project}/assignees/{user}', methods: [Request::METHOD_PUT])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]

@@ -23,7 +23,6 @@ final readonly class DeleteGeneralBillingController
     {
     }
 
-    #[Route('/v1/crm/general/billings/{billing}', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(summary: 'General - Delete Billing', responses: [new OA\Response(response: 204, description: 'Billing supprimée')])]
     public function __invoke(Billing $billing): JsonResponse
     {

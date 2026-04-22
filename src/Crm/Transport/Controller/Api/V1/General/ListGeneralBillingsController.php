@@ -27,7 +27,6 @@ final readonly class ListGeneralBillingsController
     {
     }
 
-    #[Route('/v1/crm/general/billings', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'General - List Billings', responses: [new OA\Response(response: 200, description: 'Liste des billings', content: new OA\JsonContent(example: ['items' => [['id' => 'uuid', 'label' => 'Abonnement avril', 'amount' => 99.9]]]))])]
     public function __invoke(): JsonResponse
     {

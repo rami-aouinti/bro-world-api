@@ -20,7 +20,6 @@ final readonly class ListGeneralTasksByLatestSprintController
     ) {
     }
 
-    #[Route('/v1/crm/general/tasks/by-latest-sprint', methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'List General Tasks By Latest Sprint',
         responses: [

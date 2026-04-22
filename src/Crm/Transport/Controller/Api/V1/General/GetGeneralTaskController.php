@@ -22,7 +22,6 @@ final readonly class GetGeneralTaskController
     {
     }
 
-    #[Route('/v1/crm/general/tasks/{task}', methods: [Request::METHOD_GET], requirements: ['task' => '[0-9a-fA-F\\-]{36}'])]
     #[OA\Get(
         summary: 'General - Get Task',
         parameters: [new OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],

@@ -44,7 +44,7 @@ final readonly class UpdateTaskRequestStatusController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/crm/applications/{applicationSlug}/task-requests/{taskRequest}/status', methods: [Request::METHOD_PATCH, Request::METHOD_PUT])]
+    #[Route('/v1/crm/task-requests/{taskRequest}/status', methods: [Request::METHOD_PATCH, Request::METHOD_PUT])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Patch(

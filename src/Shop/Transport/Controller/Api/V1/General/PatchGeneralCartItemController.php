@@ -45,7 +45,6 @@ final readonly class PatchGeneralCartItemController
      * @throws ORMException
      * @throws JsonException
      */
-    #[Route('/v1/shop/general/carts/{shopId}/items/{itemId}', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'shopId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'itemId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Post(

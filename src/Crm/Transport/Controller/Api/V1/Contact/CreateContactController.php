@@ -31,7 +31,7 @@ final readonly class CreateContactController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/contacts', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/contacts', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
         description: 'Exécute l action metier Create Contact dans le perimetre de l application CRM.',

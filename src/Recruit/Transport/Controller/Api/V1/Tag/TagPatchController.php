@@ -39,7 +39,7 @@ class TagPatchController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/applications/{applicationSlug}/tag/{id}',
+        path: '/v1/recruit/tag/{id}',
         requirements: [
             'id' => Requirement::UUID_V1,
         ],

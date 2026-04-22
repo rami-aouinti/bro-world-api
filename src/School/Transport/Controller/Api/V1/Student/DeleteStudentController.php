@@ -26,8 +26,6 @@ final readonly class DeleteStudentController
     ) {
     }
 
-    #[Route('/v1/school/applications/{applicationSlug}/students/{id}', methods: [Request::METHOD_DELETE], defaults: ['applicationSlug' => 'general'])]
-    #[Route('/v1/school/general/students/{id}', methods: [Request::METHOD_DELETE], defaults: ['applicationSlug' => 'general'])]
     #[Route('/v1/school/students/{id}', methods: [Request::METHOD_DELETE], defaults: ['applicationSlug' => 'general'])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $id, ?User $loggedInUser): JsonResponse

@@ -24,7 +24,6 @@ final readonly class ListGeneralMyJobsController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/general/private/me/jobs', methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'Retourne les jobs créés et les jobs postulés par le user connecté.',
         responses: [

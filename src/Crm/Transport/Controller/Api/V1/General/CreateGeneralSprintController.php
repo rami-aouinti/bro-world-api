@@ -30,7 +30,6 @@ final readonly class CreateGeneralSprintController
     {
     }
 
-    #[Route('/v1/crm/general/sprints', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'General - Create Sprint', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['projectId' => 'uuid', 'name' => 'Sprint 1', 'status' => 'planned'])), responses: [new OA\Response(response: 201, description: 'Sprint créée', content: new OA\JsonContent(example: ['id' => 'uuid']))])]
     public function __invoke(Request $request): JsonResponse
     {

@@ -28,7 +28,6 @@ final readonly class ListGeneralProductsController
      * @throws JsonException
      * @throws InvalidArgumentException
      */
-    #[Route('/v1/shop/general/products', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'List products for global shop scope')]
     #[OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1, minimum: 1))]
     #[OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20, maximum: 100, minimum: 1))]

@@ -36,7 +36,6 @@ final readonly class CheckoutGeneralController
     ) {
     }
 
-    #[Route('/v1/shop/general/checkout/{shopId}', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'shopId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: 'f95da407-b9f0-4d5f-a14e-15c4b22af6e3'))]
     #[OA\Post(
         description: 'Manual /api/doc chain step 3/6: POST /v1/shop/general/checkout/{shopId}. Reuse shopId=f95da407-b9f0-4d5f-a14e-15c4b22af6e3 from steps 1-2 and store returned orderId=ord_8cb7be4f-2d27-430d-bc16-5b9fc4f2ef1e for steps 4-5.',

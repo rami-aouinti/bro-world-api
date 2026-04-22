@@ -21,7 +21,6 @@ final readonly class ListGeneralProjectsController
     {
     }
 
-    #[Route('/v1/crm/general/projects', methods: [Request::METHOD_GET])]
     public function __invoke(Request $request): JsonResponse
     {
         return new JsonResponse($this->projectReadService->getListGlobal($request));

@@ -34,7 +34,7 @@ final readonly class ConfirmPaymentController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/shop/applications/{applicationSlug}/orders/{orderId}/payment-confirm', methods: [Request::METHOD_POST])]
+    #[Route('/v1/shop/orders/{orderId}/payment-confirm', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
         summary: 'Confirm a payment for an order (private endpoint, full authentication required).',

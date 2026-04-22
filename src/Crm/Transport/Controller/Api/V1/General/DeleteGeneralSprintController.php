@@ -23,7 +23,6 @@ final readonly class DeleteGeneralSprintController
     {
     }
 
-    #[Route('/v1/crm/general/sprints/{sprint}', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(summary: 'General - Delete Sprint', responses: [new OA\Response(response: 204, description: 'Sprint supprimée')])]
     public function __invoke(Sprint $sprint): JsonResponse
     {

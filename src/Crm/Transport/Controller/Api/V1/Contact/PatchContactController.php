@@ -35,7 +35,7 @@ final readonly class PatchContactController
     /**
      * @throws ExceptionInterface
      */
-    #[Route('/v1/crm/applications/{applicationSlug}/contacts/{id}', methods: [Request::METHOD_PATCH])]
+    #[Route('/v1/crm/contacts/{id}', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Patch(

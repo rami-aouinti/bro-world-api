@@ -37,7 +37,6 @@ final readonly class CreateGeneralCategoryController
     ) {
     }
 
-    #[Route('/v1/shop/general/categories', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'Create category in global shop scope')]
     public function __invoke(Request $request): JsonResponse
     {

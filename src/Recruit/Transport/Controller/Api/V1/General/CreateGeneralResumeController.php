@@ -42,7 +42,6 @@ final readonly class CreateGeneralResumeController
      * @throws ORMException
      * @throws JsonException
      */
-    #[Route(path: '/v1/recruit/general/resumes', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'Crée un CV et permet l’upload optionnel d’un PDF.')]
     #[OA\RequestBody(
         required: false,

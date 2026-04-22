@@ -24,7 +24,6 @@ final readonly class ListGeneralCategoriesController
     ) {
     }
 
-    #[Route('/v1/shop/general/categories', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'List categories for global shop scope')]
     public function __invoke(): JsonResponse
     {

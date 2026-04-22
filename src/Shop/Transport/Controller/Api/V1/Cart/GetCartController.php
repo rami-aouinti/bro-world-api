@@ -33,7 +33,7 @@ final readonly class GetCartController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/shop/applications/{applicationSlug}/carts/{shopId}', methods: [Request::METHOD_GET])]
+    #[Route('/v1/shop/carts/{shopId}', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $shopId, User $loggedInUser): JsonResponse
     {

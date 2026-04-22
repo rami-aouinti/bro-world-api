@@ -20,8 +20,7 @@ final readonly class ListProjectGithubActionsController
     {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/actions/workflows', methods: [Request::METHOD_GET])]
-    #[Route('/v1/crm/general/projects/{project}/github/actions/workflows', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/projects/{project}/github/actions/workflows', methods: [Request::METHOD_GET])]
     public function workflows(Project $project, Request $request): JsonResponse
     {
         return new JsonResponse($this->crmGithubService->listWorkflows(
@@ -32,8 +31,7 @@ final readonly class ListProjectGithubActionsController
         ));
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/actions/runs', methods: [Request::METHOD_GET])]
-    #[Route('/v1/crm/general/projects/{project}/github/actions/runs', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/projects/{project}/github/actions/runs', methods: [Request::METHOD_GET])]
     public function runs(Project $project, Request $request): JsonResponse
     {
         $workflowId = $request->query->get('workflowId');

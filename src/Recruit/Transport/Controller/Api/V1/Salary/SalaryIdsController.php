@@ -29,7 +29,7 @@ class SalaryIdsController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/applications/{applicationSlug}/salary/ids',
+        path: '/v1/recruit/salary/ids',
         methods: [Request::METHOD_GET],
     )]
     #[IsGranted('ROLE_ROOT')]

@@ -31,7 +31,7 @@ final readonly class DeleteTaskRequestController
     /**
      * @throws ExceptionInterface
      */
-    #[Route('/v1/crm/applications/{applicationSlug}/task-requests/{taskRequest}', methods: [Request::METHOD_DELETE])]
+    #[Route('/v1/crm/task-requests/{taskRequest}', methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'taskRequest', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(

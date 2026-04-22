@@ -27,7 +27,7 @@ readonly class PrivatePipelineController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/private/{applicationSlug}/pipeline', methods: [Request::METHOD_GET])]
+    #[Route(path: '/v1/recruit/private/pipeline', methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'Kanban pipeline privé des candidatures (colonnes + candidats + métriques).',
         parameters: [

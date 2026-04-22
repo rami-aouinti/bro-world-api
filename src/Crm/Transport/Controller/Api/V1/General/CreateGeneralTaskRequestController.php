@@ -34,7 +34,6 @@ final readonly class CreateGeneralTaskRequestController
     ) {
     }
 
-    #[Route('/v1/crm/general/task-requests', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'General - Create Task Request', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['taskId' => 'uuid', 'repositoryId' => 'uuid', 'title' => 'Corriger bug API', 'status' => 'pending'])), responses: [new OA\Response(response: 201, description: 'Task request créée', content: new OA\JsonContent(example: ['id' => 'uuid']))])]
     public function __invoke(Request $request): JsonResponse
     {

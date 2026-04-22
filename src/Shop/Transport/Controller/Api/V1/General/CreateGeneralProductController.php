@@ -41,7 +41,6 @@ final readonly class CreateGeneralProductController
     /**
      * @throws ExceptionInterface
      */
-    #[Route('/v1/shop/general/products', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'Create product in global shop scope')]
     public function __invoke(Request $request): JsonResponse
     {

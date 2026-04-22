@@ -20,7 +20,6 @@ final class GetGeneralBillingController
 {
     use GeneralCrudApiTrait;
 
-    #[Route('/v1/crm/general/billings/{billing}', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'General - Get Billing', responses: [new OA\Response(response: 200, description: 'Détail billing', content: new OA\JsonContent(example: ['id' => 'uuid', 'label' => 'Abonnement avril', 'amount' => 99.9]))])]
     public function __invoke(Billing $billing): JsonResponse
     {

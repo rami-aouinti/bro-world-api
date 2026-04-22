@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[AsController]
 #[OA\Tag(name: 'Chat Conversation')]
 #[OA\Get(
-    path: '/v1/chat/{applicationSlug}/chats/{chatId}/conversations',
+    path: '/v1/chat/chats/{chatId}/conversations',
     operationId: 'chat_conversation_public_chat_list',
     summary: "Lister les conversations d'un chat",
     tags: ['Chat Conversation'],
@@ -45,7 +45,7 @@ readonly class ApplicationConversationListController
      * @throws JsonException
      * @throws InvalidArgumentException
      */
-    #[Route(path: '/v1/chat/{applicationSlug}/chats/{chat}/conversations', methods: [Request::METHOD_GET])]
+    #[Route(path: '/v1/chat/chats/{chat}/conversations', methods: [Request::METHOD_GET])]
     public function __invoke(string $applicationSlug, Chat $chat, Request $request): JsonResponse
     {
         $this->chatApplicationScopeValidator->validate($chat->getId(), $applicationSlug);

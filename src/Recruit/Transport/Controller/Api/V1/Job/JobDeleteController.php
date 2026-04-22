@@ -30,7 +30,7 @@ class JobDeleteController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/applications/{applicationSlug}/job/{id}',
+        path: '/v1/recruit/job/{id}',
         requirements: [
             'id' => Requirement::UUID_V1,
         ],

@@ -29,7 +29,6 @@ final readonly class GetGeneralDashboardController
     ) {
     }
 
-    #[Route('/v1/crm/general/dashboard', methods: [Request::METHOD_GET])]
     public function __invoke(): JsonResponse
     {
         return new JsonResponse([

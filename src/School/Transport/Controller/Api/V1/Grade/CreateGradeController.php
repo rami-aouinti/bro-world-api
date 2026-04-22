@@ -29,8 +29,6 @@ final readonly class CreateGradeController
     ) {
     }
 
-    #[Route('/v1/school/applications/{applicationSlug}/grades', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
-    #[Route('/v1/school/general/grades', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
     #[Route('/v1/school/grades', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/SchoolError'))]

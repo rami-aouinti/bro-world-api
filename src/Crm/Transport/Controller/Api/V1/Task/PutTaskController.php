@@ -42,7 +42,7 @@ final readonly class PutTaskController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/crm/applications/{applicationSlug}/tasks/{task}', methods: [Request::METHOD_PUT])]
+    #[Route('/v1/crm/tasks/{task}', methods: [Request::METHOD_PUT])]
     #[OA\Put(
         summary: 'Replace Task',
         responses: [

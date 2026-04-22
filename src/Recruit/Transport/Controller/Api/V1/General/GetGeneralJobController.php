@@ -20,7 +20,6 @@ final readonly class GetGeneralJobController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/general/jobs/{jobSlug}', methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'Détail public général d\'un job publié avec jobs similaires indexés.',
         security: [],

@@ -15,7 +15,6 @@ use Symfony\Component\Routing\Attribute\Route;
 #[OA\Tag(name: 'Quiz')]
 final readonly class GetPublicGeneralQuizLevelsController
 {
-    #[Route('/v1/public/quiz/general/levels', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'Get quiz levels (public)', security: [], tags: ['Quiz'])]
     public function __invoke(QuizReadService $quizReadService): JsonResponse
     {
