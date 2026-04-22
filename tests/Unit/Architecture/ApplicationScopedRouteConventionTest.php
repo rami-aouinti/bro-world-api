@@ -19,9 +19,13 @@ final class ApplicationScopedRouteConventionTest extends TestCase
         'blog',
     ];
 
+    private const APPLICATION_SCOPED_SEGMENT = '/applications/{applicationSlug}';
+
     public function testV1RoutesFollowModuleScopedConvention(): void
     {
-        $violations = [];
+        $invalidModulePrefixes = [];
+        $legacyPrivatePrefixes = [];
+        $applicationScopedRoutes = [];
 
         foreach (self::MODULES as $module) {
             $moduleDir = \dirname(__DIR__, 3) . '/src/' . ucfirst($module) . '/Transport/Controller/Api/V1';
@@ -47,17 +51,18 @@ final class ApplicationScopedRouteConventionTest extends TestCase
                     }
 
                     $expectedModulePrefix = '/v1/' . $module . '/';
+                    $routeIdentity = $file->getPathname() . ' -> ' . $path;
 
                     if (!\str_starts_with($path, $expectedModulePrefix)) {
-                        $violations[] = $file->getPathname() . ' -> ' . $path . ' (expected prefix: ' . $expectedModulePrefix . '...)';
-                    }
-
-                    if (\str_contains($path, '/applications/{applicationSlug}')) {
-                        $violations[] = $file->getPathname() . ' -> ' . $path . ' (forbidden segment: /applications/{applicationSlug})';
+                        $invalidModulePrefixes[] = $routeIdentity . ' (expected prefix: ' . $expectedModulePrefix . '...)';
                     }
 
                     if (\str_starts_with($path, '/v1/private/')) {
-                        $violations[] = $file->getPathname() . ' -> ' . $path . ' (legacy private prefix: use /v1/' . $module . '/private/...)';
+                        $legacyPrivatePrefixes[] = $routeIdentity . ' (legacy private prefix: use /v1/' . $module . '/private/...)';
+                    }
+
+                    if (\str_contains($path, self::APPLICATION_SCOPED_SEGMENT)) {
+                        $applicationScopedRoutes[] = $routeIdentity;
                     }
                 }
             }
@@ -65,11 +70,24 @@ final class ApplicationScopedRouteConventionTest extends TestCase
 
         self::assertSame(
             [],
-            $violations,
-            "Routes V1 hors convention module-scoped. "
-            . "Utiliser /v1/{module}/... sans /applications/{applicationSlug}; "
-            . "passer le slug applicatif via query/header/body avec fallback sur 'general'.\n"
-            . \implode("\n", $violations),
+            $invalidModulePrefixes,
+            "Routes V1 hors convention module-scoped: utiliser explicitement le préfixe /v1/{module}/...\n"
+            . \implode("\n", $invalidModulePrefixes),
+        );
+
+        self::assertSame(
+            [],
+            $legacyPrivatePrefixes,
+            "Routes V1 avec préfixe private legacy: utiliser /v1/{module}/private/...\n"
+            . \implode("\n", $legacyPrivatePrefixes),
+        );
+
+        self::assertSame(
+            [],
+            $applicationScopedRoutes,
+            "Routes V1 interdites avec segment applicatif " . self::APPLICATION_SCOPED_SEGMENT . ".\n"
+            . "Nouvelle convention: rester en /v1/{module}/... et passer le slug applicatif via query/header/body (fallback: general).\n"
+            . \implode("\n", $applicationScopedRoutes),
         );
     }
 }
