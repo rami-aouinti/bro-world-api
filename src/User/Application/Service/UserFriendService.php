@@ -83,6 +83,12 @@ readonly class UserFriendService
             title: trim($loggedInUser->getFirstName() . ' ' . $loggedInUser->getLastName()) . ' sent you a friend request',
             type: self::FRIEND_NOTIFICATION_TYPE,
             description: $this->buildUserProfileLink($loggedInUser),
+            metadata: [
+                'event' => 'friend_request_sent',
+                'friendStatus' => FriendStatus::PENDING->value,
+                'requesterId' => $loggedInUser->getId(),
+                'addresseeId' => $targetUser->getId(),
+            ],
         );
 
         if ($targetUser->getEmail() !== '') {
@@ -130,6 +136,12 @@ readonly class UserFriendService
             title: trim($loggedInUser->getFirstName() . ' ' . $loggedInUser->getLastName()) . ' accepted your friend request',
             type: self::FRIEND_NOTIFICATION_TYPE,
             description: $this->buildUserProfileLink($loggedInUser),
+            metadata: [
+                'event' => 'friend_request_accepted',
+                'friendStatus' => FriendStatus::ACCEPTED->value,
+                'requesterId' => $requester->getId(),
+                'addresseeId' => $loggedInUser->getId(),
+            ],
         );
 
         if ($requester->getEmail() !== '') {

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Notification\Application\Service;
 
+use App\General\Application\Service\MercurePublisher;
 use App\Notification\Application\Service\NotificationPublisher;
 use App\Notification\Domain\Entity\Notification;
 use App\Notification\Infrastructure\Repository\NotificationRepository;
 use App\User\Domain\Entity\User;
 use PHPUnit\Framework\TestCase;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Uid\UuidV7;
 
 final class NotificationPublisherTest extends TestCase
 {
@@ -19,7 +23,10 @@ final class NotificationPublisherTest extends TestCase
         $repository = $this->createMock(NotificationRepository::class);
         $repository->expects(self::never())->method('save');
 
-        $publisher = new NotificationPublisher($repository);
+        $mercurePublisher = $this->createMock(MercurePublisher::class);
+        $mercurePublisher->expects(self::never())->method('publish');
+
+        $publisher = new NotificationPublisher($repository, $mercurePublisher);
         $publisher->publish($user, $user, 'title', 'blog_notification');
     }
 
@@ -39,16 +46,43 @@ final class NotificationPublisherTest extends TestCase
                     && $notification->getDescription() === '';
             }));
 
-        $publisher = new NotificationPublisher($repository);
-        $publisher->publish($from, $recipient, 'Rami commented your post "Post title"', 'blog_notification');
+        $mercurePublisher = $this->createMock(MercurePublisher::class);
+        $mercurePublisher->expects(self::once())
+            ->method('publish')
+            ->with(
+                self::stringContains('/notifications'),
+                self::callback(static function (array $payload) use ($from): bool {
+                    return ($payload['metadata']['event'] ?? null) === 'blog_comment_created'
+                        && ($payload['fromId'] ?? null) === $from->getId()
+                        && ($payload['fromPhoto'] ?? '') !== ''
+                        && ($payload['from']['id'] ?? null) === $from->getId()
+                        && ($payload['from']['photo'] ?? '') !== '';
+                }),
+            );
+
+        $publisher = new NotificationPublisher($repository, $mercurePublisher);
+        $publisher->publish(
+            $from,
+            $recipient,
+            'Rami commented your post "Post title"',
+            'blog_notification',
+            '',
+            ['event' => 'blog_comment_created'],
+        );
     }
 
     private function createUser(string $firstName, string $lastName): User
     {
         return (new User())
+            ->setId($this->uuid())
             ->setFirstName($firstName)
             ->setLastName($lastName)
             ->setUsername(strtolower($firstName . '.' . $lastName))
             ->setEmail(strtolower($firstName . '.' . $lastName . '@example.com'));
+    }
+
+    private function uuid(): UuidInterface
+    {
+        return Uuid::fromString((string) new UuidV7());
     }
 }
