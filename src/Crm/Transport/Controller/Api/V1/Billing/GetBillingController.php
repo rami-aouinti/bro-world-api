@@ -30,7 +30,7 @@ final readonly class GetBillingController
      * @throws InvalidArgumentException
      */
     #[Route('/v1/crm/billings/{billing}', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'billing', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
         description: 'Exécute l action metier Get Billing dans le perimetre de l application CRM.',

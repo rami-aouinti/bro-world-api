@@ -25,7 +25,7 @@ readonly class MyJobListController
     }
 
     #[Route(path: '/v1/recruit/private/me/jobs', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Get(summary: 'Retourne les jobs créés et les jobs postulés par le user connecté.')]
     public function __invoke(string $applicationSlug, User $loggedInUser): JsonResponse
     {

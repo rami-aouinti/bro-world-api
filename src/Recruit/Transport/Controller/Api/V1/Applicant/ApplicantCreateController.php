@@ -39,7 +39,7 @@ readonly class ApplicantCreateController
      * @throws ORMException
      */
     #[Route(path: '/v1/recruit/applicants', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
         summary: 'Crée un candidat lié au CV du user connecté.',
         requestBody: new OA\RequestBody(

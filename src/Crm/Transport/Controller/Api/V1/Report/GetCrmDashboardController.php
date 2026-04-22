@@ -33,7 +33,7 @@ final readonly class GetCrmDashboardController
     }
 
     #[Route('/v1/crm/dashboard', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Get(
         summary: 'Consulter le tableau de bord CRM',
         description: 'Retourne les indicateurs consolidés (entreprises, projets, tâches et demandes) pour une application CRM.',

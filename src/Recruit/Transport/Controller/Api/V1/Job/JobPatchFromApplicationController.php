@@ -34,7 +34,7 @@ readonly class JobPatchFromApplicationController
     }
 
     #[Route(path: '/v1/recruit/jobs/{jobId}', methods: [Request::METHOD_PATCH])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[Route(path: '/v1/recruit/private/jobs/{jobId}', methods: [Request::METHOD_PATCH])]
     public function __invoke(string $applicationSlug, string $jobId, Request $request, User $loggedInUser): JsonResponse
     {

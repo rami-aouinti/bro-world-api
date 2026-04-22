@@ -53,7 +53,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/jobs?page=1&limit=20&q=backend&location=lyon&workMode=Remote&contractType=CDI&experienceLevel=Senior",
+          "raw": "{{baseUrl}}/v1/recruit/general/jobs?page=1&limit=20&q=backend&location=lyon&workMode=Remote&contractType=CDI&experienceLevel=Senior&applicationSlug={applicationSlug}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -64,6 +64,10 @@
             "jobs"
           ],
           "query": [
+            {
+              "key": "applicationSlug",
+              "value": "{{applicationSlug}}"
+            },
             {
               "key": "page",
               "value": "1"
@@ -111,7 +115,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/jobs/{{jobSlug}}",
+          "raw": "{{baseUrl}}/v1/recruit/general/jobs/{{jobSlug}}?applicationSlug={applicationSlug}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -121,6 +125,12 @@
             "general",
             "jobs",
             "{{jobSlug}}"
+          ],
+          "query": [
+            {
+              "key": "applicationSlug",
+              "value": "{{applicationSlug}}"
+            }
           ]
         },
         "description": "Détail public d'un job + jobs similaires indexés."
@@ -145,7 +155,7 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/private/me/jobs",
+          "raw": "{{baseUrl}}/v1/recruit/general/private/me/jobs?applicationSlug={applicationSlug}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -156,6 +166,12 @@
             "private",
             "me",
             "jobs"
+          ],
+          "query": [
+            {
+              "key": "applicationSlug",
+              "value": "{{applicationSlug}}"
+            }
           ]
         },
         "description": "Retourne les jobs créés + jobs postulés par l'utilisateur connecté."
@@ -180,7 +196,7 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/private/me/resumes",
+          "raw": "{{baseUrl}}/v1/recruit/general/private/me/resumes?applicationSlug={applicationSlug}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -191,6 +207,12 @@
             "private",
             "me",
             "resumes"
+          ],
+          "query": [
+            {
+              "key": "applicationSlug",
+              "value": "{{applicationSlug}}"
+            }
           ]
         }
       },
@@ -214,7 +236,7 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/applicants",
+          "raw": "{{baseUrl}}/v1/recruit/general/applicants?applicationSlug={applicationSlug}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -223,6 +245,12 @@
             "recruit",
             "general",
             "applicants"
+          ],
+          "query": [
+            {
+              "key": "applicationSlug",
+              "value": "{{applicationSlug}}"
+            }
           ]
         },
         "description": "Liste brute des applicants du user (retour repository getArrayResult)."
@@ -247,7 +275,7 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/private/job-applications?jobId={{jobId}}",
+          "raw": "{{baseUrl}}/v1/recruit/general/private/job-applications?jobId={{jobId}}&applicationSlug={applicationSlug}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -259,6 +287,10 @@
             "job-applications"
           ],
           "query": [
+            {
+              "key": "applicationSlug",
+              "value": "{{applicationSlug}}"
+            },
             {
               "key": "jobId",
               "value": "{{jobId}}"
@@ -295,7 +327,7 @@
           "raw": "{\n  \"experiences\": [{\"title\": \"Backend Developer\", \"description\": \"Symfony API\"}],\n  \"skills\": [{\"title\": \"PHP\", \"description\": \"8.x\"}],\n  \"languages\": [{\"title\": \"French\", \"description\": \"Native\"}]\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/resumes",
+          "raw": "{{baseUrl}}/v1/recruit/general/resumes?applicationSlug={applicationSlug}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -304,6 +336,12 @@
             "recruit",
             "general",
             "resumes"
+          ],
+          "query": [
+            {
+              "key": "applicationSlug",
+              "value": "{{applicationSlug}}"
+            }
           ]
         },
         "description": "Crée un CV sans fichier."
@@ -348,7 +386,7 @@
           ]
         },
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/resumes",
+          "raw": "{{baseUrl}}/v1/recruit/general/resumes?applicationSlug={applicationSlug}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -357,6 +395,12 @@
             "recruit",
             "general",
             "resumes"
+          ],
+          "query": [
+            {
+              "key": "applicationSlug",
+              "value": "{{applicationSlug}}"
+            }
           ]
         },
         "description": "Crée un CV avec attachement PDF (champ `document`)."
@@ -389,7 +433,7 @@
           "raw": "{\n  \"resumeId\": \"{{resumeId}}\",\n  \"coverLetter\": \"Je suis motivé pour ce poste.\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/applicants",
+          "raw": "{{baseUrl}}/v1/recruit/general/applicants?applicationSlug={applicationSlug}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -398,6 +442,12 @@
             "recruit",
             "general",
             "applicants"
+          ],
+          "query": [
+            {
+              "key": "applicationSlug",
+              "value": "{{applicationSlug}}"
+            }
           ]
         }
       },
@@ -429,7 +479,7 @@
           "raw": "{\n  \"applicantId\": \"{{applicantId}}\",\n  \"jobId\": \"{{jobId}}\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/applications",
+          "raw": "{{baseUrl}}/v1/recruit/general/applications?applicationSlug={applicationSlug}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -438,6 +488,12 @@
             "recruit",
             "general",
             "applications"
+          ],
+          "query": [
+            {
+              "key": "applicationSlug",
+              "value": "{{applicationSlug}}"
+            }
           ]
         }
       },
@@ -469,7 +525,7 @@
           "raw": "{\n  \"status\": \"INTERVIEW_PLANNED\",\n  \"comment\": \"Profil validé, entretien planifié.\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/private/applications/{{applicationId}}/status",
+          "raw": "{{baseUrl}}/v1/recruit/general/private/applications/{{applicationId}}/status?applicationSlug={applicationSlug}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -481,6 +537,12 @@
             "applications",
             "{{applicationId}}",
             "status"
+          ],
+          "query": [
+            {
+              "key": "applicationSlug",
+              "value": "{{applicationSlug}}"
+            }
           ]
         }
       },
@@ -497,7 +559,7 @@
       "name": "Recruit V1 - endpoints ajoutés (hors /general)",
       "item": [
         {
-          "name": "GET /v1/recruit/applications/{applicationSlug}/private/analytics",
+          "name": "GET /v1/recruit/private/analytics?applicationSlug={applicationSlug}",
           "request": {
             "method": "GET",
             "header": [
@@ -507,17 +569,21 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/analytics",
+              "raw": "{{baseUrl}}/v1/recruit/private/analytics?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "analytics"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -531,7 +597,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/applications/{applicationSlug}/applicants",
+          "name": "POST /v1/recruit/applicants?applicationSlug={applicationSlug}",
           "request": {
             "method": "POST",
             "header": [
@@ -545,16 +611,20 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/applicants",
+              "raw": "{{baseUrl}}/v1/recruit/applicants?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "applicants"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             },
             "body": {
@@ -572,7 +642,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/applications/{applicationSlug}/applications",
+          "name": "POST /v1/recruit/applications?applicationSlug={applicationSlug}",
           "request": {
             "method": "POST",
             "header": [
@@ -586,16 +656,20 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/applications",
+              "raw": "{{baseUrl}}/v1/recruit/applications?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "applications"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             },
             "body": {
@@ -613,7 +687,7 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/applications/{applicationSlug}/private/applications/{applicationId}/status-history",
+          "name": "GET /v1/recruit/private/applications/{applicationId}/status-history?applicationSlug={applicationSlug}",
           "request": {
             "method": "GET",
             "header": [
@@ -623,19 +697,23 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/applications/{{applicationId}}/status-history",
+              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/status-history?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "applications",
                 "{{applicationId}}",
                 "status-history"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -649,7 +727,7 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/applications/{applicationSlug}/private/job-applications",
+          "name": "GET /v1/recruit/private/job-applications?applicationSlug={applicationSlug}",
           "request": {
             "method": "GET",
             "header": [
@@ -659,17 +737,21 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/job-applications",
+              "raw": "{{baseUrl}}/v1/recruit/private/job-applications?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "job-applications"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -683,7 +765,7 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/private/{applicationSlug}/pipeline",
+          "name": "GET /v1/recruit/private/pipeline?applicationSlug={applicationSlug}",
           "request": {
             "method": "GET",
             "header": [
@@ -693,7 +775,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/{{applicationSlug}}/pipeline",
+              "raw": "{{baseUrl}}/v1/recruit/private/pipeline?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -701,8 +783,13 @@
                 "v1",
                 "recruit",
                 "private",
-                "{{applicationSlug}}",
                 "pipeline"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -730,7 +817,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/interviews",
+              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/interviews?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -741,6 +828,12 @@
                 "applications",
                 "{{applicationId}}",
                 "interviews"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             },
             "body": {
@@ -768,7 +861,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/interviews/{{interviewId}}",
+              "raw": "{{baseUrl}}/v1/recruit/private/interviews/{{interviewId}}?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -778,6 +871,12 @@
                 "private",
                 "interviews",
                 "{{interviewId}}"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -801,7 +900,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/interviews",
+              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/interviews?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -812,6 +911,12 @@
                 "applications",
                 "{{applicationId}}",
                 "interviews"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -839,7 +944,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/interviews/{{interviewId}}",
+              "raw": "{{baseUrl}}/v1/recruit/private/interviews/{{interviewId}}?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -849,6 +954,12 @@
                 "private",
                 "interviews",
                 "{{interviewId}}"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             },
             "body": {
@@ -876,7 +987,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/decision-summary",
+              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/decision-summary?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -887,6 +998,12 @@
                 "applications",
                 "{{applicationId}}",
                 "decision-summary"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -900,7 +1017,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/applications/{applicationSlug}/jobs",
+          "name": "POST /v1/recruit/jobs?applicationSlug={applicationSlug}",
           "request": {
             "method": "POST",
             "header": [
@@ -914,16 +1031,20 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/jobs",
+              "raw": "{{baseUrl}}/v1/recruit/jobs?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "jobs"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             },
             "body": {
@@ -941,7 +1062,7 @@
           ]
         },
         {
-          "name": "DELETE /v1/recruit/applications/{applicationSlug}/jobs/{jobId}",
+          "name": "DELETE /v1/recruit/jobs?applicationSlug={applicationSlug}/{jobId}",
           "request": {
             "method": "DELETE",
             "header": [
@@ -951,17 +1072,21 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/jobs/{{jobId}}",
+              "raw": "{{baseUrl}}/v1/recruit/jobs/{{jobId}}?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "jobs",
                 "{{jobId}}"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -975,7 +1100,7 @@
           ]
         },
         {
-          "name": "PATCH /v1/recruit/applications/{applicationSlug}/jobs/{jobId}",
+          "name": "PATCH /v1/recruit/jobs?applicationSlug={applicationSlug}/{jobId}",
           "request": {
             "method": "PATCH",
             "header": [
@@ -989,17 +1114,21 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/jobs/{{jobId}}",
+              "raw": "{{baseUrl}}/v1/recruit/jobs/{{jobId}}?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "jobs",
                 "{{jobId}}"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             },
             "body": {
@@ -1017,7 +1146,7 @@
           ]
         },
         {
-          "name": "PATCH /v1/recruit/applications/{applicationSlug}/private/jobs/{jobId}",
+          "name": "PATCH /v1/recruit/private/jobs/{jobId}?applicationSlug={applicationSlug}",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1031,18 +1160,22 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/jobs/{{jobId}}",
+              "raw": "{{baseUrl}}/v1/recruit/private/jobs/{{jobId}}?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "jobs",
                 "{{jobId}}"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             },
             "body": {
@@ -1060,7 +1193,7 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/applications/{applicationSlug}/private/me/jobs",
+          "name": "GET /v1/recruit/private/me/jobs?applicationSlug={applicationSlug}",
           "request": {
             "method": "GET",
             "header": [
@@ -1070,18 +1203,22 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/me/jobs",
+              "raw": "{{baseUrl}}/v1/recruit/private/me/jobs?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "me",
                 "jobs"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -1095,7 +1232,7 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/applications/{applicationSlug}/private/jobs",
+          "name": "GET /v1/recruit/private/jobs?applicationSlug={applicationSlug}",
           "request": {
             "method": "GET",
             "header": [
@@ -1105,17 +1242,21 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/jobs",
+              "raw": "{{baseUrl}}/v1/recruit/private/jobs?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "jobs"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -1129,7 +1270,7 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/applications/{applicationSlug}/private/jobs/stats",
+          "name": "GET /v1/recruit/private/jobs?applicationSlug={applicationSlug}/stats",
           "request": {
             "method": "GET",
             "header": [
@@ -1139,18 +1280,22 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/jobs/stats",
+              "raw": "{{baseUrl}}/v1/recruit/private/jobs/stats?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "jobs",
                 "stats"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -1164,23 +1309,27 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/applications/{applicationSlug}/public/jobs/{jobSlug}",
+          "name": "GET /v1/recruit/public/jobs/{jobSlug}?applicationSlug={applicationSlug}",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/public/jobs/{{jobSlug}}",
+              "raw": "{{baseUrl}}/v1/recruit/public/jobs/{{jobSlug}}?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "public",
                 "jobs",
                 "{{jobSlug}}"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -1194,22 +1343,26 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/applications/{applicationSlug}/public/jobs",
+          "name": "GET /v1/recruit/public/jobs?applicationSlug={applicationSlug}",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/public/jobs",
+              "raw": "{{baseUrl}}/v1/recruit/public/jobs?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "public",
                 "jobs"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -1223,7 +1376,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/applications/{applicationSlug}/private/applications/{applicationId}/offers",
+          "name": "POST /v1/recruit/private/applications/{applicationId}/offers?applicationSlug={applicationSlug}",
           "request": {
             "method": "POST",
             "header": [
@@ -1237,19 +1390,23 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/applications/{{applicationId}}/offers",
+              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/offers?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "applications",
                 "{{applicationId}}",
                 "offers"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             },
             "body": {
@@ -1267,7 +1424,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/applications/{applicationSlug}/private/offers/{offerId}/send",
+          "name": "POST /v1/recruit/private/offers/{offerId}/send?applicationSlug={applicationSlug}",
           "request": {
             "method": "POST",
             "header": [
@@ -1281,19 +1438,23 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/offers/{{offerId}}/send",
+              "raw": "{{baseUrl}}/v1/recruit/private/offers/{{offerId}}/send?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "offers",
                 "{{offerId}}",
                 "send"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             },
             "body": {
@@ -1311,7 +1472,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/applications/{applicationSlug}/private/offers/{offerId}/accept",
+          "name": "POST /v1/recruit/private/offers/{offerId}/accept?applicationSlug={applicationSlug}",
           "request": {
             "method": "POST",
             "header": [
@@ -1325,19 +1486,23 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/offers/{{offerId}}/accept",
+              "raw": "{{baseUrl}}/v1/recruit/private/offers/{{offerId}}/accept?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "offers",
                 "{{offerId}}",
                 "accept"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             },
             "body": {
@@ -1355,7 +1520,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/applications/{applicationSlug}/private/offers/{offerId}/decline",
+          "name": "POST /v1/recruit/private/offers/{offerId}/decline?applicationSlug={applicationSlug}",
           "request": {
             "method": "POST",
             "header": [
@@ -1369,19 +1534,23 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/offers/{{offerId}}/decline",
+              "raw": "{{baseUrl}}/v1/recruit/private/offers/{{offerId}}/decline?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "offers",
                 "{{offerId}}",
                 "decline"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             },
             "body": {
@@ -1399,7 +1568,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/applications/{applicationSlug}/private/offers/{offerId}/withdraw",
+          "name": "POST /v1/recruit/private/offers/{offerId}/withdraw?applicationSlug={applicationSlug}",
           "request": {
             "method": "POST",
             "header": [
@@ -1413,19 +1582,23 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/offers/{{offerId}}/withdraw",
+              "raw": "{{baseUrl}}/v1/recruit/private/offers/{{offerId}}/withdraw?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "offers",
                 "{{offerId}}",
                 "withdraw"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             },
             "body": {
@@ -1443,7 +1616,7 @@
           ]
         },
         {
-          "name": "DELETE /v1/recruit/applications/{applicationSlug}/private/me/resumes/{resumeId}",
+          "name": "DELETE /v1/recruit/private/me/resumes/{resumeId}?applicationSlug={applicationSlug}",
           "request": {
             "method": "DELETE",
             "header": [
@@ -1453,19 +1626,23 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/me/resumes/{{resumeId}}",
+              "raw": "{{baseUrl}}/v1/recruit/private/me/resumes/{{resumeId}}?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "me",
                 "resumes",
                 "{{resumeId}}"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -1479,7 +1656,7 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/applications/{applicationSlug}/private/me/resumes",
+          "name": "GET /v1/recruit/private/me/resumes?applicationSlug={applicationSlug}",
           "request": {
             "method": "GET",
             "header": [
@@ -1489,18 +1666,22 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/me/resumes",
+              "raw": "{{baseUrl}}/v1/recruit/private/me/resumes?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "me",
                 "resumes"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             }
           },
@@ -1514,7 +1695,7 @@
           ]
         },
         {
-          "name": "PATCH /v1/recruit/applications/{applicationSlug}/private/me/resumes/{resumeId}",
+          "name": "PATCH /v1/recruit/private/me/resumes/{resumeId}?applicationSlug={applicationSlug}",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1528,19 +1709,23 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/private/me/resumes/{{resumeId}}",
+              "raw": "{{baseUrl}}/v1/recruit/private/me/resumes/{{resumeId}}?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "private",
                 "me",
                 "resumes",
                 "{{resumeId}}"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             },
             "body": {
@@ -1558,7 +1743,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/applications/{applicationSlug}/resumes",
+          "name": "POST /v1/recruit/resumes?applicationSlug={applicationSlug}",
           "request": {
             "method": "POST",
             "header": [
@@ -1572,16 +1757,20 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications/{{applicationSlug}}/resumes",
+              "raw": "{{baseUrl}}/v1/recruit/resumes?applicationSlug={applicationSlug}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "recruit",
-                "applications",
-                "{{applicationSlug}}",
                 "resumes"
+              ],
+              "query": [
+                {
+                  "key": "applicationSlug",
+                  "value": "{{applicationSlug}}"
+                }
               ]
             },
             "body": {

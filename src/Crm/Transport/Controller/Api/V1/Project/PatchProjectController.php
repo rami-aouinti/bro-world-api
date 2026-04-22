@@ -37,7 +37,7 @@ final readonly class PatchProjectController
      * @throws ORMException
      */
     #[Route('/v1/crm/projects/{project}', methods: [Request::METHOD_PATCH])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Patch(
         summary: 'Patch Project',

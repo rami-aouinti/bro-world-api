@@ -61,7 +61,7 @@ final readonly class PatchSchoolApplicationResourceController
             new OA\Response(response: 422, description: 'Payload invalide.'),
         ],
     )]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $resource, string $id, Request $request, ?User $loggedInUser): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);

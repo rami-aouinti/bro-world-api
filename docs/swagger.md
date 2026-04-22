@@ -162,7 +162,7 @@ curl -X GET "http://localhost/api/v1/application/private?title=recruit&page=2&li
 ## School API (scope application)
 
 ### Règles de scope application
-- Tous les endpoints School de ce bloc sont préfixés par `/v1/school/applications/{applicationSlug}/...`.
+- Tous les endpoints School de ce bloc sont préfixés par `/v1/school/...` avec `applicationSlug` en query (`?applicationSlug=...`)`.
 - `applicationSlug` détermine le **scope d'accès**: une ressource (`classes`, `students`, `teachers`, `exams`, `grades`) doit appartenir à l'école résolue pour cette application.
 - Si la ressource n'appartient pas au scope de l'application, l'API retourne `404` (même si l'ID existe ailleurs).
 - Les endpoints sont protégés: utilisateur non authentifié/non autorisé => `403`.
@@ -178,7 +178,7 @@ curl -X GET "http://localhost/api/v1/application/private?title=recruit&page=2&li
 
 #### List (classes)
 ```bash
-curl -X GET "http://localhost/api/v1/school/applications/school-crm/classes?page=1&limit=20&q=term" \
+curl -X GET "http://localhost/api/v1/school/classes?applicationSlug=school-crm&page=1&limit=20&q=term" \
   -H "Accept: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>"
 ```
@@ -195,7 +195,7 @@ curl -X GET "http://localhost/api/v1/school/applications/school-crm/classes?page
 
 #### Detail (resource)
 ```bash
-curl -X GET "http://localhost/api/v1/school/applications/school-crm/students/4cfada53-2cf2-49a7-a4fb-4a9682c3a0c0" \
+curl -X GET "http://localhost/api/v1/school/students/4cfada53-2cf2-49a7-a4fb-4a9682c3a0c0?applicationSlug=school-crm" \
   -H "Accept: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>"
 ```
@@ -206,7 +206,7 @@ curl -X GET "http://localhost/api/v1/school/applications/school-crm/students/4cf
 
 #### Create (student)
 ```bash
-curl -X POST "http://localhost/api/v1/school/applications/school-crm/students" \
+curl -X POST "http://localhost/api/v1/school/students?applicationSlug=school-crm" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -d '{"name":"Alice Martin","classId":"7600e750-f92f-4f9f-883a-26404b538f66"}'
@@ -218,7 +218,7 @@ curl -X POST "http://localhost/api/v1/school/applications/school-crm/students" \
 
 #### Patch (resource)
 ```bash
-curl -X PATCH "http://localhost/api/v1/school/applications/school-crm/classes/7600e750-f92f-4f9f-883a-26404b538f66" \
+curl -X PATCH "http://localhost/api/v1/school/classes/7600e750-f92f-4f9f-883a-26404b538f66?applicationSlug=school-crm" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -d '{"name":"Terminale S1"}'
@@ -230,8 +230,15 @@ curl -X PATCH "http://localhost/api/v1/school/applications/school-crm/classes/76
 
 #### Delete (class)
 ```bash
-curl -X DELETE "http://localhost/api/v1/school/applications/school-crm/classes/7600e750-f92f-4f9f-883a-26404b538f66" \
+curl -X DELETE "http://localhost/api/v1/school/classes/7600e750-f92f-4f9f-883a-26404b538f66?applicationSlug=school-crm" \
   -H "Authorization: Bearer <JWT_TOKEN>"
 ```
 
 Réponse: `204 No Content`.
+
+
+## Migration client (applicationSlug en query)
+
+Exemple de bascule :
+- Avant: `/v1/school/applications/school-crm/classes`
+- Après: `/v1/school/classes?applicationSlug=school-crm`

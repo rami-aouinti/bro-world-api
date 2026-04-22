@@ -45,7 +45,7 @@ final readonly class GetSchoolApplicationResourceController
             new OA\Response(response: 404, description: 'Ressource introuvable dans ce scope application.'),
         ],
     )]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $resource, string $id, ?User $loggedInUser): JsonResponse
     {
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);

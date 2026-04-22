@@ -34,7 +34,7 @@ final readonly class DeleteSprintController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/sprints/{sprint}', methods: [Request::METHOD_DELETE])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'sprint', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(
         summary: 'Delete Sprint',
@@ -48,7 +48,7 @@ final readonly class DeleteSprintController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, Sprint $sprint): JsonResponse
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);

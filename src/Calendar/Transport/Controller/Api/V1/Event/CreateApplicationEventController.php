@@ -45,7 +45,7 @@ use Throwable;
         new OA\Property(property: 'reminders', type: 'array', items: new OA\Items(type: 'object')),
         new OA\Property(property: 'metadata', type: 'object', additionalProperties: true)])),
     tags: ['Calendar Event'],
-    parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world'))],
+    parameters: [new OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world'))],
     responses: [new OA\Response(response: 202, description: 'Commande acceptée'),
         new OA\Response(response: 422, description: 'Dates invalides')]
 )]

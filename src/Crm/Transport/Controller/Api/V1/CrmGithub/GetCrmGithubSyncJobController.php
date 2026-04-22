@@ -26,7 +26,7 @@ final readonly class GetCrmGithubSyncJobController
     }
 
     #[Route('/v1/crm/github/sync/jobs/{jobId}', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'jobId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
         summary: 'Get CRM GitHub sync job status',

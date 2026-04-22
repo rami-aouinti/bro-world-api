@@ -73,7 +73,7 @@ final readonly class SchoolApplicationResourceListController
             new OA\Response(response: 422, description: 'Paramètres de pagination/filtres invalides.'),
         ],
     )]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $resource, ?User $loggedInUser): JsonResponse
     {
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);

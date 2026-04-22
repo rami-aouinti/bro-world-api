@@ -3,11 +3,12 @@
 ## Convention officielle
 Pour tous les modules métier ciblés (`crm`, `recruit`, `shop`, `school`, `calendar`, `chat`, `quiz`, `blog`), la convention unique est :
 
-`/v1/{module}/applications/{applicationSlug}/...`
+`/v1/{module}/...` avec `applicationSlug` transmis en query (`?applicationSlug=...`) (ou header dédié).
 
 Règles associées :
-- ne jamais utiliser `application` (singulier) dans le chemin ;
-- `private` et `public` sont positionnés **après** `{applicationSlug}` (ex: `/v1/recruit/applications/{applicationSlug}/private/jobs`).
+- ne plus injecter `applicationSlug` dans le path ;
+- transmettre `applicationSlug` en query (`?applicationSlug=...`) ;
+- conserver les segments métier (`private`, `public`, etc.) sans préfixe `applications/{applicationSlug}`.
 
 ## Compatibilité legacy (stratégie)
 Pour conserver la compatibilité avec les clients existants:
@@ -25,12 +26,31 @@ Quand le slug n'est pas dérivable automatiquement, retourner `400` avec un mess
 ### Shop products (`/v1/shop/products`)
 - Les routes legacy `GET /v1/shop/products` et `POST /v1/shop/products` sont **dépréciées**.
 - Les consommateurs externes doivent migrer vers les routes canoniques :
-  - `GET /v1/shop/applications/{applicationSlug}/products`
-  - `POST /v1/shop/applications/{applicationSlug}/products`
-  - `GET|PATCH|DELETE /v1/shop/applications/{applicationSlug}/products/{id}`
+  - `GET /v1/shop/products?applicationSlug={applicationSlug}`
+  - `POST /v1/shop/products?applicationSlug={applicationSlug}`
+  - `GET|PATCH|DELETE /v1/shop/products/{id}?applicationSlug={applicationSlug}`
 - Pendant la fenêtre de migration, les routes legacy restent accessibles mais répondent avec les en-têtes HTTP:
   - `Deprecation: true`
   - `Sunset: Wed, 31 Dec 2026 23:59:59 GMT`
-  - `Warning: 299 - "Deprecated endpoint: use /v1/shop/applications/{applicationSlug}/products instead."`
+  - `Warning: 299 - "Deprecated endpoint: use /v1/shop/products?applicationSlug={applicationSlug} instead."`
 
-Action attendue côté clients: renseigner explicitement `applicationSlug` dans les chemins d'URL et retirer l'usage de `/v1/shop/products`.
+Action attendue côté clients: renseigner explicitement `applicationSlug` en query string et retirer l'usage des anciennes URLs avec `/applications/{applicationSlug}`.
+
+
+## Migration client (ancienne URL → nouvelle URL)
+
+| Ancienne URL | Nouvelle URL |
+|---|---|
+| `/v1/recruit/applications/{applicationSlug}/jobs` | `/v1/recruit/jobs?applicationSlug={applicationSlug}` |
+| `/v1/recruit/applications/{applicationSlug}/private/jobs` | `/v1/recruit/private/jobs?applicationSlug={applicationSlug}` |
+| `/v1/recruit/public/{applicationSlug}/jobs` | `/v1/recruit/public/jobs?applicationSlug={applicationSlug}` |
+
+Exemple concret:
+
+```bash
+# Avant
+GET /v1/recruit/applications/bro-world/jobs
+
+# Après
+GET /v1/recruit/jobs?applicationSlug=bro-world
+```

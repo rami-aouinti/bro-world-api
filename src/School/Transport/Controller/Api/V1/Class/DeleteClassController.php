@@ -38,7 +38,7 @@ final readonly class DeleteClassController
             new OA\Response(response: 404, description: 'Classe introuvable dans ce scope application.'),
         ],
     )]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $id, ?User $loggedInUser): JsonResponse
     {
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);

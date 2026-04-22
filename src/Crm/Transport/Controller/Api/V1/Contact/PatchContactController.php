@@ -36,7 +36,7 @@ final readonly class PatchContactController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/contacts/{id}', methods: [Request::METHOD_PATCH])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Patch(
         description: 'Exécute l action metier Patch Contact dans le perimetre de l application CRM.',

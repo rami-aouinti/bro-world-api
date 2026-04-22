@@ -34,7 +34,7 @@ final readonly class DeleteProductController
      * @throws \Throwable
      */
     #[Route('/v1/shop/products/{id}', methods: [Request::METHOD_DELETE])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $id): JsonResponse
     {
         $shop = $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
