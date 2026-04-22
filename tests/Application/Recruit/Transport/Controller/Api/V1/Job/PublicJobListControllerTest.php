@@ -75,6 +75,35 @@ class PublicJobListControllerTest extends WebTestCase
         }
     }
 
+    #[TestDox('Test that `GET /v1/recruit/applications/{applicationSlug}/public/jobs` keeps the expected job payload structure.')]
+    public function testThatPublicJobListKeepsExpectedPayloadStructure(): void
+    {
+        [$applicationSlug] = $this->getFixtureContext();
+
+        $client = $this->getTestClient();
+        $client->request('GET', self::API_URL_PREFIX . '/v1/recruit/applications/' . $applicationSlug . '/public/jobs?limit=1');
+
+        $response = $client->getResponse();
+        $content = $response->getContent();
+
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:\n" . $response);
+
+        $payload = JSON::decode($content, true);
+        self::assertIsArray($payload['items'] ?? null);
+        self::assertNotEmpty($payload['items']);
+
+        $item = $payload['items'][0];
+        self::assertIsArray($item);
+        self::assertArrayHasKey('missionTitle', $item);
+        self::assertArrayHasKey('missionDescription', $item);
+        self::assertArrayHasKey('responsibilities', $item);
+        self::assertArrayHasKey('benefits', $item);
+        self::assertArrayHasKey('matchScore', $item);
+        self::assertArrayNotHasKey('owner', $item);
+        self::assertArrayNotHasKey('apply', $item);
+    }
+
     /**
      * @return array{0: string, 1: Job}
      */
