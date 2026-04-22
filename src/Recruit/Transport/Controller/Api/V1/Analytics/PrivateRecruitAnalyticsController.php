@@ -40,9 +40,10 @@ readonly class PrivateRecruitAnalyticsController
     #[OA\Parameter(name: 'to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date-time'))]
     #[OA\Parameter(name: 'jobId', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'format', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['json', 'csv']))]
-    public function __invoke(string $applicationSlug, Request $request, User $loggedInUser): Response
+    public function __invoke(Request $request, User $loggedInUser): Response
     {
-        $recruit = $this->recruitResolverService->resolveByApplicationSlug($applicationSlug);
+        $recruit = $this->recruitResolverService->resolveFromRequest($request);
+        $applicationSlug = (string) $request->attributes->get('applicationSlug', '');
 
         if ($recruit->getApplication()?->getUser()?->getId() !== $loggedInUser->getId()) {
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You cannot access analytics for this application.');
