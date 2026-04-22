@@ -140,10 +140,11 @@ services:
         restart: always
         environment:
             SERVER_NAME: ':80'
+            MERCURE_PUBLISHER_JWT_KEY: ${MERCURE_JWT_SECRET}
+            MERCURE_SUBSCRIBER_JWT_KEY: ${MERCURE_JWT_SECRET}
             MERCURE_EXTRA_DIRECTIVES: |
                 cors_origins *
                 anonymous
-                publish_origins *
         ports:
             - "${MERCURE_PORT}:80"
         networks:
