@@ -26,3 +26,14 @@
 ## Other GET CRM endpoints (out of current refactor scope)
 - `GET /v1/crm/reports`
 - `GET /v1/crm/dashboard`
+
+
+## Migration (ancien endpoint -> nouveau endpoint)
+
+| Ancien endpoint | Nouveau endpoint |
+|---|---|
+| `GET /v1/crm/applications/{applicationSlug}/billings` | `GET /v1/crm/billings?applicationSlug={applicationSlug}` |
+| `GET /v1/crm/applications/{applicationSlug}/contacts` | `GET /v1/crm/contacts?applicationSlug={applicationSlug}` |
+| `GET /v1/crm/applications/{applicationSlug}/companies` | `GET /v1/crm/companies?applicationSlug={applicationSlug}` |
+| `GET /v1/crm/applications/{applicationSlug}/projects` | `GET /v1/crm/projects?applicationSlug={applicationSlug}` |
+| `GET /v1/crm/applications/{applicationSlug}/tasks` | `GET /v1/crm/tasks?applicationSlug={applicationSlug}` |

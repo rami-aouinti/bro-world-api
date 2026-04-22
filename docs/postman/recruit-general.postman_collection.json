@@ -53,7 +53,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/jobs?page=1&limit=20&q=backend&location=lyon&workMode=Remote&contractType=CDI&experienceLevel=Senior&applicationSlug={applicationSlug}",
+          "raw": "{{baseUrl}}/v1/recruit/general/jobs?page=1&limit=20&q=backend&location=lyon&workMode=Remote&contractType=CDI&experienceLevel=Senior&applicationSlug={{applicationSlug}}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -115,7 +115,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/jobs/{{jobSlug}}?applicationSlug={applicationSlug}",
+          "raw": "{{baseUrl}}/v1/recruit/general/jobs/{{jobSlug}}?applicationSlug={{applicationSlug}}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -155,7 +155,7 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/private/me/jobs?applicationSlug={applicationSlug}",
+          "raw": "{{baseUrl}}/v1/recruit/general/private/me/jobs?applicationSlug={{applicationSlug}}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -196,7 +196,7 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/private/me/resumes?applicationSlug={applicationSlug}",
+          "raw": "{{baseUrl}}/v1/recruit/general/private/me/resumes?applicationSlug={{applicationSlug}}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -236,7 +236,7 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/applicants?applicationSlug={applicationSlug}",
+          "raw": "{{baseUrl}}/v1/recruit/general/applicants?applicationSlug={{applicationSlug}}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -275,7 +275,7 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/private/job-applications?jobId={{jobId}}&applicationSlug={applicationSlug}",
+          "raw": "{{baseUrl}}/v1/recruit/general/private/job-applications?jobId={{jobId}}&applicationSlug={{applicationSlug}}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -327,7 +327,7 @@
           "raw": "{\n  \"experiences\": [{\"title\": \"Backend Developer\", \"description\": \"Symfony API\"}],\n  \"skills\": [{\"title\": \"PHP\", \"description\": \"8.x\"}],\n  \"languages\": [{\"title\": \"French\", \"description\": \"Native\"}]\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/resumes?applicationSlug={applicationSlug}",
+          "raw": "{{baseUrl}}/v1/recruit/general/resumes?applicationSlug={{applicationSlug}}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -386,7 +386,7 @@
           ]
         },
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/resumes?applicationSlug={applicationSlug}",
+          "raw": "{{baseUrl}}/v1/recruit/general/resumes?applicationSlug={{applicationSlug}}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -433,7 +433,7 @@
           "raw": "{\n  \"resumeId\": \"{{resumeId}}\",\n  \"coverLetter\": \"Je suis motivé pour ce poste.\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/applicants?applicationSlug={applicationSlug}",
+          "raw": "{{baseUrl}}/v1/recruit/general/applicants?applicationSlug={{applicationSlug}}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -479,7 +479,7 @@
           "raw": "{\n  \"applicantId\": \"{{applicantId}}\",\n  \"jobId\": \"{{jobId}}\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/applications?applicationSlug={applicationSlug}",
+          "raw": "{{baseUrl}}/v1/recruit/general/applications?applicationSlug={{applicationSlug}}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -525,7 +525,7 @@
           "raw": "{\n  \"status\": \"INTERVIEW_PLANNED\",\n  \"comment\": \"Profil validé, entretien planifié.\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/v1/recruit/general/private/applications/{{applicationId}}/status?applicationSlug={applicationSlug}",
+          "raw": "{{baseUrl}}/v1/recruit/general/private/applications/{{applicationId}}/status?applicationSlug={{applicationSlug}}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -559,7 +559,7 @@
       "name": "Recruit V1 - endpoints ajoutés (hors /general)",
       "item": [
         {
-          "name": "GET /v1/recruit/private/analytics?applicationSlug={applicationSlug}",
+          "name": "GET /v1/recruit/private/analytics?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "GET",
             "header": [
@@ -569,7 +569,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/analytics?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/analytics?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -597,7 +597,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/applicants?applicationSlug={applicationSlug}",
+          "name": "POST /v1/recruit/applicants?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "POST",
             "header": [
@@ -611,7 +611,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applicants?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/applicants?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -642,7 +642,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/applications?applicationSlug={applicationSlug}",
+          "name": "POST /v1/recruit/applications?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "POST",
             "header": [
@@ -656,7 +656,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/applications?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/applications?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -687,7 +687,7 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/private/applications/{applicationId}/status-history?applicationSlug={applicationSlug}",
+          "name": "GET /v1/recruit/private/applications/{applicationId}/status-history?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "GET",
             "header": [
@@ -697,7 +697,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/status-history?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/status-history?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -727,7 +727,7 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/private/job-applications?applicationSlug={applicationSlug}",
+          "name": "GET /v1/recruit/private/job-applications?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "GET",
             "header": [
@@ -737,7 +737,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/job-applications?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/job-applications?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -765,7 +765,7 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/private/pipeline?applicationSlug={applicationSlug}",
+          "name": "GET /v1/recruit/private/pipeline?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "GET",
             "header": [
@@ -775,7 +775,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/pipeline?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/pipeline?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -817,7 +817,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/interviews?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/interviews?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -861,7 +861,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/interviews/{{interviewId}}?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/interviews/{{interviewId}}?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -900,7 +900,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/interviews?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/interviews?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -944,7 +944,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/interviews/{{interviewId}}?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/interviews/{{interviewId}}?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -987,7 +987,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/decision-summary?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/decision-summary?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1017,7 +1017,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/jobs?applicationSlug={applicationSlug}",
+          "name": "POST /v1/recruit/jobs?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "POST",
             "header": [
@@ -1031,7 +1031,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/jobs?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/jobs?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1062,7 +1062,7 @@
           ]
         },
         {
-          "name": "DELETE /v1/recruit/jobs?applicationSlug={applicationSlug}/{jobId}",
+          "name": "DELETE /v1/recruit/jobs/{jobId}?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "DELETE",
             "header": [
@@ -1072,7 +1072,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/jobs/{{jobId}}?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/jobs/{{jobId}}?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1100,7 +1100,7 @@
           ]
         },
         {
-          "name": "PATCH /v1/recruit/jobs?applicationSlug={applicationSlug}/{jobId}",
+          "name": "PATCH /v1/recruit/jobs/{jobId}?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1114,7 +1114,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/jobs/{{jobId}}?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/jobs/{{jobId}}?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1146,7 +1146,7 @@
           ]
         },
         {
-          "name": "PATCH /v1/recruit/private/jobs/{jobId}?applicationSlug={applicationSlug}",
+          "name": "PATCH /v1/recruit/private/jobs/{jobId}?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1160,7 +1160,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/jobs/{{jobId}}?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/jobs/{{jobId}}?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1193,7 +1193,7 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/private/me/jobs?applicationSlug={applicationSlug}",
+          "name": "GET /v1/recruit/private/me/jobs?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "GET",
             "header": [
@@ -1203,7 +1203,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/me/jobs?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/me/jobs?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1232,7 +1232,7 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/private/jobs?applicationSlug={applicationSlug}",
+          "name": "GET /v1/recruit/private/jobs?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "GET",
             "header": [
@@ -1242,7 +1242,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/jobs?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/jobs?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1270,7 +1270,7 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/private/jobs?applicationSlug={applicationSlug}/stats",
+          "name": "GET /v1/recruit/private/jobs/stats?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "GET",
             "header": [
@@ -1280,7 +1280,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/jobs/stats?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/jobs/stats?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1309,12 +1309,12 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/public/jobs/{jobSlug}?applicationSlug={applicationSlug}",
+          "name": "GET /v1/recruit/public/jobs/{jobSlug}?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/public/jobs/{{jobSlug}}?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/public/jobs/{{jobSlug}}?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1343,12 +1343,12 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/public/jobs?applicationSlug={applicationSlug}",
+          "name": "GET /v1/recruit/public/jobs?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/public/jobs?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/public/jobs?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1376,7 +1376,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/private/applications/{applicationId}/offers?applicationSlug={applicationSlug}",
+          "name": "POST /v1/recruit/private/applications/{applicationId}/offers?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "POST",
             "header": [
@@ -1390,7 +1390,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/offers?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/applications/{{applicationId}}/offers?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1424,7 +1424,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/private/offers/{offerId}/send?applicationSlug={applicationSlug}",
+          "name": "POST /v1/recruit/private/offers/{offerId}/send?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "POST",
             "header": [
@@ -1438,7 +1438,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/offers/{{offerId}}/send?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/offers/{{offerId}}/send?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1472,7 +1472,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/private/offers/{offerId}/accept?applicationSlug={applicationSlug}",
+          "name": "POST /v1/recruit/private/offers/{offerId}/accept?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "POST",
             "header": [
@@ -1486,7 +1486,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/offers/{{offerId}}/accept?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/offers/{{offerId}}/accept?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1520,7 +1520,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/private/offers/{offerId}/decline?applicationSlug={applicationSlug}",
+          "name": "POST /v1/recruit/private/offers/{offerId}/decline?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "POST",
             "header": [
@@ -1534,7 +1534,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/offers/{{offerId}}/decline?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/offers/{{offerId}}/decline?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1568,7 +1568,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/private/offers/{offerId}/withdraw?applicationSlug={applicationSlug}",
+          "name": "POST /v1/recruit/private/offers/{offerId}/withdraw?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "POST",
             "header": [
@@ -1582,7 +1582,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/offers/{{offerId}}/withdraw?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/offers/{{offerId}}/withdraw?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1616,7 +1616,7 @@
           ]
         },
         {
-          "name": "DELETE /v1/recruit/private/me/resumes/{resumeId}?applicationSlug={applicationSlug}",
+          "name": "DELETE /v1/recruit/private/me/resumes/{resumeId}?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "DELETE",
             "header": [
@@ -1626,7 +1626,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/me/resumes/{{resumeId}}?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/me/resumes/{{resumeId}}?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1656,7 +1656,7 @@
           ]
         },
         {
-          "name": "GET /v1/recruit/private/me/resumes?applicationSlug={applicationSlug}",
+          "name": "GET /v1/recruit/private/me/resumes?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "GET",
             "header": [
@@ -1666,7 +1666,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/me/resumes?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/me/resumes?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1695,7 +1695,7 @@
           ]
         },
         {
-          "name": "PATCH /v1/recruit/private/me/resumes/{resumeId}?applicationSlug={applicationSlug}",
+          "name": "PATCH /v1/recruit/private/me/resumes/{resumeId}?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1709,7 +1709,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/private/me/resumes/{{resumeId}}?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/private/me/resumes/{{resumeId}}?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1743,7 +1743,7 @@
           ]
         },
         {
-          "name": "POST /v1/recruit/resumes?applicationSlug={applicationSlug}",
+          "name": "POST /v1/recruit/resumes?applicationSlug={{applicationSlug}}",
           "request": {
             "method": "POST",
             "header": [
@@ -1757,7 +1757,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/recruit/resumes?applicationSlug={applicationSlug}",
+              "raw": "{{baseUrl}}/v1/recruit/resumes?applicationSlug={{applicationSlug}}",
               "host": [
                 "{{baseUrl}}"
               ],
