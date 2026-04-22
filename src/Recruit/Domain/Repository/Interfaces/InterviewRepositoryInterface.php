@@ -13,4 +13,11 @@ interface InterviewRepositoryInterface
      * @return array<int, Interview>
      */
     public function findByApplicationOrdered(Application $application): array;
+
+    /**
+     * @param list<string> $applicationIds
+     *
+     * @return array<string, \DateTimeImmutable>
+     */
+    public function findFirstInterviewAtByApplicationId(array $applicationIds): array;
 }

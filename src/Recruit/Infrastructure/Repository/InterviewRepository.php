@@ -37,4 +37,33 @@ class InterviewRepository extends BaseRepository implements InterviewRepositoryI
             ->getQuery()
             ->getResult();
     }
+
+    public function findFirstInterviewAtByApplicationId(array $applicationIds): array
+    {
+        if ($applicationIds === []) {
+            return [];
+        }
+
+        $rows = $this->createQueryBuilder('interview')
+            ->select('IDENTITY(interview.application) AS applicationId', 'MIN(interview.scheduledAt) AS firstInterviewAt')
+            ->andWhere('interview.application IN (:applicationIds)')
+            ->setParameter('applicationIds', $applicationIds)
+            ->groupBy('interview.application')
+            ->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+
+        foreach ($rows as $row) {
+            $applicationId = (string)($row['applicationId'] ?? '');
+            $firstInterviewAt = $row['firstInterviewAt'] ?? null;
+            if ($applicationId === '' || !$firstInterviewAt instanceof \DateTimeImmutable) {
+                continue;
+            }
+
+            $result[$applicationId] = $firstInterviewAt;
+        }
+
+        return $result;
+    }
 }
