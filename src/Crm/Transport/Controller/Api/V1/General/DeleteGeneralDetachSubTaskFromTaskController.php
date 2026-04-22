@@ -30,7 +30,6 @@ final readonly class DeleteGeneralDetachSubTaskFromTaskController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/crm/general/tasks/{task}/subtasks/{subtask}', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(
         summary: 'General - Detach Subtask From Task',
         parameters: [

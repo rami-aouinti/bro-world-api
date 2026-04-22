@@ -46,7 +46,7 @@ final readonly class CreateTaskController
     /**
      * @throws ExceptionInterface
      */
-    #[Route('/v1/crm/applications/{applicationSlug}/tasks', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/tasks', methods: [Request::METHOD_POST])]
     #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Post(
         summary: 'Create Task',

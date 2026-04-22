@@ -28,7 +28,6 @@ final readonly class PatchGeneralTaskRequestController
     {
     }
 
-    #[Route('/v1/crm/general/task-requests/{taskRequest}', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(summary: 'General - Update Task Request', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['status' => 'done', 'resolvedAt' => '2026-05-03T09:00:00+00:00'])), responses: [new OA\Response(response: 200, description: 'Task request mise à jour', content: new OA\JsonContent(example: ['id' => 'uuid']))])]
     public function __invoke(TaskRequest $taskRequest, Request $request): JsonResponse
     {

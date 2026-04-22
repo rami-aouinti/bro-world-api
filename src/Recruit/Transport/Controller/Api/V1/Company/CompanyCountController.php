@@ -29,7 +29,7 @@ class CompanyCountController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/applications/{applicationSlug}/company/count',
+        path: '/v1/recruit/company/count',
         methods: [Request::METHOD_GET],
     )]
     #[IsGranted('ROLE_ROOT')]

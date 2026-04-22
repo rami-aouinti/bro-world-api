@@ -36,7 +36,6 @@ final readonly class CreateGeneralSubTaskController
     ) {
     }
 
-    #[Route('/v1/crm/general/tasks/{task}/subtasks', methods: [Request::METHOD_POST])]
     #[OA\Post(
         summary: 'General - Create Subtask',
         parameters: [new OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],

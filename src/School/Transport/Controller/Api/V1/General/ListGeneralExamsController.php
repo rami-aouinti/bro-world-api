@@ -22,7 +22,6 @@ final readonly class ListGeneralExamsController
     ) {
     }
 
-    #[Route('/v1/school/general/exams', methods: [Request::METHOD_GET], defaults: ['applicationSlug' => 'general'])]
     #[OA\Get(summary: 'Lister globalement les examens school (scope General en lecture seule)')]
     public function __invoke(Request $request): JsonResponse
     {

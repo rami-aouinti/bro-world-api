@@ -26,7 +26,7 @@ final readonly class ListTagsController
     ) {
     }
 
-    #[Route('/v1/shop/applications/{applicationSlug}/tags', methods: [Request::METHOD_GET])]
+    #[Route('/v1/shop/tags', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug): JsonResponse
     {

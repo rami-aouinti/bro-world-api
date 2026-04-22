@@ -32,7 +32,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class CreateProductController
 {
-    private const LEGACY_ROUTE_WARNING = 'Deprecated endpoint: use /v1/shop/applications/{applicationSlug}/products instead.';
+    private const LEGACY_ROUTE_WARNING = 'Deprecated endpoint: use /v1/shop/legacy/products instead.';
 
     public function __construct(
         private ProductHydratorService $productHydratorService,
@@ -49,11 +49,11 @@ final readonly class CreateProductController
      * @throws ORMException
      * @throws ExceptionInterface
      */
-    #[Route('/v1/shop/products', methods: [Request::METHOD_POST])]
+    #[Route('/v1/shop/legacy/products', methods: [Request::METHOD_POST])]
     #[OA\Post(
         deprecated: true,
         summary: 'Legacy create product endpoint',
-        description: 'Deprecated: migrate to /v1/shop/applications/{applicationSlug}/products.',
+        description: 'Deprecated: migrate to /v1/shop/products.',
     )]
     public function __invoke(Request $request): JsonResponse
     {

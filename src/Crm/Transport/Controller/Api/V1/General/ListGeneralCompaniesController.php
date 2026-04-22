@@ -26,7 +26,6 @@ final readonly class ListGeneralCompaniesController
     /** @throws JsonException
      * @throws InvalidArgumentException
      */
-    #[Route('/v1/crm/general/companies', methods: [Request::METHOD_GET])]
     public function __invoke(Request $request): JsonResponse
     {
         return new JsonResponse($this->companyApplicationListService->listGlobal($request));

@@ -27,7 +27,6 @@ final readonly class ListGeneralOrdersController
     ) {
     }
 
-    #[Route('/v1/shop/general/orders', methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'List authenticated user orders in global shop scope.',
         security: [['Bearer' => []]],

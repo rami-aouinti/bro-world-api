@@ -23,7 +23,6 @@ final readonly class DeleteGeneralCompanyController
     {
     }
 
-    #[Route('/v1/crm/general/companies/{company}', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(summary: 'General - Delete Company', responses: [new OA\Response(response: 204, description: 'Company supprimée')])]
     public function __invoke(Company $company): JsonResponse
     {

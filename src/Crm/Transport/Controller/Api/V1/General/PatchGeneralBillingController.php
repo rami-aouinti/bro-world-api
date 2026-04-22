@@ -28,7 +28,6 @@ final readonly class PatchGeneralBillingController
     {
     }
 
-    #[Route('/v1/crm/general/billings/{billing}', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(summary: 'General - Update Billing', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['status' => 'paid', 'paidAt' => '2026-05-02T08:30:00+00:00'])), responses: [new OA\Response(response: 200, description: 'Billing mise à jour', content: new OA\JsonContent(example: ['id' => 'uuid']))])]
     public function __invoke(Billing $billing, Request $request): JsonResponse
     {

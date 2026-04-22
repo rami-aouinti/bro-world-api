@@ -30,7 +30,6 @@ final readonly class CreateGeneralApplicantController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route(path: '/v1/recruit/general/applicants', methods: [Request::METHOD_POST])]
     #[OA\Post(
         summary: 'Crée un candidat lié au CV du user connecté.',
         requestBody: new OA\RequestBody(

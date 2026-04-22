@@ -31,8 +31,7 @@ final readonly class CreateProjectGithubPullRequestController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/pull-requests', methods: [Request::METHOD_POST])]
-    #[Route('/v1/crm/general/projects/{project}/github/pull-requests', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/projects/{project}/github/pull-requests', methods: [Request::METHOD_POST])]
     public function __invoke(Project $project, Request $request): JsonResponse
     {
         $payload = $this->crmRequestHandler->decodeJson($request);

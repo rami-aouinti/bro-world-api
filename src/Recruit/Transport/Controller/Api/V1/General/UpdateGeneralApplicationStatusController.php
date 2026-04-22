@@ -38,7 +38,6 @@ final readonly class UpdateGeneralApplicationStatusController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route(path: '/v1/recruit/general/private/applications/{applicationId}/status', methods: [Request::METHOD_PATCH])]
     #[OA\Parameter(name: 'applicationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Patch(
         summary: 'Modifie le statut d\'une candidature.',

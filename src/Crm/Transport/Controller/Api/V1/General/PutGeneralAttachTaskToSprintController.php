@@ -34,7 +34,6 @@ final readonly class PutGeneralAttachTaskToSprintController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/crm/general/sprints/{sprint}/tasks/{task}', methods: [Request::METHOD_PUT])]
     #[OA\Parameter(name: 'sprint', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Put(

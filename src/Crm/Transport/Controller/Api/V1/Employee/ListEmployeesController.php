@@ -29,7 +29,7 @@ final readonly class ListEmployeesController
      * @throws JsonException
      * @throws InvalidArgumentException
      */
-    #[Route('/v1/crm/applications/{applicationSlug}/employees', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/employees', methods: [Request::METHOD_GET])]
     #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Parameter(ref: '#/components/parameters/page')]
     #[OA\Parameter(ref: '#/components/parameters/limit')]

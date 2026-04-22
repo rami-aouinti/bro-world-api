@@ -38,7 +38,7 @@ class TagCreateController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/applications/{applicationSlug}/tag',
+        path: '/v1/recruit/tag',
         methods: [Request::METHOD_POST],
     )]
     #[IsGranted('ROLE_ROOT')]

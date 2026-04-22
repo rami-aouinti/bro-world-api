@@ -44,7 +44,7 @@ final readonly class CreateApplicationProductController
      * @throws ORMException
      * @throws ExceptionInterface
      */
-    #[Route('/v1/shop/applications/{applicationSlug}/products', methods: [Request::METHOD_POST])]
+    #[Route('/v1/shop/products', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'Create product by application scope')]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse

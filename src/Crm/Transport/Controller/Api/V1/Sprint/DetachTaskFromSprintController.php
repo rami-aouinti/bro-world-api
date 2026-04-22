@@ -35,7 +35,7 @@ final readonly class DetachTaskFromSprintController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/crm/applications/{applicationSlug}/sprints/{sprintId}/tasks/{taskId}', methods: [Request::METHOD_DELETE])]
+    #[Route('/v1/crm/sprints/{sprintId}/tasks/{taskId}', methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'sprintId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'taskId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]

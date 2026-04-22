@@ -34,7 +34,6 @@ final readonly class DeleteGeneralDetachTaskFromSprintController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/crm/general/sprints/{sprint}/tasks/{task}', methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'sprint', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(

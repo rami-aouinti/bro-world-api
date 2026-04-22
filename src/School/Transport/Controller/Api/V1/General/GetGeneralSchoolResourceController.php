@@ -22,7 +22,7 @@ final readonly class GetGeneralSchoolResourceController
     ) {
     }
 
-    #[Route('/v1/school/general/{resource}/{id}', requirements: [
+    #[Route('/v1/school/{resource}/{id}', requirements: [
         'resource' => 'classes|students|teachers|courses|exams|grades',
     ], methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'Détail global d\'une ressource school (scope General en lecture seule)')]

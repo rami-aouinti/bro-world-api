@@ -48,7 +48,7 @@ readonly class JobCreateFromApplicationController
      * @throws ExceptionInterface
      * @throws ORMException
      */
-    #[Route(path: '/v1/recruit/applications/{applicationSlug}/jobs', methods: [Request::METHOD_POST])]
+    #[Route(path: '/v1/recruit/jobs', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
     {

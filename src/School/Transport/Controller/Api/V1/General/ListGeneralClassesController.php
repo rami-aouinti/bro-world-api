@@ -28,7 +28,6 @@ final readonly class ListGeneralClassesController
      * @throws InvalidArgumentException
      * @throws JsonException
      */
-    #[Route('/v1/school/general/classes', defaults: ['applicationSlug' => 'general'], methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'Lister globalement les classes school (scope General en lecture seule)')]
     public function __invoke(Request $request): JsonResponse
     {

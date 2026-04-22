@@ -33,7 +33,7 @@ readonly class ApplicationStatusHistoryListController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/applications/{applicationSlug}/private/applications/{applicationId}/status-history', methods: [Request::METHOD_GET])]
+    #[Route(path: '/v1/recruit/private/applications/{applicationId}/status-history', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'applicationId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(

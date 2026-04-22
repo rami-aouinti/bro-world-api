@@ -22,7 +22,6 @@ final readonly class GetGeneralCompanyController
     {
     }
 
-    #[Route('/v1/crm/general/companies/{company}', methods: [Request::METHOD_GET])]
     public function __invoke(Company $company): JsonResponse
     {
         return new JsonResponse($this->companyApplicationListService->getGlobalDetail($company));

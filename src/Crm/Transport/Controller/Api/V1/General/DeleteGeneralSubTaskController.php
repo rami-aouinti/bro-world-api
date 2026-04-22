@@ -24,7 +24,6 @@ final readonly class DeleteGeneralSubTaskController
     {
     }
 
-    #[Route('/v1/crm/general/subtasks/{subtask}', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(
         summary: 'General - Delete Subtask',
         parameters: [new OA\Parameter(name: 'subtask', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],

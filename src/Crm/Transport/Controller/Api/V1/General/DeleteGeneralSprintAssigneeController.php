@@ -31,7 +31,6 @@ final readonly class DeleteGeneralSprintAssigneeController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/crm/general/sprints/{sprint}/assignees/{user}', methods: [Request::METHOD_DELETE])]
     #[OA\Parameter(name: 'sprint', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(

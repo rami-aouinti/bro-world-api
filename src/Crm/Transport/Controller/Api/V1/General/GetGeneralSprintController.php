@@ -21,7 +21,6 @@ final readonly class GetGeneralSprintController
     {
     }
 
-    #[Route('/v1/crm/general/sprints/{sprint}', methods: [Request::METHOD_GET])]
     public function __invoke(Sprint $sprint): JsonResponse
     {
         return new JsonResponse([

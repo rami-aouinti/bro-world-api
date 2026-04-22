@@ -26,7 +26,6 @@ final readonly class ListGeneralTaskRequestsController
     {
     }
 
-    #[Route('/v1/crm/general/task-requests', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'General - List Task Requests', responses: [new OA\Response(response: 200, description: 'Liste des task requests', content: new OA\JsonContent(example: ['items' => [['id' => 'uuid', 'title' => 'Créer PR']]]))])]
     public function __invoke(): JsonResponse
     {

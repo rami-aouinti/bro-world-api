@@ -30,7 +30,7 @@ readonly class OfferCreateController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/applications/{applicationSlug}/private/applications/{applicationId}/offers', methods: [Request::METHOD_POST])]
+    #[Route(path: '/v1/recruit/private/applications/{applicationId}/offers', methods: [Request::METHOD_POST])]
     public function __invoke(string $applicationSlug, string $applicationId, Request $request, User $loggedInUser): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);

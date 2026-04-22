@@ -19,7 +19,7 @@ use Throwable;
 #[AsController]
 #[OA\Tag(name: 'Calendar Event')]
 #[OA\Post(
-    path: '/v1/calendar/applications/{applicationSlug}/events',
+    path: '/v1/calendar/events',
     operationId: 'calendar_application_event_create',
     summary: 'Créer un événement application',
     requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['title', 'startAt', 'endAt'], properties: [new OA\Property(property: 'title', type: 'string', example: 'Demo client'),
@@ -61,7 +61,7 @@ readonly class CreateApplicationEventController
     /**
      * @throws Throwable
      */
-    #[Route(path: '/v1/calendar/applications/{applicationSlug}/events', methods: [Request::METHOD_POST])]
+    #[Route(path: '/v1/calendar/events', methods: [Request::METHOD_POST])]
     public function __invoke(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
     {
         $command = $this->eventMutationInputFactory->createApplicationCreateCommand($request->toArray(), $loggedInUser->getId(), $applicationSlug);

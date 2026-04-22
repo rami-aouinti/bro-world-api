@@ -31,7 +31,7 @@ final readonly class PutProjectController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}', methods: [Request::METHOD_PUT])]
+    #[Route('/v1/crm/projects/{project}', methods: [Request::METHOD_PUT])]
     #[OA\Put(
         summary: 'Replace Project',
         responses: [

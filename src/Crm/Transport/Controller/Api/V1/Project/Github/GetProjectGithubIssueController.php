@@ -27,8 +27,7 @@ final readonly class GetProjectGithubIssueController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/projects/{project}/github/issues/{number}', methods: [Request::METHOD_GET])]
-    #[Route('/v1/crm/general/projects/{project}/github/issues/{number}', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/projects/{project}/github/issues/{number}', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'number', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 42)]
     #[OA\Parameter(name: 'repo', in: 'query', required: true, schema: new OA\Schema(type: 'string'), example: 'rami-aouinti/bro-world-api')]

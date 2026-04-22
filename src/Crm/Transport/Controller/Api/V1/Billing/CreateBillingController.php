@@ -38,7 +38,7 @@ final readonly class CreateBillingController
     /**
      * @throws ExceptionInterface
      */
-    #[Route('/v1/crm/applications/{applicationSlug}/billings', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/billings', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
         description: 'Exécute l action metier Create Billing dans le perimetre de l application CRM.',

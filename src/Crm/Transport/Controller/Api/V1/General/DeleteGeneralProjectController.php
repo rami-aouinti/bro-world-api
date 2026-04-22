@@ -23,7 +23,6 @@ final readonly class DeleteGeneralProjectController
     {
     }
 
-    #[Route('/v1/crm/general/projects/{project}', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(summary: 'General - Delete Project', responses: [new OA\Response(response: 204, description: 'Project supprimé')])]
     public function __invoke(Project $project): JsonResponse
     {

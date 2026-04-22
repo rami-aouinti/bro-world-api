@@ -32,7 +32,6 @@ final readonly class PutGeneralAttachSubTaskToTaskController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/crm/general/tasks/{task}/subtasks/{subtask}', methods: [Request::METHOD_PUT])]
     #[OA\Put(
         summary: 'General - Attach Subtask To Task',
         parameters: [

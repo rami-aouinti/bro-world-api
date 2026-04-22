@@ -30,8 +30,8 @@ final class CreateQuizQuestionController
      * @throws ExceptionInterface
      * @throws JsonException
      */
-    #[Route('/v1/quiz/applications/{applicationSlug}/questions', methods: [Request::METHOD_POST])]
-    #[OA\Post(summary: 'POST /v1/quiz/applications/{applicationSlug}/questions', tags: ['Quiz'])]
+    #[Route('/v1/quiz/questions', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'POST /v1/quiz/questions', tags: ['Quiz'])]
     public function __invoke(string $applicationSlug, Request $request, MessageBusInterface $messageBus, User $loggedInUser, ApplicationRepository $applicationRepository, QuizRepository $quizRepository, QuizEditorAccessService $accessService): JsonResponse
     {
         $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);

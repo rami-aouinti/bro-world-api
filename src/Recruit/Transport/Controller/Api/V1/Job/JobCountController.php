@@ -29,7 +29,7 @@ class JobCountController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/applications/{applicationSlug}/job/count',
+        path: '/v1/recruit/job/count',
         methods: [Request::METHOD_GET],
     )]
     #[IsGranted('ROLE_ROOT')]

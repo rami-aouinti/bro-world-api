@@ -30,7 +30,6 @@ final readonly class CreateGeneralProjectController
     {
     }
 
-    #[Route('/v1/crm/general/projects', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'General - Create Project', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['companyId' => 'uuid', 'name' => 'Migration CRM', 'status' => 'planned'])), responses: [new OA\Response(response: 201, description: 'Project créé', content: new OA\JsonContent(example: ['id' => 'uuid']))])]
     public function __invoke(Request $request): JsonResponse
     {

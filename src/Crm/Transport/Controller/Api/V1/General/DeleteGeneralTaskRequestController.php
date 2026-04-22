@@ -23,7 +23,6 @@ final readonly class DeleteGeneralTaskRequestController
     {
     }
 
-    #[Route('/v1/crm/general/task-requests/{taskRequest}', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(summary: 'General - Delete Task Request', responses: [new OA\Response(response: 204, description: 'Task request supprimée')])]
     public function __invoke(TaskRequest $taskRequest): JsonResponse
     {

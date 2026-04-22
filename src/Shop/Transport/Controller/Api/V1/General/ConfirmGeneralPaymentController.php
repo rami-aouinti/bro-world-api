@@ -34,7 +34,6 @@ final readonly class ConfirmGeneralPaymentController
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    #[Route('/v1/shop/general/orders/{orderId}/payment-confirm', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'orderId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: 'ord_8cb7be4f-2d27-430d-bc16-5b9fc4f2ef1e'))]
     #[OA\Post(
         summary: 'Confirm a previously created payment intent for a global order.',

@@ -26,7 +26,6 @@ final readonly class ListTeachersController
     ) {
     }
 
-    #[Route('/v1/school/applications/{applicationSlug}/teachers', methods: [Request::METHOD_GET], defaults: ['applicationSlug' => 'general'])]
     #[Route('/v1/school/teachers', methods: [Request::METHOD_GET], defaults: ['applicationSlug' => 'general'])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, Request $request, ?User $loggedInUser): JsonResponse

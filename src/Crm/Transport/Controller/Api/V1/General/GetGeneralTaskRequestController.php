@@ -19,7 +19,6 @@ final class GetGeneralTaskRequestController
 {
     use GeneralCrudApiTrait;
 
-    #[Route('/v1/crm/general/task-requests/{taskRequest}', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'General - Get Task Request', responses: [new OA\Response(response: 200, description: 'Détail task request', content: new OA\JsonContent(example: ['id' => 'uuid', 'title' => 'Créer PR', 'status' => 'pending']))])]
     public function __invoke(TaskRequest $taskRequest): JsonResponse
     {

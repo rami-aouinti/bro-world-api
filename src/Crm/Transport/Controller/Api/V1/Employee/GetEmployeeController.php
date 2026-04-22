@@ -25,7 +25,7 @@ final readonly class GetEmployeeController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/employees/{employee}', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/employees/{employee}', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'employee', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(

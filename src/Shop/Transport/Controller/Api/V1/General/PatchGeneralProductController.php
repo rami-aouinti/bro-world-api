@@ -43,7 +43,6 @@ final readonly class PatchGeneralProductController
     /**
      * @throws ExceptionInterface
      */
-    #[Route('/v1/shop/general/products/{id}', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(summary: 'Patch product in global shop scope')]
     public function __invoke(string $id, Request $request): JsonResponse
     {

@@ -22,7 +22,7 @@ final readonly class ListTaskRequestsController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/task-requests', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/task-requests', methods: [Request::METHOD_GET])]
     #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Parameter(ref: '#/components/parameters/page')]
     #[OA\Parameter(ref: '#/components/parameters/limit')]

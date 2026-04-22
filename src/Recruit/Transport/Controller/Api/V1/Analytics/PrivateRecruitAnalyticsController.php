@@ -34,7 +34,7 @@ readonly class PrivateRecruitAnalyticsController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/applications/{applicationSlug}/private/analytics', methods: [Request::METHOD_GET])]
+    #[Route(path: '/v1/recruit/private/analytics', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date-time'))]
     #[OA\Parameter(name: 'to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date-time'))]

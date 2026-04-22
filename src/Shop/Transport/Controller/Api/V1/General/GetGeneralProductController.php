@@ -26,7 +26,6 @@ final readonly class GetGeneralProductController
     ) {
     }
 
-    #[Route('/v1/shop/general/products/{product}', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'Get one product in global shop scope')]
     #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     public function __invoke(Product $product): JsonResponse

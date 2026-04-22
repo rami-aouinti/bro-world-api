@@ -25,7 +25,6 @@ final readonly class GetGeneralContactController
     }
 
     /** @throws InvalidArgumentException */
-    #[Route('/v1/crm/general/contacts/{contact}', methods: [Request::METHOD_GET])]
     public function __invoke(Contact $contact): JsonResponse
     {
         $payload = $this->contactReadService->getGlobalDetail($contact->getId());

@@ -28,7 +28,7 @@ final readonly class DeleteEmployeeController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/employees/{employeeId}', methods: [Request::METHOD_DELETE])]
+    #[Route('/v1/crm/employees/{employeeId}', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(
         summary: 'Delete Employee',
         description: 'Exécute l action metier Delete Employee dans le perimetre de l application CRM.',

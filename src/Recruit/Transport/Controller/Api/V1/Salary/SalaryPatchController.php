@@ -39,7 +39,7 @@ class SalaryPatchController extends Controller
     }
 
     #[Route(
-        path: '/v1/recruit/applications/{applicationSlug}/salary/{id}',
+        path: '/v1/recruit/salary/{id}',
         requirements: [
             'id' => Requirement::UUID_V1,
         ],

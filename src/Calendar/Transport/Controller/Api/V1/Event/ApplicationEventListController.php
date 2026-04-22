@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 #[AsController]
 #[OA\Tag(name: 'Calendar Event')]
-#[OA\Get(path: '/v1/calendar/applications/{applicationSlug}/events', operationId: 'calendar_application_event_list', summary: 'Lister les événements publics de une application', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world')), new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, example: 1)), new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, example: 20))], responses: [new OA\Response(response: 200, description: 'Liste paginée'), new OA\Response(response: 404, description: 'Application inconnue')])]
+#[OA\Get(path: '/v1/calendar/events', operationId: 'calendar_application_event_list', summary: 'Lister les événements publics de une application', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world')), new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, example: 1)), new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, example: 20))], responses: [new OA\Response(response: 200, description: 'Liste paginée'), new OA\Response(response: 404, description: 'Application inconnue')])]
 class ApplicationEventListController
 {
     public function __construct(
@@ -27,7 +27,7 @@ class ApplicationEventListController
      * @throws JsonException
      * @throws InvalidArgumentException
      */
-    #[Route(path: '/v1/calendar/applications/{applicationSlug}/events', methods: [Request::METHOD_GET])]
+    #[Route(path: '/v1/calendar/events', methods: [Request::METHOD_GET])]
     public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
         $page = max(1, $request->query->getInt('page', 1));

@@ -29,7 +29,7 @@ final class SubmitQuizByApplicationController
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    #[Route('/v1/quiz/applications/{applicationSlug}/submit', methods: [Request::METHOD_POST])]
+    #[Route('/v1/quiz/submit', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'Submit quiz answers for an application', tags: ['Quiz'])]
     public function __invoke(string $applicationSlug, Request $request, QuizSubmissionService $quizSubmissionService, User $loggedInUser): JsonResponse
     {
@@ -43,7 +43,6 @@ final class SubmitQuizByApplicationController
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    #[Route('/v1/quiz/general/submit', methods: [Request::METHOD_POST])]
     #[OA\Post(
         description: 'Endpoint to submit answers for the general quiz. Use this payload in api/doc to test score calculation.',
         summary: 'Submit general quiz answers and compute score',

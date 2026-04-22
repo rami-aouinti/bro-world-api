@@ -29,7 +29,6 @@ final readonly class GeneralPaymentWebhookController
      * @throws ORMException
      * @throws JsonException
      */
-    #[Route('/v1/shop/general/payments/webhook', methods: [Request::METHOD_POST])]
     #[OA\Parameter(
         name: 'provider',
         in: 'query',

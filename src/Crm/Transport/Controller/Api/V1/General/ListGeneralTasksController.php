@@ -26,7 +26,6 @@ final readonly class ListGeneralTasksController
     /** @throws JsonException
      * @throws InvalidArgumentException
      */
-    #[Route('/v1/crm/general/tasks', methods: [Request::METHOD_GET])]
     public function __invoke(Request $request): JsonResponse
     {
         return new JsonResponse($this->taskListService->getGlobalList($request));

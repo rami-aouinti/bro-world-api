@@ -28,7 +28,6 @@ final readonly class PatchGeneralProjectController
     {
     }
 
-    #[Route('/v1/crm/general/projects/{project}', methods: [Request::METHOD_PATCH])]
     #[OA\Patch(summary: 'General - Update Project', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['name' => 'Migration CRM v2', 'status' => 'active'])), responses: [new OA\Response(response: 200, description: 'Project mis à jour', content: new OA\JsonContent(example: ['id' => 'uuid']))])]
     public function __invoke(Project $project, Request $request): JsonResponse
     {

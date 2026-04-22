@@ -26,7 +26,6 @@ final readonly class ListGeneralMyResumesController
     ) {
     }
 
-    #[Route(path: '/v1/recruit/general/private/me/resumes', methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'Retourne les CV du user connecté.',
         responses: [

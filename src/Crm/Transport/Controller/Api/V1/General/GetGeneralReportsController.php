@@ -26,7 +26,6 @@ final readonly class GetGeneralReportsController
     ) {
     }
 
-    #[Route('/v1/crm/general/reports', methods: [Request::METHOD_GET])]
     public function __invoke(Request $request): Response
     {
         $report = $this->crmReportService->buildGlobal();

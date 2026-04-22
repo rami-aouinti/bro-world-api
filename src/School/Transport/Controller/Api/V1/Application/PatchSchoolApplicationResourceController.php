@@ -33,10 +33,7 @@ final readonly class PatchSchoolApplicationResourceController
         private MessageBusInterface $messageBus,
     ) {
     }
-    #[Route('/v1/school/applications/{applicationSlug}/{resource}/{id}', methods: [Request::METHOD_PATCH, Request::METHOD_PUT], requirements: [
-        'resource' => 'classes|students|teachers|exams|grades',
-    ])]
-    #[Route('/v1/school/general/{resource}/{id}', methods: [Request::METHOD_PATCH, Request::METHOD_PUT], defaults: ['applicationSlug' => 'general'], requirements: [
+    #[Route('/v1/school/{resource}/{id}', methods: [Request::METHOD_PATCH, Request::METHOD_PUT], requirements: [
         'resource' => 'classes|students|teachers|exams|grades',
     ])]
     #[OA\Patch(

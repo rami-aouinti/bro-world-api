@@ -21,7 +21,7 @@ use Throwable;
 
 #[AsController]
 #[OA\Tag(name: 'Chat Conversation')]
-#[OA\Post(path: '/v1/chat/{applicationSlug}/private/chats/{chatId}/conversations', operationId: 'chat_conversation_create', summary: 'Créer une conversation', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['userId'], properties: [new OA\Property(property: 'userId', type: 'string', format: 'uuid')])), tags: ['Chat Conversation'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world')), new OA\Parameter(name: 'chatId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))])]
+#[OA\Post(path: '/v1/chat/private/chats/{chatId}/conversations', operationId: 'chat_conversation_create', summary: 'Créer une conversation', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['userId'], properties: [new OA\Property(property: 'userId', type: 'string', format: 'uuid')])), tags: ['Chat Conversation'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world')), new OA\Parameter(name: 'chatId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))])]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 readonly class CreateConversationController
 {
@@ -36,7 +36,7 @@ readonly class CreateConversationController
     /**
      * @throws Throwable
      */
-    #[Route(path: '/v1/chat/{applicationSlug}/private/chats/{chatId}/conversations', methods: [Request::METHOD_POST])]
+    #[Route(path: '/v1/chat/private/chats/{chatId}/conversations', methods: [Request::METHOD_POST])]
     public function __invoke(string $applicationSlug, string $chatId, Request $request, User $loggedInUser): JsonResponse
     {
         $this->chatApplicationScopeValidator->validate($chatId, $applicationSlug);

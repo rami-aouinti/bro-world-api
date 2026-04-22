@@ -30,8 +30,7 @@ final readonly class ListTaskRequestGithubBranchesController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/task-requests/{taskRequest}/github/branches', methods: [Request::METHOD_GET])]
-    #[Route('/v1/crm/general/task-requests/{taskRequest}/github/branches', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/task-requests/{taskRequest}/github/branches', methods: [Request::METHOD_GET])]
     #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Parameter(name: 'taskRequest', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'), example: 'a8f2140e-322e-49e5-94dc-dd86126fef3a')]
     #[OA\Get(

@@ -18,7 +18,7 @@ use Throwable;
 
 #[AsController]
 #[OA\Tag(name: 'Calendar Event')]
-#[OA\Post(path: '/v1/calendar/applications/{applicationSlug}/events/{eventId}/cancel', operationId: 'calendar_application_event_cancel', summary: 'Annuler un événement application', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world')), new OA\Parameter(name: 'eventId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], responses: [new OA\Response(response: 202, description: 'Commande acceptée'), new OA\Response(response: 400, description: 'Paramètres de path invalides'), new OA\Response(response: 404, description: 'Application ou événement introuvable'), new OA\Response(response: 422, description: 'Annulation impossible')])]
+#[OA\Post(path: '/v1/calendar/events/{eventId}/cancel', operationId: 'calendar_application_event_cancel', summary: 'Annuler un événement application', tags: ['Calendar Event'], parameters: [new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'bro-world')), new OA\Parameter(name: 'eventId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'))], responses: [new OA\Response(response: 202, description: 'Commande acceptée'), new OA\Response(response: 400, description: 'Paramètres de path invalides'), new OA\Response(response: 404, description: 'Application ou événement introuvable'), new OA\Response(response: 422, description: 'Annulation impossible')])]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 readonly class CancelApplicationEventController
 {
@@ -31,7 +31,7 @@ readonly class CancelApplicationEventController
     /**
      * @throws Throwable
      */
-    #[Route(path: '/v1/calendar/applications/{applicationSlug}/events/{eventId}/cancel', methods: [Request::METHOD_POST])]
+    #[Route(path: '/v1/calendar/events/{eventId}/cancel', methods: [Request::METHOD_POST])]
     public function __invoke(string $applicationSlug, string $eventId, User $loggedInUser): JsonResponse
     {
         $command = $this->eventMutationInputFactory->createApplicationCancelCommand($applicationSlug, $eventId, $loggedInUser->getId());

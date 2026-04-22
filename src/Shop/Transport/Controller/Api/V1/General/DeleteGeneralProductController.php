@@ -35,7 +35,6 @@ final readonly class DeleteGeneralProductController
     /**
      * @throws ExceptionInterface
      */
-    #[Route('/v1/shop/general/products/{id}', methods: [Request::METHOD_DELETE])]
     #[OA\Delete(summary: 'Delete product from global shop scope')]
     public function __invoke(string $id): JsonResponse
     {

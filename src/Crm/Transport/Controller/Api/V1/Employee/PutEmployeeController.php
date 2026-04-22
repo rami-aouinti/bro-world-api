@@ -34,7 +34,7 @@ final readonly class PutEmployeeController
     ) {
     }
 
-    #[Route('/v1/crm/applications/{applicationSlug}/employees/{employeeId}', methods: [Request::METHOD_PUT])]
+    #[Route('/v1/crm/employees/{employeeId}', methods: [Request::METHOD_PUT])]
     #[OA\Put(
         summary: 'Replace Employee',
         description: 'Exécute l action metier Put Employee dans le perimetre de l application CRM.',

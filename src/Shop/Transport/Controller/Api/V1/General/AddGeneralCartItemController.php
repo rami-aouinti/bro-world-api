@@ -45,7 +45,6 @@ final readonly class AddGeneralCartItemController
      * @throws JsonException
      * @throws OptimisticLockException
      */
-    #[Route('/v1/shop/general/carts/{shopId}/items', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'shopId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid', example: 'f95da407-b9f0-4d5f-a14e-15c4b22af6e3'))]
     #[OA\Post(
         description: 'Manual /api/doc chain step 1/6: POST /v1/shop/general/carts/{shopId}/items. Use shopId=f95da407-b9f0-4d5f-a14e-15c4b22af6e3, then reuse the same shopId in step 2 (GET cart) and step 3 (checkout).',

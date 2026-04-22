@@ -32,7 +32,6 @@ final readonly class CreateGeneralBillingController
     ) {
     }
 
-    #[Route('/v1/crm/general/billings', methods: [Request::METHOD_POST])]
     #[OA\Post(
         summary: 'General - Create Billing',
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(example: ['companyId' => 'uuid', 'label' => 'Licence', 'amount' => 149.90, 'currency' => 'EUR', 'status' => 'pending', 'dueAt' => '2026-05-01T10:00:00+00:00'])),
