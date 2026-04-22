@@ -21,7 +21,7 @@ class ApplicationCreateControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that POST /v1/recruit/applications/{applicationSlug}/applications rejects a job from another application.')]
+    #[TestDox('Test that POST /v1/recruit/applications?applicationSlug={applicationSlug} rejects a job from another application.')]
     public function testThatCreateRejectsJobApplicationSlugMismatch(): void
     {
         $rootContext = $this->getApplicantAndApplicationSlugForUsername('john-root');
@@ -39,7 +39,7 @@ class ApplicationCreateControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that POST /v1/recruit/applications/{applicationSlug}/applications rejects duplicate active applications for same applicant and job.')]
+    #[TestDox('Test that POST /v1/recruit/applications?applicationSlug={applicationSlug} rejects duplicate active applications for same applicant and job.')]
     public function testThatCreateRejectsDuplicateActiveApplication(): void
     {
         [$applicationSlug, $applicantId, $jobId] = $this->createDedicatedContextForUsername('john-root');

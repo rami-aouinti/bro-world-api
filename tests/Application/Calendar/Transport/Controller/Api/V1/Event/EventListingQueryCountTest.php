@@ -57,7 +57,7 @@ final class EventListingQueryCountTest extends WebTestCase
     private function countSqlQueriesForListingRequest(KernelBrowser $client, string $applicationSlug): int
     {
         $client->enableProfiler();
-        $client->request('GET', self::API_URL_PREFIX . '/v1/calendar/applications/' . $applicationSlug . '/events?limit=100');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/calendar/events?applicationSlug=' . $applicationSlug . '&limit=100');
 
         $response = $client->getResponse();
         self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:\n" . $response);

@@ -16,6 +16,8 @@ final class ScopedApplicationRoutesTest extends WebTestCase
         $ownerClient = $this->getTestClient('john-root', 'password-root');
         $ownerClient->request('GET', self::API_URL_PREFIX . '/v1/crm/companies?applicationSlug=crm-sales-hub');
         self::assertSame(Response::HTTP_OK, $ownerClient->getResponse()->getStatusCode());
+        $ownerPayload = $this->decodeResponse($ownerClient->getResponse());
+        self::assertSame('crm-sales-hub', $ownerPayload['meta']['applicationSlug'] ?? null);
 
         $forbiddenClient = $this->getTestClient('john-user', 'password-user');
         $forbiddenClient->request('GET', self::API_URL_PREFIX . '/v1/crm/companies?applicationSlug=crm-sales-hub');
@@ -56,5 +58,8 @@ final class ScopedApplicationRoutesTest extends WebTestCase
         $invalidClient->request('GET', self::API_URL_PREFIX . '/v1/school/classes?applicationSlug=not-found-slug');
 
         self::assertSame(Response::HTTP_NOT_FOUND, $invalidClient->getResponse()->getStatusCode());
+        $payload = $this->decodeResponse($invalidClient->getResponse());
+        self::assertIsArray($payload);
+        self::assertArrayHasKey('message', $payload);
     }
 }

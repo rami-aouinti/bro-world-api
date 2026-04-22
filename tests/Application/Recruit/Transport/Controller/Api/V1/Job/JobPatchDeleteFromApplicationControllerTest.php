@@ -20,7 +20,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that PATCH /v1/recruit/applications/{applicationSlug}/jobs/{jobId} updates job for owner.')]
+    #[TestDox('Test that PATCH /v1/recruit/jobs/{jobId}?applicationSlug={applicationSlug} updates job for owner.')]
     public function testThatPatchFromApplicationUpdatesJob(): void
     {
         [$applicationSlug, $jobId] = $this->getApplicationSlugAndJobIdForUsername('john-root');
@@ -44,7 +44,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that PATCH /v1/recruit/applications/{applicationSlug}/jobs/{jobId} returns bad request for unknown application slug.')]
+    #[TestDox('Test that PATCH /v1/recruit/jobs/{jobId}?applicationSlug={applicationSlug} returns bad request for unknown application slug.')]
     public function testThatPatchFromApplicationRejectsUnknownApplicationSlug(): void
     {
         $client = $this->getTestClient('john-root', 'password-root');
@@ -58,7 +58,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that PATCH /v1/recruit/applications/{applicationSlug}/jobs/{jobId} returns not found for missing job.')]
+    #[TestDox('Test that PATCH /v1/recruit/jobs/{jobId}?applicationSlug={applicationSlug} returns not found for missing job.')]
     public function testThatPatchFromApplicationReturnsNotFoundWhenJobIsMissing(): void
     {
         [$applicationSlug] = $this->getApplicationSlugAndJobIdForUsername('john-root');
@@ -74,7 +74,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that PATCH /v1/recruit/applications/{applicationSlug}/jobs/{jobId} forbids non owner.')]
+    #[TestDox('Test that PATCH /v1/recruit/jobs/{jobId}?applicationSlug={applicationSlug} forbids non owner.')]
     public function testThatPatchFromApplicationRejectsForeignApplication(): void
     {
         [$applicationSlug, $jobId] = $this->getApplicationSlugAndJobIdForUsername('john-root');
@@ -90,7 +90,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that DELETE /v1/recruit/applications/{applicationSlug}/jobs/{jobId} deletes job for owner.')]
+    #[TestDox('Test that DELETE /v1/recruit/jobs/{jobId}?applicationSlug={applicationSlug} deletes job for owner.')]
     public function testThatDeleteFromApplicationDeletesJob(): void
     {
         [$applicationSlug, $jobId] = $this->createDedicatedJobForUser('john-root');
@@ -110,7 +110,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that DELETE /v1/recruit/applications/{applicationSlug}/jobs/{jobId} returns bad request for unknown application slug.')]
+    #[TestDox('Test that DELETE /v1/recruit/jobs/{jobId}?applicationSlug={applicationSlug} returns bad request for unknown application slug.')]
     public function testThatDeleteFromApplicationRejectsUnknownApplicationSlug(): void
     {
         $client = $this->getTestClient('john-root', 'password-root');
@@ -122,7 +122,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that DELETE /v1/recruit/applications/{applicationSlug}/jobs/{jobId} returns forbidden for foreign application.')]
+    #[TestDox('Test that DELETE /v1/recruit/jobs/{jobId}?applicationSlug={applicationSlug} returns forbidden for foreign application.')]
     public function testThatDeleteFromApplicationRejectsForeignApplication(): void
     {
         [$applicationSlug, $jobId] = $this->createDedicatedJobForUser('john-root');
@@ -136,7 +136,7 @@ class JobPatchDeleteFromApplicationControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that DELETE /v1/recruit/applications/{applicationSlug}/jobs/{jobId} returns not found for missing job.')]
+    #[TestDox('Test that DELETE /v1/recruit/jobs/{jobId}?applicationSlug={applicationSlug} returns not found for missing job.')]
     public function testThatDeleteFromApplicationReturnsNotFoundWhenJobIsMissing(): void
     {
         [$applicationSlug] = $this->getApplicationSlugAndJobIdForUsername('john-root');

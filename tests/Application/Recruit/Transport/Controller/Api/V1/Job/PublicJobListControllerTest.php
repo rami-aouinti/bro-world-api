@@ -17,7 +17,7 @@ use function count;
 
 class PublicJobListControllerTest extends WebTestCase
 {
-    #[TestDox('Test that `GET /v1/recruit/applications/{applicationSlug}/public/jobs` filters by experienceLevel.')]
+    #[TestDox('Test that `GET /v1/recruit/public/jobs?applicationSlug={applicationSlug}` filters by experienceLevel.')]
     public function testThatPublicJobListFiltersByExperienceLevel(): void
     {
         [$applicationSlug, $referenceJob] = $this->getFixtureContext();
@@ -44,7 +44,7 @@ class PublicJobListControllerTest extends WebTestCase
         }
     }
 
-    #[TestDox('Test that `GET /v1/recruit/applications/{applicationSlug}/public/jobs` filters by yearsExperience range intersection.')]
+    #[TestDox('Test that `GET /v1/recruit/public/jobs?applicationSlug={applicationSlug}` filters by yearsExperience range intersection.')]
     public function testThatPublicJobListFiltersByYearsExperienceIntersection(): void
     {
         [$applicationSlug, $referenceJob] = $this->getFixtureContext();
@@ -75,7 +75,7 @@ class PublicJobListControllerTest extends WebTestCase
         }
     }
 
-    #[TestDox('Test that `GET /v1/recruit/applications/{applicationSlug}/public/jobs` keeps the expected job payload structure.')]
+    #[TestDox('Test that `GET /v1/recruit/public/jobs?applicationSlug={applicationSlug}` keeps the expected job payload structure.')]
     public function testThatPublicJobListKeepsExpectedPayloadStructure(): void
     {
         [$applicationSlug] = $this->getFixtureContext();

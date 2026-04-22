@@ -18,7 +18,7 @@ class JobCreateFromApplicationControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that `POST /v1/recruit/applications/{applicationSlug}/jobs` creates a job for owner without requiring matchScore.')]
+    #[TestDox('Test that `POST /v1/recruit/jobs?applicationSlug={applicationSlug}` creates a job for owner without requiring matchScore.')]
     public function testThatCreateFromApplicationCreatesJobWithoutMatchScore(): void
     {
         $applicationSlug = $this->getApplicationSlugForUsername('john-root');
@@ -48,7 +48,7 @@ class JobCreateFromApplicationControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
-    #[TestDox('Test that `POST /v1/recruit/applications/{applicationSlug}/jobs` returns forbidden if application is not owned by logged user.')]
+    #[TestDox('Test that `POST /v1/recruit/jobs?applicationSlug={applicationSlug}` returns forbidden if application is not owned by logged user.')]
     public function testThatCreateFromApplicationRejectsForeignApplication(): void
     {
         $applicationSlug = $this->getApplicationSlugForUsername('john-root');

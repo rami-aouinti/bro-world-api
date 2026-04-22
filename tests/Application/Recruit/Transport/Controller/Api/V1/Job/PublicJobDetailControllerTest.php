@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class PublicJobDetailControllerTest extends WebTestCase
 {
-    #[TestDox('Test that GET /v1/recruit/applications/{applicationSlug}/public/jobs/{jobSlug} returns job detail and similar jobs list.')]
+    #[TestDox('Test that GET /v1/recruit/public/jobs/{jobSlug}?applicationSlug={applicationSlug} returns job detail and similar jobs list.')]
     public function testThatPublicJobDetailReturnsJobAndSimilarJobsList(): void
     {
         [$applicationSlug, $jobSlug, $jobId, $similarJobSlug, $similarJobId] = $this->getApplicationSlugAndJobDetails();

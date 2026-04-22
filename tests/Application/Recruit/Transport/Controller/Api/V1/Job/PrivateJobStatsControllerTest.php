@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class PrivateJobStatsControllerTest extends WebTestCase
 {
-    #[TestDox('Test that GET /v1/recruit/applications/{applicationSlug}/private/jobs/stats returns aggregate statistics for owner.')]
+    #[TestDox('Test that GET /v1/recruit/private/jobs/stats?applicationSlug={applicationSlug} returns aggregate statistics for owner.')]
     public function testThatPrivateJobStatsReturnsAggregates(): void
     {
         $applicationSlug = $this->getApplicationSlug();
