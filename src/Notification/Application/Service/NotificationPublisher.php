@@ -25,7 +25,17 @@ final readonly class NotificationPublisher
      * @throws JsonException
      * @throws ORMException
      */
-    public function publish(User $from, User $recipient, string $title, string $type, string $description = ''): void
+    /**
+     * @param array<string,mixed> $metadata
+     */
+    public function publish(
+        User $from,
+        User $recipient,
+        string $title,
+        string $type,
+        string $description = '',
+        array $metadata = [],
+    ): void
     {
         if ($from->getId() === $recipient->getId()) {
             return;
@@ -47,7 +57,8 @@ final readonly class NotificationPublisher
             'type' => $notification->getType(),
             'recipientId' => $recipient->getId(),
             'fromId' => $from->getId(),
-            'createdAt' => $notification->getCreatedAt()?->format(DATE_ATOM)
+            'createdAt' => $notification->getCreatedAt()?->format(DATE_ATOM),
+            'metadata' => $metadata,
         ]);
     }
 }
