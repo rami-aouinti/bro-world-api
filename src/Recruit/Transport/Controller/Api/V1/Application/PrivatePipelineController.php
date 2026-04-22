@@ -41,9 +41,9 @@ readonly class PrivatePipelineController
             new OA\Parameter(name: 'tags', in: 'query', required: false, schema: new OA\Schema(type: 'string', description: 'Label du tag job.')),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
+    public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        $recruit = $this->recruitResolverService->resolveByApplicationSlug($applicationSlug);
+        $recruit = $this->recruitResolverService->resolveFromRequest($request);
 
         if ($recruit->getApplication()?->getUser()?->getId() !== $loggedInUser->getId()) {
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You cannot access pipeline for this application.');

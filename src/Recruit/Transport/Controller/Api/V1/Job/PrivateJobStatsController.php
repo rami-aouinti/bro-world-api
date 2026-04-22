@@ -29,9 +29,9 @@ readonly class PrivateJobStatsController
 
     #[Route(path: '/v1/recruit/private/jobs/stats', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, User $loggedInUser): JsonResponse
+    public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        $recruit = $this->recruitResolverService->resolveByApplicationSlug($applicationSlug);
+        $recruit = $this->recruitResolverService->resolveFromRequest($request);
 
         if ($recruit->getApplication()?->getUser()?->getId() !== $loggedInUser->getId()) {
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You cannot access stats for this application.');

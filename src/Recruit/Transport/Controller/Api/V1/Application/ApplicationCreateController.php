@@ -59,9 +59,9 @@ readonly class ApplicationCreateController
             new OA\Response(response: 400, description: 'Payload invalide.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
+    public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        $request->attributes->set('applicationSlug', $applicationSlug);
+        $recruit = $this->recruitResolverService->resolveFromRequest($request);
         /** @var array<string, mixed> $payload */
         $payload = $request->toArray();
 
@@ -88,7 +88,6 @@ readonly class ApplicationCreateController
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unknown "jobId".');
         }
 
-        $recruit = $this->recruitResolverService->resolveByApplicationSlug($applicationSlug);
         if ($job->getRecruit()?->getId() !== $recruit->getId()) {
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'The given job does not belong to this application.');
         }
