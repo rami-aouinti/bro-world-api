@@ -19,7 +19,7 @@ final class ApplicationScopedRouteConventionTest extends TestCase
         'blog',
     ];
 
-    public function testApplicationScopedRoutesFollowOfficialConvention(): void
+    public function testV1RoutesFollowModuleScopedConvention(): void
     {
         $violations = [];
 
@@ -36,30 +36,40 @@ final class ApplicationScopedRouteConventionTest extends TestCase
                     continue;
                 }
 
-                $content = (string)\file_get_contents($file->getPathname());
+                $content = (string) \file_get_contents($file->getPathname());
                 if (!\preg_match_all("/Route\\((?:[^'\\n]*?)'([^']+)'/", $content, $matches)) {
                     continue;
                 }
 
                 foreach ($matches[1] as $path) {
-                    if (!\str_contains($path, '{applicationSlug}')) {
+                    if (!\str_starts_with($path, '/v1/')) {
                         continue;
                     }
 
-                    $expectedPrefix = '/v1/' . $module . '/applications/{applicationSlug}';
-                    if (!\str_starts_with($path, $expectedPrefix)) {
-                        $violations[] = $file->getPathname() . ' -> ' . $path;
+                    $expectedModulePrefix = '/v1/' . $module . '/';
 
-                        continue;
+                    if (!\str_starts_with($path, $expectedModulePrefix)) {
+                        $violations[] = $file->getPathname() . ' -> ' . $path . ' (expected prefix: ' . $expectedModulePrefix . '...)';
                     }
 
-                    if (\str_contains($path, '/private/applications/{applicationSlug}')) {
-                        $violations[] = $file->getPathname() . ' -> ' . $path;
+                    if (\str_contains($path, '/applications/{applicationSlug}')) {
+                        $violations[] = $file->getPathname() . ' -> ' . $path . ' (forbidden segment: /applications/{applicationSlug})';
+                    }
+
+                    if (\str_starts_with($path, '/v1/private/')) {
+                        $violations[] = $file->getPathname() . ' -> ' . $path . ' (legacy private prefix: use /v1/' . $module . '/private/...)';
                     }
                 }
             }
         }
 
-        self::assertSame([], $violations, "Routes hors convention:\n" . \implode("\n", $violations));
+        self::assertSame(
+            [],
+            $violations,
+            "Routes V1 hors convention module-scoped. "
+            . "Utiliser /v1/{module}/... sans /applications/{applicationSlug}; "
+            . "passer le slug applicatif via query/header/body avec fallback sur 'general'.\n"
+            . \implode("\n", $violations),
+        );
     }
 }
