@@ -24,8 +24,6 @@ final readonly class NotificationPublisher
      * @throws OptimisticLockException
      * @throws JsonException
      * @throws ORMException
-     */
-    /**
      * @param array<string,mixed> $metadata
      */
     public function publish(
@@ -57,6 +55,11 @@ final readonly class NotificationPublisher
             'type' => $notification->getType(),
             'recipientId' => $recipient->getId(),
             'fromId' => $from->getId(),
+            'fromPhoto' => $from->getPhoto(),
+            'from' => [
+                'id' => $from->getId(),
+                'photo' => $from->getPhoto(),
+            ],
             'createdAt' => $notification->getCreatedAt()?->format(DATE_ATOM),
             'metadata' => $metadata,
         ]);

@@ -51,8 +51,12 @@ final class NotificationPublisherTest extends TestCase
             ->method('publish')
             ->with(
                 self::stringContains('/notifications'),
-                self::callback(static function (array $payload): bool {
-                    return ($payload['metadata']['event'] ?? null) === 'blog_comment_created';
+                self::callback(static function (array $payload) use ($from): bool {
+                    return ($payload['metadata']['event'] ?? null) === 'blog_comment_created'
+                        && ($payload['fromId'] ?? null) === $from->getId()
+                        && ($payload['fromPhoto'] ?? '') !== ''
+                        && ($payload['from']['id'] ?? null) === $from->getId()
+                        && ($payload['from']['photo'] ?? '') !== '';
                 }),
             );
 
@@ -65,7 +69,6 @@ final class NotificationPublisherTest extends TestCase
             '',
             ['event' => 'blog_comment_created'],
         );
-
     }
 
     private function createUser(string $firstName, string $lastName): User
