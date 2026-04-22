@@ -363,6 +363,144 @@ readonly class CrmGithubService
         ];
     }
 
+    public function listCommits(Project $project, string $repoFullName, int $page = 1, int $perPage = 30, ?string $branch = null): array
+    {
+        $query = [
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+        if (is_string($branch) && trim($branch) !== '') {
+            $query['sha'] = trim($branch);
+        }
+
+        $response = $this->requestWithMeta($project, 'GET', sprintf('/repos/%s/commits', $repoFullName), [
+            'query' => $query,
+        ]);
+
+        $items = array_values(array_map(static fn (array $commit): array => [
+            'sha' => (string)($commit['sha'] ?? ''),
+            'message' => (string)($commit['commit']['message'] ?? ''),
+            'author' => (string)($commit['author']['login'] ?? $commit['commit']['author']['name'] ?? ''),
+            'date' => (string)($commit['commit']['author']['date'] ?? ''),
+            'htmlUrl' => (string)($commit['html_url'] ?? ''),
+        ], $response['data']));
+
+        return [
+            'items' => $items,
+            'pagination' => $this->buildPagination($response['meta']['link'], $page, $perPage, count($items)),
+        ];
+    }
+
+    public function getCommit(Project $project, string $repoFullName, string $sha): array
+    {
+        $commit = $this->request($project, 'GET', sprintf('/repos/%s/commits/%s', $repoFullName, trim($sha)));
+
+        return [
+            'sha' => (string)($commit['sha'] ?? ''),
+            'message' => (string)($commit['commit']['message'] ?? ''),
+            'author' => (string)($commit['author']['login'] ?? $commit['commit']['author']['name'] ?? ''),
+            'date' => (string)($commit['commit']['author']['date'] ?? ''),
+            'htmlUrl' => (string)($commit['html_url'] ?? ''),
+            'files' => array_values(array_map(static fn (array $file): array => [
+                'filename' => (string)($file['filename'] ?? ''),
+                'status' => (string)($file['status'] ?? ''),
+                'additions' => (int)($file['additions'] ?? 0),
+                'deletions' => (int)($file['deletions'] ?? 0),
+                'changes' => (int)($file['changes'] ?? 0),
+            ], is_array($commit['files'] ?? null) ? $commit['files'] : [])),
+        ];
+    }
+
+    public function listCollaborators(Project $project, string $repoFullName, int $page = 1, int $perPage = 30): array
+    {
+        $response = $this->requestWithMeta($project, 'GET', sprintf('/repos/%s/collaborators', $repoFullName), [
+            'query' => [
+                'page' => $page,
+                'per_page' => $perPage,
+            ],
+        ]);
+
+        $items = array_values(array_map(static fn (array $collaborator): array => [
+            'login' => (string)($collaborator['login'] ?? ''),
+            'type' => (string)($collaborator['type'] ?? ''),
+            'htmlUrl' => (string)($collaborator['html_url'] ?? ''),
+            'permissions' => is_array($collaborator['permissions'] ?? null) ? $collaborator['permissions'] : [],
+        ], $response['data']));
+
+        return [
+            'items' => $items,
+            'pagination' => $this->buildPagination($response['meta']['link'], $page, $perPage, count($items)),
+        ];
+    }
+
+    public function listWorkflows(Project $project, string $repoFullName, int $page = 1, int $perPage = 30): array
+    {
+        $response = $this->request($project, 'GET', sprintf('/repos/%s/actions/workflows', $repoFullName), [
+            'query' => [
+                'page' => $page,
+                'per_page' => $perPage,
+            ],
+        ]);
+        $workflows = is_array($response['workflows'] ?? null) ? $response['workflows'] : [];
+
+        return [
+            'items' => array_values(array_map(static fn (array $workflow): array => [
+                'id' => (int)($workflow['id'] ?? 0),
+                'name' => (string)($workflow['name'] ?? ''),
+                'state' => (string)($workflow['state'] ?? ''),
+                'path' => (string)($workflow['path'] ?? ''),
+                'htmlUrl' => (string)($workflow['html_url'] ?? ''),
+                'createdAt' => (string)($workflow['created_at'] ?? ''),
+                'updatedAt' => (string)($workflow['updated_at'] ?? ''),
+            ], $workflows)),
+            'pagination' => [
+                'page' => $page,
+                'limit' => $perPage,
+                'totalItems' => (int)($response['total_count'] ?? count($workflows)),
+                'totalPages' => (int)max(1, (int)ceil(((int)($response['total_count'] ?? count($workflows))) / $perPage)),
+            ],
+        ];
+    }
+
+    public function listWorkflowRuns(Project $project, string $repoFullName, ?int $workflowId = null, int $page = 1, int $perPage = 30, ?string $status = null): array
+    {
+        $path = is_int($workflowId)
+            ? sprintf('/repos/%s/actions/workflows/%d/runs', $repoFullName, $workflowId)
+            : sprintf('/repos/%s/actions/runs', $repoFullName);
+        $query = [
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+        if (is_string($status) && trim($status) !== '') {
+            $query['status'] = trim($status);
+        }
+
+        $response = $this->request($project, 'GET', $path, [
+            'query' => $query,
+        ]);
+
+        $runs = is_array($response['workflow_runs'] ?? null) ? $response['workflow_runs'] : [];
+
+        return [
+            'items' => array_values(array_map(static fn (array $run): array => [
+                'id' => (int)($run['id'] ?? 0),
+                'name' => (string)($run['name'] ?? ''),
+                'status' => (string)($run['status'] ?? ''),
+                'conclusion' => isset($run['conclusion']) ? (string)$run['conclusion'] : null,
+                'event' => (string)($run['event'] ?? ''),
+                'htmlUrl' => (string)($run['html_url'] ?? ''),
+                'createdAt' => (string)($run['created_at'] ?? ''),
+                'updatedAt' => (string)($run['updated_at'] ?? ''),
+            ], $runs)),
+            'pagination' => [
+                'page' => $page,
+                'limit' => $perPage,
+                'totalItems' => (int)($response['total_count'] ?? count($runs)),
+                'totalPages' => (int)max(1, (int)ceil(((int)($response['total_count'] ?? count($runs))) / $perPage)),
+            ],
+        ];
+    }
+
     public function getIssue(Project $project, string $repoFullName, int $number): array
     {
         $issue = $this->request($project, 'GET', sprintf('/repos/%s/issues/%d', $repoFullName, $number));

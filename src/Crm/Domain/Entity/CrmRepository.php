@@ -54,10 +54,46 @@ class CrmRepository implements EntityInterface
     #[ORM\Column(name: 'default_branch', type: Types::STRING, length: 255, nullable: true)]
     private ?string $defaultBranch = null;
 
+    #[ORM\Column(name: 'visibility', type: Types::STRING, length: 20, nullable: true)]
+    private ?string $visibility = null;
+
     #[ORM\Column(name: 'is_private', type: Types::BOOLEAN, options: [
         'default' => false,
     ])]
     private bool $isPrivate = false;
+
+    #[ORM\Column(name: 'primary_language', type: Types::STRING, length: 120, nullable: true)]
+    private ?string $primaryLanguage = null;
+
+    #[ORM\Column(name: 'stars_count', type: Types::INTEGER, options: [
+        'default' => 0,
+    ])]
+    private int $starsCount = 0;
+
+    #[ORM\Column(name: 'forks_count', type: Types::INTEGER, options: [
+        'default' => 0,
+    ])]
+    private int $forksCount = 0;
+
+    #[ORM\Column(name: 'watchers_count', type: Types::INTEGER, options: [
+        'default' => 0,
+    ])]
+    private int $watchersCount = 0;
+
+    #[ORM\Column(name: 'open_issues_count', type: Types::INTEGER, options: [
+        'default' => 0,
+    ])]
+    private int $openIssuesCount = 0;
+
+    #[ORM\Column(name: 'is_archived', type: Types::BOOLEAN, options: [
+        'default' => false,
+    ])]
+    private bool $isArchived = false;
+
+    #[ORM\Column(name: 'is_disabled', type: Types::BOOLEAN, options: [
+        'default' => false,
+    ])]
+    private bool $isDisabled = false;
 
     #[ORM\Column(name: 'html_url', type: Types::STRING, length: 1024, nullable: true)]
     private ?string $htmlUrl = null;
@@ -67,6 +103,9 @@ class CrmRepository implements EntityInterface
 
     #[ORM\Column(name: 'last_synced_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $lastSyncedAt = null;
+
+    #[ORM\Column(name: 'last_pushed_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?DateTimeImmutable $lastPushedAt = null;
 
     #[ORM\Column(name: 'sync_status', type: Types::STRING, length: 40, options: [
         'default' => 'pending',
@@ -165,6 +204,18 @@ class CrmRepository implements EntityInterface
         return $this;
     }
 
+    public function getVisibility(): ?string
+    {
+        return $this->visibility;
+    }
+
+    public function setVisibility(?string $visibility): self
+    {
+        $this->visibility = $visibility;
+
+        return $this;
+    }
+
     public function isPrivate(): bool
     {
         return $this->isPrivate;
@@ -173,6 +224,90 @@ class CrmRepository implements EntityInterface
     public function setIsPrivate(bool $isPrivate): self
     {
         $this->isPrivate = $isPrivate;
+
+        return $this;
+    }
+
+    public function getPrimaryLanguage(): ?string
+    {
+        return $this->primaryLanguage;
+    }
+
+    public function setPrimaryLanguage(?string $primaryLanguage): self
+    {
+        $this->primaryLanguage = $primaryLanguage;
+
+        return $this;
+    }
+
+    public function getStarsCount(): int
+    {
+        return $this->starsCount;
+    }
+
+    public function setStarsCount(int $starsCount): self
+    {
+        $this->starsCount = $starsCount;
+
+        return $this;
+    }
+
+    public function getForksCount(): int
+    {
+        return $this->forksCount;
+    }
+
+    public function setForksCount(int $forksCount): self
+    {
+        $this->forksCount = $forksCount;
+
+        return $this;
+    }
+
+    public function getWatchersCount(): int
+    {
+        return $this->watchersCount;
+    }
+
+    public function setWatchersCount(int $watchersCount): self
+    {
+        $this->watchersCount = $watchersCount;
+
+        return $this;
+    }
+
+    public function getOpenIssuesCount(): int
+    {
+        return $this->openIssuesCount;
+    }
+
+    public function setOpenIssuesCount(int $openIssuesCount): self
+    {
+        $this->openIssuesCount = $openIssuesCount;
+
+        return $this;
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->isArchived;
+    }
+
+    public function setIsArchived(bool $isArchived): self
+    {
+        $this->isArchived = $isArchived;
+
+        return $this;
+    }
+
+    public function isDisabled(): bool
+    {
+        return $this->isDisabled;
+    }
+
+    public function setIsDisabled(bool $isDisabled): self
+    {
+        $this->isDisabled = $isDisabled;
 
         return $this;
     }
@@ -209,6 +344,18 @@ class CrmRepository implements EntityInterface
     public function setLastSyncedAt(?DateTimeImmutable $lastSyncedAt): self
     {
         $this->lastSyncedAt = $lastSyncedAt;
+
+        return $this;
+    }
+
+    public function getLastPushedAt(): ?DateTimeImmutable
+    {
+        return $this->lastPushedAt;
+    }
+
+    public function setLastPushedAt(?DateTimeImmutable $lastPushedAt): self
+    {
+        $this->lastPushedAt = $lastPushedAt;
 
         return $this;
     }
