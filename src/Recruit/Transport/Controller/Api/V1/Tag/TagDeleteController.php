@@ -38,7 +38,7 @@ class TagDeleteController extends Controller
     )]
     #[IsGranted('ROLE_ROOT')]
     #[OA\Delete(summary: 'Delete tag', responses: [new OA\Response(response: 200, description: 'deleted')])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, Request $request, string $id): Response
     {
         $request->attributes->set('applicationSlug', $applicationSlug);

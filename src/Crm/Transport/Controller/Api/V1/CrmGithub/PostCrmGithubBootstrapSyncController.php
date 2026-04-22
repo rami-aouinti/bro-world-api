@@ -39,7 +39,7 @@ final readonly class PostCrmGithubBootstrapSyncController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/github/sync/bootstrap', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
         description: 'Synchronise les repositories et issues GitHub vers CRM selon issueTarget.'
             . "\n\nRègles de mapping:"

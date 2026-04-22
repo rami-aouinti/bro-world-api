@@ -33,7 +33,7 @@ final readonly class PatchBillingController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/billings/{billing}', methods: [Request::METHOD_PATCH])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'billing', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Patch(
         description: 'Exécute l action metier Patch Billing dans le perimetre de l application CRM.',

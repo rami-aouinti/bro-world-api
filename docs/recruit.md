@@ -9,7 +9,7 @@ Ce document centralise **toutes les routes HTTP exposées par le module `Recruit
 
 ## Authentification
 - Endpoints publics: 
-  - `GET /v1/recruit/public/{applicationSlug}/jobs`
+  - `GET /v1/recruit/public/jobs`
 - Endpoints privés: tous les autres endpoints de ce document (JWT requis).
 
 Exemple d'en-tête JWT:
@@ -143,10 +143,10 @@ Attributs métier du body:
 ## 2) Endpoints Recruit spécifiques (implémentations dédiées)
 
 ### 2.1 Liste publique des jobs
-`GET /v1/recruit/public/{applicationSlug}/jobs`
+`GET /v1/recruit/public/jobs`
 
-Path params:
-- `applicationSlug` (string)
+Query params:
+- `applicationSlug` (string, requis)
 
 Query params disponibles:
 - `page` (int, défaut `1`)
@@ -169,12 +169,12 @@ Query params disponibles:
 
 Exemple:
 ```bash
-curl -X GET "http://localhost/api/v1/recruit/public/my-app/jobs?company=Acme&workMode=Remote&page=1&limit=10" \
+curl -X GET "http://localhost/api/v1/recruit/public/jobs?applicationSlug=my-app&company=Acme&workMode=Remote&page=1&limit=10" \
   -H "Accept: application/json"
 ```
 
 ### 2.2 Détail public d'un job (+ jobs similaires)
-`GET /v1/recruit/public/{applicationSlug}/jobs/{jobSlug}`
+`GET /v1/recruit/public/jobs/{jobSlug}`
 
 Retourne:
 - `job`: détail d'une offre
@@ -182,18 +182,18 @@ Retourne:
 
 Exemple:
 ```bash
-curl -X GET "http://localhost/api/v1/recruit/public/my-app/jobs/backend-engineer-m-w-d-symfony-api-platform" \
+curl -X GET "http://localhost/api/v1/recruit/public/jobs/backend-engineer-m-w-d-symfony-api-platform?applicationSlug=my-app" \
   -H "Accept: application/json"
 ```
 
 ### 2.2 Liste privée des jobs d'une application
-`GET /v1/recruit/private/{applicationSlug}/jobs`
+`GET /v1/recruit/private/jobs`
 
 Même format que la liste publique, mais authentifiée.
 
 Exemple:
 ```bash
-curl -X GET "http://localhost/api/v1/recruit/private/my-app/jobs?q=php" \
+curl -X GET "http://localhost/api/v1/recruit/private/jobs?applicationSlug=my-app&q=php" \
   -H "Accept: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>"
 ```
@@ -213,10 +213,10 @@ curl -X GET "http://localhost/api/v1/recruit/private/me/jobs" \
 ```
 
 ### 2.4 Créer un job via `applicationSlug`
-`POST /v1/recruit/applications/{applicationSlug}/jobs`
+`POST /v1/recruit/jobs`
 
-Path params:
-- `applicationSlug` (string)
+Query params:
+- `applicationSlug` (string, requis)
 
 Body requis:
 - `title` (string non vide)
@@ -240,7 +240,7 @@ Body optionnel:
 
 Exemple:
 ```bash
-curl -X POST "http://localhost/api/v1/recruit/applications/my-app/jobs" \
+curl -X POST "http://localhost/api/v1/recruit/jobs?applicationSlug=my-app" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
@@ -390,7 +390,7 @@ curl -X PATCH "http://localhost/api/v1/recruit/private/applications/<application
 ```
 
 ### 2.5 Statistiques privées des offres
-`GET /v1/recruit/private/{applicationSlug}/jobs/stats`
+`GET /v1/recruit/private/jobs/stats`
 
 Retourne:
 - `total`
@@ -555,3 +555,10 @@ Permissions fonctionnelles:
   - les données personnelles non nécessaires (`email`, `coverLetter`).
 
 > `ROLE_ADMIN` et `ROLE_ROOT` gardent un accès complet (override) via le voter Recruit.
+
+
+## Migration client (ancienne URL -> nouvelle URL)
+
+- `GET /v1/recruit/public/{applicationSlug}/jobs` -> `GET /v1/recruit/public/jobs?applicationSlug={applicationSlug}`
+- `GET /v1/recruit/private/{applicationSlug}/jobs` -> `GET /v1/recruit/private/jobs?applicationSlug={applicationSlug}`
+- `POST /v1/recruit/applications/{applicationSlug}/jobs` -> `POST /v1/recruit/jobs?applicationSlug={applicationSlug}`

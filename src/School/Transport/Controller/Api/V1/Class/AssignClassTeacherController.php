@@ -26,7 +26,7 @@ final readonly class AssignClassTeacherController
     ) {
     }
     #[Route('/v1/school/classes/{id}/teachers/{teacherId}', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $id, string $teacherId, ?User $loggedInUser): JsonResponse
     {
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);

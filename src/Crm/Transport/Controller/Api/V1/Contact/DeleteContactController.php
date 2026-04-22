@@ -32,7 +32,7 @@ final readonly class DeleteContactController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/contacts/{id}', methods: [Request::METHOD_DELETE])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(
         description: 'Exécute l action metier Delete Contact dans le perimetre de l application CRM.',

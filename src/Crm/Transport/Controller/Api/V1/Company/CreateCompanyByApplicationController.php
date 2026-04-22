@@ -34,7 +34,7 @@ final readonly class CreateCompanyByApplicationController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/companies', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Post(
         description: 'Exécute l action metier Create Company By Application dans le perimetre de l application CRM.',
         summary: 'Create Company By Application',

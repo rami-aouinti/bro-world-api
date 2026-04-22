@@ -38,7 +38,7 @@ final readonly class UploadTaskRequestFilesController
      * @throws RandomException
      */
     #[Route('/v1/crm/task-requests/{taskRequest}/files', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'taskRequest', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Post(
         summary: 'Upload Task Request Files',

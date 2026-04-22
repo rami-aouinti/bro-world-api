@@ -46,7 +46,7 @@ final readonly class PatchCartItemController
      * @throws JsonException
      */
     #[Route('/v1/shop/carts/{shopId}/items/{itemId}', methods: [Request::METHOD_PATCH])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, string $shopId, string $itemId, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);

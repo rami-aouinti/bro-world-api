@@ -49,7 +49,7 @@ class JobPatchController extends Controller
     #[IsGranted('ROLE_ROOT')]
     #[OA\Patch(summary: 'Patch job', responses: [new OA\Response(response: 200, description: 'success')])]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object'))]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     public function __invoke(string $applicationSlug, Request $request, string $id): Response
     {
         $request->attributes->set('applicationSlug', $applicationSlug);

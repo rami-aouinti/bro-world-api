@@ -25,7 +25,7 @@ readonly class PublicJobDetailController
         summary: 'Détail public d\'un job avec jobs similaires indexés.',
         security: [],
         parameters: [
-            new OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'jobSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
         ],
     )]

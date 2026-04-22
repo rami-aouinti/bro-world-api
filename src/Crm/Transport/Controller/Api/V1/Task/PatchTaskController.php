@@ -41,7 +41,7 @@ final readonly class PatchTaskController
      * @throws ORMException
      */
     #[Route('/v1/crm/tasks/{task}', methods: [Request::METHOD_PATCH])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Patch(
         description: 'Exécute l action metier Patch Task dans le perimetre de l application CRM.',

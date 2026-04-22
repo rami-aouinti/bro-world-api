@@ -34,7 +34,7 @@ final readonly class PutBillingController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/billings/{billing}', methods: [Request::METHOD_PUT])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'billing', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Put(
         description: 'Exécute l action metier Put Billing dans le perimetre de l application CRM.',
