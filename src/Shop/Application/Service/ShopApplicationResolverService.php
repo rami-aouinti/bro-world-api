@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shop\Application\Service;
 
+use App\General\Application\Service\ApplicationScopeResolver;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Enum\PlatformKey;
 use App\Shop\Domain\Entity\Shop;
@@ -38,7 +39,7 @@ final readonly class ShopApplicationResolverService
 
         $application = $this->shopRepository->findApplicationBySlug($applicationSlug);
         if (!$application instanceof Application) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Unknown "applicationSlug".');
+            throw ApplicationScopeResolver::createInvalidApplicationSlugException();
         }
 
         $this->assertApplicationAccess($application, PlatformKey::SHOP);
@@ -65,7 +66,7 @@ final readonly class ShopApplicationResolverService
     public function assertApplicationAccess(?Application $application, PlatformKey $platformKey): void
     {
         if (!$application instanceof Application || $application->getPlatform()?->getPlatformKey() !== $platformKey) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Invalid "applicationSlug" for the requested platform.');
+            throw ApplicationScopeResolver::createInvalidApplicationSlugException();
         }
 
         $user = $this->security->getUser();

@@ -21,7 +21,7 @@ readonly class RecruitResolverService
 
     public function resolveFromRequest(Request $request): Recruit
     {
-        return $this->resolveByApplicationSlug($this->applicationScopeResolver->resolveApplicationSlug($request));
+        return $this->resolveByApplicationSlug($this->applicationScopeResolver->resolveFromRequest($request));
     }
 
     public function resolveByApplicationSlug(string $applicationSlug): Recruit

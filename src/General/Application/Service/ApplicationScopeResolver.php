@@ -20,7 +20,12 @@ final readonly class ApplicationScopeResolver
     ) {
     }
 
-    public function resolveApplicationSlug(Request $request): string
+    public static function createInvalidApplicationSlugException(): HttpException
+    {
+        return new HttpException(JsonResponse::HTTP_NOT_FOUND, self::UNKNOWN_APPLICATION_SLUG_MESSAGE);
+    }
+
+    public function resolveFromRequest(Request $request): string
     {
         $resolvedSlug = $this->extractApplicationSlug($request);
         $application = $this->entityManager->getRepository(Application::class)->findOneBy([
@@ -28,7 +33,7 @@ final readonly class ApplicationScopeResolver
         ]);
 
         if (!$application instanceof Application) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, self::UNKNOWN_APPLICATION_SLUG_MESSAGE);
+            throw self::createInvalidApplicationSlugException();
         }
 
         $request->attributes->set('applicationSlug', $resolvedSlug);
