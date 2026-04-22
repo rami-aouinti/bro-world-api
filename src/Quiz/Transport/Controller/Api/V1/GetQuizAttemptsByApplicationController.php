@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Quiz\Transport\Controller\Api\V1;
 
+use App\General\Application\Service\ApplicationScopeResolver;
 use App\Quiz\Domain\Entity\Quiz;
 use App\Quiz\Infrastructure\Repository\QuizAttemptRepository;
 use App\Quiz\Infrastructure\Repository\QuizRepository;
@@ -23,6 +24,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final readonly class GetQuizAttemptsByApplicationController
 {
     public function __construct(
+        private ApplicationScopeResolver $applicationScopeResolver,
         private QuizRepository $quizRepository,
         private QuizAttemptRepository $attemptRepository,
     ) {
@@ -30,8 +32,9 @@ final readonly class GetQuizAttemptsByApplicationController
 
     #[Route('/v1/quiz/attempts', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'List current user quiz attempts by application', tags: ['Quiz'])]
-    public function __invoke(string $applicationSlug, User $loggedInUser): JsonResponse
+    public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
+        $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);
         $quiz = $this->quizRepository->findOneByApplicationSlugWithConfiguration($applicationSlug);
         if (!$quiz instanceof Quiz) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Quiz not found for this application.');

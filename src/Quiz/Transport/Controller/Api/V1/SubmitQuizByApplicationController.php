@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Quiz\Transport\Controller\Api\V1;
 
+use App\General\Application\Service\ApplicationScopeResolver;
 use App\Quiz\Application\Service\QuizSubmissionService;
 use App\User\Domain\Entity\User;
 use Doctrine\ORM\Exception\ORMException;
@@ -24,6 +25,11 @@ final class SubmitQuizByApplicationController
 {
     private const string GENERAL_APPLICATION_SLUG = 'general';
 
+    public function __construct(
+        private readonly ApplicationScopeResolver $applicationScopeResolver,
+    ) {
+    }
+
     /**
      * @throws JsonException
      * @throws ORMException
@@ -31,8 +37,9 @@ final class SubmitQuizByApplicationController
      */
     #[Route('/v1/quiz/submit', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'Submit quiz answers for an application', tags: ['Quiz'])]
-    public function __invoke(string $applicationSlug, Request $request, QuizSubmissionService $quizSubmissionService, User $loggedInUser): JsonResponse
+    public function __invoke(Request $request, QuizSubmissionService $quizSubmissionService, User $loggedInUser): JsonResponse
     {
+        $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);
         $payload = (array)json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         return new JsonResponse($quizSubmissionService->submitByApplicationSlug($applicationSlug, $payload, $loggedInUser));

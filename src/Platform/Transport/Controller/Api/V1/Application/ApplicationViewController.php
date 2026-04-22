@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Platform\Transport\Controller\Api\V1\Application;
 
 use App\Configuration\Domain\Entity\Configuration;
+use App\General\Application\Service\ApplicationScopeResolver;
 use App\Platform\Domain\Entity\Application;
 use App\Platform\Domain\Entity\ApplicationPlugin;
 use App\Platform\Infrastructure\Repository\ApplicationRepository;
@@ -21,12 +22,14 @@ readonly class ApplicationViewController
 {
     public function __construct(
         private ApplicationRepository $applicationRepository,
+        private ApplicationScopeResolver $applicationScopeResolver,
     ) {
     }
 
     #[Route(path: '/v1/application/private/view', methods: [Request::METHOD_GET])]
-    public function __invoke(string $applicationSlug, ?User $loggedInUser = null): JsonResponse
+    public function __invoke(Request $request, ?User $loggedInUser = null): JsonResponse
     {
+        $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);
         $application = $this->applicationRepository->findOneBy([
             'slug' => $applicationSlug,
         ]);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Blog\Transport\Controller\Api\V1\Read;
 
 use App\Blog\Application\Service\BlogReadService;
+use App\General\Application\Service\ApplicationScopeResolver;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -20,12 +21,14 @@ final readonly class GetApplicationBlogController
     public function __construct(
         private BlogReadService $blogReadService,
         private Security $security,
+        private ApplicationScopeResolver $applicationScopeResolver,
     ) {
     }
 
     #[Route('/v1/blog/feed', methods: [Request::METHOD_GET])]
-    public function __invoke(string $applicationSlug): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
+        $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);
         $user = $this->security->getUser();
 
         return new JsonResponse($this->blogReadService->getByApplicationSlug($applicationSlug, $user instanceof User ? $user : null));
