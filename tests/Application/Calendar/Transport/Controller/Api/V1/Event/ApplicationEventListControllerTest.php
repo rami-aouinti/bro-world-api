@@ -11,12 +11,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class ApplicationEventListControllerTest extends WebTestCase
 {
-    #[TestDox('GET /api/v1/calendar/applications/{applicationSlug}/events does not expose private events.')]
+    #[TestDox('GET /api/v1/calendar/events?applicationSlug={applicationSlug} does not expose private events.')]
     public function testPublicApplicationEventListDoesNotExposePrivateEvents(): void
     {
         $client = $this->getTestClient();
 
-        $client->request('GET', self::API_URL_PREFIX . '/v1/calendar/applications/crm-support-desk/events');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/calendar/events?applicationSlug=crm-support-desk');
         $response = $client->getResponse();
         $content = $response->getContent();
 
@@ -32,12 +32,12 @@ final class ApplicationEventListControllerTest extends WebTestCase
         self::assertSame(0, $responseData['pagination']['totalItems']);
     }
 
-    #[TestDox('GET /api/v1/calendar/applications/{applicationSlug}/events/me keeps owner/user access logic.')]
+    #[TestDox('GET /api/v1/calendar/events/me?applicationSlug={applicationSlug} keeps owner/user access logic.')]
     public function testPrivateApplicationEventListStillReturnsOwnerEvents(): void
     {
         $client = $this->getTestClient('john-root', 'password-root');
 
-        $client->request('GET', self::API_URL_PREFIX . '/v1/calendar/applications/crm-support-desk/events/me');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/calendar/events/me?applicationSlug=crm-support-desk');
         $response = $client->getResponse();
         $content = $response->getContent();
 
@@ -100,7 +100,7 @@ final class ApplicationEventListControllerTest extends WebTestCase
         );
         self::assertContains('John Root standalone private event #1', $privateTitles);
 
-        $client->request('GET', self::API_URL_PREFIX . '/v1/calendar/applications/crm-support-desk/events/me?limit=50');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/calendar/events/me?applicationSlug=crm-support-desk&limit=50');
         $applicationPrivateResponse = $client->getResponse();
         $applicationPrivateContent = $applicationPrivateResponse->getContent();
 

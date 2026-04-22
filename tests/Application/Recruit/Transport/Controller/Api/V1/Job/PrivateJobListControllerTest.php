@@ -31,7 +31,7 @@ use function trim;
 
 class PrivateJobListControllerTest extends WebTestCase
 {
-    #[TestDox('Test that `GET /v1/recruit/applications/{applicationSlug}/private/jobs` requires authentication.')]
+    #[TestDox('Test that `GET /v1/recruit/private/jobs?applicationSlug={applicationSlug}` requires authentication.')]
     public function testThatPrivateJobListRequiresAuthentication(): void
     {
         [$applicationSlug] = $this->getFixtureContext();
@@ -42,7 +42,7 @@ class PrivateJobListControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_UNAUTHORIZED, $client->getResponse()->getStatusCode());
     }
 
-    #[TestDox('Test that `GET /v1/recruit/applications/{applicationSlug}/private/jobs` returns computed matchScore from user resume skills.')]
+    #[TestDox('Test that `GET /v1/recruit/private/jobs?applicationSlug={applicationSlug}` returns computed matchScore from user resume skills.')]
     public function testThatPrivateJobListReturnsComputedMatchScoreFromResumeSkills(): void
     {
         [$applicationSlug, $jobId, $expectedMatchScore] = $this->getFixtureContext();
@@ -74,7 +74,7 @@ class PrivateJobListControllerTest extends WebTestCase
         self::assertSame($expectedMatchScore, $jobPayload['matchScore']);
     }
 
-    #[TestDox('Test that `GET /v1/recruit/applications/{applicationSlug}/private/jobs` keeps the expected payload structure.')]
+    #[TestDox('Test that `GET /v1/recruit/private/jobs?applicationSlug={applicationSlug}` keeps the expected payload structure.')]
     public function testThatPrivateJobListKeepsExpectedPayloadStructure(): void
     {
         [$applicationSlug] = $this->getFixtureContext();
