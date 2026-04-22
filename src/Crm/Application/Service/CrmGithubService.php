@@ -330,6 +330,68 @@ readonly class CrmGithubService
         ];
     }
 
+    public function createPullRequest(Project $project, string $repoFullName, string $title, string $head, string $base, ?string $body = null, bool $draft = false): array
+    {
+        $payload = [
+            'title' => trim($title),
+            'head' => trim($head),
+            'base' => trim($base),
+            'draft' => $draft,
+        ];
+        if (is_string($body) && trim($body) !== '') {
+            $payload['body'] = trim($body);
+        }
+
+        return $this->request($project, 'POST', sprintf('/repos/%s/pulls', $repoFullName), [
+            'json' => $payload,
+        ]);
+    }
+
+    public function patchPullRequest(
+        Project $project,
+        string $repoFullName,
+        int $number,
+        ?string $title = null,
+        ?string $body = null,
+        ?string $state = null,
+        ?string $base = null,
+        ?bool $maintainerCanModify = null,
+    ): array {
+        $payload = array_filter([
+            'title' => is_string($title) ? trim($title) : null,
+            'body' => $body,
+            'state' => is_string($state) ? trim($state) : null,
+            'base' => is_string($base) ? trim($base) : null,
+            'maintainer_can_modify' => $maintainerCanModify,
+        ], static fn (mixed $value): bool => $value !== null);
+
+        return $this->request($project, 'PATCH', sprintf('/repos/%s/pulls/%d', $repoFullName, $number), [
+            'json' => $payload,
+        ]);
+    }
+
+    public function listPullRequestCommits(Project $project, string $repoFullName, int $number, int $page = 1, int $perPage = 30): array
+    {
+        $response = $this->requestWithMeta($project, 'GET', sprintf('/repos/%s/pulls/%d/commits', $repoFullName, $number), [
+            'query' => [
+                'page' => $page,
+                'per_page' => $perPage,
+            ],
+        ]);
+
+        $items = array_values(array_map(static fn (array $commit): array => [
+            'sha' => (string)($commit['sha'] ?? ''),
+            'message' => (string)($commit['commit']['message'] ?? ''),
+            'author' => (string)($commit['author']['login'] ?? $commit['commit']['author']['name'] ?? ''),
+            'htmlUrl' => (string)($commit['html_url'] ?? ''),
+        ], $response['data']));
+
+        return [
+            'items' => $items,
+            'pagination' => $this->buildPagination($response['meta']['link'], $page, $perPage, count($items)),
+        ];
+    }
+
     public function listIssues(Project $project, string $repoFullName, string $state = 'open', int $page = 1, int $perPage = 30): array
     {
         $response = $this->requestWithMeta($project, 'GET', sprintf('/repos/%s/issues', $repoFullName), [
@@ -657,6 +719,55 @@ GRAPHQL, [
             'json' => [
                 'state' => strtolower(trim($state)),
             ],
+        ]);
+    }
+
+    public function patchIssue(
+        Project $project,
+        string $repoFullName,
+        int $number,
+        ?string $title = null,
+        ?string $body = null,
+        ?string $state = null,
+        ?string $stateReason = null,
+        ?array $labels = null,
+        ?array $assignees = null,
+        ?int $milestone = null,
+    ): array {
+        $payload = array_filter([
+            'title' => is_string($title) ? trim($title) : null,
+            'body' => $body,
+            'state' => is_string($state) ? trim($state) : null,
+            'state_reason' => is_string($stateReason) ? trim($stateReason) : null,
+            'labels' => $labels,
+            'assignees' => $assignees,
+            'milestone' => $milestone,
+        ], static fn (mixed $value): bool => $value !== null);
+
+        return $this->request($project, 'PATCH', sprintf('/repos/%s/issues/%d', $repoFullName, $number), [
+            'json' => $payload,
+        ]);
+    }
+
+    public function patchRepository(
+        Project $project,
+        string $repoFullName,
+        ?string $name = null,
+        ?string $description = null,
+        ?bool $private = null,
+        ?string $defaultBranch = null,
+        ?bool $archived = null,
+    ): array {
+        $payload = array_filter([
+            'name' => is_string($name) ? trim($name) : null,
+            'description' => $description,
+            'private' => $private,
+            'default_branch' => is_string($defaultBranch) ? trim($defaultBranch) : null,
+            'archived' => $archived,
+        ], static fn (mixed $value): bool => $value !== null);
+
+        return $this->request($project, 'PATCH', sprintf('/repos/%s', trim($repoFullName)), [
+            'json' => $payload,
         ]);
     }
 
