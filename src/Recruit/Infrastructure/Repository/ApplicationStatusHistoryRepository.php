@@ -26,4 +26,47 @@ class ApplicationStatusHistoryRepository extends BaseRepository implements Appli
         protected ManagerRegistry $managerRegistry,
     ) {
     }
+
+    public function findAnalyticsHistoryRowsByApplicationId(array $applicationIds): array
+    {
+        if ($applicationIds === []) {
+            return [];
+        }
+
+        $rows = $this->createQueryBuilder('history')
+            ->select('IDENTITY(history.application) AS applicationId', 'history.toStatus AS toStatus', 'history.createdAt AS createdAt', 'history.comment AS comment')
+            ->andWhere('history.application IN (:applicationIds)')
+            ->setParameter('applicationIds', $applicationIds)
+            ->orderBy('history.createdAt', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+
+        foreach ($rows as $row) {
+            $applicationId = (string)($row['applicationId'] ?? '');
+            if ($applicationId === '') {
+                continue;
+            }
+
+            $toStatus = $row['toStatus'] ?? null;
+            if ($toStatus instanceof \App\Recruit\Domain\Enum\ApplicationStatus) {
+                $toStatus = $toStatus->value;
+            }
+
+            $createdAt = $row['createdAt'] ?? null;
+            if (!$createdAt instanceof \DateTimeImmutable) {
+                continue;
+            }
+
+            $result[$applicationId] ??= [];
+            $result[$applicationId][] = [
+                'toStatus' => (string)$toStatus,
+                'createdAt' => $createdAt,
+                'comment' => isset($row['comment']) ? (string)$row['comment'] : null,
+            ];
+        }
+
+        return $result;
+    }
 }

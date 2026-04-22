@@ -7,6 +7,7 @@ namespace App\Recruit\Application\Service;
 use App\Recruit\Domain\Entity\Application;
 use App\Recruit\Domain\Entity\Recruit;
 use App\Recruit\Domain\Enum\ApplicationStatus;
+use App\Recruit\Infrastructure\Repository\ApplicationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
@@ -69,9 +70,16 @@ readonly class PipelineBoardService
         }
 
         if ($date !== '') {
-            $queryBuilder
-                ->andWhere('DATE(application.createdAt) = :createdOn')
-                ->setParameter('createdOn', $date);
+            $startOfDay = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+            if ($startOfDay !== false) {
+                $startOfNextDay = $startOfDay->modify('+1 day');
+
+                $queryBuilder
+                    ->andWhere('application.createdAt >= :startOfDay')
+                    ->andWhere('application.createdAt < :startOfNextDay')
+                    ->setParameter('startOfDay', $startOfDay)
+                    ->setParameter('startOfNextDay', $startOfNextDay);
+            }
         }
 
         if ($source === 'resume') {
@@ -87,12 +95,9 @@ readonly class PipelineBoardService
                 ->setParameter('tagLabel', $tag);
         }
 
-        $aggregateQueryBuilder = clone $queryBuilder;
-        $aggregateRows = $aggregateQueryBuilder
-            ->select('application.status AS status', 'COUNT(application.id) AS statusCount', 'AVG(TIMESTAMPDIFF(DAY, application.createdAt, CURRENT_TIMESTAMP())) AS avgAgingDays')
-            ->groupBy('application.status')
-            ->getQuery()
-            ->getArrayResult();
+        /** @var ApplicationRepository $applicationRepository */
+        $applicationRepository = $this->entityManager->getRepository(Application::class);
+        $aggregateRows = $applicationRepository->findPipelineStatusMetrics($queryBuilder);
 
         $queryBuilder->setFirstResult($offset)->setMaxResults($limit);
 
@@ -118,6 +123,8 @@ readonly class PipelineBoardService
 
         $columns = array_fill_keys($statusOrder, []);
 
+        $now = new \DateTimeImmutable();
+
         foreach ($paginator as $application) {
             if (!$application instanceof Application) {
                 continue;
@@ -132,7 +139,7 @@ readonly class PipelineBoardService
                 'id' => $application->getId(),
                 'status' => $status,
                 'createdAt' => $application->getCreatedAt()?->format(DATE_ATOM),
-                'agingDays' => max(0, (int)$application->getCreatedAt()?->diff(new \DateTimeImmutable())->days),
+                'agingDays' => max(0, (int)$application->getCreatedAt()?->diff($now)->days),
                 'source' => $applicant->getResume() !== null ? 'resume' : 'manual',
                 'job' => [
                     'id' => $job->getId(),
@@ -148,6 +155,8 @@ readonly class PipelineBoardService
             ];
         }
 
+        $total = count($paginator);
+
         return [
             'columns' => array_values(array_map(static fn (string $status) => [
                 'status' => $status,
@@ -157,8 +166,8 @@ readonly class PipelineBoardService
             'pagination' => [
                 'page' => $page,
                 'limit' => $limit,
-                'total' => count($paginator),
-                'pages' => (int)ceil(max(1, count($paginator)) / $limit),
+                'total' => $total,
+                'pages' => (int)ceil(max(1, $total) / $limit),
             ],
             'filters' => [
                 'jobId' => $jobId,

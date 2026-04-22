@@ -4,19 +4,17 @@ declare(strict_types=1);
 
 namespace App\Recruit\Application\Service;
 
-use App\Recruit\Domain\Entity\Application;
-use App\Recruit\Domain\Entity\ApplicationStatusHistory;
-use App\Recruit\Domain\Entity\Interview;
 use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
 use App\Recruit\Domain\Enum\ApplicationStatus;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Recruit\Domain\Repository\Interfaces\ApplicationRepositoryInterface;
+use App\Recruit\Domain\Repository\Interfaces\ApplicationStatusHistoryRepositoryInterface;
+use App\Recruit\Domain\Repository\Interfaces\InterviewRepositoryInterface;
 
 use function array_key_exists;
 use function array_reduce;
 use function count;
 use function fputcsv;
-use function in_array;
 use function max;
 use function round;
 use function strtolower;
@@ -24,8 +22,16 @@ use function trim;
 
 readonly class RecruitAnalyticsService
 {
+    /**
+     * Notes de perf attendues avec cette implémentation :
+     * - plus d'hydratation d'entités `Application`, `ApplicationStatusHistory` et `Interview` pour les analytics ;
+     * - récupération via snapshots/scalaires (`getArrayResult`) et agrégats SQL (`COUNT`, `MIN`) ;
+     * - allocation mémoire réduite et latence plus stable quand le volume d'applications augmente.
+     */
     public function __construct(
-        private EntityManagerInterface $entityManager,
+        private ApplicationRepositoryInterface $applicationRepository,
+        private ApplicationStatusHistoryRepositoryInterface $applicationStatusHistoryRepository,
+        private InterviewRepositoryInterface $interviewRepository,
     ) {
     }
 
@@ -34,16 +40,20 @@ readonly class RecruitAnalyticsService
      */
     public function getAnalytics(Recruit $recruit, ?\DateTimeImmutable $from = null, ?\DateTimeImmutable $to = null, ?Job $job = null): array
     {
-        $applications = $this->findApplications($recruit, $from, $to, $job);
-        $historiesByApplication = $this->findHistoriesByApplication($applications);
-        $interviewTimes = $this->findFirstInterviewAtByApplication($applications);
+        $applicationSnapshots = $this->findApplications($recruit, $from, $to, $job);
+        $applicationIds = array_values(array_map(
+            static fn (array $row): string => $row['id'],
+            $applicationSnapshots
+        ));
+        $historiesByApplication = $this->findHistoriesByApplication($applicationIds);
+        $interviewTimes = $this->findFirstInterviewAtByApplication($applicationIds);
 
-        $total = count($applications);
-        $byCurrentStatus = $this->buildCurrentStatusCounts($applications);
-        $conversion = $this->buildConversion($applications, $historiesByApplication);
-        $timeToStage = $this->buildTimeToStage($applications, $historiesByApplication, $interviewTimes);
+        $total = count($applicationSnapshots);
+        $byCurrentStatus = $this->buildCurrentStatusCounts($recruit, $from, $to, $job);
+        $conversion = $this->buildConversion($recruit, $from, $to, $job);
+        $timeToStage = $this->buildTimeToStage($applicationSnapshots, $historiesByApplication, $interviewTimes);
         $offerAcceptanceRate = $this->buildOfferAcceptanceRate($conversion);
-        $rejectionCauses = $this->buildRejectionCauses($applications, $historiesByApplication);
+        $rejectionCauses = $this->buildRejectionCauses($applicationSnapshots, $historiesByApplication);
 
         return [
             'filters' => [
@@ -104,111 +114,37 @@ readonly class RecruitAnalyticsService
     }
 
     /**
-     * @return list<Application>
+     * @return list<array{id: string, status: string, createdAt: ?\DateTimeImmutable}>
      */
     private function findApplications(Recruit $recruit, ?\DateTimeImmutable $from, ?\DateTimeImmutable $to, ?Job $job): array
     {
-        $queryBuilder = $this->entityManager->getRepository(Application::class)
-            ->createQueryBuilder('application')
-            ->innerJoin('application.job', 'job')
-            ->andWhere('job.recruit = :recruit')
-            ->setParameter('recruit', $recruit);
-
-        if ($from !== null) {
-            $queryBuilder
-                ->andWhere('application.createdAt >= :from')
-                ->setParameter('from', $from);
-        }
-
-        if ($to !== null) {
-            $queryBuilder
-                ->andWhere('application.createdAt <= :to')
-                ->setParameter('to', $to);
-        }
-
-        if ($job !== null) {
-            $queryBuilder
-                ->andWhere('application.job = :job')
-                ->setParameter('job', $job);
-        }
-
-        /** @var list<Application> $applications */
-        $applications = $queryBuilder->getQuery()->getResult();
-
-        return $applications;
+        return $this->applicationRepository->findAnalyticsApplicationSnapshots($recruit, $from, $to, $job);
     }
 
     /**
-     * @param list<Application> $applications
+     * @param list<string> $applicationIds
      *
-     * @return array<string, list<ApplicationStatusHistory>>
+     * @return array<string, list<array{toStatus: string, createdAt: \DateTimeImmutable, comment: ?string}>>
      */
-    private function findHistoriesByApplication(array $applications): array
+    private function findHistoriesByApplication(array $applicationIds): array
     {
-        if ($applications === []) {
-            return [];
-        }
-
-        /** @var list<ApplicationStatusHistory> $historyRows */
-        $historyRows = $this->entityManager->getRepository(ApplicationStatusHistory::class)
-            ->createQueryBuilder('history')
-            ->innerJoin('history.application', 'application')
-            ->andWhere('history.application IN (:applications)')
-            ->setParameter('applications', $applications)
-            ->orderBy('history.createdAt', 'ASC')
-            ->getQuery()
-            ->getResult();
-
-        $result = [];
-
-        foreach ($historyRows as $row) {
-            $applicationId = $row->getApplication()->getId();
-            $result[$applicationId] ??= [];
-            $result[$applicationId][] = $row;
-        }
-
-        return $result;
+        return $this->applicationStatusHistoryRepository->findAnalyticsHistoryRowsByApplicationId($applicationIds);
     }
 
     /**
-     * @param list<Application> $applications
+     * @param list<string> $applicationIds
      *
      * @return array<string, \DateTimeImmutable>
      */
-    private function findFirstInterviewAtByApplication(array $applications): array
+    private function findFirstInterviewAtByApplication(array $applicationIds): array
     {
-        if ($applications === []) {
-            return [];
-        }
-
-        /** @var list<Interview> $interviews */
-        $interviews = $this->entityManager->getRepository(Interview::class)
-            ->createQueryBuilder('interview')
-            ->innerJoin('interview.application', 'application')
-            ->andWhere('interview.application IN (:applications)')
-            ->setParameter('applications', $applications)
-            ->orderBy('interview.scheduledAt', 'ASC')
-            ->getQuery()
-            ->getResult();
-
-        $result = [];
-
-        foreach ($interviews as $interview) {
-            $applicationId = $interview->getApplication()->getId();
-            if (!array_key_exists($applicationId, $result)) {
-                $result[$applicationId] = $interview->getScheduledAt();
-            }
-        }
-
-        return $result;
+        return $this->interviewRepository->findFirstInterviewAtByApplicationId($applicationIds);
     }
 
     /**
-     * @param list<Application> $applications
-     *
      * @return array<string, int>
      */
-    private function buildCurrentStatusCounts(array $applications): array
+    private function buildCurrentStatusCounts(Recruit $recruit, ?\DateTimeImmutable $from, ?\DateTimeImmutable $to, ?Job $job): array
     {
         $counts = [];
 
@@ -216,20 +152,23 @@ readonly class RecruitAnalyticsService
             $counts[$status->value] = 0;
         }
 
-        foreach ($applications as $application) {
-            $counts[$application->getStatus()->value]++;
+        $statusCounts = $this->applicationRepository->countByCurrentStatusForAnalytics($recruit, $from, $to, $job);
+
+        foreach ($statusCounts as $status => $count) {
+            if (!array_key_exists($status, $counts)) {
+                continue;
+            }
+
+            $counts[$status] = $count;
         }
 
         return $counts;
     }
 
     /**
-     * @param list<Application> $applications
-     * @param array<string, list<ApplicationStatusHistory>> $historiesByApplication
-     *
      * @return array<string, array{count: int, rateFromPrevious: float, rateFromTotal: float}>
      */
-    private function buildConversion(array $applications, array $historiesByApplication): array
+    private function buildConversion(Recruit $recruit, ?\DateTimeImmutable $from, ?\DateTimeImmutable $to, ?Job $job): array
     {
         $steps = [
             'APPLIED',
@@ -239,29 +178,7 @@ readonly class RecruitAnalyticsService
             ApplicationStatus::HIRED->value,
         ];
 
-        $counts = [
-            'APPLIED' => count($applications),
-            ApplicationStatus::SCREENING->value => 0,
-            'INTERVIEW' => 0,
-            ApplicationStatus::OFFER_SENT->value => 0,
-            ApplicationStatus::HIRED->value => 0,
-        ];
-
-        foreach ($applications as $application) {
-            $applicationId = $application->getId();
-            $history = $historiesByApplication[$applicationId] ?? [];
-            $status = $application->getStatus();
-
-            $reachedScreening = $this->applicationReachedStatuses($status, $history, [ApplicationStatus::SCREENING]);
-            $reachedInterview = $this->applicationReachedStatuses($status, $history, [ApplicationStatus::INTERVIEW_PLANNED, ApplicationStatus::INTERVIEW_DONE]);
-            $reachedOffer = $this->applicationReachedStatuses($status, $history, [ApplicationStatus::OFFER_SENT]);
-            $reachedHired = $this->applicationReachedStatuses($status, $history, [ApplicationStatus::HIRED]);
-
-            $counts[ApplicationStatus::SCREENING->value] += $reachedScreening ? 1 : 0;
-            $counts['INTERVIEW'] += $reachedInterview ? 1 : 0;
-            $counts[ApplicationStatus::OFFER_SENT->value] += $reachedOffer ? 1 : 0;
-            $counts[ApplicationStatus::HIRED->value] += $reachedHired ? 1 : 0;
-        }
+        $counts = $this->applicationRepository->countConversionsByStepForAnalytics($recruit, $from, $to, $job);
 
         $result = [];
 
@@ -281,56 +198,8 @@ readonly class RecruitAnalyticsService
     }
 
     /**
-     * @param list<ApplicationStatusHistory> $history
-     * @param list<ApplicationStatus> $statuses
-     */
-    private function applicationReachedStatuses(ApplicationStatus $currentStatus, array $history, array $statuses): bool
-    {
-        if (in_array($currentStatus, $statuses, true)) {
-            return true;
-        }
-
-        if ($currentStatus === ApplicationStatus::INTERVIEW_DONE && in_array(ApplicationStatus::INTERVIEW_PLANNED, $statuses, true)) {
-            return true;
-        }
-
-        if (
-            in_array($currentStatus, [ApplicationStatus::INTERVIEW_DONE, ApplicationStatus::OFFER_SENT, ApplicationStatus::HIRED], true)
-            && in_array(ApplicationStatus::INTERVIEW_DONE, $statuses, true)
-        ) {
-            return true;
-        }
-
-        if (
-            in_array($currentStatus, [ApplicationStatus::INTERVIEW_PLANNED, ApplicationStatus::INTERVIEW_DONE, ApplicationStatus::OFFER_SENT, ApplicationStatus::HIRED], true)
-            && in_array(ApplicationStatus::INTERVIEW_PLANNED, $statuses, true)
-        ) {
-            return true;
-        }
-
-        if (
-            in_array($currentStatus, [ApplicationStatus::OFFER_SENT, ApplicationStatus::HIRED], true)
-            && in_array(ApplicationStatus::OFFER_SENT, $statuses, true)
-        ) {
-            return true;
-        }
-
-        if ($currentStatus === ApplicationStatus::HIRED && in_array(ApplicationStatus::HIRED, $statuses, true)) {
-            return true;
-        }
-
-        foreach ($history as $row) {
-            if (in_array($row->getToStatus(), $statuses, true)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @param list<Application> $applications
-     * @param array<string, list<ApplicationStatusHistory>> $historiesByApplication
+     * @param list<array{id: string, status: string, createdAt: ?\DateTimeImmutable}> $applications
+     * @param array<string, list<array{toStatus: string, createdAt: \DateTimeImmutable, comment: ?string}>> $historiesByApplication
      * @param array<string, \DateTimeImmutable> $interviewTimes
      *
      * @return array<string, array{averageHours: float, sampleSize: int}>
@@ -342,12 +211,12 @@ readonly class RecruitAnalyticsService
         $hireHours = [];
 
         foreach ($applications as $application) {
-            $createdAt = $application->getCreatedAt();
+            $createdAt = $application['createdAt'];
             if ($createdAt === null) {
                 continue;
             }
 
-            $applicationId = $application->getId();
+            $applicationId = $application['id'];
             $history = $historiesByApplication[$applicationId] ?? [];
 
             $firstScreenAt = $this->findFirstStatusAt($history, ApplicationStatus::SCREENING);
@@ -413,8 +282,8 @@ readonly class RecruitAnalyticsService
     }
 
     /**
-     * @param list<Application> $applications
-     * @param array<string, list<ApplicationStatusHistory>> $historiesByApplication
+     * @param list<array{id: string, status: string, createdAt: ?\DateTimeImmutable}> $applications
+     * @param array<string, list<array{toStatus: string, createdAt: \DateTimeImmutable, comment: ?string}>> $historiesByApplication
      *
      * @return list<array{cause: string, count: int}>
      */
@@ -423,19 +292,19 @@ readonly class RecruitAnalyticsService
         $counts = [];
 
         foreach ($applications as $application) {
-            if ($application->getStatus() !== ApplicationStatus::REJECTED) {
+            if ($application['status'] !== ApplicationStatus::REJECTED->value) {
                 continue;
             }
 
-            $history = $historiesByApplication[$application->getId()] ?? [];
+            $history = $historiesByApplication[$application['id']] ?? [];
             $cause = 'Unspecified';
 
             foreach ($history as $row) {
-                if ($row->getToStatus() !== ApplicationStatus::REJECTED) {
+                if ($row['toStatus'] !== ApplicationStatus::REJECTED->value) {
                     continue;
                 }
 
-                $comment = trim((string)$row->getComment());
+                $comment = trim((string)$row['comment']);
                 $cause = $comment !== '' ? $comment : 'Unspecified';
             }
 
@@ -451,16 +320,16 @@ readonly class RecruitAnalyticsService
     }
 
     /**
-     * @param list<ApplicationStatusHistory> $history
+     * @param list<array{toStatus: string, createdAt: \DateTimeImmutable, comment: ?string}> $history
      */
     private function findFirstStatusAt(array $history, ApplicationStatus $status): ?\DateTimeImmutable
     {
         foreach ($history as $row) {
-            if ($row->getToStatus() !== $status) {
+            if ($row['toStatus'] !== $status->value) {
                 continue;
             }
 
-            return $row->getCreatedAt();
+            return $row['createdAt'];
         }
 
         return null;
