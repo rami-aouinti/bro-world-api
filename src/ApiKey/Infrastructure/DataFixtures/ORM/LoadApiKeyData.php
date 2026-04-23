@@ -12,6 +12,7 @@ use App\User\Domain\Entity\UserGroup;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
+use LogicException;
 use Override;
 use Throwable;
 
@@ -45,6 +46,15 @@ final class LoadApiKeyData extends Fixture implements OrderedFixtureInterface
         '-crm_support' => '30000000-0000-1000-8000-000000000014',
         '-crm_marketing' => '30000000-0000-1000-8000-000000000015',
         '-crm_viewer' => '30000000-0000-1000-8000-000000000016',
+        '-shop_viewer' => '30000000-0000-1000-8000-000000000017',
+        '-shop_editor' => '30000000-0000-1000-8000-000000000018',
+        '-shop_manager' => '30000000-0000-1000-8000-000000000019',
+        '-school_viewer' => '30000000-0000-1000-8000-000000000020',
+        '-school_editor' => '30000000-0000-1000-8000-000000000021',
+        '-school_manager' => '30000000-0000-1000-8000-000000000022',
+        '-job_viewer' => '30000000-0000-1000-8000-000000000023',
+        '-job_editor' => '30000000-0000-1000-8000-000000000024',
+        '-job_manager' => '30000000-0000-1000-8000-000000000025',
     ];
 
     public function __construct(
@@ -109,7 +119,7 @@ final class LoadApiKeyData extends Fixture implements OrderedFixtureInterface
 
         PhpUnitUtil::setProperty(
             'id',
-            UuidHelper::fromString(self::$uuids[$suffix]),
+            UuidHelper::fromString($this->resolveUuidBySuffix($suffix)),
             $entity
         );
 
@@ -119,5 +129,20 @@ final class LoadApiKeyData extends Fixture implements OrderedFixtureInterface
         $this->addReference('ApiKey' . $suffix, $entity);
 
         return true;
+    }
+
+    private function resolveUuidBySuffix(string $suffix): string
+    {
+        if (isset(self::$uuids[$suffix])) {
+            return self::$uuids[$suffix];
+        }
+
+        throw new LogicException(
+            sprintf(
+                'Missing API key fixture UUID for suffix "%s". Add it to %s::$uuids.',
+                $suffix,
+                self::class
+            )
+        );
     }
 }
