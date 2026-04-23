@@ -24,9 +24,12 @@ use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Throwable;
 
 use function array_filter;
+use function array_flip;
 use function array_map;
 use function array_values;
 use function count;
+use function method_exists;
+use function usort;
 
 readonly class UserStoryService
 {
@@ -48,22 +51,16 @@ readonly class UserStoryService
     public function getActiveStories(User $loggedInUser, int $limit): array
     {
         $visibleUsers = $this->findVisibleUsers($loggedInUser);
-        $visibleUserIds = array_map(static fn (User $user): string => $user->getId(), $visibleUsers);
         $cacheKey = $this->cacheKeyConventionService->buildPrivateStoryListKey($loggedInUser->getId(), $limit);
 
         /** @var array<int, array<string, mixed>> $stories */
-        $stories = $this->cache->get($cacheKey, function (ItemInterface $item) use ($loggedInUser, $visibleUserIds, $limit): array {
+        $stories = $this->cache->get($cacheKey, function (ItemInterface $item) use ($loggedInUser, $visibleUsers, $limit): array {
             $item->expiresAfter(60);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->tagPrivateStoryList());
             }
 
-            $esIds = $this->searchActiveStoryIdsFromElastic($visibleUserIds, $limit);
-            if ($esIds === []) {
-                return [];
-            }
-
-            return $this->findActiveStories($loggedInUser, $visibleUserIds, $limit, $esIds);
+            return $this->getActiveStoriesFromSources($loggedInUser, $visibleUsers, $limit);
         });
 
         return $stories;
@@ -113,12 +110,26 @@ readonly class UserStoryService
     }
 
     /**
-     * @param array<int, string> $visibleUserIds
+     * @param array<int, User> $visibleUsers
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function getActiveStoriesFromSources(User $loggedInUser, array $visibleUsers, int $limit): array
+    {
+        $visibleUserIds = array_map(static fn (User $user): string => $user->getId(), $visibleUsers);
+        $esIds = $this->searchActiveStoryIdsFromElastic($visibleUserIds, $limit);
+
+        // If Elasticsearch does not have the index/documents yet, fall back to DB query.
+        return $this->findActiveStories($loggedInUser, $visibleUsers, $limit, $esIds === [] ? null : $esIds);
+    }
+
+    /**
+     * @param array<int, User> $visibleUsers
      * @param array<int, string>|null $esIds
      *
      * @return array<int, array<string, mixed>>
      */
-    private function findActiveStories(User $loggedInUser, array $visibleUserIds, int $limit, ?array $esIds): array
+    private function findActiveStories(User $loggedInUser, array $visibleUsers, int $limit, ?array $esIds): array
     {
         $since = new DateTimeImmutable('-24 hours');
 
@@ -126,9 +137,11 @@ readonly class UserStoryService
             ->select('story', 'user')
             ->innerJoin('story.user', 'user')
             ->andWhere('story.createdAt >= :since')
-            ->andWhere('user.id IN (:visibleUserIds)')
+            ->andWhere('story.expiresAt >= :now')
+            ->andWhere('story.user IN (:visibleUsers)')
             ->setParameter('since', $since)
-            ->setParameter('visibleUserIds', $visibleUserIds)
+            ->setParameter('now', new DateTimeImmutable())
+            ->setParameter('visibleUsers', $visibleUsers)
             ->orderBy('story.createdAt', 'DESC')
             ->setMaxResults($limit);
 
