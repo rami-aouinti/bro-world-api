@@ -12,6 +12,7 @@ use App\User\Domain\Entity\UserGroup;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
+use LogicException;
 use Override;
 use Throwable;
 
@@ -118,7 +119,7 @@ final class LoadApiKeyData extends Fixture implements OrderedFixtureInterface
 
         PhpUnitUtil::setProperty(
             'id',
-            UuidHelper::fromString(self::$uuids[$suffix]),
+            UuidHelper::fromString($this->resolveUuidBySuffix($suffix)),
             $entity
         );
 
@@ -128,5 +129,20 @@ final class LoadApiKeyData extends Fixture implements OrderedFixtureInterface
         $this->addReference('ApiKey' . $suffix, $entity);
 
         return true;
+    }
+
+    private function resolveUuidBySuffix(string $suffix): string
+    {
+        if (isset(self::$uuids[$suffix])) {
+            return self::$uuids[$suffix];
+        }
+
+        throw new LogicException(
+            sprintf(
+                'Missing API key fixture UUID for suffix "%s". Add it to %s::$uuids.',
+                $suffix,
+                self::class
+            )
+        );
     }
 }
