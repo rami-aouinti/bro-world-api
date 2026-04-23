@@ -25,7 +25,6 @@ final readonly class GetGeneralSchoolResourceController
     #[Route('/v1/school/{resource}/{id}', requirements: [
         'resource' => 'classes|students|teachers|courses|exams|grades',
     ], methods: [Request::METHOD_GET])]
-    #[OA\Get(summary: 'Détail global d\'une ressource school (scope General en lecture seule)')]
     public function __invoke(string $resource, string $id): JsonResponse
     {
         $entity = $this->resourceViewService->findOr404($resource, $id);
