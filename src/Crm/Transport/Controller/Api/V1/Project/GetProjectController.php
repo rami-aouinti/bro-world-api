@@ -29,8 +29,8 @@ final readonly class GetProjectController
     #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
-        summary: 'Get Project',
         description: 'Exécute l action metier Get Project dans le perimetre de l application CRM.',
+        summary: 'Get Project',
         responses: [
             new OA\Response(
                 response: JsonResponse::HTTP_OK,

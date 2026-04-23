@@ -35,7 +35,7 @@ final readonly class GetGeneralShopController
      * @throws InvalidArgumentException
      */
     #[Route('/v1/shop/general', methods: [Request::METHOD_GET])]
-    #[OA\Get(summary: 'Get global shop overview')]
+    #[OA\Get(summary: 'Get global shop overview', security: [])]
     #[OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1, minimum: 1))]
     #[OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20, maximum: 100, minimum: 1))]
     #[OA\Parameter(name: 'q', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]

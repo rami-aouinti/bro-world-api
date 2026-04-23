@@ -82,16 +82,12 @@ security:
         - { path: ^/command-scheduler, roles: ROLE_ADMIN }
         - { path: ^/api/v1/crm, roles: ROLE_CRM_OWNER, methods: [DELETE] }
         - { path: ^/api/v1/crm, roles: ROLE_CRM_MANAGER, methods: [POST, PUT, PATCH] }
-        - { path: ^/api/v1/crm, roles: ROLE_CRM_VIEWER, methods: [GET] }
         - { path: ^/api/v1/shop, roles: ROLE_SHOP_MANAGER, methods: [DELETE] }
         - { path: ^/api/v1/shop, roles: ROLE_SHOP_EDITOR, methods: [POST, PUT, PATCH] }
-        - { path: ^/api/v1/shop, roles: ROLE_SHOP_VIEWER, methods: [GET] }
         - { path: ^/api/v1/school, roles: ROLE_SCHOOL_MANAGER, methods: [DELETE] }
         - { path: ^/api/v1/school, roles: ROLE_SCHOOL_EDITOR, methods: [POST, PUT, PATCH] }
-        - { path: ^/api/v1/school, roles: ROLE_SCHOOL_VIEWER, methods: [GET] }
         - { path: ^/api/v1/recruit, roles: ROLE_JOB_MANAGER, methods: [DELETE] }
         - { path: ^/api/v1/recruit, roles: ROLE_JOB_EDITOR, methods: [POST, PUT, PATCH] }
-        - { path: ^/api/v1/recruit, roles: ROLE_JOB_VIEWER, methods: [GET] }
 
 when@test:
     security:

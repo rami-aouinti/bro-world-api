@@ -13,39 +13,40 @@ use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Throwable;
 
 use function array_slice;
-use function implode;
 use function json_decode;
 use function preg_match;
 use function shuffle;
-use function sprintf;
-use function strip_tags;
 use function strtolower;
 use function trim;
+use function sprintf;
 
 #[AsCommand(
     name: self::NAME,
-    description: 'Generate 3 AI posts and publish them into blog_post as john-root.',
+    description: 'Generate 3 AI posts safely (no timeout).',
 )]
 final class GenerateAiPostsCommand extends Command
 {
-    final public const string NAME = 'app:generate-ai-posts';
+    public const string NAME = 'app:generate-ai-posts';
 
-    private const string AI_URL = 'http://127.0.0.1:11434/api/generate';
+    private const AI_URL = 'http://127.0.0.1:11434/api/generate';
     private const string AI_MODEL = 'phi';
-    private const string SYSTEM_USERNAME = 'john-root';
 
-    /**
-     * @var list<string>
-     */
     private const array TOPICS = [
         'AI startups',
         'social media growth',
@@ -54,9 +55,15 @@ final class GenerateAiPostsCommand extends Command
         'tech trends',
     ];
 
+    private const array AUTHORS = [
+        'john-root',
+        'john-admin',
+        'john-api',
+    ];
+
     public function __construct(
         private readonly HttpClientInterface $client,
-        private readonly EntityManagerInterface $entityManager,
+        private readonly EntityManagerInterface $em,
         private readonly UserRepository $userRepository,
         private readonly BlogRepository $blogRepository,
         private readonly BlogPostRepository $blogPostRepository,
@@ -66,93 +73,96 @@ final class GenerateAiPostsCommand extends Command
         parent::__construct();
     }
 
+    /**
+     * @throws ORMException
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws OptimisticLockException
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $author = $this->resolveAuthor();
-        $blog = $this->resolveTargetBlog($author);
-
         $topics = self::TOPICS;
         shuffle($topics);
-        $selectedTopics = array_slice($topics, 0, 3);
 
-        foreach ($selectedTopics as $topic) {
-            [$title, $content] = $this->generatePostForTopic($topic);
+        $selected = array_slice($topics, 0, 3);
 
-            $post = (new BlogPost())
+        foreach ($selected as $i => $topic) {
+
+            $author = $this->resolveAuthor(self::AUTHORS[$i % 3]);
+            $blog = $this->resolveBlog($author);
+
+            [$title, $content] = $this->generatePost($topic);
+
+            $post = new BlogPost()
                 ->setBlog($blog)
                 ->setAuthor($author)
                 ->setTitle($title)
-                ->setSlug($this->buildUniqueSlug($title, $topic))
+                ->setSlug($this->slug($title, $topic))
                 ->setContent($content)
                 ->setIsPinned(false);
 
             $this->blogPostRepository->save($post, false);
-            $output->writeln(sprintf('Created blog post for topic "%s" as %s.', $topic, self::SYSTEM_USERNAME));
+
+            $output->writeln("✔ Post created: $topic by {$author->getUsername()}");
         }
 
-        $this->entityManager->flush();
-        $this->cacheInvalidationService->invalidateBlogCaches($blog->getApplication()?->getSlug(), [$author->getId()]);
+        $this->em->flush();
 
-        $output->writeln('3 AI posts generated in blog_post table.');
+        $this->cacheInvalidationService->invalidateBlogCaches(null, []);
+
+        $output->writeln('🎉 Done: 3 AI posts generated.');
 
         return Command::SUCCESS;
     }
 
-    private function resolveAuthor(): User
+    private function resolveAuthor(string $username): User
     {
-        $author = $this->userRepository->findOneBy([
-            'username' => self::SYSTEM_USERNAME,
-        ]);
+        $user = $this->userRepository->findOneBy(['username' => $username]);
 
-        if (!$author instanceof User) {
-            throw new \RuntimeException(sprintf('User "%s" not found.', self::SYSTEM_USERNAME));
+        if (!$user) {
+            throw new RuntimeException("User not found: $username");
         }
 
-        return $author;
+        return $user;
     }
 
-    private function resolveTargetBlog(User $author): Blog
+    private function resolveBlog(User $user): Blog
     {
         $blog = $this->blogRepository->findOneBy([
-            'owner' => $author,
             'type' => BlogType::GENERAL,
         ]);
 
-        if (!$blog instanceof Blog) {
-            $blog = $this->blogRepository->findOneBy([
-                'owner' => $author,
-            ]);
+        if (!$blog) {
+            $blog = $this->blogRepository->findOneBy(['owner' => $user]);
         }
 
-        if (!$blog instanceof Blog) {
-            throw new \RuntimeException(sprintf('No blog found for user "%s".', self::SYSTEM_USERNAME));
+        if (!$blog) {
+            throw new RuntimeException('Blog not found');
         }
 
         return $blog;
     }
 
     /**
+     * @param string $topic
      * @return array{0: string, 1: string}
+     * @throws ClientExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws TransportExceptionInterface
      */
-    private function generatePostForTopic(string $topic): array
+    private function generatePost(string $topic): array
     {
-        $prompt = <<<PROMPT
-You are a viral content creator.
-
-Write one social media post about: {$topic}
-
-Rules:
-- Hook at the start
-- Engaging tone
-- Max 150 words
-- Exactly 3 hashtags
-- Make it viral and emotionally engaging
-
-Return ONLY valid JSON with this shape:
-{"title":"...","content":"..."}
-PROMPT;
+        // 🔥 ULTRA LIGHT PROMPT (important pour éviter timeout)
+        $prompt = "Write a viral social media post about: $topic.
+Max 100 words. Add 3 hashtags. No JSON.";
 
         $response = $this->client->request('POST', self::AI_URL, [
+            'timeout' => 120, // 🔥 FIX TIMEOUT
             'json' => [
                 'model' => self::AI_MODEL,
                 'prompt' => $prompt,
@@ -160,49 +170,37 @@ PROMPT;
             ],
         ]);
 
-        /** @var array{response?: string} $payload */
-        $payload = $response->toArray(false);
-        $raw = trim((string)($payload['response'] ?? ''));
+        $data = $response->toArray(false);
+        $text = trim((string)($data['response'] ?? ''));
 
-        try {
-            /** @var array{title?: string, content?: string} $decoded */
-            $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
-
-            $title = trim((string)($decoded['title'] ?? ''));
-            $content = trim((string)($decoded['content'] ?? ''));
-
-            if ($title !== '' && $content !== '') {
-                return [$title, $content];
-            }
-        } catch (Throwable) {
-            // Fallback below.
-        }
-
-        if (preg_match('/^(.+?)\n+/s', $raw, $matches) === 1) {
-            return [trim(strip_tags($matches[1])), trim($raw)];
-        }
-
-        return [sprintf('Post about %s', $topic), $raw !== '' ? $raw : sprintf('Topic: %s', $topic)];
+        return $this->parse($text, $topic);
     }
 
-    private function buildUniqueSlug(string $title, string $topic): string
+    private function parse(string $text, string $topic): array
     {
-        $baseSlug = strtolower($this->slugger->slug(sprintf('%s %s', $topic, $title))->toString());
-        $candidate = trim($baseSlug, '-');
+        // try JSON if exists
+        if (preg_match('/\{.*\}/s', $text, $m)) {
+            $json = json_decode($m[0], true);
 
-        if ($candidate === '') {
-            $candidate = 'ai-post';
+            if (isset($json['title'], $json['content'])) {
+                return [
+                    trim((string)$json['title']),
+                    trim((string)$json['content']),
+                ];
+            }
         }
 
-        if (!$this->blogPostRepository->findOneBy(['slug' => $candidate]) instanceof BlogPost) {
-            return $candidate;
-        }
+        // fallback safe
+        $lines = explode("\n", $text);
+        $title = $lines[0] ?? "Post about $topic";
 
-        $index = 2;
-        while ($this->blogPostRepository->findOneBy(['slug' => sprintf('%s-%d', $candidate, $index)]) instanceof BlogPost) {
-            ++$index;
-        }
+        return [$title, $text];
+    }
 
-        return sprintf('%s-%d', $candidate, $index);
+    private function slug(string $title, string $topic): string
+    {
+        $base = strtolower($this->slugger->slug($topic . ' ' . $title)->toString());
+
+        return trim($base, '-') ?: 'ai-post';
     }
 }
