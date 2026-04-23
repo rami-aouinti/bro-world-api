@@ -62,8 +62,7 @@ final readonly class ListClassesByApplicationController
             new OA\Response(response: 422, description: 'Pagination ou filtres invalides.'),
         ],
     )]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, Request $request, ?User $loggedInUser): JsonResponse
+        public function __invoke(string $applicationSlug, Request $request, ?User $loggedInUser): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);

@@ -36,8 +36,7 @@ final readonly class DeleteTagController
      * @throws ExceptionInterface
      */
     #[Route('/v1/shop/tags/{id}', methods: [Request::METHOD_DELETE])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, string $id): JsonResponse
+        public function __invoke(string $applicationSlug, string $id): JsonResponse
     {
         $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
 

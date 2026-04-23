@@ -56,8 +56,7 @@ final readonly class CreateExamController
         ],
     )]
     #[Route('/v1/school/exams', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, ?User $loggedInUser, Request $request): JsonResponse
+        public function __invoke(string $applicationSlug, ?User $loggedInUser, Request $request): JsonResponse
     {
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
 

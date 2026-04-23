@@ -48,8 +48,7 @@ final readonly class CreateProjectController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/projects', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Post(
+        #[OA\Post(
         summary: 'Create Project',
         requestBody: new OA\RequestBody(
             required: true,

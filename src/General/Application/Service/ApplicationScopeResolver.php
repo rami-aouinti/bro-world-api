@@ -13,7 +13,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 final readonly class ApplicationScopeResolver
 {
     public const string DEFAULT_APPLICATION_SLUG = 'general';
-    public const string UNKNOWN_APPLICATION_SLUG_MESSAGE = 'Unknown "applicationSlug".';
+    public const string UNKNOWN_APPLICATION_SLUG_MESSAGE = 'Unknown application scope.';
 
     public function __construct(
         private EntityManagerInterface $entityManager,
@@ -43,11 +43,7 @@ final readonly class ApplicationScopeResolver
 
     private function extractApplicationSlug(Request $request): string
     {
-        $applicationSlug = trim((string) ($request->query->get('applicationSlug')
-            ?? $request->headers->get('X-Application-Slug')
-            ?? $request->headers->get('Application-Slug')
-            ?? $request->attributes->get('applicationSlug')
-            ?? ''));
+        $applicationSlug = trim((string) ($request->attributes->get('applicationSlug') ?? ''));
 
         if ($applicationSlug === '') {
             return self::DEFAULT_APPLICATION_SLUG;
