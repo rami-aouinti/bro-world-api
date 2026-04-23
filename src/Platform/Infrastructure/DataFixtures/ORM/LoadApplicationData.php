@@ -685,6 +685,51 @@ final class LoadApplicationData extends Fixture implements OrderedFixtureInterfa
                         ],
                     ],
                 ],
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000038',
+                    'reference' => 'Plugin-Connect-Github',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000038',
+                            'key' => 'plugin.connect.github.general',
+                            'value' => [
+                                'enabled' => true,
+                                'provider' => 'github',
+                                'syncRepositories' => true,
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000039',
+                    'reference' => 'Plugin-Connect-Gitlab',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000039',
+                            'key' => 'plugin.connect.gitlab.general',
+                            'value' => [
+                                'enabled' => true,
+                                'provider' => 'gitlab',
+                                'syncPipelines' => true,
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'uuid' => '62000000-0000-1000-8000-000000000040',
+                    'reference' => 'Plugin-Connect-Azure',
+                    'configurations' => [
+                        [
+                            'uuid' => '63000000-0000-1000-8000-000000000040',
+                            'key' => 'plugin.connect.azure.general',
+                            'value' => [
+                                'enabled' => true,
+                                'provider' => 'azure-devops',
+                                'syncBoards' => true,
+                            ],
+                        ],
+                    ],
+                ],
             ],
         ],
         [
