@@ -34,8 +34,7 @@ class SalaryIdsController extends Controller
     )]
     #[IsGranted('ROLE_ROOT')]
     #[OA\Get(summary: 'Ids salary', responses: [new OA\Response(response: 200, description: 'success')])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, Request $request): Response
+        public function __invoke(string $applicationSlug, Request $request): Response
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
 

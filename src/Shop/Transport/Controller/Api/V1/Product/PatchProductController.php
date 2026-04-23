@@ -48,8 +48,7 @@ final readonly class PatchProductController
      * @throws ORMException
      */
     #[Route('/v1/shop/products/{id}', methods: [Request::METHOD_PATCH])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, string $id, Request $request): JsonResponse
+        public function __invoke(string $applicationSlug, string $id, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
         $shop = $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);

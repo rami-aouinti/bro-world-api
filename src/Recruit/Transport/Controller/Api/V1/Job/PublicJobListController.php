@@ -30,7 +30,6 @@ readonly class PublicJobListController
         summary: 'Liste publique des offres jobs, paginée et filtrable.',
         security: [],
         parameters: [
-            new OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20, maximum: 100, minimum: 1)),
             new OA\Parameter(name: 'company', in: 'query', required: false, schema: new OA\Schema(type: 'string')),

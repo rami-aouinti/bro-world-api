@@ -34,8 +34,7 @@ final readonly class GetCartController
      * @throws ORMException
      */
     #[Route('/v1/shop/carts/{shopId}', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $shopId, User $loggedInUser): JsonResponse
+        public function __invoke(string $shopId, User $loggedInUser): JsonResponse
     {
         $shop = $this->shopRepository->find($shopId);
         if (!$shop instanceof Shop) {

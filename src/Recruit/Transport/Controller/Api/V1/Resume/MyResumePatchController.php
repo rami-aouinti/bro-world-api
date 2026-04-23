@@ -32,8 +32,7 @@ readonly class MyResumePatchController
     }
 
     #[Route(path: '/v1/recruit/private/me/resumes/{resumeId}', methods: [Request::METHOD_PATCH])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Patch(summary: 'Met à jour un CV appartenant au user connecté.')]
+        #[OA\Patch(summary: 'Met à jour un CV appartenant au user connecté.')]
     public function __invoke(string $applicationSlug, string $resumeId, Request $request, User $loggedInUser): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);

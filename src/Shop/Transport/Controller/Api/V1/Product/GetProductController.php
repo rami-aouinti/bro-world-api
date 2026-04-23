@@ -30,8 +30,7 @@ final readonly class GetProductController
     }
 
     #[Route('/v1/shop/products/{id}', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, string $id): JsonResponse
+        public function __invoke(string $applicationSlug, string $id): JsonResponse
     {
         $shop = $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
         $product = $this->productRepository->findOneByIdAndShop($id, $shop);

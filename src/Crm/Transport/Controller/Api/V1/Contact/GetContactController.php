@@ -30,8 +30,7 @@ final readonly class GetContactController
      * @throws InvalidArgumentException
      */
     #[Route('/v1/crm/contacts/{contact}', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'contact', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+        #[OA\Parameter(name: 'contact', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
         description: 'Exécute l action metier Get Contact dans le perimetre de l application CRM.',
         summary: 'Get Contact',

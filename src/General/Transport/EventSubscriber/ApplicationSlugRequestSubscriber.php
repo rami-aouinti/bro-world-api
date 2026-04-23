@@ -32,16 +32,6 @@ final class ApplicationSlugRequestSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $applicationSlug = trim((string) ($request->attributes->get('applicationSlug')
-            ?? $request->query->get('applicationSlug')
-            ?? $request->headers->get('X-Application-Slug')
-            ?? $request->headers->get('Application-Slug')
-            ?? ''));
-
-        if ($applicationSlug == '') {
-            $applicationSlug = self::DEFAULT_APPLICATION_SLUG;
-        }
-
-        $request->attributes->set('applicationSlug', $applicationSlug);
+        $request->attributes->set('applicationSlug', self::DEFAULT_APPLICATION_SLUG);
     }
 }

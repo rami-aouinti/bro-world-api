@@ -31,7 +31,6 @@ readonly class UpcomingEventListController
         summary: 'Lister mes 3 événements les plus proches (optionnellement par application)',
         tags: ['Calendar Event'],
         parameters: [
-            new OA\Parameter(name: 'applicationSlug', in: 'query', required: false, schema: new OA\Schema(type: 'string', example: 'crm-pipeline-pro')),
             new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', maximum: 20, minimum: 1, example: 3)),
         ],
         responses: [
@@ -41,12 +40,11 @@ readonly class UpcomingEventListController
     )]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        $applicationSlug = trim((string)$request->query->get('applicationSlug', ''));
         $limit = max(1, min(20, $request->query->getInt('limit', 3)));
 
         return new JsonResponse($this->eventListService->getUpcoming(
             $loggedInUser,
-            $applicationSlug !== '' ? $applicationSlug : null,
+            null,
             $limit,
         ));
     }
