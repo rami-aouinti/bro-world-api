@@ -28,7 +28,8 @@ final readonly class ListGeneralProductsController
      * @throws JsonException
      * @throws InvalidArgumentException
      */
-    #[OA\Get(summary: 'List products for global shop scope')]
+    #[Route('/v1/shop/products', methods: [Request::METHOD_GET])]
+    #[OA\Get(summary: 'List products for global shop scope', security: [])]
     #[OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1, minimum: 1))]
     #[OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20, maximum: 100, minimum: 1))]
     #[OA\Parameter(name: 'q', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
@@ -37,7 +38,7 @@ final readonly class ListGeneralProductsController
     #[OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'minPrice', in: 'query', required: false, schema: new OA\Schema(type: 'number', format: 'float', minimum: 0))]
     #[OA\Parameter(name: 'maxPrice', in: 'query', required: false, schema: new OA\Schema(type: 'number', format: 'float', minimum: 0))]
-    #[OA\Parameter(name: 'promotion', description: 'Minimum promotion percentage to match (e.g. 20 means >=20%).', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 0, maximum: 100))]
+    #[OA\Parameter(name: 'promotion', description: 'Minimum promotion percentage to match (e.g. 20 means >=20%).', in: 'query', required: false, schema: new OA\Schema(type: 'integer', maximum: 100, minimum: 0))]
     public function __invoke(Request $request): JsonResponse
     {
         return new JsonResponse($this->productListService->getGlobalList($request));

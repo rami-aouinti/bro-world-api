@@ -6,6 +6,7 @@ namespace App\Recruit\Transport\Controller\Api\V1\Job;
 
 use App\Recruit\Application\Service\JobPublicListService;
 use OpenApi\Attributes as OA;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -20,6 +21,10 @@ readonly class PublicJobListController
     ) {
     }
 
+    /**
+     * @throws \JsonException
+     * @throws InvalidArgumentException
+     */
     #[Route(path: '/v1/recruit/public/jobs', methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'Liste publique des offres jobs, paginée et filtrable.',
@@ -27,7 +32,7 @@ readonly class PublicJobListController
         parameters: [
             new OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1)),
-            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20, minimum: 1, maximum: 100)),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20, maximum: 100, minimum: 1)),
             new OA\Parameter(name: 'company', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'salaryMin', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'salaryMax', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
@@ -42,8 +47,8 @@ readonly class PublicJobListController
             new OA\Parameter(name: 'q', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
         ],
     )]
-    public function __invoke(Request $request, string $applicationSlug): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        return new JsonResponse($this->jobPublicListService->getList($request, $applicationSlug));
+        return new JsonResponse($this->jobPublicListService->getGeneralList($request));
     }
 }
