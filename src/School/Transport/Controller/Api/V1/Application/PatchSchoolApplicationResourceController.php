@@ -63,8 +63,7 @@ final readonly class PatchSchoolApplicationResourceController
             new OA\Response(response: 422, description: 'Payload invalide.'),
         ],
     )]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $resource, string $id, Request $request, ?User $loggedInUser): JsonResponse
+        public function __invoke(string $resource, string $id, Request $request, ?User $loggedInUser): JsonResponse
     {
         $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);

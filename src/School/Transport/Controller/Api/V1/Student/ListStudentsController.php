@@ -27,8 +27,7 @@ final readonly class ListStudentsController
     }
 
     #[Route('/v1/school/students', methods: [Request::METHOD_GET], defaults: ['applicationSlug' => 'general'])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, Request $request, ?User $loggedInUser): JsonResponse
+        public function __invoke(string $applicationSlug, Request $request, ?User $loggedInUser): JsonResponse
     {
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
 

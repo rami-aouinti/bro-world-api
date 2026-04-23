@@ -82,8 +82,7 @@ final readonly class CreateCourseController
         ],
     )]
     #[Route('/v1/school/courses', methods: [Request::METHOD_POST], defaults: ['applicationSlug' => 'general'])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, ?User $loggedInUser, Request $request): JsonResponse
+        public function __invoke(string $applicationSlug, ?User $loggedInUser, Request $request): JsonResponse
     {
         $school = $this->scopeResolver->resolveOrCreateSchoolByApplicationSlug($applicationSlug, $loggedInUser);
         $payload = $this->extractPayload($request);

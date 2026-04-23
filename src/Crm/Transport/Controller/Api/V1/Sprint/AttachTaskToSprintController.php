@@ -36,8 +36,7 @@ final readonly class AttachTaskToSprintController
      * @throws ORMException
      */
     #[Route('/v1/crm/sprints/{sprintId}/tasks/{taskId}', methods: [Request::METHOD_PUT])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'sprintId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+        #[OA\Parameter(name: 'sprintId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'taskId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Put(
         summary: 'Attach Task To Sprint',

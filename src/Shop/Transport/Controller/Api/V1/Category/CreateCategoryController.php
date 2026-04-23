@@ -37,8 +37,7 @@ final readonly class CreateCategoryController
     }
 
     #[Route('/v1/shop/categories', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+        public function __invoke(string $applicationSlug, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
         $shop = $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);

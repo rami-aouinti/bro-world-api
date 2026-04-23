@@ -32,8 +32,7 @@ final readonly class DeleteTaskController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/tasks/{task}', methods: [Request::METHOD_DELETE])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+        #[OA\Parameter(name: 'task', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(
         description: 'Exécute l action metier Delete Task dans le perimetre de l application CRM.',
         summary: 'Delete Task',
@@ -46,8 +45,7 @@ final readonly class DeleteTaskController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, Task $task): JsonResponse
+        public function __invoke(string $applicationSlug, Task $task): JsonResponse
     {
         $this->entityManager->remove($task);
         $this->entityManager->flush();

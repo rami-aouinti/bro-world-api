@@ -36,8 +36,7 @@ final readonly class UploadProjectFilesController
      * @throws ORMException
      */
     #[Route('/v1/crm/projects/{project}/files', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+        #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Post(
         summary: 'Upload Project Files',
         description: 'Exécute l action metier Upload Project Files dans le perimetre de l application CRM.',

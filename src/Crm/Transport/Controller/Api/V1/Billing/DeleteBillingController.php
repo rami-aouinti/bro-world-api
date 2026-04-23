@@ -29,8 +29,7 @@ final readonly class DeleteBillingController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/billings/{billing}', methods: [Request::METHOD_DELETE])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'billing', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+        #[OA\Parameter(name: 'billing', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(
         description: 'Exécute l action metier Delete Billing dans le perimetre de l application CRM.',
         summary: 'Delete Billing',
