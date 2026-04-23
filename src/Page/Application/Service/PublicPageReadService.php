@@ -20,6 +20,10 @@ use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
+use function is_array;
+use function str_starts_with;
+use function substr;
+
 final readonly class PublicPageReadService
 {
     private const int TTL = 600;
@@ -71,6 +75,15 @@ final readonly class PublicPageReadService
         return $this->getPageContent('faq', $languageCode);
     }
 
+    /**
+     * @return array<string, mixed>|null
+     * @throws InvalidArgumentException
+     */
+    public function getModulePage(string $pageSlug, string $languageCode): ?array
+    {
+        return $this->getPageContent('module:' . $pageSlug, $languageCode);
+    }
+
     public function resolveLanguage(string $languageCode): ?PageLanguage
     {
         /** @var PageLanguage|null $language */
@@ -107,7 +120,7 @@ final readonly class PublicPageReadService
                 'about' => $this->readAbout($language),
                 'contact' => $this->readContact($language),
                 'faq' => $this->readFaq($language),
-                default => null,
+                default => str_starts_with($page, 'module:') ? $this->readModule($language, substr($page, 7)) : null,
             };
         });
 
@@ -164,5 +177,30 @@ final readonly class PublicPageReadService
         ]);
 
         return $entity?->getContent();
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function readModule(PageLanguage $language, string $slug): ?array
+    {
+        $home = $this->readHome($language);
+        if (!is_array($home) || !isset($home['pages']) || !is_array($home['pages'])) {
+            return null;
+        }
+
+        foreach ($home['pages'] as $module) {
+            if (!is_array($module)) {
+                continue;
+            }
+
+            if (($module['slug'] ?? null) !== $slug) {
+                continue;
+            }
+
+            return $module;
+        }
+
+        return null;
     }
 }

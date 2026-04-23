@@ -71,6 +71,20 @@ final readonly class PublicPageController
         return $this->jsonContentOr404($this->publicPageReadService->getFaq($languageCode), $languageCode);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
+    #[Route(
+        path: '/v1/page/public/{pageSlug}/{languageCode}',
+        methods: [Request::METHOD_GET],
+        requirements: ['pageSlug' => 'crm|shop|jobs-applications|jobs-offers|job|school|learning-teachers|learning-courses'],
+    )]
+    #[OA\Get(security: [])]
+    public function modulePage(string $pageSlug, string $languageCode): JsonResponse
+    {
+        return $this->jsonContentOr404($this->publicPageReadService->getModulePage($pageSlug, $languageCode), $languageCode);
+    }
+
     #[Route(path: '/v1/page/public/contact', methods: [Request::METHOD_POST])]
     #[OA\Post(security: [], summary: 'Create a public contact request.')]
     #[OA\RequestBody(
