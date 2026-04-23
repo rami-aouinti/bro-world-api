@@ -19,19 +19,20 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
     #[Override]
     public function load(ObjectManager $manager): void
     {
-        $frLanguage = (new PageLanguage())
-            ->setCode('fr')
-            ->setLabel('Français');
-
-        $enLanguage = (new PageLanguage())
-            ->setCode('en')
-            ->setLabel('English');
+        $frLanguage = (new PageLanguage())->setCode('fr')->setLabel('Français');
+        $enLanguage = (new PageLanguage())->setCode('en')->setLabel('English');
+        $esLanguage = (new PageLanguage())->setCode('es')->setLabel('Español');
+        $deLanguage = (new PageLanguage())->setCode('de')->setLabel('Deutsch');
 
         $manager->persist($frLanguage);
         $manager->persist($enLanguage);
+        $manager->persist($esLanguage);
+        $manager->persist($deLanguage);
 
         $this->persistPages($manager, $frLanguage, $this->getFrenchHome(), $this->getFrenchAbout(), $this->getFrenchContact(), $this->getFrenchFaq());
         $this->persistPages($manager, $enLanguage, $this->getEnglishHome(), $this->getEnglishAbout(), $this->getEnglishContact(), $this->getEnglishFaq());
+        $this->persistPages($manager, $esLanguage, $this->getSpanishHome(), $this->getSpanishAbout(), $this->getSpanishContact(), $this->getSpanishFaq());
+        $this->persistPages($manager, $deLanguage, $this->getGermanHome(), $this->getGermanAbout(), $this->getGermanContact(), $this->getGermanFaq());
 
         $manager->flush();
     }
@@ -67,6 +68,7 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
     private function getFrenchHome(): array
     {
         return [
+            'pages' => $this->getPageModules('fr'),
             'featuresTitle' => 'Fonctionnalités principales',
             'metricsTitle' => 'Indicateurs de performance',
             'stepsTitle' => 'Comment ça marche',
@@ -142,6 +144,7 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
     private function getEnglishHome(): array
     {
         return [
+            'pages' => $this->getPageModules('en'),
             'featuresTitle' => 'Key features',
             'metricsTitle' => 'Performance metrics',
             'stepsTitle' => 'How it works',
@@ -217,6 +220,7 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
     private function getFrenchAbout(): array
     {
         return [
+            'pages' => $this->getPageModules('fr'),
             'hero' => [
                 'badge' => 'À propos',
                 'title' => 'Nous aidons les équipes à lancer plus vite',
@@ -302,6 +306,7 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
     private function getEnglishAbout(): array
     {
         return [
+            'pages' => $this->getPageModules('en'),
             'hero' => [
                 'badge' => 'About',
                 'title' => 'We help teams launch faster',
@@ -387,6 +392,7 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
     private function getFrenchContact(): array
     {
         return [
+            'pages' => $this->getPageModules('fr'),
             'title' => 'Contact',
             'hero' => [
                 'badge' => 'Contact',
@@ -477,6 +483,7 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
     private function getEnglishContact(): array
     {
         return [
+            'pages' => $this->getPageModules('en'),
             'title' => 'Contact',
             'hero' => [
                 'badge' => 'Contact',
@@ -567,6 +574,7 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
     private function getFrenchFaq(): array
     {
         return [
+            'pages' => $this->getPageModules('fr'),
             'hero' => [
                 'badge' => 'FAQ',
                 'title' => 'Questions fréquentes',
@@ -634,6 +642,7 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
     private function getEnglishFaq(): array
     {
         return [
+            'pages' => $this->getPageModules('en'),
             'hero' => [
                 'badge' => 'FAQ',
                 'title' => 'Frequently asked questions',
@@ -693,5 +702,146 @@ final class LoadPageData extends Fixture implements OrderedFixtureInterface
                 'suggestion' => 'Try another keyword or switch category.',
             ],
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getSpanishHome(): array
+    {
+        return [
+            ...$this->getEnglishHome(),
+            'pages' => $this->getPageModules('es'),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getSpanishAbout(): array
+    {
+        return [
+            ...$this->getEnglishAbout(),
+            'pages' => $this->getPageModules('es'),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getSpanishContact(): array
+    {
+        return [
+            ...$this->getEnglishContact(),
+            'pages' => $this->getPageModules('es'),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getSpanishFaq(): array
+    {
+        return [
+            ...$this->getEnglishFaq(),
+            'pages' => $this->getPageModules('es'),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getGermanHome(): array
+    {
+        return [
+            ...$this->getEnglishHome(),
+            'pages' => $this->getPageModules('de'),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getGermanAbout(): array
+    {
+        return [
+            ...$this->getEnglishAbout(),
+            'pages' => $this->getPageModules('de'),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getGermanContact(): array
+    {
+        return [
+            ...$this->getEnglishContact(),
+            'pages' => $this->getPageModules('de'),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getGermanFaq(): array
+    {
+        return [
+            ...$this->getEnglishFaq(),
+            'pages' => $this->getPageModules('de'),
+        ];
+    }
+
+    /**
+     * @return list<array{slug: string, title: string, description: string}>
+     */
+    private function getPageModules(string $languageCode): array
+    {
+        return match ($languageCode) {
+            'fr' => [
+                ['slug' => 'crm', 'title' => 'CRM', 'description' => 'Gestion commerciale et relation client.'],
+                ['slug' => 'learning', 'title' => 'Learning', 'description' => 'Parcours d’apprentissage et progression.'],
+                ['slug' => 'job', 'title' => 'Job', 'description' => 'Offres, candidatures et suivi des recrutements.'],
+                ['slug' => 'school', 'title' => 'School', 'description' => 'Gestion scolaire, classes et progression des élèves.'],
+                ['slug' => 'shop', 'title' => 'Shop', 'description' => 'Catalogue produits et commandes e-commerce.'],
+                ['slug' => 'jobs-applications', 'title' => 'Jobs Applications', 'description' => 'Suivi des candidatures et statuts de recrutement.'],
+                ['slug' => 'jobs-offers', 'title' => 'Jobs Offers', 'description' => 'Gestion et publication des offres d’emploi.'],
+                ['slug' => 'learning-courses', 'title' => 'Learning Courses', 'description' => 'Catalogue des cours et parcours pédagogiques.'],
+                ['slug' => 'learning-teachers', 'title' => 'Learning Teachers', 'description' => 'Annuaire des enseignants et disponibilité.'],
+            ],
+            'es' => [
+                ['slug' => 'crm', 'title' => 'CRM', 'description' => 'Gestión comercial y relación con clientes.'],
+                ['slug' => 'learning', 'title' => 'Learning', 'description' => 'Rutas de aprendizaje y progreso.'],
+                ['slug' => 'job', 'title' => 'Job', 'description' => 'Ofertas, candidaturas y seguimiento de contratación.'],
+                ['slug' => 'school', 'title' => 'School', 'description' => 'Gestión escolar, clases y progreso de estudiantes.'],
+                ['slug' => 'shop', 'title' => 'Shop', 'description' => 'Catálogo de productos y pedidos e-commerce.'],
+                ['slug' => 'jobs-applications', 'title' => 'Jobs Applications', 'description' => 'Seguimiento de candidaturas y estado de contratación.'],
+                ['slug' => 'jobs-offers', 'title' => 'Jobs Offers', 'description' => 'Gestión y publicación de ofertas de empleo.'],
+                ['slug' => 'learning-courses', 'title' => 'Learning Courses', 'description' => 'Catálogo de cursos y rutas de aprendizaje.'],
+                ['slug' => 'learning-teachers', 'title' => 'Learning Teachers', 'description' => 'Directorio de profesores y disponibilidad.'],
+            ],
+            'de' => [
+                ['slug' => 'crm', 'title' => 'CRM', 'description' => 'Vertrieb und Kundenbeziehungen steuern.'],
+                ['slug' => 'learning', 'title' => 'Learning', 'description' => 'Lernpfade und Fortschritt verwalten.'],
+                ['slug' => 'job', 'title' => 'Job', 'description' => 'Stellen, Bewerbungen und Recruiting-Tracking.'],
+                ['slug' => 'school', 'title' => 'School', 'description' => 'Schulverwaltung, Klassen und Lernfortschritt.'],
+                ['slug' => 'shop', 'title' => 'Shop', 'description' => 'Produktkatalog und E-Commerce-Bestellungen.'],
+                ['slug' => 'jobs-applications', 'title' => 'Jobs Applications', 'description' => 'Bewerbungen und Recruiting-Status verfolgen.'],
+                ['slug' => 'jobs-offers', 'title' => 'Jobs Offers', 'description' => 'Stellenangebote verwalten und veröffentlichen.'],
+                ['slug' => 'learning-courses', 'title' => 'Learning Courses', 'description' => 'Kurskatalog und Lernpfade verwalten.'],
+                ['slug' => 'learning-teachers', 'title' => 'Learning Teachers', 'description' => 'Lehrkräfte-Verzeichnis und Verfügbarkeit.'],
+            ],
+            default => [
+                ['slug' => 'crm', 'title' => 'CRM', 'description' => 'Sales workflow and customer relationship management.'],
+                ['slug' => 'learning', 'title' => 'Learning', 'description' => 'Learning paths and progress tracking.'],
+                ['slug' => 'job', 'title' => 'Job', 'description' => 'Open positions, applications and hiring workflow.'],
+                ['slug' => 'school', 'title' => 'School', 'description' => 'School operations, classes, and learner progress.'],
+                ['slug' => 'shop', 'title' => 'Shop', 'description' => 'Product catalog and e-commerce orders.'],
+                ['slug' => 'jobs-applications', 'title' => 'Jobs Applications', 'description' => 'Track applications and hiring statuses.'],
+                ['slug' => 'jobs-offers', 'title' => 'Jobs Offers', 'description' => 'Manage and publish job offers.'],
+                ['slug' => 'learning-courses', 'title' => 'Learning Courses', 'description' => 'Course catalog and learning paths.'],
+                ['slug' => 'learning-teachers', 'title' => 'Learning Teachers', 'description' => 'Teacher directory and availability.'],
+            ],
+        };
     }
 }

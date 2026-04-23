@@ -73,6 +73,14 @@ final class PublicPageControllerTest extends WebTestCase
                     'title' => 'Aucun résultat',
                 ],
             ]];
+        yield 'crm-fr' => ['/v1/page/public/crm', ['slug' => 'crm']];
+        yield 'shop-fr' => ['/v1/page/public/shop', ['slug' => 'shop']];
+        yield 'jobs-applications-fr' => ['/v1/page/public/jobs-applications', ['slug' => 'jobs-applications']];
+        yield 'jobs-offers-fr' => ['/v1/page/public/jobs-offers', ['slug' => 'jobs-offers']];
+        yield 'job-fr' => ['/v1/page/public/job', ['slug' => 'job']];
+        yield 'school-fr' => ['/v1/page/public/school', ['slug' => 'school']];
+        yield 'learning-teachers-fr' => ['/v1/page/public/learning-teachers', ['slug' => 'learning-teachers']];
+        yield 'learning-courses-fr' => ['/v1/page/public/learning-courses', ['slug' => 'learning-courses']];
     }
 
     /**
@@ -110,6 +118,14 @@ final class PublicPageControllerTest extends WebTestCase
                     'title' => 'No results',
                 ],
             ]];
+        yield 'crm-en' => ['/v1/page/public/crm', ['slug' => 'crm']];
+        yield 'shop-en' => ['/v1/page/public/shop', ['slug' => 'shop']];
+        yield 'jobs-applications-en' => ['/v1/page/public/jobs-applications', ['slug' => 'jobs-applications']];
+        yield 'jobs-offers-en' => ['/v1/page/public/jobs-offers', ['slug' => 'jobs-offers']];
+        yield 'job-en' => ['/v1/page/public/job', ['slug' => 'job']];
+        yield 'school-en' => ['/v1/page/public/school', ['slug' => 'school']];
+        yield 'learning-teachers-en' => ['/v1/page/public/learning-teachers', ['slug' => 'learning-teachers']];
+        yield 'learning-courses-en' => ['/v1/page/public/learning-courses', ['slug' => 'learning-courses']];
     }
 
     /**
@@ -121,6 +137,14 @@ final class PublicPageControllerTest extends WebTestCase
         yield 'about' => ['/v1/page/public/about'];
         yield 'contact' => ['/v1/page/public/contact'];
         yield 'faq' => ['/v1/page/public/faq'];
+        yield 'crm' => ['/v1/page/public/crm'];
+        yield 'shop' => ['/v1/page/public/shop'];
+        yield 'jobs-applications' => ['/v1/page/public/jobs-applications'];
+        yield 'jobs-offers' => ['/v1/page/public/jobs-offers'];
+        yield 'job' => ['/v1/page/public/job'];
+        yield 'school' => ['/v1/page/public/school'];
+        yield 'learning-teachers' => ['/v1/page/public/learning-teachers'];
+        yield 'learning-courses' => ['/v1/page/public/learning-courses'];
     }
 
     /**
