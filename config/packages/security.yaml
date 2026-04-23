@@ -59,8 +59,17 @@ security:
         ROLE_CRM_MANAGER: [ROLE_CRM_SUPPORT, ROLE_CRM_MARKETING, ROLE_CRM_SALES]
         ROLE_CRM_ADMIN: [ROLE_CRM_MANAGER]
         ROLE_CRM_OWNER: [ROLE_CRM_ADMIN]
-        ROLE_ADMIN: [ROLE_USER]
+        ROLE_ADMIN: [ROLE_USER, ROLE_CRM_OWNER, ROLE_SHOP_MANAGER, ROLE_SCHOOL_MANAGER, ROLE_JOB_MANAGER]
         ROLE_ROOT: [ROLE_ADMIN]
+        ROLE_SHOP_VIEWER: [ROLE_USER]
+        ROLE_SHOP_EDITOR: [ROLE_SHOP_VIEWER]
+        ROLE_SHOP_MANAGER: [ROLE_SHOP_EDITOR]
+        ROLE_SCHOOL_VIEWER: [ROLE_USER]
+        ROLE_SCHOOL_EDITOR: [ROLE_SCHOOL_VIEWER]
+        ROLE_SCHOOL_MANAGER: [ROLE_SCHOOL_EDITOR]
+        ROLE_JOB_VIEWER: [ROLE_USER]
+        ROLE_JOB_EDITOR: [ROLE_JOB_VIEWER]
+        ROLE_JOB_MANAGER: [ROLE_JOB_EDITOR]
 
     access_decision_manager:
         strategy: unanimous
@@ -71,6 +80,18 @@ security:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
         - { path: ^/command-scheduler, roles: ROLE_ADMIN }
+        - { path: ^/api/v1/crm, roles: ROLE_CRM_OWNER, methods: [DELETE] }
+        - { path: ^/api/v1/crm, roles: ROLE_CRM_MANAGER, methods: [POST, PUT, PATCH] }
+        - { path: ^/api/v1/crm, roles: ROLE_CRM_VIEWER, methods: [GET] }
+        - { path: ^/api/v1/shop, roles: ROLE_SHOP_MANAGER, methods: [DELETE] }
+        - { path: ^/api/v1/shop, roles: ROLE_SHOP_EDITOR, methods: [POST, PUT, PATCH] }
+        - { path: ^/api/v1/shop, roles: ROLE_SHOP_VIEWER, methods: [GET] }
+        - { path: ^/api/v1/school, roles: ROLE_SCHOOL_MANAGER, methods: [DELETE] }
+        - { path: ^/api/v1/school, roles: ROLE_SCHOOL_EDITOR, methods: [POST, PUT, PATCH] }
+        - { path: ^/api/v1/school, roles: ROLE_SCHOOL_VIEWER, methods: [GET] }
+        - { path: ^/api/v1/recruit, roles: ROLE_JOB_MANAGER, methods: [DELETE] }
+        - { path: ^/api/v1/recruit, roles: ROLE_JOB_EDITOR, methods: [POST, PUT, PATCH] }
+        - { path: ^/api/v1/recruit, roles: ROLE_JOB_VIEWER, methods: [GET] }
 
 when@test:
     security:
