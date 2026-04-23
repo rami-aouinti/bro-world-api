@@ -26,6 +26,15 @@ enum Role: string
     case CRM_SUPPORT = 'ROLE_CRM_SUPPORT';
     case CRM_MARKETING = 'ROLE_CRM_MARKETING';
     case CRM_VIEWER = 'ROLE_CRM_VIEWER';
+    case SHOP_VIEWER = 'ROLE_SHOP_VIEWER';
+    case SHOP_EDITOR = 'ROLE_SHOP_EDITOR';
+    case SHOP_MANAGER = 'ROLE_SHOP_MANAGER';
+    case SCHOOL_VIEWER = 'ROLE_SCHOOL_VIEWER';
+    case SCHOOL_EDITOR = 'ROLE_SCHOOL_EDITOR';
+    case SCHOOL_MANAGER = 'ROLE_SCHOOL_MANAGER';
+    case JOB_VIEWER = 'ROLE_JOB_VIEWER';
+    case JOB_EDITOR = 'ROLE_JOB_EDITOR';
+    case JOB_MANAGER = 'ROLE_JOB_MANAGER';
 
     public function label(): string
     {
@@ -45,6 +54,15 @@ enum Role: string
             self::CRM_SUPPORT => 'CRM support',
             self::CRM_MARKETING => 'CRM marketing',
             self::CRM_VIEWER => 'CRM viewers',
+            self::SHOP_VIEWER => 'Shop viewers',
+            self::SHOP_EDITOR => 'Shop editors',
+            self::SHOP_MANAGER => 'Shop managers',
+            self::SCHOOL_VIEWER => 'School viewers',
+            self::SCHOOL_EDITOR => 'School editors',
+            self::SCHOOL_MANAGER => 'School managers',
+            self::JOB_VIEWER => 'Job viewers',
+            self::JOB_EDITOR => 'Job editors',
+            self::JOB_MANAGER => 'Job managers',
         };
     }
 }
