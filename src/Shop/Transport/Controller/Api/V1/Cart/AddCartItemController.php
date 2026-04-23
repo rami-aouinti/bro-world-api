@@ -46,8 +46,7 @@ final readonly class AddCartItemController
      * @throws OptimisticLockException
      */
     #[Route('/v1/shop/carts/{shopId}/items', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, string $shopId, Request $request): JsonResponse
+        public function __invoke(string $applicationSlug, string $shopId, Request $request): JsonResponse
     {
         $request->attributes->set('applicationSlug', $applicationSlug);
         $user = $this->security->getUser();

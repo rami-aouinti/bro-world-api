@@ -41,8 +41,7 @@ readonly class ApplicationCreateController
      * @throws ORMException
      */
     #[Route(path: '/v1/recruit/applications', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Post(
+        #[OA\Post(
         summary: 'Crée une candidature pour un job.',
         requestBody: new OA\RequestBody(
             required: true,

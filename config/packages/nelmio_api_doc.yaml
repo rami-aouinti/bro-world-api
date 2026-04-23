@@ -19,12 +19,6 @@ when@dev: &dev
                 version: 3.9.0
             components:
                 parameters:
-                    applicationSlug:
-                        name: applicationSlug
-                        in: path
-                        required: true
-                        schema:
-                            type: string
                     page:
                         name: page
                         in: query

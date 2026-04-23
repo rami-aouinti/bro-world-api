@@ -24,8 +24,7 @@ final readonly class ListTasksBySprintController
     }
 
     #[Route('/v1/crm/tasks/by-sprint/{sprint}', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'sprint', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+        #[OA\Parameter(name: 'sprint', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
         summary: 'List Tasks By Sprint',
         responses: [

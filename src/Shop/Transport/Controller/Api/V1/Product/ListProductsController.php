@@ -21,7 +21,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class ListProductsController
 {
-    private const LEGACY_ROUTE_WARNING = 'Deprecated endpoint: use /v1/shop/products?applicationSlug={applicationSlug} instead.';
+    private const LEGACY_ROUTE_WARNING = 'Deprecated endpoint: use /v1/shop/products instead.';
     private const LEGACY_ROUTE_COUNTER = 'shop.legacy_route.usage_total';
 
     public function __construct(
@@ -49,7 +49,7 @@ final readonly class ListProductsController
                 'legacy_route' => true,
                 'route' => '/v1/shop/legacy/products',
                 'method' => Request::METHOD_GET,
-                'replacement' => '/v1/shop/products?applicationSlug={applicationSlug}',
+                'replacement' => '/v1/shop/products',
                 'sunset_at' => '2026-12-31T23:59:59Z',
                 'user_agent' => $request->headers->get('User-Agent'),
             ],

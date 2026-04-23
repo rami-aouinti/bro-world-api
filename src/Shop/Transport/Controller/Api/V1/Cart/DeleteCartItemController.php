@@ -37,8 +37,7 @@ final readonly class DeleteCartItemController
      * @throws ORMException
      */
     #[Route('/v1/shop/carts/{shopId}/items/{itemId}', methods: [Request::METHOD_DELETE])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, string $shopId, string $itemId, User $loggedInUser): JsonResponse
+        public function __invoke(string $applicationSlug, string $shopId, string $itemId, User $loggedInUser): JsonResponse
     {
         $shop = $this->shopRepository->find($shopId);
         if (!$shop instanceof Shop) {

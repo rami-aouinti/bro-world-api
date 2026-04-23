@@ -27,8 +27,7 @@ readonly class JobApplicationListController
     }
 
     #[Route(path: '/v1/recruit/private/job-applications', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Get(
+        #[OA\Get(
         summary: 'Liste privée des candidatures d\'un job.',
         parameters: [
             new OA\Parameter(name: 'jobId', description: 'UUID du job', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'uuid')),

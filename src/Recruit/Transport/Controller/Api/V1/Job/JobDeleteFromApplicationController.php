@@ -35,7 +35,6 @@ readonly class JobDeleteFromApplicationController
     #[OA\Delete(
         summary: 'Supprime un job via applicationSlug et contrôle propriétaire.',
         parameters: [
-            new OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'jobId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
         ],
         responses: [

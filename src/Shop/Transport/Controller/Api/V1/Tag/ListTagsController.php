@@ -27,8 +27,7 @@ final readonly class ListTagsController
     }
 
     #[Route('/v1/shop/tags', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug): JsonResponse
+        public function __invoke(string $applicationSlug): JsonResponse
     {
         $this->shopApplicationResolverService->resolveOrCreateShopByApplicationSlug($applicationSlug);
 

@@ -34,8 +34,7 @@ final readonly class DeleteProjectController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/projects/{project}', methods: [Request::METHOD_DELETE])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+        #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(
         summary: 'Delete Project',
         description: 'Exécute l action metier Delete Project dans le perimetre de l application CRM.',
@@ -48,8 +47,7 @@ final readonly class DeleteProjectController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    public function __invoke(string $applicationSlug, Project $project): JsonResponse
+        public function __invoke(string $applicationSlug, Project $project): JsonResponse
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
 

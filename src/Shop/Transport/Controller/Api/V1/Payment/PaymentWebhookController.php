@@ -30,8 +30,7 @@ final readonly class PaymentWebhookController
      * @throws JsonException
      */
     #[Route('/v1/shop/payments/webhook', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'provider', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['paypal', 'stripe', 'mock']))]
+        #[OA\Parameter(name: 'provider', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['paypal', 'stripe', 'mock']))]
     #[OA\Post(
         summary: 'Handle payment provider webhook (public endpoint with strict signature verification).',
         security: [],

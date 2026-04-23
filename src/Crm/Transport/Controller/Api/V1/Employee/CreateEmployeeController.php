@@ -34,8 +34,7 @@ final readonly class CreateEmployeeController
     }
 
     #[Route('/v1/crm/employees', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Post(
+        #[OA\Post(
         summary: 'Create Employee',
         description: 'Exécute l action metier Create Employee dans le perimetre de l application CRM.',
         responses: [

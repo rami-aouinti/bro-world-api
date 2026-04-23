@@ -32,8 +32,7 @@ final readonly class DeleteCompanyController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/companies/{company}', methods: [Request::METHOD_DELETE])]
-    #[OA\Parameter(name: 'applicationSlug', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'company', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+        #[OA\Parameter(name: 'company', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Delete(
         description: 'Exécute l action metier Delete Company dans le perimetre de l application CRM.',
         summary: 'Delete Company',
