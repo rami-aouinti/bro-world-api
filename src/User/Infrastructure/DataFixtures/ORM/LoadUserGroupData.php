@@ -43,6 +43,15 @@ final class LoadUserGroupData extends Fixture implements OrderedFixtureInterface
         'Role-crm_support' => '10000000-0000-1000-8000-000000000013',
         'Role-crm_marketing' => '10000000-0000-1000-8000-000000000014',
         'Role-crm_viewer' => '10000000-0000-1000-8000-000000000015',
+        'Role-shop_viewer' => '10000000-0000-1000-8000-000000000016',
+        'Role-shop_editor' => '10000000-0000-1000-8000-000000000017',
+        'Role-shop_manager' => '10000000-0000-1000-8000-000000000018',
+        'Role-school_viewer' => '10000000-0000-1000-8000-000000000019',
+        'Role-school_editor' => '10000000-0000-1000-8000-000000000020',
+        'Role-school_manager' => '10000000-0000-1000-8000-000000000021',
+        'Role-job_viewer' => '10000000-0000-1000-8000-000000000022',
+        'Role-job_editor' => '10000000-0000-1000-8000-000000000023',
+        'Role-job_manager' => '10000000-0000-1000-8000-000000000024',
     ];
 
     public function __construct(
