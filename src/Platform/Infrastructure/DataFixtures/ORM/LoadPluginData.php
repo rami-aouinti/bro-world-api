@@ -76,6 +76,60 @@ final class LoadPluginData extends Fixture implements OrderedFixtureInterface
             'private' => false,
             'description' => 'Gamified quiz module with categories, difficulty levels and answer scoring.',
         ],
+        [
+            'uuid' => '50000000-0000-1000-8000-000000000007',
+            'key' => 'Migration-Shopify',
+            'pluginKey' => 'language',
+            'name' => 'Migration Shopify',
+            'enabled' => true,
+            'private' => false,
+            'description' => 'Assistant de migration des catalogues et commandes Shopify vers l application cible.',
+        ],
+        [
+            'uuid' => '50000000-0000-1000-8000-000000000008',
+            'key' => 'Migration-OroEcommerce',
+            'pluginKey' => 'language',
+            'name' => 'Migration OroEcommerce',
+            'enabled' => true,
+            'private' => false,
+            'description' => 'Outils de migration des donnees OroCommerce incluant clients, prix et historiques.',
+        ],
+        [
+            'uuid' => '50000000-0000-1000-8000-000000000009',
+            'key' => 'Migration-Shopware',
+            'pluginKey' => 'language',
+            'name' => 'Migration Shopware',
+            'enabled' => true,
+            'private' => false,
+            'description' => 'Connecteur de migration Shopware avec reprise des contenus, stocks et medias.',
+        ],
+        [
+            'uuid' => '50000000-0000-1000-8000-000000000010',
+            'key' => 'Connect-Github',
+            'pluginKey' => 'chat',
+            'name' => 'Connect Github',
+            'enabled' => true,
+            'private' => false,
+            'description' => 'Connexion Github pour synchroniser repositories, issues et pull requests.',
+        ],
+        [
+            'uuid' => '50000000-0000-1000-8000-000000000011',
+            'key' => 'Connect-Gitlab',
+            'pluginKey' => 'chat',
+            'name' => 'Connect Gitlab',
+            'enabled' => true,
+            'private' => false,
+            'description' => 'Connexion Gitlab pour suivre pipelines CI/CD, merge requests et projets.',
+        ],
+        [
+            'uuid' => '50000000-0000-1000-8000-000000000012',
+            'key' => 'Connect-Azure',
+            'pluginKey' => 'chat',
+            'name' => 'Connect Azure',
+            'enabled' => true,
+            'private' => false,
+            'description' => 'Connexion Azure DevOps pour boards, repositories et deploiements cloud.',
+        ],
     ];
     /**
      * @var array<non-empty-string, non-empty-string>
@@ -90,6 +144,12 @@ final class LoadPluginData extends Fixture implements OrderedFixtureInterface
         'CRM Assistant' => '50000000-0000-1000-8000-000000000001',
         'Analytics Booster' => '50000000-0000-1000-8000-000000000002',
         'Knowledge Base Connector' => '50000000-0000-1000-8000-000000000005',
+        'Migration Shopify' => '50000000-0000-1000-8000-000000000007',
+        'Migration OroEcommerce' => '50000000-0000-1000-8000-000000000008',
+        'Migration Shopware' => '50000000-0000-1000-8000-000000000009',
+        'Connect Github' => '50000000-0000-1000-8000-000000000010',
+        'Connect Gitlab' => '50000000-0000-1000-8000-000000000011',
+        'Connect Azure' => '50000000-0000-1000-8000-000000000012',
     ];
 
     /**
