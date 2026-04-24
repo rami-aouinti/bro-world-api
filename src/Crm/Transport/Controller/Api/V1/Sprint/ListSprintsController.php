@@ -17,7 +17,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
-#[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class ListSprintsController
 {
     public function __construct(
@@ -29,7 +28,7 @@ final readonly class ListSprintsController
 
     #[Route('/v1/crm/sprints', methods: [Request::METHOD_GET])]
         #[OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1), example: 1)]
-    #[OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100), example: 20)]
+    #[OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', maximum: 100, minimum: 1), example: 20)]
     #[OA\Parameter(name: 'search', description: 'Filtre de recherche libre', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
     #[OA\Get(
         description: 'Exécute l action metier List Sprints dans le perimetre de l application CRM.',
