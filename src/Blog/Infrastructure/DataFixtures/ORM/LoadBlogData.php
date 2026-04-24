@@ -84,7 +84,7 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
                     $postData = $generalPosts[$postIndex - 1];
                 }
 
-                $post = (new BlogPost())
+                $post = new BlogPost()
                     ->setBlog($blog)
                     ->setAuthor($author)
                     ->setTitle($postData['title'] ?? sprintf('Post fixture %d', $postIndex))
@@ -117,19 +117,17 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
                 }
 
                 $postTags = [];
-                for ($tagIndex = 1; $tagIndex <= 2; $tagIndex++) {
-                    $tag = (new BlogTag())
-                        ->setBlog($blog)
-                        ->setLabel(sprintf('tag-%d-%d-%d', $blogIndex + 1, $postIndex, $tagIndex));
-                    $manager->persist($tag);
-                    $postTags[] = $tag;
-                }
+                $tag = new BlogTag()
+                    ->setBlog($blog)
+                    ->setLabel('BroWorld');
+                $manager->persist($tag);
+                $postTags[] = $tag;
 
                 $post->setTags($postTags);
                 $manager->persist($post);
 
                 if ($postIndex <= 2) {
-                    $sharedChild = (new BlogPost())
+                    $sharedChild = new BlogPost()
                         ->setBlog($blog)
                         ->setAuthor($authors[($blogIndex + $postIndex + 1) % count($authors)])
                         ->setTitle(sprintf('Shared fixture %d', $postIndex))
