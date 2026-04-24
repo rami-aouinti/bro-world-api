@@ -174,13 +174,10 @@ final readonly class CrmApiNormalizer
     {
         return [
             'id' => (string)($item['id'] ?? ''),
-            'taskId' => $item['taskId'] ?? null,
-            'repositoryId' => $item['repositoryId'] ?? null,
             'title' => (string)($item['title'] ?? ''),
             'status' => ($item['status'] ?? ''),
             'requestedAt' => $this->normalizeDateValue($item['requestedAt'] ?? null),
             'resolvedAt' => $this->normalizeDateValue($item['resolvedAt'] ?? null),
-            'blogId' => $item['blogId'] ?? null,
             'assignees' => $this->mapTaskRequestAssigneesProjection((array)($item['assignees'] ?? [])),
             'githubIssue' => [
                 'provider' => $item['githubIssueProvider'] ?? null,

@@ -60,12 +60,12 @@ readonly class CompanyApplicationListService
     public function listGlobal(Request $request): array
     {
         $queryOptions = $this->listRequestHelper->fromRequest($request, ['q']);
-        $cacheKey = $this->cacheKeyConventionService->buildCrmCompanyApplicationListKey('general', $queryOptions->page, $queryOptions->limit, $queryOptions->filters);
+        $cacheKey = $this->cacheKeyConventionService->buildCrmCompanyApplicationListKey('crm-general-core', $queryOptions->page, $queryOptions->limit, $queryOptions->filters);
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($queryOptions): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
-                $item->tag($this->cacheKeyConventionService->crmCompanyListByApplicationTag('general'));
+                $item->tag($this->cacheKeyConventionService->crmCompanyListByApplicationTag('crm-general-core'));
             }
 
             $items = $this->companyRepository->findBy([], ['createdAt' => 'DESC'], $queryOptions->limit, $queryOptions->offset());

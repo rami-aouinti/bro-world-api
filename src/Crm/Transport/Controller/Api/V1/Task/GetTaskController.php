@@ -16,7 +16,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
-#[IsGranted(Role::CRM_VIEWER->value)]
 final readonly class GetTaskController
 {
     public function __construct(
@@ -38,7 +37,7 @@ final readonly class GetTaskController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Task $task): JsonResponse
+    public function __invoke(Task $task): JsonResponse
     {
         return new JsonResponse($this->normalizer->normalizeTask($task));
     }

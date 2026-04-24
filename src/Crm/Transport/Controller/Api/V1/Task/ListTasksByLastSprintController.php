@@ -16,14 +16,14 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Crm')]
-final readonly class ListTasksBySprintController
+final readonly class ListTasksByLastSprintController
 {
     public function __construct(
         private TaskBoardService $taskBoardService,
     ) {
     }
 
-    #[Route('/v1/crm/tasks/by-sprint/{sprint}', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/tasks/sprints/by-latest-sprint', methods: [Request::METHOD_GET])]
         #[OA\Parameter(name: 'sprint', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
         summary: 'List Tasks By Sprint',
@@ -31,8 +31,8 @@ final readonly class ListTasksBySprintController
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Board payload grouped by sprint with sprint.name.'),
         ],
     )]
-    public function __invoke(Sprint $sprint): JsonResponse
+    public function __invoke(): JsonResponse
     {
-        return new JsonResponse($this->taskBoardService->listBySprint('crm-general-core', $sprint->getId()));
+        return new JsonResponse($this->taskBoardService->listByLatestSprintGlobal());
     }
 }

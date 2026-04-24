@@ -38,6 +38,8 @@ class PatchController
         'email',
         'language',
         'locale',
+        'visible',
+        'abonnement',
     ];
 
     public function __construct(
@@ -103,6 +105,22 @@ class PatchController
 
     private function applyPatch(User $loggedInUser, string $field, mixed $value): void
     {
+        if ($field === 'visible' || $field === 'abonnement') {
+            if (!is_bool($value)) {
+                throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "' . $field . '" must be a boolean.');
+            }
+
+            if ($field === 'visible') {
+                $loggedInUser->setVisible($value);
+
+                return;
+            }
+
+            $loggedInUser->setAbonnement($value);
+
+            return;
+        }
+
         if (!is_string($value)) {
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "' . $field . '" must be a string.');
         }
@@ -127,4 +145,5 @@ class PatchController
             default => throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Unsupported field "' . $field . '".'),
         };
     }
+
 }

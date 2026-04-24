@@ -144,12 +144,12 @@ readonly class ProjectReadService
             'status' => trim((string)$request->query->get('status', '')),
         ];
 
-        $cacheKey = $this->cacheKeyConventionService->buildCrmProjectListKey('general', $page, $limit, $filters);
+        $cacheKey = $this->cacheKeyConventionService->buildCrmProjectListKey('crm-general-core', $page, $limit, $filters);
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($page, $limit, $filters): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
-                $item->tag($this->cacheKeyConventionService->crmProjectListTag('general'));
+                $item->tag($this->cacheKeyConventionService->crmProjectListTag('crm-general-core'));
             }
 
             $projects = $this->projectRepository->findBy([], ['createdAt' => 'DESC'], $limit, ($page - 1) * $limit);
@@ -181,7 +181,7 @@ readonly class ProjectReadService
 
     public function getDetailGlobal(Project $project): ?array
     {
-        return $this->getDetail('general', $project);
+        return $this->getDetail('crm-general-core', $project);
     }
 
     private function searchIdsFromElastic(string $query): ?array

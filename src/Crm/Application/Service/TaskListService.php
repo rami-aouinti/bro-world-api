@@ -172,7 +172,7 @@ readonly class TaskListService
             $page,
             $limit,
             array_merge($filters, [
-                'applicationSlug' => 'general',
+                'applicationSlug' => 'crm-general-core',
             ])
         );
 
@@ -180,7 +180,7 @@ readonly class TaskListService
         $result = $this->cache->get($cacheKey, function (ItemInterface $item) use ($filters, $page, $limit): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
-                $item->tag($this->cacheKeyConventionService->crmTaskListTag('general'));
+                $item->tag($this->cacheKeyConventionService->crmTaskListTag('crm-general-core'));
             }
 
             $items = array_map(
