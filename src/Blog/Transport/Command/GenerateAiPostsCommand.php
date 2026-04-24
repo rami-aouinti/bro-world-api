@@ -29,36 +29,39 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 use function array_slice;
-use function json_decode;
+use function array_unique;
+use function explode;
+use function implode;
 use function preg_match;
+use function preg_replace;
 use function shuffle;
 use function strtolower;
+use function strip_tags;
 use function trim;
-use function sprintf;
 
 #[AsCommand(
     name: self::NAME,
-    description: 'Generate 3 AI posts safely (no timeout).',
+    description: 'Generate clean AI posts (no quotes, no duplicates).',
 )]
 final class GenerateAiPostsCommand extends Command
 {
     public const string NAME = 'app:generate-ai-posts';
 
-    private const AI_URL = 'http://127.0.0.1:11434/api/generate';
+    private const string AI_URL = 'http://127.0.0.1:11434/api/generate';
     private const string AI_MODEL = 'phi';
 
     private const array TOPICS = [
-        'AI startups',
-        'social media growth',
-        'SaaS business ideas',
-        'productivity tips',
-        'tech trends',
+        'Symfony 6',
+        'Docker',
+        'Nuxt Vue Js',
+        'Elastic Search',
+        'Messenger RabbitMQ',
     ];
 
     private const array AUTHORS = [
         'john-root',
         'john-admin',
-        'john-api',
+        'john-user',
     ];
 
     public function __construct(
@@ -110,10 +113,9 @@ final class GenerateAiPostsCommand extends Command
         }
 
         $this->em->flush();
-
         $this->cacheInvalidationService->invalidateBlogCaches(null, []);
 
-        $output->writeln('🎉 Done: 3 AI posts generated.');
+        $output->writeln('🎉 3 clean AI posts generated.');
 
         return Command::SUCCESS;
     }
@@ -136,10 +138,6 @@ final class GenerateAiPostsCommand extends Command
         ]);
 
         if (!$blog) {
-            $blog = $this->blogRepository->findOneBy(['owner' => $user]);
-        }
-
-        if (!$blog) {
             throw new RuntimeException('Blog not found');
         }
 
@@ -157,12 +155,13 @@ final class GenerateAiPostsCommand extends Command
      */
     private function generatePost(string $topic): array
     {
-        // 🔥 ULTRA LIGHT PROMPT (important pour éviter timeout)
         $prompt = "Write a viral social media post about: $topic.
-Max 100 words. Add 3 hashtags. No JSON.";
+Max 100 words. Add 3 hashtags.
+Do NOT use quotes.
+Do NOT repeat text.";
 
         $response = $this->client->request('POST', self::AI_URL, [
-            'timeout' => 120, // 🔥 FIX TIMEOUT
+            'timeout' => 120,
             'json' => [
                 'model' => self::AI_MODEL,
                 'prompt' => $prompt,
@@ -171,28 +170,41 @@ Max 100 words. Add 3 hashtags. No JSON.";
         ]);
 
         $data = $response->toArray(false);
-        $text = trim((string)($data['response'] ?? ''));
+        $raw = trim((string)($data['response'] ?? ''));
 
-        return $this->parse($text, $topic);
+        return $this->clean($raw, $topic);
     }
 
-    private function parse(string $text, string $topic): array
+    /**
+     * @return array{0: string, 1: string}
+     */
+    private function clean(string $text, string $topic): array
     {
-        // try JSON if exists
-        if (preg_match('/\{.*\}/s', $text, $m)) {
-            $json = json_decode($m[0], true);
+        // remove quotes
+        $text = trim($text, "\"'");
 
-            if (isset($json['title'], $json['content'])) {
-                return [
-                    trim((string)$json['title']),
-                    trim((string)$json['content']),
-                ];
-            }
+        // remove HTML
+        $text = strip_tags($text);
+
+        // remove duplicated lines
+        $lines = array_unique(array_filter(explode("\n", $text)));
+        $text = implode("\n", $lines);
+
+        // remove repeated blocks
+        if (preg_match('/^(.+)\1$/s', $text, $match)) {
+            $text = $match[1];
         }
 
-        // fallback safe
+        // clean spacing
+        $text = trim(preg_replace('/\n+/', "\n", $text));
+
+        // title = first line
         $lines = explode("\n", $text);
-        $title = $lines[0] ?? "Post about $topic";
+        $title = trim($lines[0] ?? '');
+
+        if ($title === '') {
+            $title = "Post about $topic";
+        }
 
         return [$title, $text];
     }
@@ -200,7 +212,6 @@ Max 100 words. Add 3 hashtags. No JSON.";
     private function slug(string $title, string $topic): string
     {
         $base = strtolower($this->slugger->slug($topic . ' ' . $title)->toString());
-
         return trim($base, '-') ?: 'ai-post';
     }
 }
