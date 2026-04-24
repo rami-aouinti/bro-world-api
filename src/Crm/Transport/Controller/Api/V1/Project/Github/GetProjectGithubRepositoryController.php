@@ -28,6 +28,7 @@ final readonly class GetProjectGithubRepositoryController
     }
 
     #[Route('/v1/crm/projects/{project}/github/repositories/{repository}', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/projects/{project}/gitlab/repositories/{repository}', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'repository', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'rami-aouinti/bro-world-api')]
     #[OA\Get(

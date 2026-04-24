@@ -49,6 +49,7 @@ final readonly class CreateTaskRequestGithubBranchController
     }
 
     #[Route('/v1/crm/task-requests/{taskRequest}/github/branches', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/task-requests/{taskRequest}/gitlab/branches', methods: [Request::METHOD_POST])]
     #[OA\Parameter(
         name: 'taskRequest',
         description: 'TaskRequest UUID. Future alias: body.taskRequestId on project/github equivalent endpoint.',

@@ -24,6 +24,7 @@ final readonly class GithubWebhookController
     }
 
     #[Route('/v1/crm/github/webhook', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/gitlab/webhook', methods: [Request::METHOD_POST])]
     #[OA\Post(
         description: 'Use this endpoint as GitHub webhook URL. In /api/doc, click "Try it out", set required headers and paste the raw GitHub payload JSON.',
         summary: 'Handle Project GitHub Webhook',

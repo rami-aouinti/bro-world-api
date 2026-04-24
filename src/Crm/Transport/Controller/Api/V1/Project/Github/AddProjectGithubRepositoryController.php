@@ -34,6 +34,7 @@ final readonly class AddProjectGithubRepositoryController
     }
 
     #[Route('/v1/crm/projects/{project}/github/repositories', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/projects/{project}/gitlab/repositories', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'), example: 'ebf77366-d60c-4ac4-b204-9f91a7f7ee12')]
     #[OA\Post(
         description: 'Ajoute un repository GitHub existant au projet CRM courant à partir du fullName `owner/name`.',

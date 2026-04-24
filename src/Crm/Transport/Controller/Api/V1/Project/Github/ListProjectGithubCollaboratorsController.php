@@ -21,6 +21,7 @@ final readonly class ListProjectGithubCollaboratorsController
     }
 
     #[Route('/v1/crm/projects/{project}/github/collaborators', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/projects/{project}/gitlab/collaborators', methods: [Request::METHOD_GET])]
     public function __invoke(Project $project, Request $request): JsonResponse
     {
         return new JsonResponse($this->crmGithubService->listCollaborators(

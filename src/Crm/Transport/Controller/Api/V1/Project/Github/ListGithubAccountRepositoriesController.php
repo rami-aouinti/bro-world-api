@@ -25,6 +25,7 @@ final readonly class ListGithubAccountRepositoriesController
     }
 
     #[Route('/v1/crm/projects/{project}/github/account/repositories', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/projects/{project}/gitlab/account/repositories', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1), example: 1)]
     #[OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100), example: 20)]

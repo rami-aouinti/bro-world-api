@@ -32,6 +32,7 @@ final readonly class AddProjectGithubIssueCommentController
     }
 
     #[Route('/v1/crm/projects/{project}/github/issues/{number}/comments', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/projects/{project}/gitlab/issues/{number}/comments', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'number', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 42)]
     #[OA\Post(

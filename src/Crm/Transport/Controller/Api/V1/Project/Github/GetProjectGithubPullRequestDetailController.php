@@ -24,6 +24,7 @@ final readonly class GetProjectGithubPullRequestDetailController
     }
 
     #[Route('/v1/crm/projects/{project}/github/pull-requests/{number}', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/projects/{project}/gitlab/pull-requests/{number}', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'number', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
