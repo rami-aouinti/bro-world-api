@@ -32,6 +32,7 @@ final readonly class CreateProjectGithubBranchController
     }
 
     #[Route('/v1/crm/projects/{project}/github/branches/create', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/projects/{project}/gitlab/branches/create', methods: [Request::METHOD_POST])]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Post(
         summary: 'Create Project GitHub Branch',

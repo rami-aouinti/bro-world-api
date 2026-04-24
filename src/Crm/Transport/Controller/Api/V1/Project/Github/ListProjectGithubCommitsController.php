@@ -21,6 +21,7 @@ final readonly class ListProjectGithubCommitsController
     }
 
     #[Route('/v1/crm/projects/{project}/github/commits', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/projects/{project}/gitlab/commits', methods: [Request::METHOD_GET])]
     public function __invoke(Project $project, Request $request): JsonResponse
     {
         return new JsonResponse($this->crmGithubService->listCommits(

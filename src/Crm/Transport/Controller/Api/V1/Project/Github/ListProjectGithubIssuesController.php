@@ -28,6 +28,7 @@ final readonly class ListProjectGithubIssuesController
     }
 
     #[Route('/v1/crm/projects/{project}/github/issues', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/projects/{project}/gitlab/issues', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'repo', in: 'query', required: true, schema: new OA\Schema(type: 'string'), example: 'rami-aouinti/bro-world-api')]
     #[OA\Parameter(ref: '#/components/parameters/status')]

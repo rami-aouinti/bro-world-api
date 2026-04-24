@@ -28,6 +28,7 @@ final readonly class ListProjectGithubProjectItemsController
     }
 
     #[Route('/v1/crm/projects/{project}/github/projects/{projectId}/items', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/projects/{project}/gitlab/projects/{projectId}/items', methods: [Request::METHOD_GET])]
     #[OA\Parameter(name: 'project', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Parameter(name: 'projectId', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'PVT_kwDOBfke3c4A9v0F')]
     #[OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1), example: 1)]

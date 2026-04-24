@@ -39,6 +39,7 @@ final readonly class PostCrmGithubBootstrapSyncController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/github/sync/bootstrap', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/gitlab/sync/bootstrap', methods: [Request::METHOD_POST])]
         #[OA\Post(
         description: 'Synchronise les repositories et issues GitHub vers CRM selon issueTarget.'
             . "\n\nRègles de mapping:"

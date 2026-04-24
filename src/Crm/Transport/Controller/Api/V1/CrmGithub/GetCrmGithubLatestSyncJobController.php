@@ -28,6 +28,7 @@ final readonly class GetCrmGithubLatestSyncJobController
     }
 
     #[Route('/v1/crm/github/sync/jobs/latest', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/gitlab/sync/jobs/latest', methods: [Request::METHOD_GET])]
         #[OA\Get(
         summary: 'Get latest CRM GitHub sync job',
         responses: [

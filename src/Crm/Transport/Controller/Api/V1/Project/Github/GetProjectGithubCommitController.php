@@ -21,6 +21,7 @@ final readonly class GetProjectGithubCommitController
     }
 
     #[Route('/v1/crm/projects/{project}/github/commits/{sha}', methods: [Request::METHOD_GET])]
+    #[Route('/v1/crm/projects/{project}/gitlab/commits/{sha}', methods: [Request::METHOD_GET])]
     public function __invoke(Project $project, string $sha, Request $request): JsonResponse
     {
         return new JsonResponse($this->crmGithubService->getCommit(
