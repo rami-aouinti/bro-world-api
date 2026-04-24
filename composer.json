@@ -188,6 +188,7 @@
 		"docker": [
 			"php bin/console scheduler:cleanup-logs",
 			"php bin/console scheduler:cleanup-messenger-messages",
+			"php bin/console scheduler:notification-template-sync",
 			"php bin/console scheduler:recruit-index-similar-jobs",
 			"php bin/console scheduler:elastic-reindex-domains",
 			"php bin/console scheduler:warmup-public-endpoints",

@@ -7,9 +7,11 @@ namespace App\Notification\Transport\Controller\Api\V1;
 use App\General\Domain\Service\Interfaces\MessageServiceInterface;
 use App\Notification\Application\Message\CreateNotificationCommand;
 use App\Notification\Application\Message\MarkAllNotificationsAsReadCommand;
+use App\Notification\Application\Service\MailjetTemplateService;
 use App\Notification\Application\Service\NotificationReadService;
 use App\Notification\Domain\Entity\Notification;
 use App\Notification\Infrastructure\Repository\NotificationRepository;
+use App\Notification\Infrastructure\Repository\NotificationTemplateRepository;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
 use Ramsey\Uuid\Uuid;
@@ -22,6 +24,8 @@ use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 use Throwable;
+use function is_array;
+use function is_int;
 use function is_string;
 use function trim;
 
@@ -32,7 +36,9 @@ final readonly class NotificationController
 {
     public function __construct(
         private NotificationRepository $notificationRepository,
+        private NotificationTemplateRepository $notificationTemplateRepository,
         private NotificationReadService $notificationReadService,
+        private MailjetTemplateService $mailjetTemplateService,
         private MessageServiceInterface $messageService,
     ) {
     }
@@ -112,6 +118,104 @@ final readonly class NotificationController
             'items' => $this->notificationReadService->normalizeList($notifications),
             'unreadCount' => $this->notificationRepository->countUnreadByRecipient($loggedInUser),
         ]);
+    }
+
+    #[Route('/v1/notifications/templates', methods: [Request::METHOD_GET])]
+    #[OA\Get(summary: 'List synchronized notification templates with their variables.')]
+    #[OA\Parameter(name: 'limit', description: 'Max number of templates to return (default: 50).', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, example: 20))]
+    #[OA\Parameter(name: 'offset', description: 'Pagination offset (default: 0).', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 0, example: 0))]
+    #[OA\Response(
+        response: 200,
+        description: 'Notification templates list.',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(
+                    property: 'items',
+                    type: 'array',
+                    items: new OA\Items(
+                        properties: [
+                            new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+                            new OA\Property(property: 'templateId', type: 'integer', nullable: false, example: 123456789),
+                            new OA\Property(property: 'name', type: 'string', example: 'Welcome Email'),
+                            new OA\Property(property: 'isActive', type: 'boolean', example: true),
+                            new OA\Property(property: 'variables', type: 'array', items: new OA\Items(type: 'string', example: 'firstName')),
+                        ],
+                        type: 'object',
+                    ),
+                ),
+            ],
+            type: 'object',
+        ),
+    )]
+    #[OA\Response(response: 401, description: 'Authentication required.')]
+    #[OA\Response(response: 403, description: 'Access denied.')]
+    public function listTemplates(Request $request): JsonResponse
+    {
+        $limit = max(1, (int)$request->query->get('limit', 50));
+        $offset = max(0, (int)$request->query->get('offset', 0));
+
+        $templates = $this->notificationTemplateRepository->findList($limit, $offset);
+
+        return new JsonResponse([
+            'items' => array_map(static fn ($template): array => [
+                'id' => $template->getId(),
+                'templateId' => $template->getProviderTemplateId(),
+                'name' => $template->getName(),
+                'isActive' => $template->isActive(),
+                'variables' => $template->getVariables(),
+            ], $templates),
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    #[Route('/v1/notifications/templates/send', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'Send an email using a Mailjet template and request variables.')]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ['templateId', 'to'],
+            properties: [
+                new OA\Property(property: 'templateId', type: 'integer', example: 123456789),
+                new OA\Property(property: 'to', type: 'string', format: 'email', example: 'user@example.com'),
+                new OA\Property(property: 'variables', type: 'object', additionalProperties: new OA\AdditionalProperties(type: 'string')),
+            ],
+        ),
+    )]
+    #[OA\Response(response: 202, description: 'Mailjet send request accepted.')]
+    #[OA\Response(response: 400, description: 'Validation error.')]
+    #[OA\Response(response: 401, description: 'Authentication required.')]
+    #[OA\Response(response: 403, description: 'Access denied.')]
+    #[OA\Response(response: 502, description: 'Mailjet upstream error.')]
+    public function sendTemplateEmail(Request $request): JsonResponse
+    {
+        $payload = $request->toArray();
+        $templateId = $payload['templateId'] ?? null;
+        $to = $payload['to'] ?? null;
+        $variables = $payload['variables'] ?? [];
+
+        if (!is_int($templateId)) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "templateId" must be an integer.');
+        }
+        if (!is_string($to) || trim($to) === '') {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "to" must be a non-empty email string.');
+        }
+        if (!is_array($variables)) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "variables" must be an object.');
+        }
+
+        try {
+            $response = $this->mailjetTemplateService->sendTemplateEmail($templateId, $to, $variables);
+        } catch (Throwable $exception) {
+            throw new HttpException(JsonResponse::HTTP_BAD_GATEWAY, 'Unable to send template email through Mailjet.', $exception);
+        }
+
+        return new JsonResponse([
+            'status' => 'accepted',
+            'provider' => 'mailjet',
+            'response' => $response,
+        ], JsonResponse::HTTP_ACCEPTED);
     }
 
     /**
