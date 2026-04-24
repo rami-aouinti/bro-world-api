@@ -32,6 +32,7 @@ final readonly class GetGeneralBlogController
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1, minimum: 1)),
             new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20, maximum: 100, minimum: 1)),
+            new OA\Parameter(name: 'tag', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
         ]
     )]
     #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
@@ -39,7 +40,8 @@ final readonly class GetGeneralBlogController
     {
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
+        $tag = trim((string)$request->query->get('tag', ''));
 
-        return new JsonResponse($this->blogReadService->getGeneralBlogWithTree($loggedInUser, $page, $limit));
+        return new JsonResponse($this->blogReadService->getGeneralBlogWithTree($loggedInUser, $page, $limit, $tag !== '' ? $tag : null));
     }
 }

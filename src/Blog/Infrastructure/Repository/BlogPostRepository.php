@@ -33,20 +33,27 @@ class BlogPostRepository extends BaseRepository
     /**
      * @return list<BlogPost>
      */
-    public function findRootPostsByBlogPaginated(Blog $blog, int $page, int $limit): array
+    public function findRootPostsByBlogPaginated(Blog $blog, int $page, int $limit, ?string $tag = null): array
     {
         $offset = ($page - 1) * $limit;
 
-        $idRows = $this->createQueryBuilder('post')
+        $qb = $this->createQueryBuilder('post')
             ->select('post.id AS id')
             ->where('post.blog = :blog')
             ->andWhere('post.parentPost IS NULL')
             ->orderBy('post.createdAt', 'DESC')
             ->setFirstResult($offset)
             ->setMaxResults($limit)
-            ->setParameter('blog', $blog->getId(), UuidBinaryOrderedTimeType::NAME)
-            ->getQuery()
-            ->getArrayResult();
+            ->setParameter('blog', $blog->getId(), UuidBinaryOrderedTimeType::NAME);
+
+        if ($tag !== null) {
+            $qb
+                ->innerJoin('post.tags', 'tag')
+                ->andWhere('tag.label = :tagLabel')
+                ->setParameter('tagLabel', $tag);
+        }
+
+        $idRows = $qb->getQuery()->getArrayResult();
 
         /** @var list<string> $ids */
         $ids = array_values(
@@ -59,15 +66,22 @@ class BlogPostRepository extends BaseRepository
         return $this->findPostsWithDisplayRelationsByIds($ids);
     }
 
-    public function countRootPostsByBlog(Blog $blog): int
+    public function countRootPostsByBlog(Blog $blog, ?string $tag = null): int
     {
-        return (int)$this->createQueryBuilder('post')
+        $qb = $this->createQueryBuilder('post')
             ->select('COUNT(post.id)')
             ->where('post.blog = :blog')
             ->andWhere('post.parentPost IS NULL')
-            ->setParameter('blog', $blog->getId(), UuidBinaryOrderedTimeType::NAME)
-            ->getQuery()
-            ->getSingleScalarResult();
+            ->setParameter('blog', $blog->getId(), UuidBinaryOrderedTimeType::NAME);
+
+        if ($tag !== null) {
+            $qb
+                ->innerJoin('post.tags', 'tag')
+                ->andWhere('tag.label = :tagLabel')
+                ->setParameter('tagLabel', $tag);
+        }
+
+        return (int)$qb->getQuery()->getSingleScalarResult();
     }
 
     /**
@@ -114,6 +128,7 @@ class BlogPostRepository extends BaseRepository
         $posts = $this->createQueryBuilder('post')
             ->leftJoin('post.author', 'author')->addSelect('author')
             ->leftJoin('post.parentPost', 'parent')->addSelect('parent')
+            ->leftJoin('post.tags', 'tags')->addSelect('tags')
             ->where('post.slug = :slug')
             ->setParameter('slug', $slug)
             ->setMaxResults(1)
@@ -204,7 +219,8 @@ class BlogPostRepository extends BaseRepository
         $qb = $this->createQueryBuilder('post')
             ->distinct()
             ->leftJoin('post.author', 'author')->addSelect('author')
-            ->leftJoin('post.parentPost', 'parent')->addSelect('parent');
+            ->leftJoin('post.parentPost', 'parent')->addSelect('parent')
+            ->leftJoin('post.tags', 'tags')->addSelect('tags');
 
         $orX = $qb->expr()->orX();
 

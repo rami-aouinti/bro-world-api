@@ -10,6 +10,7 @@ final readonly class PatchBlogPostCommand implements MessageHighInterface
 {
     /**
      * @param list<string>|null $mediaUrls
+     * @param list<string>|null $tagIds
      */
     public function __construct(
         public string $operationId,
@@ -19,6 +20,7 @@ final readonly class PatchBlogPostCommand implements MessageHighInterface
         public ?string $content,
         public ?string $filePath,
         public ?array $mediaUrls,
+        public ?array $tagIds,
         public ?string $sharedUrl,
         public ?bool $isPinned
     ) {

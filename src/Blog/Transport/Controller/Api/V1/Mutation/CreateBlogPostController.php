@@ -48,6 +48,7 @@ final readonly class CreateBlogPostController
         $payload['filePath'] = $this->requestService->resolveUploadedFileUrl($request, (string)($payload['filePath'] ?? ''));
         $contentData = $this->requestService->normalizePostContent($payload);
         $slug = $this->slugify((string)($payload['slug'] ?? $payload['title'] ?? 'post'));
+        $tagIds = $this->requestService->normalizeTagIds($payload['tagIds'] ?? null);
 
         $entityId = $this->handler->__invoke(new CreateBlogPostCommand(
             (string)uniqid('op_', true),
@@ -58,6 +59,7 @@ final readonly class CreateBlogPostController
             $contentData['content'],
             $payload['filePath'] ?: null,
             [],
+            $tagIds,
             $contentData['sharedUrl'],
             isset($payload['parentPostId']) ? (string)$payload['parentPostId'] : null,
             (bool)($payload['isPinned'] ?? false)

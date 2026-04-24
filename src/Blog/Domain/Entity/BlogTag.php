@@ -7,6 +7,8 @@ namespace App\Blog\Domain\Entity;
 use App\General\Domain\Entity\Interfaces\EntityInterface;
 use App\General\Domain\Entity\Traits\Timestampable;
 use App\General\Domain\Entity\Traits\Uuid;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
@@ -30,9 +32,16 @@ class BlogTag implements EntityInterface
     #[ORM\Column(name: 'label', type: 'string', length: 100)]
     private string $label = '';
 
+    /**
+     * @var Collection<int, BlogPost>
+     */
+    #[ORM\ManyToMany(targetEntity: BlogPost::class, mappedBy: 'tags')]
+    private Collection $posts;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
+        $this->posts = new ArrayCollection();
     }
     #[Override] public function getId(): string
     {
@@ -57,5 +66,13 @@ class BlogTag implements EntityInterface
         $this->label = $label;
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, BlogPost>
+     */
+    public function getPosts(): Collection
+    {
+        return $this->posts;
     }
 }
