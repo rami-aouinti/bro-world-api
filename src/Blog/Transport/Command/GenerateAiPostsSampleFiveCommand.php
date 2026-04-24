@@ -151,15 +151,7 @@ final class GenerateAiPostsSampleFiveCommand extends Command
 
     private function resolveBlog(): ?Blog
     {
-        $blog = $this->blogRepository->findOneBy([
-            'type' => BlogType::GENERAL,
-        ]);
-
-        if (!$blog) {
-            throw new RuntimeException('Blog not found');
-        }
-
-        return $blog;
+        return $this->blogRepository->findGeneralBlog();
     }
 
     /**
