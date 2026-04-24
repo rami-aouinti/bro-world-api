@@ -118,7 +118,7 @@ final class GenerateAiPostsSampleTwoCommand extends Command
             $tags = $this->extractTags($content);
 
             foreach ($tags as $tagName) {
-                $tag = $this->resolveTag($tagName);
+                $tag = $this->resolveTag($blog, $tagName);
                 $post->addTag($tag);
             }
 
@@ -223,15 +223,16 @@ Do NOT use quotes.";
     /**
      * 🔥 Get or create tag
      */
-    private function resolveTag(string $name): BlogTag
+    private function resolveTag(Blog $blog, string $name): BlogTag
     {
         $name = strtolower(trim($name));
 
-        $tag = $this->tagRepository->findOneBy(['label' => $name]);
+        $tag = $this->tagRepository->findOneBy(['blog' => $blog, 'label' => $name]);
 
         if (!$tag) {
             $tag = new BlogTag();
-            $tag->setLabel($name);
+            $tag->setBlog($blog)
+                ->setLabel($name);
 
             $this->em->persist($tag);
         }
