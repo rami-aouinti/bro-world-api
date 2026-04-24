@@ -84,6 +84,11 @@ class SocialLoginController
         $email = trim((string)($payload['email'] ?? ''));
         $provider = trim((string)($payload['provider'] ?? ''));
         $providerId = trim((string)($payload['providerId'] ?? ''));
+        $firstname = trim((string)($payload['firstName'] ?? 'User'));
+        $lastname = trim((string)($payload['lastName'] ?? 'User'));
+        $image = trim((string)($payload['image'] ?? ''));
+
+
 
         if ($email === '' || $provider === '' || $providerId === '') {
             throw new BadRequestHttpException('email, provider and providerId are required');
@@ -113,8 +118,9 @@ class SocialLoginController
                 $user
                     ->setEmail($email)
                     ->setUsername($this->createAvailableUsername($email))
-                    ->setFirstName('User')
-                    ->setLastName('User')
+                    ->setFirstName($firstname)
+                    ->setLastName($lastname)
+                    ->setPhoto($image)
                     ->setPlainPassword($this->generateRandomPassword());
 
                 $this->entityManager->persist($user);
