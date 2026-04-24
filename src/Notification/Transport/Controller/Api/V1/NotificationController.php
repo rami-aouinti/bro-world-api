@@ -7,6 +7,7 @@ namespace App\Notification\Transport\Controller\Api\V1;
 use App\General\Domain\Service\Interfaces\MessageServiceInterface;
 use App\Notification\Application\Message\CreateNotificationCommand;
 use App\Notification\Application\Message\MarkAllNotificationsAsReadCommand;
+use App\Notification\Application\Service\MailjetTemplateService;
 use App\Notification\Application\Service\NotificationReadService;
 use App\Notification\Domain\Entity\Notification;
 use App\Notification\Infrastructure\Repository\NotificationRepository;
@@ -33,6 +34,7 @@ final readonly class NotificationController
     public function __construct(
         private NotificationRepository $notificationRepository,
         private NotificationReadService $notificationReadService,
+        private MailjetTemplateService $mailjetTemplateService,
         private MessageServiceInterface $messageService,
     ) {
     }
@@ -112,6 +114,50 @@ final readonly class NotificationController
             'items' => $this->notificationReadService->normalizeList($notifications),
             'unreadCount' => $this->notificationRepository->countUnreadByRecipient($loggedInUser),
         ]);
+    }
+
+    #[Route('/v1/notifications/mailjet/templates', methods: [Request::METHOD_GET])]
+    #[OA\Get(summary: 'List email templates available in Mailjet.')]
+    #[OA\Parameter(name: 'limit', description: 'Max number of templates to return (default: 50).', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, example: 20))]
+    #[OA\Parameter(name: 'offset', description: 'Pagination offset (default: 0).', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 0, example: 0))]
+    #[OA\Response(
+        response: 200,
+        description: 'Mailjet templates list.',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(
+                    property: 'items',
+                    type: 'array',
+                    items: new OA\Items(
+                        properties: [
+                            new OA\Property(property: 'id', type: 'integer', nullable: true, example: 123456789),
+                            new OA\Property(property: 'name', type: 'string', example: 'Welcome Email'),
+                            new OA\Property(property: 'isActive', type: 'boolean', example: true),
+                            new OA\Property(property: 'createdAt', type: 'string', nullable: true, example: '2026-04-24T10:00:00Z'),
+                            new OA\Property(property: 'updatedAt', type: 'string', nullable: true, example: '2026-04-24T10:30:00Z'),
+                        ],
+                        type: 'object',
+                    ),
+                ),
+            ],
+            type: 'object',
+        ),
+    )]
+    #[OA\Response(response: 401, description: 'Authentication required.')]
+    #[OA\Response(response: 403, description: 'Access denied.')]
+    #[OA\Response(response: 502, description: 'Failed to fetch templates from Mailjet.')]
+    public function listMailjetTemplates(Request $request): JsonResponse
+    {
+        $limit = max(1, (int)$request->query->get('limit', 50));
+        $offset = max(0, (int)$request->query->get('offset', 0));
+
+        try {
+            return new JsonResponse([
+                'items' => $this->mailjetTemplateService->listTemplates($limit, $offset),
+            ]);
+        } catch (Throwable $exception) {
+            throw new HttpException(JsonResponse::HTTP_BAD_GATEWAY, 'Unable to fetch Mailjet templates.', $exception);
+        }
     }
 
     /**

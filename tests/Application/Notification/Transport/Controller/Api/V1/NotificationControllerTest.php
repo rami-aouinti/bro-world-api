@@ -33,6 +33,40 @@ class NotificationControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
+    #[TestDox('Test that `GET /v1/notifications/mailjet/templates` requires authentication.')]
+    public function testThatMailjetTemplateListRequiresAuthentication(): void
+    {
+        $client = $this->getTestClient();
+
+        $client->request('GET', $this->baseUrl . '/mailjet/templates');
+
+        self::assertSame(Response::HTTP_UNAUTHORIZED, $client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('Test that `GET /v1/notifications/mailjet/templates` returns a normalized list.')]
+    public function testThatMailjetTemplateListReturnsNormalizedPayload(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('GET', $this->baseUrl . '/mailjet/templates');
+
+        $response = $client->getResponse();
+        $content = $response->getContent();
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:\n" . $response);
+
+        $payload = JSON::decode($content, true);
+        self::assertIsArray($payload);
+        self::assertArrayHasKey('items', $payload);
+        self::assertIsArray($payload['items']);
+    }
+
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `GET /v1/notifications` returns only notifications for the authenticated user.')]
     public function testThatListReturnsOnlyCurrentUserNotifications(): void
     {
