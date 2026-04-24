@@ -10,6 +10,36 @@ when@dev: &dev
         methods: GET
         defaults: { _controller: nelmio_api_doc.controller.swagger, area: users }
 
+    app.swagger.blog:
+        path: /api/doc/blog.json
+        methods: GET
+        defaults: { _controller: nelmio_api_doc.controller.swagger, area: blog }
+
+    app.swagger.crm:
+        path: /api/doc/crm.json
+        methods: GET
+        defaults: { _controller: nelmio_api_doc.controller.swagger, area: crm }
+
+    app.swagger.shop:
+        path: /api/doc/shop.json
+        methods: GET
+        defaults: { _controller: nelmio_api_doc.controller.swagger, area: shop }
+
+    app.swagger.school:
+        path: /api/doc/school.json
+        methods: GET
+        defaults: { _controller: nelmio_api_doc.controller.swagger, area: school }
+
+    app.swagger.recruit:
+        path: /api/doc/recruit.json
+        methods: GET
+        defaults: { _controller: nelmio_api_doc.controller.swagger, area: recruit }
+
+    app.swagger.calendar:
+        path: /api/doc/calendar.json
+        methods: GET
+        defaults: { _controller: nelmio_api_doc.controller.swagger, area: calendar }
+
     ## Requires the Asset component and the Twig bundle
     ## $ composer require twig asset
     app.swagger_ui:
@@ -21,5 +51,35 @@ when@dev: &dev
         path: /api/doc/users
         methods: GET
         defaults: { _controller: nelmio_api_doc.controller.swagger_ui, area: users }
+
+    app.swagger_ui.blog:
+        path: /api/doc/blog
+        methods: GET
+        defaults: { _controller: nelmio_api_doc.controller.swagger_ui, area: blog }
+
+    app.swagger_ui.crm:
+        path: /api/doc/crm
+        methods: GET
+        defaults: { _controller: nelmio_api_doc.controller.swagger_ui, area: crm }
+
+    app.swagger_ui.shop:
+        path: /api/doc/shop
+        methods: GET
+        defaults: { _controller: nelmio_api_doc.controller.swagger_ui, area: shop }
+
+    app.swagger_ui.school:
+        path: /api/doc/school
+        methods: GET
+        defaults: { _controller: nelmio_api_doc.controller.swagger_ui, area: school }
+
+    app.swagger_ui.recruit:
+        path: /api/doc/recruit
+        methods: GET
+        defaults: { _controller: nelmio_api_doc.controller.swagger_ui, area: recruit }
+
+    app.swagger_ui.calendar:
+        path: /api/doc/calendar
+        methods: GET
+        defaults: { _controller: nelmio_api_doc.controller.swagger_ui, area: calendar }
 
 when@test: *dev

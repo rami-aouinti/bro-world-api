@@ -399,5 +399,24 @@ when@dev: &dev
             users:
                 path_patterns:
                     - ^/api/v1/(?:auth|profile|user(?:s|_group)?|private/stories)(?:/|$)
+            blog:
+                path_patterns:
+                    - ^/api/v1/private/blogs?(?:/|$)
+            crm:
+                path_patterns:
+                    - ^/api/v1/crm(?:/|$)
+            shop:
+                path_patterns:
+                    - ^/api/v1/shop(?:/|$)
+            school:
+                path_patterns:
+                    - ^/api/v1/school(?:/|$)
+            recruit:
+                path_patterns:
+                    - ^/api/v1/recruit(?:/|$)
+            calendar:
+                path_patterns:
+                    - ^/api/v1/calendar(?:/|$)
+
 
 when@test: *dev
