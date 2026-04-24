@@ -47,22 +47,18 @@ use function trim;
     name: self::NAME,
     description: 'Generate clean AI posts (with tags extraction).',
 )]
-final class GenerateAiPostsCommand extends Command
+final class GenerateAiPostsSampleTwoCommand extends Command
 {
-    public const string NAME = 'app:generate-ai-posts';
+    public const string NAME = 'app:generate-ai-posts-sample-two';
 
     private const string AI_URL = 'http://127.0.0.1:11434/api/generate';
     private const string AI_MODEL = 'phi';
 
     private const array TOPICS = [
-        'Symfony 6',
-        'Docker',
-        'Nuxt Vue Js',
-        'Elastic Search',
-        'Messenger RabbitMQ',
-        'Redis Cache',
-        'MongoDB',
-        'Cron Jobs'
+        'Social media influence on society',
+        'Global economic inequality',
+        'Cryptocurrencies and blockchain technology',
+        'Ocean pollution and plastic waste',
     ];
 
     private const array AUTHORS = [
