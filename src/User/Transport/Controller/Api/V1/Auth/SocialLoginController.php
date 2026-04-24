@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\User\Transport\Controller\Api\V1\Auth;
 
+use App\General\Domain\Service\Interfaces\MailerServiceInterface;
 use App\General\Domain\Utils\JSON;
 use App\Role\Application\Security\Interfaces\RolesServiceInterface;
 use App\User\Application\Security\SecurityUser;
@@ -14,6 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use JsonException;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use OpenApi\Attributes as OA;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,6 +26,7 @@ use Throwable;
 
 use function in_array;
 use function bin2hex;
+use function ucfirst;
 use function explode;
 use function random_bytes;
 use function sprintf;
@@ -41,8 +44,12 @@ class SocialLoginController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly JWTTokenManagerInterface $jwtTokenManager,
+        private readonly MailerServiceInterface $mailerService,
+        private readonly \Twig\Environment $twig,
         private readonly UserRepositoryInterface $userRepository,
         private readonly RolesServiceInterface $rolesService,
+        #[Autowire('%env(resolve:APP_SENDER_EMAIL)%')]
+        private readonly string $appSenderEmail,
     ) {
     }
 
@@ -59,7 +66,7 @@ class SocialLoginController
                 required: ['email', 'provider', 'providerId'],
                 properties: [
                     new OA\Property(property: 'email', type: 'string', format: 'email', example: 'social.user@bro-world.com'),
-                    new OA\Property(property: 'provider', type: 'string', enum: ['github', 'instagram', 'facebook', 'google'], example: 'google'),
+                    new OA\Property(property: 'provider', type: 'string', enum: ['github', 'gitlab', 'instagram', 'facebook', 'google'], example: 'google'),
                     new OA\Property(property: 'providerId', type: 'string', example: 'google-oauth2|1134889988776655'),
                 ],
                 example: [
@@ -95,7 +102,7 @@ class SocialLoginController
         }
 
         if (!in_array($provider, self::ALLOWED_PROVIDERS, true)) {
-            throw new BadRequestHttpException('provider must be one of: github, instagram, facebook, google');
+            throw new BadRequestHttpException('provider must be one of: github, gitlab, instagram, facebook, google');
         }
 
         $social = $this->entityManager
@@ -110,7 +117,10 @@ class SocialLoginController
             ->getQuery()
             ->getOneOrNullResult();
 
+        $isFirstAuthenticationWithProvider = false;
+
         if (!($social instanceof Social)) {
+            $isFirstAuthenticationWithProvider = true;
             $user = $this->userRepository->loadUserByIdentifier($email, false);
 
             if (!($user instanceof User)) {
@@ -134,6 +144,31 @@ class SocialLoginController
 
             $this->entityManager->persist($social);
             $this->entityManager->flush();
+        }
+
+        if ($isFirstAuthenticationWithProvider) {
+            $body = $this->twig->render('Emails/welcome.html.twig', [
+                'email' => $email,
+            ]);
+
+            $this->mailerService->sendMail(
+                'Welcome to Bro World',
+                $this->appSenderEmail,
+                $email,
+                $body,
+            );
+        } else {
+            $body = $this->twig->render('Emails/social_login_notification.html.twig', [
+                'provider' => ucfirst($provider),
+                'email' => $email,
+            ]);
+
+            $this->mailerService->sendMail(
+                sprintf('Connexion via %s sur Bro World', ucfirst($provider)),
+                $this->appSenderEmail,
+                $email,
+                $body,
+            );
         }
 
         $securityUser = new SecurityUser(
