@@ -260,6 +260,41 @@ class User implements EntityInterface, UserInterface, UserGroupAwareInterface
     #[Assert\LessThanOrEqual(value: self::COINS_MAX)]
     private int $coins = self::COINS_DEFAULT;
 
+
+    #[ORM\Column(
+        name: 'visible',
+        type: Types::BOOLEAN,
+        nullable: false,
+        options: [
+            'default' => true,
+        ],
+    )]
+    #[Groups([
+        'User',
+        'User.visible',
+
+        self::SET_USER_PROFILE,
+        self::SET_USER_BASIC,
+    ])]
+    private bool $visible = true;
+
+    #[ORM\Column(
+        name: 'abonnement',
+        type: Types::BOOLEAN,
+        nullable: false,
+        options: [
+            'default' => false,
+        ],
+    )]
+    #[Groups([
+        'User',
+        'User.abonnement',
+
+        self::SET_USER_PROFILE,
+        self::SET_USER_BASIC,
+    ])]
+    private bool $abonnement = false;
+
     #[ORM\Column(
         name: 'password',
         type: Types::STRING,
@@ -423,6 +458,31 @@ class User implements EntityInterface, UserInterface, UserGroupAwareInterface
         }
 
         $this->coins = $coins;
+
+        return $this;
+    }
+
+
+    public function isVisible(): bool
+    {
+        return $this->visible;
+    }
+
+    public function setVisible(bool $visible): self
+    {
+        $this->visible = $visible;
+
+        return $this;
+    }
+
+    public function hasAbonnement(): bool
+    {
+        return $this->abonnement;
+    }
+
+    public function setAbonnement(bool $abonnement): self
+    {
+        $this->abonnement = $abonnement;
 
         return $this;
     }

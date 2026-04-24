@@ -150,6 +150,7 @@ final class LoadUserData extends Fixture implements OrderedFixtureInterface
                 /** @var UserGroup $crmOwnerGroup */
                 $crmOwnerGroup = $this->getReference('UserGroup-crm_owner', UserGroup::class);
                 $entity->addUserGroup($crmOwnerGroup);
+                $entity->setAbonnement(true);
             }
         }
 

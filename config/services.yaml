@@ -258,6 +258,9 @@ when@dev:
         App\School\Infrastructure\DataFixtures\:
             resource: '../src/School/Infrastructure/DataFixtures/*'
 
+        App\Abonnement\Infrastructure\DataFixtures\:
+            resource: '../src/Abonnement/Infrastructure/DataFixtures/*'
+
         App\Page\Infrastructure\DataFixtures\:
             resource: '../src/Page/Infrastructure/DataFixtures/*'
 
@@ -309,6 +312,10 @@ when@test:
 
         App\Shop\Infrastructure\DataFixtures\:
             resource: '../src/Shop/Infrastructure/DataFixtures/*'
+
+        App\Abonnement\Infrastructure\DataFixtures\:
+            resource: '../src/Abonnement/Infrastructure/DataFixtures/*'
+
         App\Crm\Infrastructure\DataFixtures\:
             resource: '../src/Crm/Infrastructure/DataFixtures/*'
         App\School\Infrastructure\DataFixtures\:

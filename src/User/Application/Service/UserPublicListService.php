@@ -125,6 +125,8 @@ readonly class UserPublicListService
     {
         $qb = $this->userRepository->createQueryBuilder('user')
             ->select('user')
+            ->andWhere('user.visible = :visible')
+            ->setParameter('visible', true)
             ->orderBy('user.createdAt', 'DESC');
 
         if ($esIds !== null) {
