@@ -160,6 +160,12 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Game/Domain/Entity'
                         prefix: 'App\Game\Domain\Entity'
                         alias: Game
+                    Abonnement:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Abonnement/Domain/Entity'
+                        prefix: 'App\Abonnement\Domain\Entity'
+                        alias: Abonnement
                 dql:
                     datetime_functions:
                         datesub: DoctrineExtensions\Query\Mysql\DateSub

@@ -165,6 +165,15 @@ library-controllers:
     prefix: /api
     defaults:
         _format: json
+abonnement-controllers:
+    resource:
+        path: ../src/Abonnement/Transport/Controller/Api/
+        namespace: App\Abonnement\Transport\Controller\Api
+    type: attribute
+    prefix: /api
+    defaults:
+        _format: json
+
 
 game:
     resource: routes/game.yaml

@@ -36,7 +36,7 @@ class SocialLoginController
     /**
      * @var array<int, string>
      */
-    private const array ALLOWED_PROVIDERS = ['github', 'instagram', 'facebook', 'google'];
+    private const array ALLOWED_PROVIDERS = ['github', 'gitlab', 'instagram', 'facebook', 'google'];
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,

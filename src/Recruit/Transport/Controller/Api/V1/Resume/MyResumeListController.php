@@ -28,7 +28,7 @@ readonly class MyResumeListController
 
     #[Route(path: '/v1/recruit/private/me/resumes', methods: [Request::METHOD_GET])]
         #[OA\Get(summary: 'Retourne les CV du user connecté.')]
-    public function __invoke(string $applicationSlug, User $loggedInUser): JsonResponse
+    public function __invoke(User $loggedInUser): JsonResponse
     {
         $resumes = $this->resumeRepository->findBy([
             'owner' => $loggedInUser,
