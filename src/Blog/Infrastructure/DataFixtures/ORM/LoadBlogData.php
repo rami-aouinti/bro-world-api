@@ -116,6 +116,16 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
                     ]);
                 }
 
+                $postTags = [];
+                for ($tagIndex = 1; $tagIndex <= 2; $tagIndex++) {
+                    $tag = (new BlogTag())
+                        ->setBlog($blog)
+                        ->setLabel(sprintf('tag-%d-%d-%d', $blogIndex + 1, $postIndex, $tagIndex));
+                    $manager->persist($tag);
+                    $postTags[] = $tag;
+                }
+
+                $post->setTags($postTags);
                 $manager->persist($post);
 
                 if ($postIndex <= 2) {
@@ -131,12 +141,6 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
                             sprintf('https://cdn.example.com/blog/%d/%d-child-image.webp', $blogIndex + 1, $postIndex),
                         ]);
                     $manager->persist($sharedChild);
-                }
-
-                for ($tagIndex = 1; $tagIndex <= 2; $tagIndex++) {
-                    $manager->persist((new BlogTag())
-                        ->setBlog($blog)
-                        ->setLabel(sprintf('tag-%d-%d-%d', $blogIndex + 1, $postIndex, $tagIndex)));
                 }
 
                 $parent = (new BlogComment())

@@ -36,14 +36,15 @@ final readonly class BlogReadService
     /**
      * @throws InvalidArgumentException
      */
-    public function getGeneralBlogWithTree(?User $currentUser = null, int $page = 1, int $limit = 20): array
+    public function getGeneralBlogWithTree(?User $currentUser = null, int $page = 1, int $limit = 20, ?string $tag = null): array
     {
         $page = max(1, $page);
         $limit = max(1, min(100, $limit));
 
-        $cacheKey = $this->buildBlogCacheKey(sprintf('general?page=%d&limit=%d', $page, $limit), $currentUser);
+        $tagScope = $tag !== null ? sprintf('&tag=%s', $tag) : '';
+        $cacheKey = $this->buildBlogCacheKey(sprintf('general?page=%d&limit=%d%s', $page, $limit, $tagScope), $currentUser);
 
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($currentUser, $page, $limit): array {
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($currentUser, $page, $limit, $tag): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->tagPublicBlog());
@@ -58,18 +59,21 @@ final readonly class BlogReadService
                 return [];
             }
 
-            return $this->normalizeBlog($blog, $currentUser, $page, $limit);
+            return $this->normalizeBlog($blog, $currentUser, $page, $limit, $tag);
         });
     }
 
     /**
      * @throws InvalidArgumentException
      */
-    public function getByApplicationSlug(string $applicationSlug, ?User $currentUser = null): array
+    public function getByApplicationSlug(string $applicationSlug, ?User $currentUser = null, int $page = 1, int $limit = 20, ?string $tag = null): array
     {
-        $cacheKey = $this->buildBlogCacheKey('app/' . $applicationSlug, $currentUser);
+        $page = max(1, $page);
+        $limit = max(1, min(100, $limit));
+        $tagScope = $tag !== null ? sprintf('&tag=%s', $tag) : '';
+        $cacheKey = $this->buildBlogCacheKey(sprintf('app/%s?page=%d&limit=%d%s', $applicationSlug, $page, $limit, $tagScope), $currentUser);
 
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $currentUser): array {
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $currentUser, $page, $limit, $tag): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag($this->cacheKeyConventionService->tagPublicBlog());
@@ -84,7 +88,7 @@ final readonly class BlogReadService
                 return [];
             }
 
-            return $this->normalizeBlog($blog, $currentUser);
+            return $this->normalizeBlog($blog, $currentUser, $page, $limit, $tag);
         });
     }
 
@@ -132,10 +136,10 @@ final readonly class BlogReadService
         ];
     }
 
-    private function normalizeBlog(Blog $blog, ?User $currentUser, int $page = 1, int $limit = 20): array
+    private function normalizeBlog(Blog $blog, ?User $currentUser, int $page = 1, int $limit = 20, ?string $tag = null): array
     {
-        $rootPosts = $this->blogPostRepository->findRootPostsByBlogPaginated($blog, $page, $limit);
-        $totalItems = $this->blogPostRepository->countRootPostsByBlog($blog);
+        $rootPosts = $this->blogPostRepository->findRootPostsByBlogPaginated($blog, $page, $limit, $tag);
+        $totalItems = $this->blogPostRepository->countRootPostsByBlog($blog, $tag);
         $childrenSummaryByParent = $this->blogPostRepository->findChildrenSharesSummaryByParentIds(
             array_map(static fn (BlogPost $post): string => $post->getId(), $rootPosts),
         );
@@ -150,6 +154,9 @@ final readonly class BlogReadService
             'commentStatus' => $blog->getCommentStatus()->value,
             'visibility' => $blog->getVisibility()->value,
             'applicationSlug' => $blog->getApplication()?->getSlug(),
+            'filter' => [
+                'tag' => $tag,
+            ],
             'posts' => array_map(
                 fn (BlogPost $post): array => $this->normalizePost($post, $currentUser, $childrenSummaryByParent),
                 $rootPosts,
@@ -186,6 +193,10 @@ final readonly class BlogReadService
             'isPinned' => $post->isPinned(),
             'filePath' => $post->getFilePath(),
             'mediaUrls' => $post->getMediaUrls(),
+            'tags' => array_map(static fn ($tag): array => [
+                'id' => $tag->getId(),
+                'label' => $tag->getLabel(),
+            ], $post->getTags()->toArray()),
             'parent' => $includeParent && $post->getParentPost() instanceof BlogPost
                 ? $this->normalizePost($post->getParentPost(), $currentUser, $childrenSummaryByParent, false)
                 : null,

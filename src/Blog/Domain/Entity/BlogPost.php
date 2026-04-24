@@ -84,6 +84,13 @@ class BlogPost implements EntityInterface
     private Collection $reactions;
 
     /**
+     * @var Collection<int, BlogTag>
+     */
+    #[ORM\ManyToMany(targetEntity: BlogTag::class, inversedBy: 'posts')]
+    #[ORM\JoinTable(name: 'blog_post_tag')]
+    private Collection $tags;
+
+    /**
      * @throws Throwable
      */
     public function __construct()
@@ -92,6 +99,7 @@ class BlogPost implements EntityInterface
         $this->comments = new ArrayCollection();
         $this->reactions = new ArrayCollection();
         $this->childrenPosts = new ArrayCollection();
+        $this->tags = new ArrayCollection();
     }
     #[Override] public function getId(): string
     {
@@ -224,5 +232,36 @@ class BlogPost implements EntityInterface
     public function getReactions(): Collection
     {
         return $this->reactions;
+    }
+
+    /**
+     * @return Collection<int, BlogTag>
+     */
+    public function getTags(): Collection
+    {
+        return $this->tags;
+    }
+
+    /**
+     * @param list<BlogTag> $tags
+     */
+    public function setTags(array $tags): self
+    {
+        $this->tags->clear();
+
+        foreach ($tags as $tag) {
+            $this->addTag($tag);
+        }
+
+        return $this;
+    }
+
+    public function addTag(BlogTag $tag): self
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags->add($tag);
+        }
+
+        return $this;
     }
 }

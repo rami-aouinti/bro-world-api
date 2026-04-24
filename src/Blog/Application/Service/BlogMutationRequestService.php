@@ -16,6 +16,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 use function array_filter;
 use function array_map;
+use function array_values;
 use function is_string;
 use function sprintf;
 use function trim;
@@ -127,6 +128,26 @@ final readonly class BlogMutationRequestService
             'content' => $content !== '' ? $content : null,
             'sharedUrl' => $sharedUrl !== '' ? $sharedUrl : null,
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function normalizeTagIds(mixed $rawTagIds): array
+    {
+        if (!is_array($rawTagIds)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(static function ($tagId): ?string {
+            if (!is_string($tagId)) {
+                return null;
+            }
+
+            $normalized = trim($tagId);
+
+            return $normalized !== '' ? $normalized : null;
+        }, $rawTagIds)));
     }
 
     /**

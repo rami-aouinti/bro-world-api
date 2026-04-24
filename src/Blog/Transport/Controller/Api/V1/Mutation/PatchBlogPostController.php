@@ -40,6 +40,7 @@ final readonly class PatchBlogPostController
         $payload['filePath'] = $this->requestService->resolveUploadedFileUrl($request, (string)($payload['filePath'] ?? ''));
         $contentData = $this->requestService->normalizePostContent($payload);
         $mediaUrls = $this->requestService->resolveUploadedFileUrls($request);
+        $tagIds = $this->requestService->normalizeTagIds($payload['tagIds'] ?? null);
 
         $this->messageBus->dispatch(new PatchBlogPostCommand(
             (string)uniqid('op_', true),
@@ -49,6 +50,7 @@ final readonly class PatchBlogPostController
             $contentData['content'],
             $payload['filePath'] ?: null,
             $mediaUrls !== [] ? $mediaUrls : null,
+            array_key_exists('tagIds', $payload) ? $tagIds : null,
             $contentData['sharedUrl'],
             isset($payload['isPinned']) ? (bool)$payload['isPinned'] : null
         ));
