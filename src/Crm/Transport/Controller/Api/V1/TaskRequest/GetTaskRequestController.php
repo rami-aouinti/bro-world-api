@@ -28,8 +28,8 @@ final readonly class GetTaskRequestController
     #[Route('/v1/crm/task-requests/{taskRequest}', methods: [Request::METHOD_GET])]
         #[OA\Parameter(name: 'taskRequest', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
-        summary: 'Get Task Request',
         description: 'Exécute l action metier Get Task Request dans le perimetre de l application CRM.',
+        summary: 'Get Task Request',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
@@ -39,9 +39,9 @@ final readonly class GetTaskRequestController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, TaskRequest $taskRequest): JsonResponse
+    public function __invoke(TaskRequest $taskRequest): JsonResponse
     {
-        $payload = $this->taskRequestReadService->getDetail($applicationSlug, $taskRequest->getId());
+        $payload = $this->taskRequestReadService->getDetail('crm-general-core', $taskRequest->getId());
         if ($payload === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Task request not found for this CRM scope.');
         }

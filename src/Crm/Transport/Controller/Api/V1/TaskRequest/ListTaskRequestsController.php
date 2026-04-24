@@ -56,6 +56,6 @@ final readonly class ListTaskRequestsController
     )]
     public function __invoke(Request $request): JsonResponse
     {
-        return new JsonResponse($this->taskRequestReadService->getList('general', $request));
+        return new JsonResponse($this->taskRequestReadService->getList('crm-general-core', $request));
     }
 }

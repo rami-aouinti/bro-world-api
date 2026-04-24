@@ -122,12 +122,12 @@ readonly class ContactReadService
         $queryOptions = $this->listRequestHelper->fromRequest($request, ['q']);
         $filters = $queryOptions->filters;
 
-        $cacheKey = $this->cacheKeyConventionService->buildCrmContactListKey('general', $queryOptions->page, $queryOptions->limit, $filters);
+        $cacheKey = $this->cacheKeyConventionService->buildCrmContactListKey('crm-general-core', $queryOptions->page, $queryOptions->limit, $filters);
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($queryOptions, $filters): array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
-                $item->tag($this->cacheKeyConventionService->crmContactListTag('general'));
+                $item->tag($this->cacheKeyConventionService->crmContactListTag('crm-general-core'));
             }
 
             $esIds = $this->searchIdsFromElastic($filters['q']);
@@ -169,14 +169,14 @@ readonly class ContactReadService
      */
     public function getGlobalDetail(string $contactId): ?array
     {
-        $cacheKey = $this->cacheKeyConventionService->buildCrmContactDetailKey('general', $contactId);
+        $cacheKey = $this->cacheKeyConventionService->buildCrmContactDetailKey('crm-general-core', $contactId);
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($contactId): ?array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag([
-                    $this->cacheKeyConventionService->crmContactListTag('general'),
-                    $this->cacheKeyConventionService->crmContactDetailTag('general', $contactId),
+                    $this->cacheKeyConventionService->crmContactListTag('crm-general-core'),
+                    $this->cacheKeyConventionService->crmContactDetailTag('crm-general-core', $contactId),
                 ]);
             }
 

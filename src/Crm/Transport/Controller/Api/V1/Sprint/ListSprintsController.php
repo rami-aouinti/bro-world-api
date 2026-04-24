@@ -84,7 +84,7 @@ final readonly class ListSprintsController
     )]
     public function __invoke(Request $request): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail('general');
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
         $filters = [

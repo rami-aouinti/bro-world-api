@@ -89,8 +89,8 @@ final readonly class CreateTaskRequestController
     )]
     public function __invoke(Request $request): JsonResponse
     {
-        $request->attributes->set('applicationSlug', 'general');
-        $crm = $this->scopeResolver->resolveOrFail( 'general');
+        $request->attributes->set('applicationSlug', 'crm-general-core');
+        $crm = $this->scopeResolver->resolveOrFail( 'crm-general-core');
 
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {
@@ -146,7 +146,7 @@ final readonly class CreateTaskRequestController
         $this->entityManager->flush();
         $this->messageBus->dispatch(new ProvisionTaskRequestGithubIssue($taskRequest->getId()));
         $this->messageBus->dispatch(new EntityCreated('crm_task_request', $taskRequest->getId(), context: [
-            'applicationSlug' =>  'general',
+            'applicationSlug' =>  'crm-general-core',
         ]));
 
         return new JsonResponse([

@@ -133,6 +133,7 @@ class TaskRequestRepository extends BaseRepository
 
         $this->applyProjectionFilters($idsQb, $filters);
 
+
         /** @var list<array{id:string}> $idRows */
         $idRows = $idsQb->getQuery()->getArrayResult();
 

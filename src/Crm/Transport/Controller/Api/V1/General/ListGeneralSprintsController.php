@@ -29,6 +29,7 @@ final readonly class ListGeneralSprintsController
     ) {
     }
 
+    #[Route('/v1/crm/general/sprints', methods: [Request::METHOD_GET])]
     public function __invoke(Request $request): JsonResponse
     {
         $page = max(1, $request->query->getInt('page', 1));

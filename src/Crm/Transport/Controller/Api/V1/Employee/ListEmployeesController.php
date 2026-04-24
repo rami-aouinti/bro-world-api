@@ -58,6 +58,6 @@ final readonly class ListEmployeesController
     )]
     public function __invoke(Request $request): JsonResponse
     {
-        return new JsonResponse($this->employeeReadService->getList('general', $request));
+        return new JsonResponse($this->employeeReadService->getList('crm-general-core', $request));
     }
 }
