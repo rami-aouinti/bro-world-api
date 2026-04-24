@@ -47,7 +47,6 @@ final readonly class CreateTaskController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/tasks', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Post(
         summary: 'Create Task',
         requestBody: new OA\RequestBody(
@@ -88,7 +87,7 @@ final readonly class CreateTaskController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '8f6a3550-9a07-4f69-9f75-0089f7d83e7f'),
-                        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true, example: '1d2f3a4b-5c6d-7e8f-9012-3456789abcde'),
+                        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', example: '1d2f3a4b-5c6d-7e8f-9012-3456789abcde', nullable: true),
                     ],
                 ),
             ),

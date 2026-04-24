@@ -17,7 +17,7 @@ use Throwable;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'crm_github_sync_job', indexes: [
-    new ORM\Index(name: 'idx_crm_gh_sync_job_app_status', columns: ['application_slug', 'status']),
+    new ORM\Index(columns: ['application_slug', 'status'], name: 'idx_crm_gh_sync_job_app_status'),
 ])]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class CrmGithubSyncJob implements EntityInterface

@@ -31,7 +31,6 @@ final readonly class ListTaskRequestGithubBranchesController
     }
 
     #[Route('/v1/crm/task-requests/{taskRequest}/github/branches', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Parameter(name: 'taskRequest', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'), example: 'a8f2140e-322e-49e5-94dc-dd86126fef3a')]
     #[OA\Get(
         summary: 'List Task Request GitHub Branches',
@@ -40,10 +39,10 @@ final readonly class ListTaskRequestGithubBranchesController
                 response: JsonResponse::HTTP_OK,
                 description: 'Opération exécutée avec succès.',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'items', type: 'array', items: new OA\Items(ref: '#/components/schemas/CrmGithubBranch')),
                     ],
+                    type: 'object',
                 ),
             ),
             new OA\Response(response: 404, ref: '#/components/responses/NotFound404'),

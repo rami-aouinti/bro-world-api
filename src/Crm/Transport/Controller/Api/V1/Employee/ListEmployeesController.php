@@ -30,13 +30,12 @@ final readonly class ListEmployeesController
      * @throws InvalidArgumentException
      */
     #[Route('/v1/crm/employees', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Parameter(ref: '#/components/parameters/page')]
     #[OA\Parameter(ref: '#/components/parameters/limit')]
     #[OA\Parameter(ref: '#/components/parameters/q')]
     #[OA\Get(
-        summary: 'List Employees',
         description: 'Exécute l action metier List Employees dans le perimetre de l application CRM.',
+        summary: 'List Employees',
         responses: [
             new OA\Response(
                 response: JsonResponse::HTTP_OK,
@@ -51,14 +50,14 @@ final readonly class ListEmployeesController
                 ),
             ),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
-            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized401'),
-            new OA\Response(response: 403, ref: '#/components/responses/Forbidden403'),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFound404'),
-            new OA\Response(response: 422, ref: '#/components/responses/ValidationFailed422'),
+            new OA\Response(ref: '#/components/responses/Unauthorized401', response: 401),
+            new OA\Response(ref: '#/components/responses/Forbidden403', response: 403),
+            new OA\Response(ref: '#/components/responses/NotFound404', response: 404),
+            new OA\Response(ref: '#/components/responses/ValidationFailed422', response: 422),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        return new JsonResponse($this->employeeReadService->getList($applicationSlug, $request));
+        return new JsonResponse($this->employeeReadService->getList('general', $request));
     }
 }

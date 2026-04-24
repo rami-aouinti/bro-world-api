@@ -31,8 +31,8 @@ final readonly class ListTasksBySprintController
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Board payload grouped by sprint with sprint.name.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, string $sprint): JsonResponse
+    public function __invoke(string $sprint): JsonResponse
     {
-        return new JsonResponse($this->taskBoardService->listBySprint($applicationSlug, $sprint));
+        return new JsonResponse($this->taskBoardService->listByLatestSprintGlobal());
     }
 }

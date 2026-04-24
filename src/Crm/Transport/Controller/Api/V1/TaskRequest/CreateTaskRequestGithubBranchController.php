@@ -49,17 +49,15 @@ final readonly class CreateTaskRequestGithubBranchController
     }
 
     #[Route('/v1/crm/task-requests/{taskRequest}/github/branches', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Parameter(
         name: 'taskRequest',
+        description: 'TaskRequest UUID. Future alias: body.taskRequestId on project/github equivalent endpoint.',
         in: 'path',
         required: true,
-        description: 'TaskRequest UUID. Future alias: body.taskRequestId on project/github equivalent endpoint.',
         schema: new OA\Schema(type: 'string', format: 'uuid'),
         example: '7cd1c6dd-a211-49f1-8ee0-b8622ff2de3d',
     )]
     #[OA\Post(
-        summary: 'Create Task Request GitHub Branch',
         description: 'Creates a GitHub branch from a TaskRequest issue mapping.'
             . "\n\n"
             . 'Try-it-out prerequisites in `/api/doc`:'
@@ -73,6 +71,7 @@ final readonly class CreateTaskRequestGithubBranchController
             . '- the linked project must have a GitHub token configured.'
             . "\n"
             . '- optional payload: `name`, `sourceBranch`, `postCommentOnIssue`.',
+        summary: 'Create Task Request GitHub Branch',
         requestBody: new OA\RequestBody(
             required: false,
             content: new OA\JsonContent(
@@ -96,8 +95,8 @@ final readonly class CreateTaskRequestGithubBranchController
                     ),
                 ],
                 properties: [
-                    new OA\Property(property: 'name', type: 'string', nullable: true, example: 'feature/task-request-123'),
-                    new OA\Property(property: 'sourceBranch', type: 'string', nullable: true, example: 'main'),
+                    new OA\Property(property: 'name', type: 'string', example: 'feature/task-request-123', nullable: true),
+                    new OA\Property(property: 'sourceBranch', type: 'string', example: 'main', nullable: true),
                     new OA\Property(property: 'postCommentOnIssue', type: 'boolean', default: true),
                 ],
             ),
@@ -107,15 +106,6 @@ final readonly class CreateTaskRequestGithubBranchController
                 response: JsonResponse::HTTP_CREATED,
                 description: 'Branch created on GitHub and associated to task request.',
                 content: new OA\JsonContent(
-                    required: ['taskRequestId', 'issueNumber', 'repositoryFullName', 'branchName', 'branchUrl', 'sha'],
-                    properties: [
-                        new OA\Property(property: 'taskRequestId', type: 'string', format: 'uuid'),
-                        new OA\Property(property: 'issueNumber', type: 'integer'),
-                        new OA\Property(property: 'repositoryFullName', type: 'string'),
-                        new OA\Property(property: 'branchName', type: 'string'),
-                        new OA\Property(property: 'branchUrl', type: 'string'),
-                        new OA\Property(property: 'sha', type: 'string', nullable: true),
-                    ],
                     examples: [
                         'createdFromIssueAutoName' => new OA\Examples(
                             example: 'createdFromIssueAutoName',
@@ -141,6 +131,15 @@ final readonly class CreateTaskRequestGithubBranchController
                                 'sha' => '0a9bcf2f3d62ed2a6d2da0dd01d5db3916efac39',
                             ],
                         ),
+                    ],
+                    required: ['taskRequestId', 'issueNumber', 'repositoryFullName', 'branchName', 'branchUrl', 'sha'],
+                    properties: [
+                        new OA\Property(property: 'taskRequestId', type: 'string', format: 'uuid'),
+                        new OA\Property(property: 'issueNumber', type: 'integer'),
+                        new OA\Property(property: 'repositoryFullName', type: 'string'),
+                        new OA\Property(property: 'branchName', type: 'string'),
+                        new OA\Property(property: 'branchUrl', type: 'string'),
+                        new OA\Property(property: 'sha', type: 'string', nullable: true),
                     ],
                 ),
             ),

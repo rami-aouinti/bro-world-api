@@ -7,6 +7,7 @@ namespace App\Crm\Transport\Controller\Api\V1\TaskRequest;
 use App\Crm\Application\Service\TaskRequestReadService;
 use App\Role\Domain\Enum\Role;
 use OpenApi\Attributes as OA;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -22,14 +23,17 @@ final readonly class ListTaskRequestsController
     ) {
     }
 
+    /**
+     * @throws InvalidArgumentException
+     * @throws \JsonException
+     */
     #[Route('/v1/crm/task-requests', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Parameter(ref: '#/components/parameters/page')]
     #[OA\Parameter(ref: '#/components/parameters/limit')]
     #[OA\Parameter(ref: '#/components/parameters/q')]
     #[OA\Get(
-        summary: 'List Task Requests',
         description: 'Exécute l action metier List Task Requests dans le perimetre de l application CRM.',
+        summary: 'List Task Requests',
         responses: [
             new OA\Response(
                 response: JsonResponse::HTTP_OK,
@@ -44,14 +48,14 @@ final readonly class ListTaskRequestsController
                 ),
             ),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
-            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized401'),
-            new OA\Response(response: 403, ref: '#/components/responses/Forbidden403'),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFound404'),
-            new OA\Response(response: 422, ref: '#/components/responses/ValidationFailed422'),
+            new OA\Response(ref: '#/components/responses/Unauthorized401', response: 401),
+            new OA\Response(ref: '#/components/responses/Forbidden403', response: 403),
+            new OA\Response(ref: '#/components/responses/NotFound404', response: 404),
+            new OA\Response(ref: '#/components/responses/ValidationFailed422', response: 422),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        return new JsonResponse($this->taskRequestReadService->getList($applicationSlug, $request));
+        return new JsonResponse($this->taskRequestReadService->getList('general', $request));
     }
 }

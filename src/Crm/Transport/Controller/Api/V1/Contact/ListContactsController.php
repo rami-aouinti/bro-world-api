@@ -30,7 +30,6 @@ final readonly class ListContactsController
      * @throws InvalidArgumentException
      */
     #[Route('/v1/crm/contacts', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Parameter(ref: '#/components/parameters/page')]
     #[OA\Parameter(ref: '#/components/parameters/limit')]
     #[OA\Parameter(ref: '#/components/parameters/q')]
@@ -57,8 +56,8 @@ final readonly class ListContactsController
             new OA\Response(ref: '#/components/responses/ValidationFailed422', response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        return new JsonResponse($this->contactReadService->list($applicationSlug, $request));
+        return new JsonResponse($this->contactReadService->listGlobal($request));
     }
 }

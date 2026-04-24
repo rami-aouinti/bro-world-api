@@ -50,7 +50,6 @@ final readonly class CreateTaskRequestController
      * @throws ExceptionInterface
      */
     #[Route('/v1/crm/task-requests', methods: [Request::METHOD_POST])]
-    #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Post(
         summary: 'Create Task Request',
         requestBody: new OA\RequestBody(
@@ -64,7 +63,7 @@ final readonly class CreateTaskRequestController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'string', format: 'uuid', example: 'a8ebfd5d-0fa8-4346-8ca2-ff5b7b1f6657'),
-                        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true, example: '1d2f3a4b-5c6d-7e8f-9012-3456789abcde'),
+                        new OA\Property(property: 'blogId', type: 'string', format: 'uuid', example: '1d2f3a4b-5c6d-7e8f-9012-3456789abcde', nullable: true),
                     ],
                 ),
             ),
@@ -84,14 +83,14 @@ final readonly class CreateTaskRequestController
                     ],
                 ),
             ),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFound404'),
-            new OA\Response(response: 422, ref: '#/components/responses/ValidationFailed422'),
+            new OA\Response(ref: '#/components/responses/NotFound404', response: 404),
+            new OA\Response(ref: '#/components/responses/ValidationFailed422', response: 422),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $request->attributes->set('applicationSlug', $applicationSlug);
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $request->attributes->set('applicationSlug', 'general');
+        $crm = $this->scopeResolver->resolveOrFail( 'general');
 
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {
@@ -147,7 +146,7 @@ final readonly class CreateTaskRequestController
         $this->entityManager->flush();
         $this->messageBus->dispatch(new ProvisionTaskRequestGithubIssue($taskRequest->getId()));
         $this->messageBus->dispatch(new EntityCreated('crm_task_request', $taskRequest->getId(), context: [
-            'applicationSlug' => $applicationSlug,
+            'applicationSlug' =>  'general',
         ]));
 
         return new JsonResponse([

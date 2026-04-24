@@ -30,7 +30,6 @@ final readonly class ListTasksController
      * @throws InvalidArgumentException
      */
     #[Route('/v1/crm/tasks', methods: [Request::METHOD_GET])]
-    #[OA\Parameter(ref: '#/components/parameters/applicationSlug')]
     #[OA\Parameter(ref: '#/components/parameters/page')]
     #[OA\Parameter(ref: '#/components/parameters/limit')]
     #[OA\Parameter(ref: '#/components/parameters/q')]
@@ -57,10 +56,8 @@ final readonly class ListTasksController
             new OA\Response(ref: '#/components/responses/ValidationFailed422', response: 422),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $request->attributes->set('applicationSlug', $applicationSlug);
-
-        return new JsonResponse($this->taskListService->getList($request));
+        return new JsonResponse($this->taskListService->getGlobalList($request));
     }
 }

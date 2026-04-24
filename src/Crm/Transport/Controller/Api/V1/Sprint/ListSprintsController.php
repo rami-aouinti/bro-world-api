@@ -30,10 +30,10 @@ final readonly class ListSprintsController
     #[Route('/v1/crm/sprints', methods: [Request::METHOD_GET])]
         #[OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1), example: 1)]
     #[OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100), example: 20)]
-    #[OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filtre de recherche libre')]
+    #[OA\Parameter(name: 'search', description: 'Filtre de recherche libre', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
     #[OA\Get(
-        summary: 'List Sprints',
         description: 'Exécute l action metier List Sprints dans le perimetre de l application CRM.',
+        summary: 'List Sprints',
         responses: [
             new OA\Response(
                 response: JsonResponse::HTTP_OK,
@@ -83,9 +83,9 @@ final readonly class ListSprintsController
             ),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('general');
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
         $filters = [

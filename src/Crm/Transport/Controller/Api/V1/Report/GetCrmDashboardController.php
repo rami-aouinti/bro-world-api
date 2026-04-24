@@ -34,16 +34,16 @@ final readonly class GetCrmDashboardController
 
     #[Route('/v1/crm/dashboard', methods: [Request::METHOD_GET])]
         #[OA\Get(
-        summary: 'Consulter le tableau de bord CRM',
         description: 'Retourne les indicateurs consolidés (entreprises, projets, tâches et demandes) pour une application CRM.',
-        responses: [
-            new OA\Response(response: JsonResponse::HTTP_OK, description: 'Tableau de bord récupéré avec succès.'),
-            new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
-            new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Authentification requise.'),
-            new OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Accès refusé.'),
-            new OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Application CRM introuvable.'),
-            new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
-        ],
+            summary: 'Consulter le tableau de bord CRM',
+            responses: [
+                new OA\Response(response: JsonResponse::HTTP_OK, description: 'Tableau de bord récupéré avec succès.'),
+                new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
+                new OA\Response(response: JsonResponse::HTTP_UNAUTHORIZED, description: 'Authentification requise.'),
+                new OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'Accès refusé.'),
+                new OA\Response(response: JsonResponse::HTTP_NOT_FOUND, description: 'Application CRM introuvable.'),
+                new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
+            ],
     )]
     public function __invoke(string $applicationSlug): JsonResponse
     {
