@@ -79,6 +79,11 @@ class User extends RestDto
     #[Assert\LessThanOrEqual(value: Entity::COINS_MAX)]
     protected int $coins = Entity::COINS_DEFAULT;
 
+
+    protected bool $visible = true;
+
+    protected bool $abonnement = false;
+
     /**
      * @var UserGroupEntity[]|array<int, UserGroupEntity>
      */
@@ -216,6 +221,33 @@ class User extends RestDto
         return $this;
     }
 
+
+    public function isVisible(): bool
+    {
+        return $this->visible;
+    }
+
+    public function setVisible(bool $visible): self
+    {
+        $this->setVisited('visible');
+        $this->visible = $visible;
+
+        return $this;
+    }
+
+    public function hasAbonnement(): bool
+    {
+        return $this->abonnement;
+    }
+
+    public function setAbonnement(bool $abonnement): self
+    {
+        $this->setVisited('abonnement');
+        $this->abonnement = $abonnement;
+
+        return $this;
+    }
+
     /**
      * @return array<int, UserGroupEntity>
      */
@@ -269,6 +301,8 @@ class User extends RestDto
             $this->timezone = $entity->getTimezone();
             $this->photo = $entity->getPhoto();
             $this->coins = $entity->getCoins();
+            $this->visible = $entity->isVisible();
+            $this->abonnement = $entity->hasAbonnement();
             /** @var array<int, UserGroupEntity> $groups */
             $groups = $entity->getUserGroups()->toArray();
             $this->userGroups = $groups;
