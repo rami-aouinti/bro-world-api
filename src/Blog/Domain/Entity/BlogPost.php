@@ -68,19 +68,19 @@ class BlogPost implements EntityInterface
     /**
      * @var Collection<int, self>
      */
-    #[ORM\OneToMany(targetEntity: self::class, mappedBy: 'parentPost')]
+    #[ORM\OneToMany(mappedBy: 'parentPost', targetEntity: self::class)]
     private Collection $childrenPosts;
 
     /**
      * @var Collection<int, BlogComment>
      */
-    #[ORM\OneToMany(targetEntity: BlogComment::class, mappedBy: 'post', cascade: ['remove'])]
+    #[ORM\OneToMany(mappedBy: 'post', targetEntity: BlogComment::class, cascade: ['remove'])]
     private Collection $comments;
 
     /**
      * @var Collection<int, BlogReaction>
      */
-    #[ORM\OneToMany(targetEntity: BlogReaction::class, mappedBy: 'post', cascade: ['remove'])]
+    #[ORM\OneToMany(mappedBy: 'post', targetEntity: BlogReaction::class, cascade: ['remove'])]
     private Collection $reactions;
 
     /**

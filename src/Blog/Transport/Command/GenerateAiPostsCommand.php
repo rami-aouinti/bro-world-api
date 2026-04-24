@@ -6,9 +6,11 @@ namespace App\Blog\Transport\Command;
 
 use App\Blog\Domain\Entity\Blog;
 use App\Blog\Domain\Entity\BlogPost;
+use App\Blog\Domain\Entity\BlogTag;
 use App\Blog\Domain\Enum\BlogType;
 use App\Blog\Infrastructure\Repository\BlogPostRepository;
 use App\Blog\Infrastructure\Repository\BlogRepository;
+use App\Blog\Infrastructure\Repository\BlogTagRepository;
 use App\General\Application\Service\CacheInvalidationService;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
@@ -28,11 +30,13 @@ use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+use function array_filter;
 use function array_slice;
 use function array_unique;
 use function explode;
 use function implode;
 use function preg_match;
+use function preg_match_all;
 use function preg_replace;
 use function shuffle;
 use function strtolower;
@@ -41,7 +45,7 @@ use function trim;
 
 #[AsCommand(
     name: self::NAME,
-    description: 'Generate clean AI posts (no quotes, no duplicates).',
+    description: 'Generate clean AI posts (with tags extraction).',
 )]
 final class GenerateAiPostsCommand extends Command
 {
@@ -70,6 +74,7 @@ final class GenerateAiPostsCommand extends Command
         private readonly UserRepository $userRepository,
         private readonly BlogRepository $blogRepository,
         private readonly BlogPostRepository $blogPostRepository,
+        private readonly BlogTagRepository $tagRepository,
         private readonly SluggerInterface $slugger,
         private readonly CacheInvalidationService $cacheInvalidationService,
     ) {
@@ -77,13 +82,16 @@ final class GenerateAiPostsCommand extends Command
     }
 
     /**
-     * @throws ORMException
-     * @throws RedirectionExceptionInterface
-     * @throws DecodingExceptionInterface
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
      * @throws ClientExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ORMException
      * @throws OptimisticLockException
-     * @throws TransportExceptionInterface
+     * @throws RedirectionExceptionInterface
      * @throws ServerExceptionInterface
+     * @throws TransportExceptionInterface
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -95,7 +103,7 @@ final class GenerateAiPostsCommand extends Command
         foreach ($selected as $i => $topic) {
 
             $author = $this->resolveAuthor(self::AUTHORS[$i % 3]);
-            $blog = $this->resolveBlog($author);
+            $blog = $this->resolveBlog();
 
             [$title, $content] = $this->generatePost($topic);
 
@@ -106,6 +114,14 @@ final class GenerateAiPostsCommand extends Command
                 ->setSlug($this->slug($title, $topic))
                 ->setContent($content)
                 ->setIsPinned(false);
+
+            // 🔥 TAG EXTRACTION + LINK
+            $tags = $this->extractTags($content);
+
+            foreach ($tags as $tagName) {
+                $tag = $this->resolveTag($tagName);
+                $post->addTag($tag);
+            }
 
             $this->blogPostRepository->save($post, false);
 
@@ -131,7 +147,7 @@ final class GenerateAiPostsCommand extends Command
         return $user;
     }
 
-    private function resolveBlog(User $user): Blog
+    private function resolveBlog(): ?Blog
     {
         $blog = $this->blogRepository->findOneBy([
             'type' => BlogType::GENERAL,
@@ -156,9 +172,8 @@ final class GenerateAiPostsCommand extends Command
     private function generatePost(string $topic): array
     {
         $prompt = "Write a viral social media post about: $topic.
-Max 100 words. Add 3 hashtags.
-Do NOT use quotes.
-Do NOT repeat text.";
+Max 100 words. Add 3 hashtags at the end.
+Do NOT use quotes.";
 
         $response = $this->client->request('POST', self::AI_URL, [
             'timeout' => 120,
@@ -180,25 +195,18 @@ Do NOT repeat text.";
      */
     private function clean(string $text, string $topic): array
     {
-        // remove quotes
         $text = trim($text, "\"'");
-
-        // remove HTML
         $text = strip_tags($text);
 
-        // remove duplicated lines
         $lines = array_unique(array_filter(explode("\n", $text)));
         $text = implode("\n", $lines);
 
-        // remove repeated blocks
         if (preg_match('/^(.+)\1$/s', $text, $match)) {
             $text = $match[1];
         }
 
-        // clean spacing
         $text = trim(preg_replace('/\n+/', "\n", $text));
 
-        // title = first line
         $lines = explode("\n", $text);
         $title = trim($lines[0] ?? '');
 
@@ -207,6 +215,37 @@ Do NOT repeat text.";
         }
 
         return [$title, $text];
+    }
+
+    /**
+     * 🔥 Extract hashtags
+     *
+     * @return string[]
+     */
+    private function extractTags(string $content): array
+    {
+        preg_match_all('/#([\p{L}\p{N}_-]+)/u', $content, $matches);
+
+        return array_unique($matches[1] ?? []);
+    }
+
+    /**
+     * 🔥 Get or create tag
+     */
+    private function resolveTag(string $name): BlogTag
+    {
+        $name = strtolower(trim($name));
+
+        $tag = $this->tagRepository->findOneBy(['label' => $name]);
+
+        if (!$tag) {
+            $tag = new BlogTag();
+            $tag->setLabel($name);
+
+            $this->em->persist($tag);
+        }
+
+        return $tag;
     }
 
     private function slug(string $title, string $topic): string
