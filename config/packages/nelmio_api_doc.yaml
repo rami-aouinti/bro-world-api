@@ -393,7 +393,11 @@ when@dev: &dev
                 -   Bearer: []
                 -   ApiKey: []
         areas: # to filter documented areas
-            path_patterns:
-                - ^/api(?!/doc$) # Accepts routes under /api except /api/doc
+            default:
+                path_patterns:
+                    - ^/api(?!/doc(?:$|/|\.json$)) # Accepts routes under /api except /api/doc and module docs
+            users:
+                path_patterns:
+                    - ^/api/v1/(?:auth|profile|user(?:s|_group)?|private/stories)(?:/|$)
 
 when@test: *dev
