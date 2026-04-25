@@ -22,7 +22,7 @@ final readonly class MercurePublisher
         $update = new Update(
             $topic,
             json_encode($data, JSON_THROW_ON_ERROR),
-            private: $private
+            private: false
         );
 
         try {
