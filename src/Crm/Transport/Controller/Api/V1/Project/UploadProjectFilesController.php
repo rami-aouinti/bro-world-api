@@ -96,7 +96,7 @@ final readonly class UploadProjectFilesController
             ),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project, Request $request): JsonResponse
+    public function __invoke(Project $project, Request $request): JsonResponse
     {
         $uploadedFiles = $this->attachmentUploaderService->upload(
             $request,

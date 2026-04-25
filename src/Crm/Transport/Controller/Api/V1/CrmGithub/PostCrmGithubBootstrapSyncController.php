@@ -168,18 +168,14 @@ final readonly class PostCrmGithubBootstrapSyncController
             ),
         ],
     )]
-    public function __invoke(Request $request, ?string $applicationSlug = null): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {
             return $payload;
         }
 
-        if ($applicationSlug === null) {
-            $applicationSlug = self::GENERAL_APPLICATION_SLUG;
-        }
-
-        $this->scopeResolver->resolveOrFail($applicationSlug);
+        $this->scopeResolver->resolveOrFail('crm-general-core');
 
         $input = $this->crmRequestHandler->mapAndValidate($payload, PostCrmGithubBootstrapSyncRequest::class);
         if ($input instanceof JsonResponse) {
@@ -187,7 +183,7 @@ final readonly class PostCrmGithubBootstrapSyncController
         }
 
         $job = (new CrmGithubSyncJob())
-            ->setApplicationSlug($applicationSlug)
+            ->setApplicationSlug('crm-general-core')
             ->setOwner((string)$input->owner)
             ->setStatus('queued')
             ->setParameters([
@@ -201,7 +197,7 @@ final readonly class PostCrmGithubBootstrapSyncController
 
         $this->messageBus->dispatch(new BootstrapCrmGithubSync(
             jobId: $jobId,
-            applicationSlug: $applicationSlug,
+            applicationSlug: 'crm-general-core',
             token: (string)$input->token,
             owner: (string)$input->owner,
             issueTarget: $input->issueTarget,

@@ -50,9 +50,9 @@ final readonly class AttachTaskToSprintController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, string $sprintId, string $taskId): JsonResponse
+    public function __invoke(string $sprintId, string $taskId): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
         $sprint = $this->sprintRepository->findOneScopedById($sprintId, $crm->getId());
         if ($sprint === null) {
             return $this->errorResponseFactory->notFoundReference('sprintId');

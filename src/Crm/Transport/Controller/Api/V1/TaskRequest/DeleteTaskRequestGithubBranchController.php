@@ -53,10 +53,9 @@ final readonly class DeleteTaskRequestGithubBranchController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation failed or GitHub API error.'),
         ],
     )]
-    public function __invoke(TaskRequest $taskRequest, string $branchId, Request $request, ?string $applicationSlug = null): JsonResponse
+    public function __invoke(TaskRequest $taskRequest, string $branchId, Request $request): JsonResponse
     {
-        $applicationSlug ??= (string)($taskRequest->getTask()?->getProject()?->getCompany()?->getCrm()?->getApplication()?->getSlug() ?? '');
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
         $scopedTaskRequest = $this->taskRequestRepository->findOneScopedById($taskRequest->getId(), $crm->getId());
         if ($scopedTaskRequest === null) {
             return $this->errorResponseFactory->notFoundReference('taskRequest');

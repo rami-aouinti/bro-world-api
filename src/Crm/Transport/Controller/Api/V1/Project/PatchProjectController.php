@@ -50,7 +50,7 @@ final readonly class PatchProjectController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project, Request $request): JsonResponse
+    public function __invoke(Project $project, Request $request): JsonResponse
     {
         try {
             $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);

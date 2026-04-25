@@ -41,9 +41,9 @@ final readonly class DeleteEmployeeController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, string $employeeId): JsonResponse
+    public function __invoke(string $employeeId): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
         $employee = $this->employeeRepository->findOneScopedById($employeeId, $crm->getId());
         if ($employee === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Employee not found for this CRM scope.');

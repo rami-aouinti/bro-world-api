@@ -44,9 +44,9 @@ final readonly class CreateContactController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
 
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {
@@ -80,7 +80,7 @@ final readonly class CreateContactController
             city: $contact->getCity(),
             score: $contact->getScore(),
             companyId: $companyId,
-            applicationSlug: $applicationSlug,
+            applicationSlug: 'crm-general-core',
         ));
 
         return new JsonResponse(new EntityIdResponseDto($contact->getId())->toArray(), JsonResponse::HTTP_CREATED);

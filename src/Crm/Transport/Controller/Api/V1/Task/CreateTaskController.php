@@ -111,10 +111,10 @@ final readonly class CreateTaskController
             new OA\Response(ref: '#/components/responses/ValidationFailed422', response: 422),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $request->attributes->set('applicationSlug', $applicationSlug);
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $request->attributes->set('applicationSlug', 'crm-general-core');
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
 
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {
@@ -143,7 +143,7 @@ final readonly class CreateTaskController
         $this->crmEntityBlogProvisioningService->provision($task);
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityCreated('crm_task', $task->getId(), context: [
-            'applicationSlug' => $applicationSlug,
+            'applicationSlug' => 'crm-general-core',
         ]));
 
         return new JsonResponse([

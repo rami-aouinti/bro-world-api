@@ -43,9 +43,9 @@ final readonly class GetBillingController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Billing $billing): JsonResponse
+    public function __invoke(Billing $billing): JsonResponse
     {
-        $payload = $this->billingReadService->getDetail($applicationSlug, $billing->getId());
+        $payload = $this->billingReadService->getDetail('crm-general-core', $billing->getId());
         if ($payload === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Billing not found for this CRM scope.');
         }

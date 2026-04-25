@@ -52,9 +52,9 @@ final readonly class AddProjectWikiPageController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, string $id, Request $request): JsonResponse
+    public function __invoke(string $id, Request $request): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
         $project = $this->projectRepository->findOneScopedById($id, $crm->getId());
         if (!$project instanceof Project) {
             return $this->errorResponseFactory->notFoundReference('projectId');

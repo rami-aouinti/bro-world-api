@@ -49,7 +49,7 @@ final readonly class PutContactController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, string $id, Request $request): JsonResponse
+    public function __invoke(string $id, Request $request): JsonResponse
     {
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {
@@ -63,7 +63,7 @@ final readonly class PutContactController
 
         try {
             $this->messageBus->dispatch(new PutContactCommand(
-                applicationSlug: $applicationSlug,
+                applicationSlug: 'crm-general-core',
                 contactId: $id,
                 firstName: (string)$input->firstName,
                 lastName: (string)$input->lastName,

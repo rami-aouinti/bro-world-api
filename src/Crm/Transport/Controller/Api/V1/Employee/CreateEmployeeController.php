@@ -46,9 +46,9 @@ final readonly class CreateEmployeeController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
 
         try {
             $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
@@ -82,7 +82,7 @@ final readonly class CreateEmployeeController
             positionName: $employee->getPositionName(),
             roleName: $employee->getRoleName(),
             userId: $input->userId,
-            applicationSlug: $applicationSlug,
+            applicationSlug: 'crm-general-core',
         ));
 
         return new JsonResponse([

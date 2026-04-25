@@ -45,9 +45,9 @@ final readonly class GetCrmDashboardController
                 new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
             ],
     )]
-    public function __invoke(string $applicationSlug): JsonResponse
+    public function __invoke(): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
 
         return new JsonResponse([
             'companies' => $this->companyRepository->countCompaniesByCrm($crm->getId()),

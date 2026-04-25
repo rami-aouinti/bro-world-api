@@ -39,9 +39,9 @@ final readonly class GetEmployeeController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Employee $employee): JsonResponse
+    public function __invoke(Employee $employee): JsonResponse
     {
-        $payload = $this->employeeReadService->getDetail($applicationSlug, $employee->getId());
+        $payload = $this->employeeReadService->getDetail('crm-general-core', $employee->getId());
         if ($payload === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Employee not found for this CRM scope.');
         }

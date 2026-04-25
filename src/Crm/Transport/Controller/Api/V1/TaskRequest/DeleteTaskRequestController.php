@@ -45,12 +45,12 @@ final readonly class DeleteTaskRequestController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-        public function __invoke(string $applicationSlug, TaskRequest $taskRequest): JsonResponse
+        public function __invoke(TaskRequest $taskRequest): JsonResponse
     {
         $this->entityManager->remove($taskRequest);
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityDeleted('crm_task_request', $taskRequest->getId(), context: [
-            'applicationSlug' => $applicationSlug,
+            'applicationSlug' => 'crm-general-core',
         ]));
 
         return new JsonResponse(status: JsonResponse::HTTP_NO_CONTENT);
