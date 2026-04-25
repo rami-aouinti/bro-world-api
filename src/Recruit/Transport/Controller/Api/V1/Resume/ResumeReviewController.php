@@ -32,6 +32,11 @@ readonly class ResumeReviewController
         required: true,
         content: new OA\JsonContent(
             required: ['resumeData'],
+            example: [
+                'resumeData' => [
+                    'additionalProp1' => [],
+                ],
+            ],
             properties: [
                 new OA\Property(
                     property: 'resumeData',

@@ -33,6 +33,9 @@ readonly class ResumeStructureFromTextController
         required: true,
         content: new OA\JsonContent(
             required: ['resumeText'],
+            example: [
+                'resumeText' => 'string',
+            ],
             properties: [
                 new OA\Property(property: 'resumeText', type: 'string', description: 'Texte brut contenant un CV.'),
             ],
