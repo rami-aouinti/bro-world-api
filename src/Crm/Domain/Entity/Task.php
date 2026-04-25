@@ -77,6 +77,10 @@ class Task implements EntityInterface
     #[ORM\Column(name: 'due_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $dueAt = null;
 
+    /**
+     * User-provided estimate for the task itself.
+     * This value is independent from TaskRequest planned-hours aggregates.
+     */
     #[ORM\Column(name: 'estimated_hours', type: Types::FLOAT, nullable: true)]
     private ?float $estimatedHours = null;
 

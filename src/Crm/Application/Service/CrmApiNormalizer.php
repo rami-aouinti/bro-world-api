@@ -11,6 +11,7 @@ use App\User\Domain\Entity\User;
 use DateTimeInterface;
 
 use function array_map;
+use function array_reduce;
 use function array_values;
 use function is_array;
 use function is_string;
@@ -54,6 +55,16 @@ final readonly class CrmApiNormalizer
             $taskRequests,
         ));
         $consumedHoursByTaskRequestId = $this->taskRequestWorklogReadService->getConsumedHoursByTaskRequestIds($taskRequestIds);
+        $taskPlannedHours = array_reduce(
+            $taskRequests,
+            static fn (float $sum, TaskRequest $taskRequest): float => $sum + $taskRequest->getPlannedHours(),
+            0.0,
+        );
+        $taskConsumedHours = array_reduce(
+            $taskRequests,
+            static fn (float $sum, TaskRequest $taskRequest): float => $sum + ($consumedHoursByTaskRequestId[$taskRequest->getId()] ?? 0.0),
+            0.0,
+        );
 
         $payload = [
             'id' => $task->getId(),
@@ -67,6 +78,10 @@ final readonly class CrmApiNormalizer
             'parentTaskId' => $task->getParentTask()?->getId(),
             'dueAt' => $this->normalizeDate($task->getDueAt()),
             'estimatedHours' => $task->getEstimatedHours(),
+            'plannedHoursFromRequests' => $taskPlannedHours,
+            'taskPlannedHours' => $taskPlannedHours,
+            'taskConsumedHours' => $taskConsumedHours,
+            'taskRemainingHours' => max(0.0, $taskPlannedHours - $taskConsumedHours),
             'updatedAt' => $this->normalizeDate($task->getUpdatedAt()),
             'attachments' => $task->getAttachments(),
             'blogId' => $task->getBlog()?->getId(),
