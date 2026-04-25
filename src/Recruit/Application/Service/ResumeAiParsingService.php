@@ -92,6 +92,21 @@ readonly class ResumeAiParsingService
             return '';
         }
 
+        $text = preg_replace('/[^\p{Latin}\p{N}\s@+&\/.,:;!?()\'"-]/u', ' ', $text);
+        if (!is_string($text)) {
+            return '';
+        }
+
+        $text = preg_replace('/(?<=\p{Ll})(?=\p{Lu})/u', ' ', $text);
+        if (!is_string($text)) {
+            return '';
+        }
+
+        $text = preg_replace('/(?<=\p{L})(?=\p{N})|(?<=\p{N})(?=\p{L})/u', ' ', $text);
+        if (!is_string($text)) {
+            return '';
+        }
+
         $text = preg_replace('/\s+/', ' ', $text);
         if (!is_string($text)) {
             return '';
@@ -120,6 +135,10 @@ readonly class ResumeAiParsingService
             }
 
             if (!$this->hasSufficientLatinContent($line)) {
+                continue;
+            }
+
+            if ($this->hasSuspiciousOverlongToken($line)) {
                 continue;
             }
 
@@ -184,6 +203,30 @@ readonly class ResumeAiParsingService
         }
 
         return ($latinLetters / $totalLetters) >= 0.7;
+    }
+
+    private function hasSuspiciousOverlongToken(string $line): bool
+    {
+        $tokens = preg_split('/\s+/', $line);
+        if (!is_array($tokens)) {
+            return false;
+        }
+
+        foreach ($tokens as $token) {
+            if (!is_string($token) || $token === '') {
+                continue;
+            }
+
+            if (strlen($token) <= 32) {
+                continue;
+            }
+
+            if (preg_match('/[aeiouyäöü]/iu', $token) !== 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function isMostlyRepeatedTokenLine(string $line): bool
