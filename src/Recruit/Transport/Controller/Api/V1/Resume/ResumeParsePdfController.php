@@ -82,10 +82,8 @@ readonly class ResumeParsePdfController
             ],
         ),
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $request->attributes->set('applicationSlug', $applicationSlug);
-
         $document = $request->files->get('document');
         if (!$document instanceof UploadedFile) {
             throw new HttpException(Response::HTTP_BAD_REQUEST, 'Field "document" is required and must be a file.');
