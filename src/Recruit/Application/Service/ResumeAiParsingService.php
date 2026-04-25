@@ -18,24 +18,17 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 use function array_map;
-use function count;
-use function file_get_contents;
-use function gzuncompress;
-use function gzinflate;
 use function implode;
 use function is_array;
 use function is_string;
 use function json_decode;
 use function json_encode;
 use function preg_match;
-use function preg_match_all;
 use function preg_replace;
 use function preg_split;
-use function preg_replace_callback;
 use function str_contains;
 use function str_replace;
 use function str_starts_with;
-use function strtolower;
 use function strlen;
 use function substr;
 use function trim;
@@ -43,8 +36,8 @@ use function trim;
 readonly class ResumeAiParsingService
 {
     private const string AI_URL = 'http://127.0.0.1:11434/api/generate';
-    private const string AI_MODEL = 'phi';
-    private const int MAX_PROMPT_RESUME_LENGTH = 12000;
+    private const string AI_MODEL = 'gemma:2b';
+    private const int MAX_PROMPT_RESUME_LENGTH = 120000;
 
     public function __construct(
         private HttpClientInterface $httpClient,
@@ -53,10 +46,12 @@ readonly class ResumeAiParsingService
 
     /**
      * @param array<string, mixed> $resumeData
+     * @return string
+     * @throws JsonException
      */
     public function reviewResume(array $resumeData): string
     {
-        $jsonPayload = json_encode($resumeData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        $jsonPayload = json_encode($resumeData, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         if (!is_string($jsonPayload) || trim($jsonPayload) === '') {
             throw new HttpException(Response::HTTP_BAD_REQUEST, 'Invalid review payload.');
         }
@@ -82,211 +77,99 @@ readonly class ResumeAiParsingService
 
     private function cleanResumeText(string $text): string
     {
+        if ($text === '') {
+            return '';
+        }
+
+        // Fix encoding
         if (str_contains($text, "\x00")) {
-            $text = $this->decodePotentialUtf16Text($text);
+            $text = mb_convert_encoding($text, 'UTF-8', 'UTF-16LE');
         }
 
         if (!mb_check_encoding($text, 'UTF-8')) {
             $text = mb_convert_encoding($text, 'UTF-8', 'auto');
         }
 
-        $text = preg_replace('/[^\P{C}\n\r\t]/u', '', $text);
-        if (!is_string($text)) {
-            return '';
-        }
-
+        // Normalize line breaks
         $text = str_replace(["\r\n", "\r"], "\n", $text);
 
+        // 🔥 REMOVE WATERMARKS
+        $text = preg_replace('/\bLEBENSLAUF\.DE\b/iu', ' ', $text);
+        $text = preg_replace('/Vorschau mit Wasserzeichen/iu', ' ', $text);
+
+        // Remove PDF artifacts
         $text = preg_replace('/\/CIDInit\s+\/ProcSet.*?end\s+end/s', ' ', $text);
-        if (!is_string($text)) {
-            return '';
-        }
 
-        $text = preg_replace('/(?:\bLEBENSLAUF\.DE\b\s*){3,}/ui', ' ', $text);
-        if (!is_string($text)) {
-            return '';
-        }
+        // Remove non-readable chars
+        $text = preg_replace('/[^\P{C}\n\t]/u', ' ', $text);
 
-        $text = preg_replace('/(?:LEBENSLAUF\.DE){2,}/ui', ' ', $text);
-        if (!is_string($text)) {
-            return '';
-        }
+        // Remove weird symbols but keep useful ones
+        $text = preg_replace('/[^\p{L}\p{N}\s@+&\/.,:;!?()\'"-]/u', ' ', $text);
 
-        $text = preg_replace('/Vorschau\s+mit\s+Wasserzeichen/ui', ' ', $text);
-        if (!is_string($text)) {
-            return '';
-        }
-
-        $text = preg_replace('/[^\p{Latin}\p{N}\p{Z}\p{P}\p{Sc}\p{Sm}\p{Sk}]/u', ' ', $text);
-        if (!is_string($text)) {
-            return '';
-        }
-
-        $text = preg_replace('/[^\p{Latin}\p{N}\s@+&\/.,:;!?()\'"-]/u', ' ', $text);
-        if (!is_string($text)) {
-            return '';
-        }
-
-        $text = preg_replace('/(?<=\p{Ll})(?=\p{Lu})/u', ' ', $text);
-        if (!is_string($text)) {
-            return '';
-        }
-
-        $text = preg_replace('/(?<=\p{L})(?=\p{N})|(?<=\p{N})(?=\p{L})/u', ' ', $text);
-        if (!is_string($text)) {
-            return '';
-        }
-
-        $text = preg_replace('/\s+/', ' ', $text);
-        if (!is_string($text)) {
-            return '';
-        }
-
-        $text = str_replace('. ', ".\n", $text);
+        // Split lines
         $lines = preg_split('/\n+/', $text);
+
         if (!is_array($lines)) {
             return '';
         }
 
-        $filtered = [];
-        $previousLine = '';
+        $cleanLines = [];
+
         foreach ($lines as $line) {
             if (!is_string($line)) {
                 continue;
             }
 
             $line = trim($line);
+
+            // Skip empty or too short
             if ($line === '' || strlen($line) < 3) {
                 continue;
             }
 
-            if (preg_match('/[\p{L}\p{N}]/u', $line) !== 1) {
+            // 🔥 Remove watermark-heavy lines
+            if (substr_count($line, 'LEBENSLAUF') > 2) {
                 continue;
             }
 
-            if (!$this->hasSufficientLatinContent($line)) {
+            // Remove useless lines (no letters)
+            if (preg_match('/[a-zA-Z]/', $line) !== 1) {
                 continue;
             }
 
-            if ($this->hasSuspiciousOverlongToken($line)) {
+            // Remove repeated tokens spam
+            if (preg_match('/\b(\w+)( \1\b){3,}/i', $line)) {
                 continue;
             }
 
-            if ($this->isMostlyRepeatedTokenLine($line)) {
+            // Remove long garbage tokens
+            if (preg_match('/\b[a-zA-Z0-9]{30,}\b/', $line)) {
                 continue;
             }
 
-            if ($line === $previousLine) {
-                continue;
-            }
-
-            $filtered[] = $line;
-            $previousLine = $line;
+            $cleanLines[] = $line;
         }
 
-        $cleaned = trim(implode("\n", $filtered));
-        if ($cleaned === '') {
-            return '';
+        $text = implode("\n", $cleanLines);
+
+        // 🔥 FINAL CLEANING
+
+        // Remove duplicated words
+        $text = preg_replace('/\b(\w+)( \1\b)+/i', '$1', $text);
+
+        // Fix spacing
+        $text = preg_replace('/\s{2,}/', ' ', $text);
+        $text = preg_replace('/\n{2,}/', "\n", $text);
+
+        // Trim
+        $text = trim($text);
+
+        // Limit size for AI
+        if (strlen($text) > self::MAX_PROMPT_RESUME_LENGTH) {
+            $text = substr($text, 0, self::MAX_PROMPT_RESUME_LENGTH);
         }
 
-        if (strlen($cleaned) > self::MAX_PROMPT_RESUME_LENGTH) {
-            return trim(substr($cleaned, 0, self::MAX_PROMPT_RESUME_LENGTH));
-        }
-
-        return $cleaned;
-    }
-
-    private function decodePotentialUtf16Text(string $text): string
-    {
-        $utf16Le = @mb_convert_encoding($text, 'UTF-8', 'UTF-16LE');
-        $utf16Be = @mb_convert_encoding($text, 'UTF-8', 'UTF-16BE');
-
-        $utf16LeScore = $this->scoreReadableText(is_string($utf16Le) ? $utf16Le : '');
-        $utf16BeScore = $this->scoreReadableText(is_string($utf16Be) ? $utf16Be : '');
-
-        if ($utf16LeScore === 0 && $utf16BeScore === 0) {
-            return $text;
-        }
-
-        return $utf16LeScore >= $utf16BeScore ? (string) $utf16Le : (string) $utf16Be;
-    }
-
-    private function scoreReadableText(string $text): int
-    {
-        if ($text === '') {
-            return 0;
-        }
-
-        return preg_match_all('/[\p{L}\p{N}\s.,;:!?@\-]/u', $text) ?: 0;
-    }
-
-    private function hasSufficientLatinContent(string $line): bool
-    {
-        $totalLetters = preg_match_all('/\p{L}/u', $line);
-        if (!is_int($totalLetters) || $totalLetters === 0) {
-            return true;
-        }
-
-        $latinLetters = preg_match_all('/\p{Latin}/u', $line);
-        if (!is_int($latinLetters) || $latinLetters === 0) {
-            return false;
-        }
-
-        return ($latinLetters / $totalLetters) >= 0.7;
-    }
-
-    private function hasSuspiciousOverlongToken(string $line): bool
-    {
-        $tokens = preg_split('/\s+/', $line);
-        if (!is_array($tokens)) {
-            return false;
-        }
-
-        foreach ($tokens as $token) {
-            if (!is_string($token) || $token === '') {
-                continue;
-            }
-
-            if (strlen($token) <= 32) {
-                continue;
-            }
-
-            if (preg_match('/[aeiouyäöü]/iu', $token) !== 1) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function isMostlyRepeatedTokenLine(string $line): bool
-    {
-        $tokens = preg_split('/\s+/', strtolower($line));
-        if (!is_array($tokens) || count($tokens) < 8) {
-            return false;
-        }
-
-        $firstToken = (string) preg_replace('/^[\p{P}\s]+|[\p{P}\s]+$/u', '', (string) ($tokens[0] ?? ''));
-        if ($firstToken === '') {
-            return false;
-        }
-
-        foreach ($tokens as $token) {
-            if (!is_string($token)) {
-                return false;
-            }
-
-            $normalized = (string) preg_replace('/^[\p{P}\s]+|[\p{P}\s]+$/u', '', $token);
-            if ($normalized === '') {
-                continue;
-            }
-
-            if (!str_contains($normalized, $firstToken) && !str_contains($firstToken, $normalized)) {
-                return false;
-            }
-        }
-
-        return true;
+        return $text;
     }
 
     /**
@@ -314,145 +197,70 @@ readonly class ResumeAiParsingService
 
     private function extractTextFromPdf(string $pdfPath): string
     {
-        $textFromPdftotext = $this->extractTextWithPdftotext($pdfPath);
-        if (trim($textFromPdftotext) !== '') {
-            return $textFromPdftotext;
-        }
-
-        $textFromPdfStreams = $this->extractTextFromPdfStreams($pdfPath);
-        if (trim($textFromPdfStreams) !== '') {
-            return $textFromPdfStreams;
-        }
-
-        throw new HttpException(
-            Response::HTTP_UNPROCESSABLE_ENTITY,
-            'Unable to extract text from the PDF. The file may be image-based (scanned) or encrypted.',
-        );
-    }
-
-    private function extractTextWithPdftotext(string $pdfPath): string
-    {
         try {
-            $process = new Process(['pdftotext', '-layout', $pdfPath, '-']);
-            $process->setTimeout(60);
+            $process = new Process([
+                'pdftotext',
+                '-layout',
+                '-nopgbrk',
+                '-f', '1',
+                '-l', '999',
+                $pdfPath,
+                '-'
+            ]);
+
+            $process->setTimeout(120);
             $process->run();
         } catch (ProcessExceptionInterface) {
-            return '';
+            $text = '';
         }
 
-        if (!$process->isSuccessful()) {
-            return '';
-        }
+        $text = $process->isSuccessful() ? $process->getOutput() : '';
 
-        return (string) $process->getOutput();
-    }
+        // 2. 👉 Fallback OCR si vide
+        if (trim($text) === '') {
+            try {
+                $ocrProcess = new Process([
+                    'tesseract',
+                    $pdfPath,
+                    'stdout',
+                    '-l', 'eng'
+                ]);
 
-    private function extractTextFromPdfStreams(string $pdfPath): string
-    {
-        $content = file_get_contents($pdfPath);
-        if (!is_string($content) || $content === '') {
-            return '';
-        }
+                $ocrProcess->setTimeout(120);
+                $ocrProcess->run();
 
-        preg_match_all('/stream\\r?\\n(.*?)\\r?\\nendstream/s', $content, $matches);
-        $streams = $matches[1] ?? [];
-        if (!is_array($streams) || count($streams) === 0) {
-            return '';
-        }
-
-        $chunks = [];
-        foreach ($streams as $stream) {
-            if (!is_string($stream) || $stream === '') {
-                continue;
-            }
-
-            $decoded = $this->decodePdfStream($stream);
-            if ($decoded === '') {
-                continue;
-            }
-
-            $chunk = $this->extractTextOperators($decoded);
-            if ($chunk !== '') {
-                $chunks[] = $chunk;
-            }
-        }
-
-        return trim(implode("\n", $chunks));
-    }
-
-    private function decodePdfStream(string $stream): string
-    {
-        $decoded = @gzuncompress($stream);
-        if (!is_string($decoded) || $decoded === '') {
-            $decoded = @gzinflate($stream);
-        }
-
-        if (is_string($decoded) && $decoded !== '') {
-            return $decoded;
-        }
-
-        if (preg_match('/[\\x20-\\x7E]{10,}/', $stream) !== 1) {
-            return '';
-        }
-
-        return $stream;
-    }
-
-    private function extractTextOperators(string $content): string
-    {
-        $content = preg_replace_callback(
-            '/\\((?:\\\\.|[^\\\\)])*\\)\\s*TJ/s',
-            static fn(array $m): string => preg_replace('/\\s+/', ' ', (string) ($m[0] ?? '')) ?? '',
-            $content,
-        ) ?? $content;
-
-        preg_match_all('/\\((?:\\\\.|[^\\\\)])*\\)\\s*Tj/s', $content, $matches);
-        $segments = $matches[0] ?? [];
-
-        $lines = [];
-        foreach ($segments as $segment) {
-            if (!is_string($segment)) {
-                continue;
-            }
-
-            if (preg_match('/\\((.*)\\)\\s*Tj/s', $segment, $group) !== 1) {
-                continue;
-            }
-
-            $text = (string) ($group[1] ?? '');
-            $text = preg_replace('/\\\\([\\\\()])/', '$1', $text) ?? $text;
-            $text = preg_replace('/\\\\[rntbf]/', ' ', $text) ?? $text;
-            $text = trim($text);
-            if ($text !== '') {
-                $lines[] = $text;
-            }
-        }
-
-        if ($lines === []) {
-            $raw = preg_replace('/[^\\PC\\s]+/u', ' ', $content) ?? '';
-            $raw = trim($raw);
-            if ($raw === '') {
+                if ($ocrProcess->isSuccessful()) {
+                    $text = $ocrProcess->getOutput();
+                }
+            } catch (ProcessExceptionInterface) {
                 return '';
             }
-
-            $parts = preg_split('/\\s{2,}|\\R/', $raw);
-            if (!is_array($parts)) {
-                return '';
-            }
-
-            $parts = array_filter($parts, static fn(mixed $part): bool => is_string($part) && trim($part) !== '');
-            return trim(implode("\n", $parts));
         }
 
-        return implode("\n", $lines);
+        return trim((string) $this->cleanResumeText($text));
     }
 
     private function buildPrompt(string $rawText): string
     {
         return <<<'PROMPT'
-You are a CV parser.
-Extract structured information from this resume text and return ONLY valid minified JSON.
-Expected JSON schema:
+You are a strict CV extraction engine.
+
+You MUST extract ALL information from the resume.
+
+Return ONLY valid JSON.
+No markdown.
+No explanations.
+
+RULES (VERY IMPORTANT):
+- Do NOT guess missing data.
+- If information exists in the text, you MUST extract it.
+- If a section exists (experience (or BERUFSERFAHRUNG), education (or AUSBILDUNG), ), skill (or Kenntnisse), ),  language (or Fremdsprachen), ), hobby (or Hobbys), ), NEVER return empty array unless truly absent.
+- Do NOT summarize. Extract exactly.
+- Keep full details from each job/education entry.
+
+OUTPUT FORMAT:
+Return ONLY valid minified JSON:
+
 {
   "user": {
     "fullName": "",
@@ -461,17 +269,52 @@ Expected JSON schema:
     "address": "",
     "links": []
   },
-  "experiences": [{"title":"","company":"","startDate":"","endDate":"","description":""}],
-  "educations": [{"title":"","school":"","startDate":"","endDate":"","description":""}],
-  "skills": ["", ""]
+  "experiences": [
+    {
+      "title": "",
+      "company": "",
+      "startDate": "",
+      "endDate": "",
+      "description": ""
+    },
+    {
+      "title": "",
+      "company": "",
+      "startDate": "",
+      "endDate": "",
+      "description": ""
+    },
+  ],
+  "educations": [
+    {
+      "title": "",
+      "school": "",
+      "startDate": "",
+      "endDate": "",
+      "description": ""
+    },
+    {
+      "title": "",
+      "school": "",
+      "startDate": "",
+      "endDate": "",
+      "description": ""
+    },
+  ],
+  "skills": [],
+  "languages": [],
+  "hobbies": []
 }
-Rules:
-- Never include markdown.
-- Missing values must be empty string, empty array or empty object field.
-- Keep arrays always present.
-- Keep keys exactly as specified.
 
-Resume text:
+EXTRA RULES:
+- Extract ALL experiences (not just one)
+- Extract ALL education entries
+- Extract ALL skills mentioned anywhere
+- Extract ALL languages mentioned anywhere
+- Extract ALL hobbies mentioned anywhere
+- Keep original wording from CV
+
+Resume:
 PROMPT
             . "\n" . $rawText;
     }
@@ -479,6 +322,12 @@ PROMPT
     private function buildResumeReviewPrompt(string $resumeJson): string
     {
         return <<<'PROMPT'
+
+Return ONLY valid JSON.
+If impossible, return {}.
+No explanation.
+No markdown.
+
 You are a senior recruiter and CV reviewer.
 Analyse the provided resume payload and answer ONLY as plain text (no markdown).
 Your answer must include:
@@ -496,6 +345,12 @@ PROMPT
     {
         return <<<'PROMPT'
 You are a CV parser.
+
+Return ONLY valid JSON.
+If impossible, return {}.
+No explanation.
+No markdown.
+
 Read the resume text and return ONLY valid minified JSON with this exact schema:
 {
   "user": {
@@ -530,7 +385,7 @@ PROMPT
     {
         try {
             $response = $this->httpClient->request('POST', self::AI_URL, [
-                'timeout' => 120,
+                'timeout' => 300,
                 'json' => [
                     'model' => self::AI_MODEL,
                     'prompt' => $prompt,
