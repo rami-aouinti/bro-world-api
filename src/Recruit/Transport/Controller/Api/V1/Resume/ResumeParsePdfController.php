@@ -35,7 +35,7 @@ readonly class ResumeParsePdfController
             schema: new OA\Schema(
                 required: ['document'],
                 properties: [
-                    new OA\Property(property: 'document', type: 'string', format: 'binary', description: 'Fichier PDF du CV.'),
+                    new OA\Property(property: 'document', description: 'Fichier PDF du CV.', type: 'string', format: 'binary'),
                 ],
                 type: 'object',
             ),
