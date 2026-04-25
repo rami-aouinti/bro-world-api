@@ -20,6 +20,7 @@ use function max;
 use function preg_match_all;
 use function sort;
 use function sprintf;
+use function str_contains;
 use function trim;
 
 final readonly class MailjetTemplateService
@@ -88,7 +89,16 @@ final readonly class MailjetTemplateService
      */
     public function fetchTemplateVariables(int $templateId): array
     {
-        $payload = $this->request('GET', sprintf(self::MAILJET_TEMPLATE_DETAIL_ENDPOINT, $templateId));
+        try {
+            $payload = $this->request('GET', sprintf(self::MAILJET_TEMPLATE_DETAIL_ENDPOINT, $templateId));
+        } catch (RuntimeException $exception) {
+            if (str_contains($exception->getMessage(), 'status code 404')) {
+                return [];
+            }
+
+            throw $exception;
+        }
+
         $details = $payload['Data'] ?? [];
         if (!is_array($details) || $details === []) {
             return [];
