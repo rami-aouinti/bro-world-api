@@ -95,6 +95,9 @@ final readonly class PatchTaskRequestController
 
             $taskRequest->setRepository($repository);
         }
+        if (array_key_exists('plannedHours', $payload) && is_numeric($payload['plannedHours'])) {
+            $taskRequest->setPlannedHours((float)$payload['plannedHours']);
+        }
 
         $this->taskRequestRepository->save($taskRequest);
 

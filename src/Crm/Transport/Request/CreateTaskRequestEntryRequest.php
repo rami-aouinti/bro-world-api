@@ -38,6 +38,10 @@ final class CreateTaskRequestEntryRequest
     ])]
     public ?array $assigneeIds = null;
 
+    #[Assert\Type(type: 'numeric')]
+    #[Assert\GreaterThanOrEqual(0)]
+    public null|int|float|string $plannedHours = null;
+
     public static function fromArray(array $payload): self
     {
         $request = new self();
@@ -48,6 +52,7 @@ final class CreateTaskRequestEntryRequest
         $request->taskId = isset($payload['taskId']) ? (string)$payload['taskId'] : null;
         $request->repositoryId = isset($payload['repositoryId']) ? (string)$payload['repositoryId'] : null;
         $request->assigneeIds = isset($payload['assigneeIds']) && is_array($payload['assigneeIds']) ? $payload['assigneeIds'] : $payload['assigneeIds'] ?? null;
+        $request->plannedHours = $payload['plannedHours'] ?? null;
 
         return $request;
     }

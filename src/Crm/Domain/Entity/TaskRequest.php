@@ -21,6 +21,10 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Throwable;
 
+use function array_map;
+use function array_reduce;
+use function max;
+
 #[ORM\Entity]
 #[ORM\Table(
     name: 'crm_task_request',
@@ -87,6 +91,13 @@ class TaskRequest implements EntityInterface
     #[ORM\InverseJoinColumn(name: 'user_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     private Collection|ArrayCollection $assignees;
 
+    #[ORM\Column(name: 'planned_hours', type: Types::FLOAT, options: ['default' => 0])]
+    private float $plannedHours = 0.0;
+
+    /** @var Collection<int, TaskRequestWorklog>|ArrayCollection<int, TaskRequestWorklog> */
+    #[ORM\OneToMany(mappedBy: 'taskRequest', targetEntity: TaskRequestWorklog::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection|ArrayCollection $worklogs;
+
     /**
      * @throws Throwable
      */
@@ -96,6 +107,7 @@ class TaskRequest implements EntityInterface
         $this->requestedAt = new DateTimeImmutable();
         $this->assignees = new ArrayCollection();
         $this->githubBranches = new ArrayCollection();
+        $this->worklogs = new ArrayCollection();
     }
 
     #[Override]
@@ -298,6 +310,62 @@ class TaskRequest implements EntityInterface
         return $this;
     }
 
+    public function getPlannedHours(): float
+    {
+        return $this->plannedHours;
+    }
+
+    public function setPlannedHours(float $plannedHours): self
+    {
+        $this->plannedHours = max(0.0, $plannedHours);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, TaskRequestWorklog>|ArrayCollection<int, TaskRequestWorklog>
+     */
+    public function getWorklogs(): Collection|ArrayCollection
+    {
+        return $this->worklogs;
+    }
+
+    public function addWorklog(TaskRequestWorklog $worklog): self
+    {
+        if (!$this->worklogs->contains($worklog)) {
+            $this->worklogs->add($worklog);
+        }
+
+        if ($worklog->getTaskRequest() !== $this) {
+            $worklog->setTaskRequest($this);
+        }
+
+        return $this;
+    }
+
+    public function removeWorklog(TaskRequestWorklog $worklog): self
+    {
+        if ($this->worklogs->removeElement($worklog) && $worklog->getTaskRequest() === $this) {
+            $worklog->setTaskRequest(null);
+        }
+
+        return $this;
+    }
+
+    public function getConsumedHours(): float
+    {
+        return array_reduce(
+            $this->worklogs->toArray(),
+            static fn (float $sum, TaskRequestWorklog $worklog): float => $sum + $worklog->getHours(),
+            0.0,
+        );
+    }
+
+    public function getRemainingHours(): float
+    {
+        return max(0.0, $this->plannedHours - $this->getConsumedHours());
+    }
+
     public function toArray(): array
     {
         return [
@@ -311,6 +379,9 @@ class TaskRequest implements EntityInterface
             'assignees' => $this->getAssignees()->toArray(),
             'github_issue' => $this->getGithubIssue()?->toArray(),
             'github_branches' => array_map(static fn (TaskRequestGithubBranch $branch): array => $branch->toArray(), $this->getGithubBranches()->toArray()),
+            'planned_hours' => $this->getPlannedHours(),
+            'consumed_hours' => $this->getConsumedHours(),
+            'remaining_hours' => $this->getRemainingHours(),
         ];
     }
 }
