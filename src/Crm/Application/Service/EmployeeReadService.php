@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Crm\Application\Service;
 
+use App\Crm\Domain\Entity\Employee;
 use App\Crm\Infrastructure\Repository\EmployeeRepository;
 use App\General\Application\Service\CacheKeyConventionService;
 use App\General\Domain\Service\Interfaces\ElasticsearchServiceInterface;
@@ -83,23 +84,18 @@ readonly class EmployeeReadService
         });
     }
 
-    public function getDetail(string $applicationSlug, string $employeeId): ?array
+    public function getDetail(string $applicationSlug, Employee $employee): ?array
     {
         $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
-        $cacheKey = $this->cacheKeyConventionService->buildCrmEmployeeDetailKey($applicationSlug, $employeeId);
+        $cacheKey = $this->cacheKeyConventionService->buildCrmEmployeeDetailKey($applicationSlug, $employee->getId());
 
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $crm, $employeeId): ?array {
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $crm, $employee): ?array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag([
                     $this->cacheKeyConventionService->crmEmployeeListTag($applicationSlug),
-                    $this->cacheKeyConventionService->crmEmployeeDetailTag($applicationSlug, $employeeId),
+                    $this->cacheKeyConventionService->crmEmployeeDetailTag($applicationSlug, $employee->getId()),
                 ]);
-            }
-
-            $employee = $this->employeeRepository->findOneScopedById($employeeId, $crm->getId());
-            if ($employee === null) {
-                return null;
             }
 
             return [

@@ -28,8 +28,8 @@ final readonly class GetEmployeeController
     #[Route('/v1/crm/employees/{employee}', methods: [Request::METHOD_GET])]
         #[OA\Parameter(name: 'employee', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
     #[OA\Get(
-        summary: 'Get Employee',
         description: 'Exécute l action metier Get Employee dans le perimetre de l application CRM.',
+        summary: 'Get Employee',
         responses: [
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'Opération exécutée avec succès.'),
             new OA\Response(response: JsonResponse::HTTP_BAD_REQUEST, description: 'Requête invalide.'),
@@ -41,7 +41,7 @@ final readonly class GetEmployeeController
     )]
     public function __invoke(Employee $employee): JsonResponse
     {
-        $payload = $this->employeeReadService->getDetail('crm-general-core', $employee->getId());
+        $payload = $this->employeeReadService->getDetail('crm-general-core', $employee);
         if ($payload === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Employee not found for this CRM scope.');
         }
