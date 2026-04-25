@@ -49,10 +49,9 @@ final readonly class ListTaskRequestGithubBranchesController
             new OA\Response(response: 404, ref: '#/components/responses/NotFound404'),
         ],
     )]
-    public function __invoke(TaskRequest $taskRequest, ?string $applicationSlug = null): JsonResponse
+    public function __invoke(TaskRequest $taskRequest): JsonResponse
     {
-        $applicationSlug ??= (string)($taskRequest->getTask()?->getProject()?->getCompany()?->getCrm()?->getApplication()?->getSlug() ?? '');
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
         $scopedTaskRequest = $this->taskRequestRepository->findOneScopedById($taskRequest->getId(), $crm->getId());
         if ($scopedTaskRequest === null) {
             return $this->errorResponseFactory->notFoundReference('taskRequest');

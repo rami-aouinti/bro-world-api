@@ -49,7 +49,7 @@ final readonly class PatchCompanyController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, string $companyId, Request $request): JsonResponse
+    public function __invoke(string $companyId, Request $request): JsonResponse
     {
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {
@@ -63,7 +63,7 @@ final readonly class PatchCompanyController
 
         try {
             $this->messageBus->dispatch(new PatchCompanyCommand(
-                applicationSlug: $applicationSlug,
+                applicationSlug: 'crm-general-core',
                 companyId: $companyId,
                 name: $input->name,
                 hasName: $input->hasName,

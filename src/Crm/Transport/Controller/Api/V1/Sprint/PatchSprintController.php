@@ -50,7 +50,7 @@ final readonly class PatchSprintController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Sprint $sprint, Request $request): JsonResponse
+    public function __invoke(Sprint $sprint, Request $request): JsonResponse
     {
         try {
             $payload = json_decode(

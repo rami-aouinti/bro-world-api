@@ -86,11 +86,11 @@ final readonly class ListCompaniesByApplicationController
             ),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $request->attributes->set('applicationSlug', $applicationSlug);
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $request->attributes->set('applicationSlug', 'crm-general-core');
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
 
-        return new JsonResponse($this->companyApplicationListService->list($request, $applicationSlug, $crm));
+        return new JsonResponse($this->companyApplicationListService->list($request, 'crm-general-core', $crm));
     }
 }

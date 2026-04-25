@@ -45,11 +45,11 @@ final readonly class DeleteContactController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, string $id): JsonResponse
+    public function __invoke(string $id): JsonResponse
     {
         try {
             $this->messageBus->dispatch(new DeleteContactCommand(
-                applicationSlug: $applicationSlug,
+                applicationSlug: 'crm-general-core',
                 contactId: $id,
             ));
         } catch (CrmReferenceNotFoundException $exception) {

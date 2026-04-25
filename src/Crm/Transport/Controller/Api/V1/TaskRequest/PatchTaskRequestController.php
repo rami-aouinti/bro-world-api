@@ -54,9 +54,9 @@ final readonly class PatchTaskRequestController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, TaskRequest $taskRequest, Request $request): JsonResponse
+    public function __invoke(TaskRequest $taskRequest, Request $request): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
 
         try {
             $payload = json_decode(

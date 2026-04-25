@@ -38,12 +38,11 @@ final readonly class GetCrmGithubLatestSyncJobController
             ),
         ],
     )]
-    public function __invoke(?string $applicationSlug = null): JsonResponse
+    public function __invoke(): JsonResponse
     {
-        $applicationSlug ??= self::GENERAL_APPLICATION_SLUG;
-        $this->scopeResolver->resolveOrFail($applicationSlug);
+        $this->scopeResolver->resolveOrFail('crm-general-core');
 
-        $job = $this->syncJobRepository->findLatestByApplicationSlug($applicationSlug);
+        $job = $this->syncJobRepository->findLatestByApplicationSlug('crm-general-core');
 
         return new JsonResponse([
             'item' => $job instanceof CrmGithubSyncJob ? $this->serializeJob($job) : null,

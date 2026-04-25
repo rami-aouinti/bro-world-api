@@ -45,11 +45,11 @@ final readonly class DeleteCompanyController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, string $company): JsonResponse
+    public function __invoke(string $company): JsonResponse
     {
         try {
             $this->messageBus->dispatch(new DeleteCompanyCommand(
-                applicationSlug: $applicationSlug,
+                applicationSlug: 'crm-general-core',
                 companyId: $company,
             ));
         } catch (CrmReferenceNotFoundException $exception) {

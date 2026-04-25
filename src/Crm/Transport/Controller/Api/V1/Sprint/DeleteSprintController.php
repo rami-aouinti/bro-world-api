@@ -47,14 +47,14 @@ final readonly class DeleteSprintController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-        public function __invoke(string $applicationSlug, Sprint $sprint): JsonResponse
+        public function __invoke(Sprint $sprint): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
 
         $this->entityManager->remove($sprint);
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityDeleted('crm_sprint', $sprint->getId(), context: [
-            'applicationSlug' => $applicationSlug,
+            'applicationSlug' => 'crm-general-core',
             'crmId' => $crm->getId(),
         ]));
 

@@ -46,7 +46,7 @@ final readonly class RemoveSprintAssigneeController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Sprint $sprint, User $user): JsonResponse
+    public function __invoke(Sprint $sprint, User $user): JsonResponse
     {
         $sprint->removeAssignee($user);
         $this->sprintRepository->save($sprint);

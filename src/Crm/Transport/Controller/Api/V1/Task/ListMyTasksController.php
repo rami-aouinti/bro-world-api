@@ -31,8 +31,8 @@ final readonly class ListMyTasksController
             new OA\Response(response: JsonResponse::HTTP_OK, description: 'List of assigned tasks and task requests for the current user.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, User $loggedInUser): JsonResponse
+    public function __invoke(User $loggedInUser): JsonResponse
     {
-        return new JsonResponse($this->taskBoardService->listMine($applicationSlug, $loggedInUser));
+        return new JsonResponse($this->taskBoardService->listMine('crm-general-core', $loggedInUser));
     }
 }

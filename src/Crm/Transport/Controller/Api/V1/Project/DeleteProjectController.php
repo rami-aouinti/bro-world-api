@@ -47,14 +47,14 @@ final readonly class DeleteProjectController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-        public function __invoke(string $applicationSlug, Project $project): JsonResponse
+        public function __invoke(Project $project): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
 
         $this->entityManager->remove($project);
         $this->entityManager->flush();
         $this->messageBus->dispatch(new EntityDeleted('crm_project', $project->getId(), context: [
-            'applicationSlug' => $applicationSlug,
+            'applicationSlug' => 'crm-general-core',
             'crmId' => $crm->getId(),
         ]));
 

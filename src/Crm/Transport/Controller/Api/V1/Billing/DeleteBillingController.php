@@ -42,10 +42,10 @@ final readonly class DeleteBillingController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, string $billing): JsonResponse
+    public function __invoke(string $billing): JsonResponse
     {
         $this->messageBus->dispatch(new DeleteBillingCommand(
-            applicationSlug: $applicationSlug,
+            applicationSlug: 'crm-general-core',
             billingId: $billing,
         ));
 
