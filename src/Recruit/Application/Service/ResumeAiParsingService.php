@@ -8,20 +8,23 @@ use JsonException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Exception\ExceptionInterface as ProcessExceptionInterface;
 use Symfony\Component\Process\Process;
-use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 use function array_map;
+use function count;
+use function file_get_contents;
+use function gzuncompress;
+use function gzinflate;
 use function is_array;
 use function is_string;
 use function json_decode;
+use function preg_match_all;
 use function preg_replace;
+use function preg_split;
+use function preg_replace_callback;
 use function str_starts_with;
 use function trim;
 
@@ -36,12 +39,7 @@ readonly class ResumeAiParsingService
     }
 
     /**
-     * @param string $pdfPath
      * @return array<string, mixed>
-     * @throws ClientExceptionInterface
-     * @throws DecodingExceptionInterface
-     * @throws RedirectionExceptionInterface
-     * @throws ServerExceptionInterface
      */
     public function parsePdf(string $pdfPath): array
     {
@@ -76,19 +74,137 @@ readonly class ResumeAiParsingService
 
     private function extractTextFromPdf(string $pdfPath): string
     {
-        $process = new Process(['pdftotext', '-layout', $pdfPath, '-']);
-        $process->setTimeout(60);
-        $process->run();
+        $textFromPdftotext = $this->extractTextWithPdftotext($pdfPath);
+        if (trim($textFromPdftotext) !== '') {
+            return $textFromPdftotext;
+        }
+
+        $textFromPdfStreams = $this->extractTextFromPdfStreams($pdfPath);
+        if (trim($textFromPdfStreams) !== '') {
+            return $textFromPdfStreams;
+        }
+
+        throw new HttpException(
+            Response::HTTP_UNPROCESSABLE_ENTITY,
+            'Unable to extract text from the PDF. The file may be image-based (scanned) or encrypted.',
+        );
+    }
+
+    private function extractTextWithPdftotext(string $pdfPath): string
+    {
+        try {
+            $process = new Process(['pdftotext', '-layout', $pdfPath, '-']);
+            $process->setTimeout(60);
+            $process->run();
+        } catch (ProcessExceptionInterface) {
+            return '';
+        }
 
         if (!$process->isSuccessful()) {
-            throw new HttpException(
-                Response::HTTP_BAD_REQUEST,
-                'Unable to extract text from the PDF. Ensure pdftotext is installed and the file is readable.',
-                new ProcessFailedException($process),
-            );
+            return '';
         }
 
         return (string) $process->getOutput();
+    }
+
+    private function extractTextFromPdfStreams(string $pdfPath): string
+    {
+        $content = file_get_contents($pdfPath);
+        if (!is_string($content) || $content === '') {
+            return '';
+        }
+
+        preg_match_all('/stream\\r?\\n(.*?)\\r?\\nendstream/s', $content, $matches);
+        $streams = $matches[1] ?? [];
+        if (!is_array($streams) || count($streams) === 0) {
+            return '';
+        }
+
+        $chunks = [];
+        foreach ($streams as $stream) {
+            if (!is_string($stream) || $stream === '') {
+                continue;
+            }
+
+            $decoded = $this->decodePdfStream($stream);
+            if ($decoded === '') {
+                continue;
+            }
+
+            $chunk = $this->extractTextOperators($decoded);
+            if ($chunk !== '') {
+                $chunks[] = $chunk;
+            }
+        }
+
+        return trim(implode("\n", $chunks));
+    }
+
+    private function decodePdfStream(string $stream): string
+    {
+        $decoded = @gzuncompress($stream);
+        if (!is_string($decoded) || $decoded === '') {
+            $decoded = @gzinflate($stream);
+        }
+
+        if (is_string($decoded) && $decoded !== '') {
+            return $decoded;
+        }
+
+        if (preg_match('/[\\x20-\\x7E]{10,}/', $stream) !== 1) {
+            return '';
+        }
+
+        return $stream;
+    }
+
+    private function extractTextOperators(string $content): string
+    {
+        $content = preg_replace_callback(
+            '/\\((?:\\\\.|[^\\\\)])*\\)\\s*TJ/s',
+            static fn(array $m): string => preg_replace('/\\s+/', ' ', (string) ($m[0] ?? '')) ?? '',
+            $content,
+        ) ?? $content;
+
+        preg_match_all('/\\((?:\\\\.|[^\\\\)])*\\)\\s*Tj/s', $content, $matches);
+        $segments = $matches[0] ?? [];
+
+        $lines = [];
+        foreach ($segments as $segment) {
+            if (!is_string($segment)) {
+                continue;
+            }
+
+            if (preg_match('/\\((.*)\\)\\s*Tj/s', $segment, $group) !== 1) {
+                continue;
+            }
+
+            $text = (string) ($group[1] ?? '');
+            $text = preg_replace('/\\\\([\\\\()])/', '$1', $text) ?? $text;
+            $text = preg_replace('/\\\\[rntbf]/', ' ', $text) ?? $text;
+            $text = trim($text);
+            if ($text !== '') {
+                $lines[] = $text;
+            }
+        }
+
+        if ($lines === []) {
+            $raw = preg_replace('/[^\\PC\\s]+/u', ' ', $content) ?? '';
+            $raw = trim($raw);
+            if ($raw === '') {
+                return '';
+            }
+
+            $parts = preg_split('/\\s{2,}|\\R/', $raw);
+            if (!is_array($parts)) {
+                return '';
+            }
+
+            $parts = array_filter($parts, static fn(mixed $part): bool => is_string($part) && trim($part) !== '');
+            return trim(implode("\n", $parts));
+        }
+
+        return implode("\n", $lines);
     }
 
     private function buildPrompt(string $rawText): string
