@@ -26,6 +26,7 @@ use function implode;
 use function is_array;
 use function is_string;
 use function json_decode;
+use function preg_match;
 use function preg_match_all;
 use function preg_replace;
 use function preg_split;
@@ -76,7 +77,17 @@ readonly class ResumeAiParsingService
             return '';
         }
 
+        $text = preg_replace('/(?:LEBENSLAUF\.DE){2,}/ui', ' ', $text);
+        if (!is_string($text)) {
+            return '';
+        }
+
         $text = preg_replace('/Vorschau\s+mit\s+Wasserzeichen/ui', ' ', $text);
+        if (!is_string($text)) {
+            return '';
+        }
+
+        $text = preg_replace('/[^\p{Latin}\p{N}\p{Z}\p{P}\p{Sc}\p{Sm}\p{Sk}]/u', ' ', $text);
         if (!is_string($text)) {
             return '';
         }
@@ -105,6 +116,10 @@ readonly class ResumeAiParsingService
             }
 
             if (preg_match('/[\p{L}\p{N}]/u', $line) !== 1) {
+                continue;
+            }
+
+            if (!$this->hasSufficientLatinContent($line)) {
                 continue;
             }
 
@@ -154,6 +169,21 @@ readonly class ResumeAiParsingService
         }
 
         return preg_match_all('/[\p{L}\p{N}\s.,;:!?@\-]/u', $text) ?: 0;
+    }
+
+    private function hasSufficientLatinContent(string $line): bool
+    {
+        $totalLetters = preg_match_all('/\p{L}/u', $line);
+        if (!is_int($totalLetters) || $totalLetters === 0) {
+            return true;
+        }
+
+        $latinLetters = preg_match_all('/\p{Latin}/u', $line);
+        if (!is_int($latinLetters) || $latinLetters === 0) {
+            return false;
+        }
+
+        return ($latinLetters / $totalLetters) >= 0.7;
     }
 
     private function isMostlyRepeatedTokenLine(string $line): bool
