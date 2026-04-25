@@ -10,6 +10,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Process\Exception\ExceptionInterface as ProcessExceptionInterface;
 use Symfony\Component\Process\Process;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -38,8 +42,66 @@ readonly class ResumeAiParsingService
     ) {
     }
 
+    function fixEncoding(string $text): string
+    {
+        // 1. Si présence massive de bytes nuls => UTF-16
+        if (strpos($text, "\x00") !== false) {
+            $text = mb_convert_encoding($text, 'UTF-8', 'UTF-16');
+        }
+
+        // 2. Si texte encore "chinois chelou" => reconversion brute
+        if (preg_match('/[^\x00-\x7F]{3,}/', $text)) {
+            $text = mb_convert_encoding($text, 'UTF-8', 'UTF-16LE');
+        }
+
+        // 3. Nettoyage caractères non imprimables
+        $text = preg_replace('/[^\P{C}\n\r\t]/u', '', $text);
+
+        return trim($text);
+    }
+
+    private function cleanResumeText(string $text): string
+    {
+        // 1. Fix UTF-16 / UTF-8 proprement
+        if (!mb_check_encoding($text, 'UTF-8')) {
+            $text = mb_convert_encoding($text, 'UTF-8', 'auto');
+        }
+
+        // 2. Supprimer caractères non imprimables
+        $text = preg_replace('/[^\P{C}\n\r\t]/u', '', $text);
+
+        // 3. Supprimer les blocs "gibberish" (genre chinois fake)
+        $text = preg_replace('/[^\x00-\x7F]{4,}/u', ' ', $text);
+
+        // 4. Normaliser espaces
+        $text = preg_replace('/\s+/', ' ', $text);
+
+        // 5. Garder lignes utiles (heuristique CV)
+        $lines = preg_split('/\n|\r/', $text);
+
+        $filtered = [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+
+            // ignore lignes trop courtes ou bruit
+            if (strlen($line) < 3) continue;
+
+            // ignore lignes avec trop de caractères non ASCII
+            if (preg_match('/[^\x00-\x7F]/', $line)) continue;
+
+            $filtered[] = $line;
+        }
+
+        return implode("\n", $filtered);
+    }
+
     /**
+     * @param string $pdfPath
      * @return array<string, mixed>
+     * @throws ClientExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
      */
     public function parsePdf(string $pdfPath): array
     {
