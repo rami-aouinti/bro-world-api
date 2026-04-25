@@ -15,6 +15,10 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 
 #[AsController]
 #[OA\Tag(name: 'Recruit Resume')]
@@ -26,6 +30,12 @@ readonly class ResumeParsePdfController
     ) {
     }
 
+    /**
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     */
     #[Route(path: '/v1/recruit/resumes/parse-pdf', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'Upload un CV PDF, extrait le texte et retourne les données structurées via AI locale.')]
     #[OA\RequestBody(
@@ -35,7 +45,7 @@ readonly class ResumeParsePdfController
             schema: new OA\Schema(
                 required: ['document'],
                 properties: [
-                    new OA\Property(property: 'document', type: 'string', format: 'binary', description: 'Fichier PDF du CV.'),
+                    new OA\Property(property: 'document', description: 'Fichier PDF du CV.', type: 'string', format: 'binary'),
                 ],
                 type: 'object',
             ),
@@ -82,10 +92,8 @@ readonly class ResumeParsePdfController
             ],
         ),
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $request->attributes->set('applicationSlug', $applicationSlug);
-
         $document = $request->files->get('document');
         if (!$document instanceof UploadedFile) {
             throw new HttpException(Response::HTTP_BAD_REQUEST, 'Field "document" is required and must be a file.');
