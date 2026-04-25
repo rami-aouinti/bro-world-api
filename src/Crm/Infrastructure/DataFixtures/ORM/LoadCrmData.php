@@ -18,6 +18,7 @@ use App\Crm\Domain\Entity\Project;
 use App\Crm\Domain\Entity\Sprint;
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Domain\Entity\TaskRequest;
+use App\Crm\Domain\Entity\TaskRequestWorklog;
 use App\Crm\Domain\Enum\ProjectStatus;
 use App\Crm\Domain\Enum\SprintStatus;
 use App\Crm\Domain\Enum\TaskPriority;
@@ -439,7 +440,13 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         array $tasks,
         int $countByTask,
     ): void {
+        $applicationKey = $application->getSlug();
+        $johnRoot = $this->getReference('User-john-root', User::class);
+        $generalCorePlannedConsumedRemainingAdded = false;
+        $generalCoreRootLoggedForEmployeeAdded = false;
+
         foreach ($tasks as $task) {
+            $assignableEmployees = $this->getAssignableEmployeesForTask($manager, $task);
             $repository = $task->getProject()?->getRepositories()->first();
             if (!$repository instanceof CrmRepository) {
                 $project = $task->getProject();
@@ -468,7 +475,15 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                     ->setRepository($repository)
                     ->setTitle($faker->sentence(6))
                     ->setDescription($faker->paragraph())
-                    ->setStatus($status);
+                    ->setStatus($status)
+                    ->setPlannedHours((float)$faker->randomElement([4, 8, 12, 16, 20, 24, 32]));
+
+                $assignedEmployee = $assignableEmployees !== []
+                    ? $faker->randomElement($assignableEmployees)
+                    : null;
+                if ($assignedEmployee instanceof Employee && $assignedEmployee->getUser() instanceof User) {
+                    $taskRequest->addAssignee($assignedEmployee->getUser());
+                }
 
                 $taskRequest->setBlog($this->createBlogThreadForEntity(
                     $manager,
@@ -483,9 +498,68 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                     $taskRequest->setResolvedAt(DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-2 weeks', 'now')));
                 }
 
+                if (
+                    $applicationKey === 'crm-general-core'
+                    && !$generalCorePlannedConsumedRemainingAdded
+                    && $assignedEmployee instanceof Employee
+                    && $assignedEmployee->getUser() instanceof User
+                ) {
+                    $taskRequest->setPlannedHours(24.0);
+                    $taskRequest->addAssignee($assignedEmployee->getUser());
+                    $assigneeWorklog = (new TaskRequestWorklog())
+                        ->setTaskRequest($taskRequest)
+                        ->setEmployee($assignedEmployee)
+                        ->setLoggedByUser($assignedEmployee->getUser())
+                        ->setHours(5.0)
+                        ->setLoggedAt(DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-10 days', 'now')))
+                        ->setComment('Avancement initial par employé assigné (5h).');
+                    $taskRequest->addWorklog($assigneeWorklog);
+                    $manager->persist($assigneeWorklog);
+                    $this->addReference('Crm-TaskRequest-general-core-planned24-consumed5', $taskRequest);
+                    $this->addReference('Crm-TaskRequestWorklog-general-core-assignee-5h', $assigneeWorklog);
+                    $generalCorePlannedConsumedRemainingAdded = true;
+                } elseif (
+                    $applicationKey === 'crm-general-core'
+                    && !$generalCoreRootLoggedForEmployeeAdded
+                    && $assignedEmployee instanceof Employee
+                    && $johnRoot instanceof User
+                ) {
+                    $rootWorklog = (new TaskRequestWorklog())
+                        ->setTaskRequest($taskRequest)
+                        ->setEmployee($assignedEmployee)
+                        ->setLoggedByUser($johnRoot)
+                        ->setHours(2.0)
+                        ->setLoggedAt(DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-7 days', 'now')))
+                        ->setComment('john-root saisit du temps pour un employé assigné sur cette demande.');
+                    $taskRequest->addWorklog($rootWorklog);
+                    $manager->persist($rootWorklog);
+                    $this->addReference('Crm-TaskRequest-general-core-root-logs-for-employee', $taskRequest);
+                    $this->addReference('Crm-TaskRequestWorklog-general-core-root-logs-for-employee', $rootWorklog);
+                    $generalCoreRootLoggedForEmployeeAdded = true;
+                }
+
                 $manager->persist($taskRequest);
             }
         }
+    }
+
+    /**
+     * @return array<int, Employee>
+     */
+    private function getAssignableEmployeesForTask(ObjectManager $manager, Task $task): array
+    {
+        $crm = $task->getProject()?->getCompany()?->getCrm();
+        if (!$crm instanceof Crm) {
+            return [];
+        }
+
+        /** @var array<int, Employee> $employees */
+        $employees = $manager->getRepository(Employee::class)->findBy(['crm' => $crm]);
+
+        return array_values(array_filter(
+            $employees,
+            static fn (Employee $employee): bool => $employee->getUser() instanceof User,
+        ));
     }
 
     private function generateBillings(ObjectManager $manager, Generator $faker, Company $company, int $count): void
