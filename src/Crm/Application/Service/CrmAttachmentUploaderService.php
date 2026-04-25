@@ -35,7 +35,9 @@ final readonly class CrmAttachmentUploaderService
         }
 
         $multiple = $request->files->get('files');
-        if (is_array($multiple)) {
+        if ($multiple instanceof UploadedFile) {
+            $files[] = $multiple;
+        } elseif (is_array($multiple)) {
             foreach ($multiple as $file) {
                 if ($file instanceof UploadedFile) {
                     $files[] = $file;
@@ -54,7 +56,7 @@ final readonly class CrmAttachmentUploaderService
     public function upload(Request $request, array $files, string $relativeDirectory): array
     {
         if ($files === []) {
-            throw new HttpException(Response::HTTP_BAD_REQUEST, 'No file found. Expected "file" or "files[]".');
+            throw new HttpException(Response::HTTP_BAD_REQUEST, 'No file found. Expected "file", "files", or "files[]".');
         }
 
         return $this->mediaUploaderService->upload(
