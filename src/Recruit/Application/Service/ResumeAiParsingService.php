@@ -26,6 +26,7 @@ use function implode;
 use function is_array;
 use function is_string;
 use function json_decode;
+use function json_encode;
 use function preg_match;
 use function preg_match_all;
 use function preg_replace;
@@ -48,6 +49,35 @@ readonly class ResumeAiParsingService
     public function __construct(
         private HttpClientInterface $httpClient,
     ) {
+    }
+
+    /**
+     * @param array<string, mixed> $resumeData
+     */
+    public function reviewResume(array $resumeData): string
+    {
+        $jsonPayload = json_encode($resumeData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        if (!is_string($jsonPayload) || trim($jsonPayload) === '') {
+            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Invalid review payload.');
+        }
+
+        return $this->generateTextResponse($this->buildResumeReviewPrompt($jsonPayload));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function structureResumeFromText(string $resumeText): array
+    {
+        $cleanedText = $this->cleanResumeText($resumeText);
+        $promptInput = $cleanedText !== '' ? $cleanedText : trim($resumeText);
+        if ($promptInput === '') {
+            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Field "resumeText" must not be empty.');
+        }
+
+        $content = $this->generateTextResponse($this->buildStructuredResumePrompt($promptInput));
+
+        return $this->normalizeAiStructuredResumePayload($content);
     }
 
     private function cleanResumeText(string $text): string
@@ -277,28 +307,7 @@ readonly class ResumeAiParsingService
         $cleanedText = $this->cleanResumeText($rawText);
         $prompt = $this->buildPrompt($cleanedText !== '' ? $cleanedText : $rawText);
 
-        try {
-            $response = $this->httpClient->request('POST', self::AI_URL, [
-                'timeout' => 120,
-                'json' => [
-                    'model' => self::AI_MODEL,
-                    'prompt' => $prompt,
-                    'stream' => false,
-                ],
-            ]);
-            $data = $response->toArray(false);
-        } catch (TransportExceptionInterface $exception) {
-            throw new HttpException(
-                Response::HTTP_BAD_GATEWAY,
-                'Unable to reach local AI service. Please verify that the local model server is running and reachable.',
-                $exception,
-            );
-        }
-
-        $content = trim((string) ($data['response'] ?? ''));
-        if ($content === '') {
-            throw new HttpException(Response::HTTP_BAD_GATEWAY, 'AI service returned an empty response.');
-        }
+        $content = $this->generateTextResponse($prompt);
 
         return $this->normalizeAiPayload($content);
     }
@@ -467,6 +476,84 @@ PROMPT
             . "\n" . $rawText;
     }
 
+    private function buildResumeReviewPrompt(string $resumeJson): string
+    {
+        return <<<'PROMPT'
+You are a senior recruiter and CV reviewer.
+Analyse the provided resume payload and answer ONLY as plain text (no markdown).
+Your answer must include:
+1) Overall quality verdict (good / needs improvement).
+2) Major issues found (if any).
+3) Concrete improvements section with bullet-style lines starting by "- ".
+Keep answer concise and actionable.
+
+Resume payload:
+PROMPT
+            . "\n" . $resumeJson;
+    }
+
+    private function buildStructuredResumePrompt(string $rawText): string
+    {
+        return <<<'PROMPT'
+You are a CV parser.
+Read the resume text and return ONLY valid minified JSON with this exact schema:
+{
+  "user": {
+    "fullName": "",
+    "email": "",
+    "phone": "",
+    "address": "",
+    "summary": "",
+    "links": []
+  },
+  "experiences": [{"title":"","company":"","startDate":"","endDate":"","description":""}],
+  "educations": [{"title":"","school":"","startDate":"","endDate":"","description":""}],
+  "skills": ["", ""],
+  "languages": [{"name":"","level":""}],
+  "certifications": [{"title":"","issuer":"","date":"","description":""}],
+  "projects": [{"title":"","description":"","link":""}],
+  "references": [{"name":"","contact":"","description":""}],
+  "hobbies": ["", ""]
+}
+Rules:
+- Never include markdown.
+- Always include every key.
+- Missing values must stay empty strings/arrays.
+- Keep output strictly as JSON object.
+
+Resume text:
+PROMPT
+            . "\n" . $rawText;
+    }
+
+    private function generateTextResponse(string $prompt): string
+    {
+        try {
+            $response = $this->httpClient->request('POST', self::AI_URL, [
+                'timeout' => 120,
+                'json' => [
+                    'model' => self::AI_MODEL,
+                    'prompt' => $prompt,
+                    'stream' => false,
+                ],
+            ]);
+            $data = $response->toArray(false);
+        } catch (TransportExceptionInterface $exception) {
+            throw new HttpException(
+                Response::HTTP_BAD_GATEWAY,
+                'Unable to reach local AI service. Please verify that the local model server is running and reachable.',
+                $exception,
+            );
+        }
+
+        $content = trim((string) ($data['response'] ?? ''));
+        if ($content === '') {
+            throw new HttpException(Response::HTTP_BAD_GATEWAY, 'AI service returned an empty response.');
+        }
+
+        return $content;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -505,6 +592,46 @@ PROMPT
             'experiences' => $this->normalizeEntries($experiences, ['title', 'company', 'startDate', 'endDate', 'description']),
             'educations' => $this->normalizeEntries($educations, ['title', 'school', 'startDate', 'endDate', 'description']),
             'skills' => $this->stringArray($skills),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function normalizeAiStructuredResumePayload(string $raw): array
+    {
+        $normalizedRaw = $this->stripCodeFence($raw);
+
+        try {
+            /** @var array<string, mixed> $decoded */
+            $decoded = json_decode($normalizedRaw, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $exception) {
+            throw new HttpException(Response::HTTP_BAD_GATEWAY, 'AI service returned invalid JSON.', $exception);
+        }
+
+        if (!is_array($decoded)) {
+            throw new HttpException(Response::HTTP_BAD_GATEWAY, 'AI service JSON must be an object.');
+        }
+
+        $user = $decoded['user'] ?? [];
+
+        return [
+            'user' => [
+                'fullName' => $this->stringValue(is_array($user) ? ($user['fullName'] ?? '') : ''),
+                'email' => $this->stringValue(is_array($user) ? ($user['email'] ?? '') : ''),
+                'phone' => $this->stringValue(is_array($user) ? ($user['phone'] ?? '') : ''),
+                'address' => $this->stringValue(is_array($user) ? ($user['address'] ?? '') : ''),
+                'summary' => $this->stringValue(is_array($user) ? ($user['summary'] ?? '') : ''),
+                'links' => $this->stringArray(is_array($user) ? ($user['links'] ?? []) : []),
+            ],
+            'experiences' => $this->normalizeEntries(is_array($decoded['experiences'] ?? null) ? $decoded['experiences'] : [], ['title', 'company', 'startDate', 'endDate', 'description']),
+            'educations' => $this->normalizeEntries(is_array($decoded['educations'] ?? null) ? $decoded['educations'] : [], ['title', 'school', 'startDate', 'endDate', 'description']),
+            'skills' => $this->stringArray($decoded['skills'] ?? []),
+            'languages' => $this->normalizeEntries(is_array($decoded['languages'] ?? null) ? $decoded['languages'] : [], ['name', 'level']),
+            'certifications' => $this->normalizeEntries(is_array($decoded['certifications'] ?? null) ? $decoded['certifications'] : [], ['title', 'issuer', 'date', 'description']),
+            'projects' => $this->normalizeEntries(is_array($decoded['projects'] ?? null) ? $decoded['projects'] : [], ['title', 'description', 'link']),
+            'references' => $this->normalizeEntries(is_array($decoded['references'] ?? null) ? $decoded['references'] : [], ['name', 'contact', 'description']),
+            'hobbies' => $this->stringArray($decoded['hobbies'] ?? []),
         ];
     }
 
