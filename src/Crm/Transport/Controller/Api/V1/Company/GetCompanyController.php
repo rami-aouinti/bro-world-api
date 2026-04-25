@@ -46,16 +46,16 @@ final readonly class GetCompanyController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Company $company): JsonResponse
+    public function __invoke(Company $company): JsonResponse
     {
-        $cacheKey = $this->cacheKeyConventionService->buildCrmCompanyDetailKey($applicationSlug, $company->getId());
+        $cacheKey = $this->cacheKeyConventionService->buildCrmCompanyDetailKey('crm-general-core', $company->getId());
 
-        $payload = $this->cache->get($cacheKey, function (ItemInterface $item) use ($applicationSlug, $company): ?array {
+        $payload = $this->cache->get($cacheKey, function (ItemInterface $item) use ($company): ?array {
             $item->expiresAfter(120);
             if (method_exists($item, 'tag') && $this->cache instanceof TagAwareCacheInterface) {
                 $item->tag([
-                    $this->cacheKeyConventionService->crmCompanyListByApplicationTag($applicationSlug),
-                    $this->cacheKeyConventionService->crmCompanyDetailTag($applicationSlug, $company->getId()),
+                    $this->cacheKeyConventionService->crmCompanyListByApplicationTag('crm-general-core'),
+                    $this->cacheKeyConventionService->crmCompanyDetailTag('crm-general-core', $company->getId()),
                 ]);
             }
 

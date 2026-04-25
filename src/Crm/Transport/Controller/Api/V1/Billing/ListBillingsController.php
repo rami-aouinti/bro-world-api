@@ -84,8 +84,8 @@ final readonly class ListBillingsController
             ),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        return new JsonResponse($this->billingReadService->getList($applicationSlug, $request));
+        return new JsonResponse($this->billingReadService->getList('crm-general-core', $request));
     }
 }

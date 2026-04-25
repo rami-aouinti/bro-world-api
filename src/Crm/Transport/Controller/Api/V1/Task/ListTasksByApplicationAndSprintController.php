@@ -84,9 +84,9 @@ final readonly class ListTasksByApplicationAndSprintController
             ),
         ],
     )]
-    public function __invoke(string $applicationSlug, Sprint $sprint): JsonResponse
+    public function __invoke(Sprint $sprint): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
         $tasks = $this->taskRepository->findScopedBySprint($crm->getId(), $sprint->getId());
 
         return new JsonResponse(new PaginatedListResponseDto(

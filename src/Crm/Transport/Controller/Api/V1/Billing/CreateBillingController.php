@@ -51,9 +51,9 @@ final readonly class CreateBillingController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
 
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {
@@ -91,7 +91,7 @@ final readonly class CreateBillingController
             currency: $billing->getCurrency(),
             status: $billing->getStatus(),
             dueAt: $billing->getDueAt()?->format(DATE_ATOM),
-            applicationSlug: $applicationSlug,
+            applicationSlug: 'crm-general-core',
             crmId: $crm->getId(),
         ));
 

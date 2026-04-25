@@ -48,9 +48,9 @@ final readonly class GetProjectController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project): JsonResponse
+    public function __invoke(Project $project): JsonResponse
     {
-        $payload = $this->projectReadService->getDetail($applicationSlug, $project);
+        $payload = $this->projectReadService->getDetail('crm-general-core', $project);
         if ($payload === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Project not found for this CRM scope.');
         }

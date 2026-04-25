@@ -46,9 +46,9 @@ final readonly class CreateCompanyByApplicationController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $request->attributes->set('applicationSlug', $applicationSlug);
+        $request->attributes->set('applicationSlug', 'crm-general-core');
 
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {
@@ -64,7 +64,7 @@ final readonly class CreateCompanyByApplicationController
 
         $this->messageBus->dispatch(new CreateCompanyCommand(
             id: $id,
-            applicationSlug: $applicationSlug,
+            applicationSlug: 'crm-general-core',
             name: (string)$input->name,
             industry: $input->industry,
             website: $input->website,
@@ -73,7 +73,7 @@ final readonly class CreateCompanyByApplicationController
         ));
 
         return new JsonResponse(new EntityIdResponseDto($id, [
-            'applicationSlug' => $applicationSlug,
+            'applicationSlug' => 'crm-general-core',
         ])->toArray(), JsonResponse::HTTP_CREATED);
     }
 }

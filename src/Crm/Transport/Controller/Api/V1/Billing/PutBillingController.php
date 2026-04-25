@@ -47,7 +47,7 @@ final readonly class PutBillingController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, string $billing, Request $request): JsonResponse
+    public function __invoke(string $billing, Request $request): JsonResponse
     {
         $payload = $this->crmRequestHandler->decodeJson($request);
         if ($payload instanceof JsonResponse) {
@@ -70,7 +70,7 @@ final readonly class PutBillingController
         }
 
         $this->messageBus->dispatch(new PutBillingCommand(
-            applicationSlug: $applicationSlug,
+            applicationSlug: 'crm-general-core',
             billingId: $billing,
             companyId: $companyId,
             label: (string)$input->label,

@@ -43,9 +43,9 @@ final readonly class GetContactController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Contact $contact): JsonResponse
+    public function __invoke(Contact $contact): JsonResponse
     {
-        $payload = $this->contactReadService->getDetail($applicationSlug, $contact->getId());
+        $payload = $this->contactReadService->getDetail('crm-general-core', $contact->getId());
         if ($payload === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Contact not found for this CRM scope.');
         }

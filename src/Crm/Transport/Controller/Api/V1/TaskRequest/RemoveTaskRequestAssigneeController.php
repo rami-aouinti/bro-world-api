@@ -46,7 +46,7 @@ final readonly class RemoveTaskRequestAssigneeController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, TaskRequest $taskRequest, User $user): JsonResponse
+    public function __invoke(TaskRequest $taskRequest, User $user): JsonResponse
     {
         $taskRequest->removeAssignee($user);
         $this->taskRequestRepository->save($taskRequest);

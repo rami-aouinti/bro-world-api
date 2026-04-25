@@ -46,7 +46,7 @@ final readonly class RemoveProjectAssigneeController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Project $project, User $user): JsonResponse
+    public function __invoke(Project $project, User $user): JsonResponse
     {
         $project->removeAssignee($user);
         $this->projectRepository->save($project);

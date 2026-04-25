@@ -64,9 +64,9 @@ final readonly class UpdateTaskRequestStatusController
             new OA\Response(response: 422, description: 'Validation failed.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, TaskRequest $taskRequest, Request $request): JsonResponse
+    public function __invoke(TaskRequest $taskRequest, Request $request): JsonResponse
     {
-        $request->attributes->set('applicationSlug', $applicationSlug);
+        $request->attributes->set('applicationSlug', 'crm-general-core');
 
         try {
             $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);

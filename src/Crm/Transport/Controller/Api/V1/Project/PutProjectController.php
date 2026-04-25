@@ -41,9 +41,9 @@ final readonly class PutProjectController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation failed.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, string $project, Request $request): JsonResponse
+    public function __invoke(string $project, Request $request): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
         $entity = $this->projectRepository->findOneScopedById($project, $crm->getId());
         if ($entity === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Project not found for this CRM scope.');

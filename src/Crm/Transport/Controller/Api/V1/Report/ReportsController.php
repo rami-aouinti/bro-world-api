@@ -43,23 +43,23 @@ final readonly class ReportsController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Erreur de validation métier.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): Response
+    public function __invoke(Request $request): Response
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
         $report = $this->crmReportService->build($crm);
         $format = strtolower($request->query->getString('format', 'json'));
 
         if ($format === 'csv') {
             return new Response($this->crmReportService->toCsv($report), 200, [
                 'Content-Type' => 'text/csv; charset=UTF-8',
-                'Content-Disposition' => HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, sprintf('crm-report-%s.csv', $applicationSlug)),
+                'Content-Disposition' => HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, sprintf('crm-report-%s.csv', 'crm-general-core')),
             ]);
         }
 
         if ($format === 'pdf') {
             return new Response($this->pdfExporter->export($report), 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, sprintf('crm-report-%s.pdf', $applicationSlug)),
+                'Content-Disposition' => HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, sprintf('crm-report-%s.pdf', 'crm-general-core')),
             ]);
         }
 

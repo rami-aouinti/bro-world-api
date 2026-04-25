@@ -41,9 +41,9 @@ final readonly class PutSprintController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation failed.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, string $sprint, Request $request): JsonResponse
+    public function __invoke(string $sprint, Request $request): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
         $entity = $this->sprintRepository->findOneScopedById($sprint, $crm->getId());
         if ($entity === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Sprint not found for this CRM scope.');

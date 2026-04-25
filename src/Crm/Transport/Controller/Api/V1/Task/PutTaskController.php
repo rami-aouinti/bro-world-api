@@ -52,9 +52,9 @@ final readonly class PutTaskController
             new OA\Response(response: JsonResponse::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation failed or sprint/project scope mismatch.'),
         ],
     )]
-    public function __invoke(string $applicationSlug, string $task, Request $request): JsonResponse
+    public function __invoke(string $task, Request $request): JsonResponse
     {
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
         $entity = $this->taskRepository->findOneScopedById($task, $crm->getId());
         if ($entity === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Task not found for this CRM scope.');

@@ -46,16 +46,15 @@ final readonly class ListCrmGithubSyncJobsController
             ),
         ],
     )]
-    public function __invoke(Request $request, ?string $applicationSlug = null): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $applicationSlug ??= self::GENERAL_APPLICATION_SLUG;
-        $this->scopeResolver->resolveOrFail($applicationSlug);
+        $this->scopeResolver->resolveOrFail('crm-general-core');
 
         $status = $request->query->getString('status', '');
         $status = $status !== '' ? $status : null;
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
 
-        $jobs = $this->syncJobRepository->findRecentByApplicationSlug($applicationSlug, $limit, $status);
+        $jobs = $this->syncJobRepository->findRecentByApplicationSlug('crm-general-core', $limit, $status);
 
         return new JsonResponse([
             'items' => array_map(self::serializeJob(...), $jobs),

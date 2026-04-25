@@ -136,10 +136,10 @@ final readonly class CreateProjectController
             ),
         ],
     )]
-    public function __invoke(string $applicationSlug, Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $request->attributes->set('applicationSlug', $applicationSlug);
-        $crm = $this->scopeResolver->resolveOrFail($applicationSlug);
+        $request->attributes->set('applicationSlug', 'crm-general-core');
+        $crm = $this->scopeResolver->resolveOrFail('crm-general-core');
 
         try {
             $payload = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
@@ -191,10 +191,10 @@ final readonly class CreateProjectController
         $this->crmEntityBlogProvisioningService->provision($project);
         $this->entityManager->flush();
 
-        $this->messageBus->dispatch(new ProjectCreated($project->getId(), $applicationSlug));
+        $this->messageBus->dispatch(new ProjectCreated($project->getId(), 'crm-general-core'));
 
         $this->messageBus->dispatch(new EntityCreated('crm_project', $project->getId(), context: [
-            'applicationSlug' => $applicationSlug,
+            'applicationSlug' => 'crm-general-core',
             'crmId' => $crm->getId(),
         ]));
 

@@ -98,7 +98,7 @@ final readonly class UploadTaskFilesController
             ),
         ],
     )]
-    public function __invoke(string $applicationSlug, Task $task, Request $request): JsonResponse
+    public function __invoke(Task $task, Request $request): JsonResponse
     {
         $uploadedFiles = $this->attachmentUploaderService->upload(
             $request,

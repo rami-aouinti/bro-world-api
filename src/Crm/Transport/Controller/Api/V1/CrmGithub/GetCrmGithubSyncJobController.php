@@ -54,14 +54,12 @@ final readonly class GetCrmGithubSyncJobController
             ),
         ],
     )]
-    public function __invoke(string $jobId, ?string $applicationSlug = null): JsonResponse
+    public function __invoke(string $jobId): JsonResponse
     {
-        if ($applicationSlug !== null) {
-            $this->scopeResolver->resolveOrFail($applicationSlug);
-        }
+        $this->scopeResolver->resolveOrFail('crm-general-core');
 
         $job = $this->syncJobRepository->find($jobId);
-        if ($job === null || ($applicationSlug !== null && $job->getApplicationSlug() !== $applicationSlug)) {
+        if ($job === null || $job->getApplicationSlug() !== 'crm-general-core') {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Sync job not found for this CRM scope.');
         }
 
