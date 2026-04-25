@@ -51,6 +51,10 @@ readonly class ResumeAiParsingService
 
     private function cleanResumeText(string $text): string
     {
+        if (str_contains($text, "\x00")) {
+            $text = $this->decodePotentialUtf16Text($text);
+        }
+
         if (!mb_check_encoding($text, 'UTF-8')) {
             $text = mb_convert_encoding($text, 'UTF-8', 'auto');
         }
@@ -126,6 +130,30 @@ readonly class ResumeAiParsingService
         }
 
         return $cleaned;
+    }
+
+    private function decodePotentialUtf16Text(string $text): string
+    {
+        $utf16Le = @mb_convert_encoding($text, 'UTF-8', 'UTF-16LE');
+        $utf16Be = @mb_convert_encoding($text, 'UTF-8', 'UTF-16BE');
+
+        $utf16LeScore = $this->scoreReadableText(is_string($utf16Le) ? $utf16Le : '');
+        $utf16BeScore = $this->scoreReadableText(is_string($utf16Be) ? $utf16Be : '');
+
+        if ($utf16LeScore === 0 && $utf16BeScore === 0) {
+            return $text;
+        }
+
+        return $utf16LeScore >= $utf16BeScore ? (string) $utf16Le : (string) $utf16Be;
+    }
+
+    private function scoreReadableText(string $text): int
+    {
+        if ($text === '') {
+            return 0;
+        }
+
+        return preg_match_all('/[\p{L}\p{N}\s.,;:!?@\-]/u', $text) ?: 0;
     }
 
     private function isMostlyRepeatedTokenLine(string $line): bool
