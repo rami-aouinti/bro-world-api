@@ -33,6 +33,56 @@ class NotificationControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
+    #[TestDox('Test that `GET /v1/notifications/templates` requires authentication.')]
+    public function testThatTemplateListRequiresAuthentication(): void
+    {
+        $client = $this->getTestClient();
+
+        $client->request('GET', $this->baseUrl . '/templates');
+
+        self::assertSame(Response::HTTP_UNAUTHORIZED, $client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('Test that `GET /v1/notifications/templates` returns a normalized list.')]
+    public function testThatTemplateListReturnsNormalizedPayload(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('GET', $this->baseUrl . '/templates');
+
+        $response = $client->getResponse();
+        $content = $response->getContent();
+        self::assertNotFalse($content);
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode(), "Response:\n" . $response);
+
+        $payload = JSON::decode($content, true);
+        self::assertIsArray($payload);
+        self::assertArrayHasKey('items', $payload);
+        self::assertIsArray($payload['items']);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    #[TestDox('Test that `POST /v1/notifications/templates/send` validates required payload.')]
+    public function testThatSendTemplateEmailValidatesPayload(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+
+        $client->request('POST', $this->baseUrl . '/templates/send', [], [], [], JSON::encode([
+            'templateId' => 'invalid',
+            'to' => '',
+        ]));
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * @throws Throwable
+     */
     #[TestDox('Test that `GET /v1/notifications` returns only notifications for the authenticated user.')]
     public function testThatListReturnsOnlyCurrentUserNotifications(): void
     {

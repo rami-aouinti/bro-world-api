@@ -208,6 +208,13 @@ services:
         arguments:
             $providers: !tagged_iterator { tag: 'app.shop.payment_provider', index_by: 'key' }
 
+    App\Notification\Application\Service\MailjetTemplateService:
+        arguments:
+            $mailjetApiKey: '%env(default::MAILJET_API_KEY)%'
+            $mailjetSecretKey: '%env(default::MAILJET_SECRET_KEY)%'
+            $mailjetSenderEmail: '%env(default::MAILJET_SENDER_EMAIL)%'
+            $mailjetSenderName: '%env(default:Bro World:MAILJET_SENDER_NAME)%'
+
     App\Crm\Application\Service\CrmGithubOwnerResolver:
         arguments:
             $defaultOwner: '%crm.github.default_repository_owner%'
