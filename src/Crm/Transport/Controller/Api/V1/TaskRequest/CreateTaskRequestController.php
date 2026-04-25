@@ -111,7 +111,8 @@ final readonly class CreateTaskRequestController
         $taskRequest->setTitle((string)$input->title)
             ->setDescription($input->description)
             ->setStatus(TaskRequestStatus::tryFrom((string)$input->status) ?? TaskRequestStatus::PENDING)
-            ->setResolvedAt($resolvedAt);
+            ->setResolvedAt($resolvedAt)
+            ->setPlannedHours(is_numeric($input->plannedHours) ? (float)$input->plannedHours : 0.0);
 
         if (is_string($input->taskId)) {
             $task = $this->taskRepository->findOneScopedById($input->taskId, $crm->getId());

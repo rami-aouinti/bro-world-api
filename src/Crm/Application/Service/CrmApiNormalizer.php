@@ -11,13 +11,16 @@ use App\User\Domain\Entity\User;
 use DateTimeInterface;
 
 use function array_map;
+use function array_values;
 use function is_array;
 use function is_string;
+use function max;
 
 final readonly class CrmApiNormalizer
 {
     public function __construct(
         private CrmBlogNormalizer $crmBlogNormalizer,
+        private TaskRequestWorklogReadService $taskRequestWorklogReadService,
     ) {
     }
 
@@ -45,6 +48,12 @@ final readonly class CrmApiNormalizer
     private function normalizeTaskWithOptions(Task $task, bool $includeBlog): array
     {
         $assignees = $this->mapUserAssignees($task->getAssignees());
+        $taskRequests = $task->getTaskRequests()->toArray();
+        $taskRequestIds = array_values(array_map(
+            static fn (TaskRequest $taskRequest): string => $taskRequest->getId(),
+            $taskRequests,
+        ));
+        $consumedHoursByTaskRequestId = $this->taskRequestWorklogReadService->getConsumedHoursByTaskRequestIds($taskRequestIds);
 
         $payload = [
             'id' => $task->getId(),
@@ -88,13 +97,20 @@ final readonly class CrmApiNormalizer
                 $task->getSubTasks()->toArray()
             ),
             'children' => array_map(
-                static fn (TaskRequest $taskRequest) => [
-                    'id' => $taskRequest->getId(),
-                    'title' => $taskRequest->getTitle(),
-                    'description' => $taskRequest->getDescription(),
-                    'status' => $taskRequest->getStatus(),
-                ],
-                $task->getTaskRequests()->toArray()
+                function (TaskRequest $taskRequest) use ($consumedHoursByTaskRequestId): array {
+                    $consumedHours = $consumedHoursByTaskRequestId[$taskRequest->getId()] ?? 0.0;
+
+                    return [
+                        'id' => $taskRequest->getId(),
+                        'title' => $taskRequest->getTitle(),
+                        'description' => $taskRequest->getDescription(),
+                        'status' => $taskRequest->getStatus(),
+                        'plannedHours' => $taskRequest->getPlannedHours(),
+                        'consumedHours' => $consumedHours,
+                        'remainingHours' => $this->taskRequestWorklogReadService->getRemainingHours($taskRequest->getPlannedHours(), $consumedHours),
+                    ];
+                },
+                $taskRequests
             ),
         ];
 
@@ -111,6 +127,7 @@ final readonly class CrmApiNormalizer
     public function normalizeTaskRequest(TaskRequest $taskRequest): array
     {
         $assignees = $this->mapUserAssignees($taskRequest->getAssignees());
+        $consumedHours = $this->taskRequestWorklogReadService->getConsumedHours($taskRequest->getId());
 
         return [
             'id' => $taskRequest->getId(),
@@ -123,6 +140,9 @@ final readonly class CrmApiNormalizer
             'attachments' => $taskRequest->getAttachments(),
             'blogId' => $taskRequest->getBlog()?->getId(),
             'assignees' => $assignees,
+            'plannedHours' => $taskRequest->getPlannedHours(),
+            'consumedHours' => $consumedHours,
+            'remainingHours' => $this->taskRequestWorklogReadService->getRemainingHours($taskRequest->getPlannedHours(), $consumedHours),
             'githubIssue' => $taskRequest->getGithubIssue()?->toArray(),
             'githubBranches' => array_map(static fn (TaskRequestGithubBranch $branch): array => $branch->toArray(), $taskRequest->getGithubBranches()->toArray()),
             'blog' => $this->crmBlogNormalizer->normalizeBlog($taskRequest->getBlog()),
@@ -172,12 +192,18 @@ final readonly class CrmApiNormalizer
      */
     public function normalizeTaskRequestProjection(array $item): array
     {
+        $plannedHours = (float)($item['plannedHours'] ?? 0);
+        $consumedHours = (float)($item['consumedHours'] ?? 0);
+
         return [
             'id' => (string)($item['id'] ?? ''),
             'title' => (string)($item['title'] ?? ''),
             'status' => ($item['status'] ?? ''),
             'requestedAt' => $this->normalizeDateValue($item['requestedAt'] ?? null),
             'resolvedAt' => $this->normalizeDateValue($item['resolvedAt'] ?? null),
+            'plannedHours' => $plannedHours,
+            'consumedHours' => $consumedHours,
+            'remainingHours' => max(0.0, $plannedHours - $consumedHours),
             'assignees' => $this->mapTaskRequestAssigneesProjection((array)($item['assignees'] ?? [])),
             'githubIssue' => [
                 'provider' => $item['githubIssueProvider'] ?? null,
