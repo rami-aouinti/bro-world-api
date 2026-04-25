@@ -22,6 +22,7 @@ use function count;
 use function file_get_contents;
 use function gzuncompress;
 use function gzinflate;
+use function implode;
 use function is_array;
 use function is_string;
 use function json_decode;
@@ -29,70 +30,160 @@ use function preg_match_all;
 use function preg_replace;
 use function preg_split;
 use function preg_replace_callback;
+use function str_contains;
+use function str_replace;
 use function str_starts_with;
+use function strtolower;
+use function strlen;
+use function substr;
 use function trim;
 
 readonly class ResumeAiParsingService
 {
     private const string AI_URL = 'http://127.0.0.1:11434/api/generate';
     private const string AI_MODEL = 'phi';
+    private const int MAX_PROMPT_RESUME_LENGTH = 12000;
 
     public function __construct(
         private HttpClientInterface $httpClient,
     ) {
     }
 
-    function fixEncoding(string $text): string
-    {
-        // 1. Si présence massive de bytes nuls => UTF-16
-        if (strpos($text, "\x00") !== false) {
-            $text = mb_convert_encoding($text, 'UTF-8', 'UTF-16');
-        }
-
-        // 2. Si texte encore "chinois chelou" => reconversion brute
-        if (preg_match('/[^\x00-\x7F]{3,}/', $text)) {
-            $text = mb_convert_encoding($text, 'UTF-8', 'UTF-16LE');
-        }
-
-        // 3. Nettoyage caractères non imprimables
-        $text = preg_replace('/[^\P{C}\n\r\t]/u', '', $text);
-
-        return trim($text);
-    }
-
     private function cleanResumeText(string $text): string
     {
-        // 1. Fix UTF-16 / UTF-8 proprement
+        if (str_contains($text, "\x00")) {
+            $text = $this->decodePotentialUtf16Text($text);
+        }
+
         if (!mb_check_encoding($text, 'UTF-8')) {
             $text = mb_convert_encoding($text, 'UTF-8', 'auto');
         }
 
-        // 2. Supprimer caractères non imprimables
         $text = preg_replace('/[^\P{C}\n\r\t]/u', '', $text);
-
-        // 3. Supprimer les blocs "gibberish" (genre chinois fake)
-        $text = preg_replace('/[^\x00-\x7F]{4,}/u', ' ', $text);
-
-        // 4. Normaliser espaces
-        $text = preg_replace('/\s+/', ' ', $text);
-
-        // 5. Garder lignes utiles (heuristique CV)
-        $lines = preg_split('/\n|\r/', $text);
-
-        $filtered = [];
-        foreach ($lines as $line) {
-            $line = trim($line);
-
-            // ignore lignes trop courtes ou bruit
-            if (strlen($line) < 3) continue;
-
-            // ignore lignes avec trop de caractères non ASCII
-            if (preg_match('/[^\x00-\x7F]/', $line)) continue;
-
-            $filtered[] = $line;
+        if (!is_string($text)) {
+            return '';
         }
 
-        return implode("\n", $filtered);
+        $text = str_replace(["\r\n", "\r"], "\n", $text);
+
+        $text = preg_replace('/\/CIDInit\s+\/ProcSet.*?end\s+end/s', ' ', $text);
+        if (!is_string($text)) {
+            return '';
+        }
+
+        $text = preg_replace('/(?:\bLEBENSLAUF\.DE\b\s*){3,}/ui', ' ', $text);
+        if (!is_string($text)) {
+            return '';
+        }
+
+        $text = preg_replace('/Vorschau\s+mit\s+Wasserzeichen/ui', ' ', $text);
+        if (!is_string($text)) {
+            return '';
+        }
+
+        $text = preg_replace('/\s+/', ' ', $text);
+        if (!is_string($text)) {
+            return '';
+        }
+
+        $text = str_replace('. ', ".\n", $text);
+        $lines = preg_split('/\n+/', $text);
+        if (!is_array($lines)) {
+            return '';
+        }
+
+        $filtered = [];
+        $previousLine = '';
+        foreach ($lines as $line) {
+            if (!is_string($line)) {
+                continue;
+            }
+
+            $line = trim($line);
+            if ($line === '' || strlen($line) < 3) {
+                continue;
+            }
+
+            if (preg_match('/[\p{L}\p{N}]/u', $line) !== 1) {
+                continue;
+            }
+
+            if ($this->isMostlyRepeatedTokenLine($line)) {
+                continue;
+            }
+
+            if ($line === $previousLine) {
+                continue;
+            }
+
+            $filtered[] = $line;
+            $previousLine = $line;
+        }
+
+        $cleaned = trim(implode("\n", $filtered));
+        if ($cleaned === '') {
+            return '';
+        }
+
+        if (strlen($cleaned) > self::MAX_PROMPT_RESUME_LENGTH) {
+            return trim(substr($cleaned, 0, self::MAX_PROMPT_RESUME_LENGTH));
+        }
+
+        return $cleaned;
+    }
+
+    private function decodePotentialUtf16Text(string $text): string
+    {
+        $utf16Le = @mb_convert_encoding($text, 'UTF-8', 'UTF-16LE');
+        $utf16Be = @mb_convert_encoding($text, 'UTF-8', 'UTF-16BE');
+
+        $utf16LeScore = $this->scoreReadableText(is_string($utf16Le) ? $utf16Le : '');
+        $utf16BeScore = $this->scoreReadableText(is_string($utf16Be) ? $utf16Be : '');
+
+        if ($utf16LeScore === 0 && $utf16BeScore === 0) {
+            return $text;
+        }
+
+        return $utf16LeScore >= $utf16BeScore ? (string) $utf16Le : (string) $utf16Be;
+    }
+
+    private function scoreReadableText(string $text): int
+    {
+        if ($text === '') {
+            return 0;
+        }
+
+        return preg_match_all('/[\p{L}\p{N}\s.,;:!?@\-]/u', $text) ?: 0;
+    }
+
+    private function isMostlyRepeatedTokenLine(string $line): bool
+    {
+        $tokens = preg_split('/\s+/', strtolower($line));
+        if (!is_array($tokens) || count($tokens) < 8) {
+            return false;
+        }
+
+        $firstToken = (string) preg_replace('/^[\p{P}\s]+|[\p{P}\s]+$/u', '', (string) ($tokens[0] ?? ''));
+        if ($firstToken === '') {
+            return false;
+        }
+
+        foreach ($tokens as $token) {
+            if (!is_string($token)) {
+                return false;
+            }
+
+            $normalized = (string) preg_replace('/^[\p{P}\s]+|[\p{P}\s]+$/u', '', $token);
+            if ($normalized === '') {
+                continue;
+            }
+
+            if (!str_contains($normalized, $firstToken) && !str_contains($firstToken, $normalized)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -110,7 +201,8 @@ readonly class ResumeAiParsingService
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'No extractable text found in the provided PDF.');
         }
 
-        $prompt = $this->buildPrompt($rawText);
+        $cleanedText = $this->cleanResumeText($rawText);
+        $prompt = $this->buildPrompt($cleanedText !== '' ? $cleanedText : $rawText);
 
         try {
             $response = $this->httpClient->request('POST', self::AI_URL, [
@@ -123,7 +215,11 @@ readonly class ResumeAiParsingService
             ]);
             $data = $response->toArray(false);
         } catch (TransportExceptionInterface $exception) {
-            throw new HttpException(Response::HTTP_BAD_GATEWAY, 'Unable to reach local AI service.', $exception);
+            throw new HttpException(
+                Response::HTTP_BAD_GATEWAY,
+                'Unable to reach local AI service. Please verify that the local model server is running and reachable.',
+                $exception,
+            );
         }
 
         $content = trim((string) ($data['response'] ?? ''));
