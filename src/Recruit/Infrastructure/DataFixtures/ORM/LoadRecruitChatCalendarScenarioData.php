@@ -14,6 +14,7 @@ use App\Chat\Domain\Entity\ChatMessageReaction;
 use App\Chat\Domain\Entity\Conversation;
 use App\Chat\Domain\Entity\ConversationParticipant;
 use App\Chat\Domain\Enum\ChatReactionType;
+use App\Chat\Domain\Enum\ConversationType;
 use App\General\Domain\Rest\UuidHelper;
 use App\Platform\Domain\Entity\Application as PlatformApplication;
 use App\Platform\Domain\Entity\Plugin;
@@ -75,6 +76,7 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         foreach ($calendarEnabledApplications as $application) {
             $calendar = $this->ensureCalendar($manager, $application);
             $this->ensureApplicationCalendarEvents($manager, $application, $calendar);
+            $this->ensureCrmGeneralEmployeeEvents($manager, $application, $calendar);
             $this->ensureJohnRootPrivateEvents($manager, $application, $calendar, $johnRoot);
         }
 
@@ -343,11 +345,17 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         $johnAdmin = $this->getReference('User-john-admin', User::class);
 
         $conversation = $this->ensureConversation($manager, $chat);
+        if ($application->getSlug() === 'crm-general-core') {
+            $conversation
+                ->setType(ConversationType::GROUP)
+                ->setTitle('General');
+        }
 
         $this->ensureParticipant($manager, $conversation, $johnRoot);
         if ($johnRoot->getId() !== $johnAdmin->getId()) {
             $this->ensureParticipant($manager, $conversation, $johnAdmin);
         }
+        $this->ensureCrmGeneralParticipants($application, $manager, $conversation);
 
         $introMessage = $this->ensureMessage(
             $manager,
@@ -367,6 +375,19 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
 
         $this->ensureReaction($manager, $introMessage, $johnAdmin, 'like');
         $this->ensureReaction($manager, $replyMessage, $johnRoot, 'love');
+    }
+
+    private function ensureCrmGeneralParticipants(PlatformApplication $application, ObjectManager $manager, Conversation $conversation): void
+    {
+        if ($application->getSlug() !== 'crm-general-core') {
+            return;
+        }
+
+        foreach (['User-john-root', 'User-john-admin', 'User-john-user', 'User-john-api'] as $userReference) {
+            /** @var User $user */
+            $user = $this->getReference($userReference, User::class);
+            $this->ensureParticipant($manager, $conversation, $user);
+        }
     }
 
     /**
@@ -512,6 +533,34 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             'Recruit event - john-root scenario',
             3,
             'Event dédié au scénario fixtures john-root pour tests fonctionnels.'
+        );
+    }
+
+    private function ensureCrmGeneralEmployeeEvents(ObjectManager $manager, PlatformApplication $application, Calendar $calendar): void
+    {
+        if ($application->getSlug() !== 'crm-general-core') {
+            return;
+        }
+
+        /** @var User $johnRoot */
+        $johnRoot = $this->getReference('User-john-root', User::class);
+
+        $this->ensureEvent(
+            $manager,
+            $calendar,
+            $johnRoot,
+            'CRM General - John Root assigned planning',
+            5,
+            'Event fixture assigné à john-root dans CRM General.',
+        );
+
+        $this->ensureEvent(
+            $manager,
+            $calendar,
+            $johnRoot,
+            'CRM General - John Root delivery sync',
+            6,
+            'Event fixture de synchronisation delivery pour john-root.',
         );
     }
 

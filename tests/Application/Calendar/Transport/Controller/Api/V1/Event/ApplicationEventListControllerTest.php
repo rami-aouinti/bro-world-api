@@ -130,4 +130,43 @@ final class ApplicationEventListControllerTest extends WebTestCase
             self::assertArrayHasKey('startAt', $upcomingData[0]);
         }
     }
+
+    #[TestDox('GET /api/v1/calendar/events/owner is restricted to application owner and returns all application events.')]
+    public function testOwnerApplicationEventListIsOwnerOnly(): void
+    {
+        $ownerClient = $this->getTestClient('john-root', 'password-root');
+        $ownerClient->request('GET', self::API_URL_PREFIX . '/v1/calendar/events/owner?applicationSlug=crm-general-core&limit=100');
+
+        self::assertSame(Response::HTTP_OK, $ownerClient->getResponse()->getStatusCode());
+        $ownerContent = $ownerClient->getResponse()->getContent();
+        self::assertNotFalse($ownerContent);
+        $ownerPayload = JSON::decode($ownerContent, true);
+        self::assertNotEmpty($ownerPayload['items']);
+
+        $viewerClient = $this->getTestClient('john-user', 'password-user');
+        $viewerClient->request('GET', self::API_URL_PREFIX . '/v1/calendar/events/owner?applicationSlug=crm-general-core');
+        self::assertSame(Response::HTTP_FORBIDDEN, $viewerClient->getResponse()->getStatusCode());
+    }
+
+    #[TestDox('GET /api/v1/calendar/events/employee-assigned returns connected employee events and rejects non employees.')]
+    public function testEmployeeAssignedEventListIsRestrictedToApplicationEmployees(): void
+    {
+        $employeeClient = $this->getTestClient('john-root', 'password-root');
+        $employeeClient->request('GET', self::API_URL_PREFIX . '/v1/calendar/events/employee-assigned?applicationSlug=crm-general-core&limit=100');
+
+        self::assertSame(Response::HTTP_OK, $employeeClient->getResponse()->getStatusCode());
+        $content = $employeeClient->getResponse()->getContent();
+        self::assertNotFalse($content);
+        $payload = JSON::decode($content, true);
+
+        $titles = array_map(
+            static fn (array $item): string => (string)($item['title'] ?? ''),
+            $payload['items'] ?? [],
+        );
+        self::assertContains('CRM General - John Root assigned planning', $titles);
+
+        $nonEmployeeClient = $this->getTestClient('alice', 'password-alice');
+        $nonEmployeeClient->request('GET', self::API_URL_PREFIX . '/v1/calendar/events/employee-assigned?applicationSlug=crm-general-core');
+        self::assertSame(Response::HTTP_FORBIDDEN, $nonEmployeeClient->getResponse()->getStatusCode());
+    }
 }
