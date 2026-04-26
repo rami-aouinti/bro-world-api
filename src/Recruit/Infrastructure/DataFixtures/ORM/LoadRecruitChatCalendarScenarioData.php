@@ -14,6 +14,7 @@ use App\Chat\Domain\Entity\ChatMessageReaction;
 use App\Chat\Domain\Entity\Conversation;
 use App\Chat\Domain\Entity\ConversationParticipant;
 use App\Chat\Domain\Enum\ChatReactionType;
+use App\Chat\Domain\Enum\ConversationType;
 use App\General\Domain\Rest\UuidHelper;
 use App\Platform\Domain\Entity\Application as PlatformApplication;
 use App\Platform\Domain\Entity\Plugin;
@@ -343,11 +344,17 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         $johnAdmin = $this->getReference('User-john-admin', User::class);
 
         $conversation = $this->ensureConversation($manager, $chat);
+        if ($application->getSlug() === 'crm-general-core') {
+            $conversation
+                ->setType(ConversationType::GROUP)
+                ->setTitle('General');
+        }
 
         $this->ensureParticipant($manager, $conversation, $johnRoot);
         if ($johnRoot->getId() !== $johnAdmin->getId()) {
             $this->ensureParticipant($manager, $conversation, $johnAdmin);
         }
+        $this->ensureCrmGeneralParticipants($application, $manager, $conversation);
 
         $introMessage = $this->ensureMessage(
             $manager,
@@ -367,6 +374,19 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
 
         $this->ensureReaction($manager, $introMessage, $johnAdmin, 'like');
         $this->ensureReaction($manager, $replyMessage, $johnRoot, 'love');
+    }
+
+    private function ensureCrmGeneralParticipants(PlatformApplication $application, ObjectManager $manager, Conversation $conversation): void
+    {
+        if ($application->getSlug() !== 'crm-general-core') {
+            return;
+        }
+
+        foreach (['User-john-root', 'User-john-admin', 'User-john-user', 'User-john-api'] as $userReference) {
+            /** @var User $user */
+            $user = $this->getReference($userReference, User::class);
+            $this->ensureParticipant($manager, $conversation, $user);
+        }
     }
 
     /**

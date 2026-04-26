@@ -6,6 +6,8 @@ namespace App\Crm\Infrastructure\Repository;
 
 use App\Crm\Domain\Entity\Employee as Entity;
 use App\General\Infrastructure\Repository\BaseRepository;
+use App\Platform\Domain\Entity\Application;
+use App\User\Domain\Entity\User;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
@@ -57,6 +59,24 @@ class EmployeeRepository extends BaseRepository
             ->andWhere('employee.crm = :crmId')
             ->setParameter('crmId', $crmId, UuidBinaryOrderedTimeType::NAME)
             ->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * @return list<User>
+     */
+    public function findUsersByApplication(Application $application): array
+    {
+        /** @var list<User> $users */
+        $users = $this->createQueryBuilder('employee')
+            ->select('DISTINCT user')
+            ->innerJoin('employee.crm', 'crm')
+            ->innerJoin('employee.user', 'user')
+            ->andWhere('crm.application = :application')
+            ->setParameter('application', $application)
+            ->getQuery()
+            ->getResult();
+
+        return $users;
     }
 
     /**
