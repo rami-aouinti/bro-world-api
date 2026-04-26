@@ -457,6 +457,9 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     private function generateSprints(ObjectManager $manager, Generator $faker, Project $project, int $count): array
     {
         $sprints = [];
+        if ($this->isBroWorldProject($project)) {
+            return $this->generateBroWorldSprints($manager, $project, $count);
+        }
 
         for ($index = 0; $index < $count; $index++) {
             $startDate = $faker->dateTimeBetween('-6 weeks', '+2 weeks');
@@ -491,17 +494,55 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         bool $applicationHasBlogPlugin,
     ): array {
         $tasks = [];
+        $broWorldAssignees = $this->isBroWorldProject($project) ? $this->getCanonicalUsers() : [];
+        $sprintStartDate = $sprint->getStartDate();
+        $sprintEndDate = $sprint->getEndDate();
 
         for ($index = 0; $index < $count; $index++) {
+            $taskStatus = $faker->randomElement(TaskStatus::cases());
+            $taskPriority = $faker->randomElement(TaskPriority::cases());
+            $taskTitle = $faker->sentence(5);
+            $taskDescription = $faker->paragraph(2);
+            $dueAt = DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-1 week', '+2 months'));
+            if ($this->isBroWorldProject($project)) {
+                $taskStatus = match (true) {
+                    $sprint->getStatus() === SprintStatus::CLOSED => $index === $count - 1 ? TaskStatus::DONE : TaskStatus::IN_PROGRESS,
+                    $sprint->getStatus() === SprintStatus::ACTIVE => $index === 0 ? TaskStatus::IN_PROGRESS : TaskStatus::TODO,
+                    default => TaskStatus::TODO,
+                };
+                $taskPriority = match ($index % 4) {
+                    0 => TaskPriority::CRITICAL,
+                    1 => TaskPriority::HIGH,
+                    2 => TaskPriority::MEDIUM,
+                    default => TaskPriority::LOW,
+                };
+                $taskTitle = sprintf('Bro World - %s task %d', $sprint->getName(), $index + 1);
+                $taskDescription = sprintf(
+                    'Implement and validate %s task %d for Bro World with clear acceptance criteria.',
+                    $sprint->getName(),
+                    $index + 1,
+                );
+                if ($sprintStartDate instanceof DateTimeImmutable && $sprintEndDate instanceof DateTimeImmutable) {
+                    $dueAt = $sprintStartDate->modify(sprintf('+%d days', min(12, ($index + 1) * 3)));
+                    if ($dueAt > $sprintEndDate) {
+                        $dueAt = $sprintEndDate;
+                    }
+                }
+            }
+
             $task = (new Task())
                 ->setProject($project)
                 ->setSprint($sprint)
-                ->setTitle($faker->sentence(5))
-                ->setDescription($faker->paragraph(2))
-                ->setStatus($faker->randomElement(TaskStatus::cases()))
-                ->setPriority($faker->randomElement(TaskPriority::cases()))
-                ->setDueAt(DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-1 week', '+2 months')))
+                ->setTitle($taskTitle)
+                ->setDescription($taskDescription)
+                ->setStatus($taskStatus)
+                ->setPriority($taskPriority)
+                ->setDueAt($dueAt)
                 ->setEstimatedHours((float)$faker->randomFloat(1, 2, 30));
+
+            if ($broWorldAssignees !== []) {
+                $task->addAssignee($broWorldAssignees[$index % count($broWorldAssignees)]);
+            }
 
             for ($attachmentIndex = 0; $attachmentIndex < $attachmentCount; $attachmentIndex++) {
                 $task->addAttachment($this->generateAttachment($faker, '/uploads/crm/tasks/', $task->getId()));
@@ -558,17 +599,43 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 
             for ($index = 0; $index < $countByTask; $index++) {
                 $status = $faker->randomElement(TaskRequestStatus::cases());
+                $requestedAt = DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-2 months', 'now'));
+                $title = $faker->sentence(6);
+                $description = $faker->paragraph();
+                $plannedHours = (float)$faker->randomElement([4, 8, 12, 16, 20, 24, 32]);
+                if ($this->isBroWorldProject($task->getProject())) {
+                    $title = sprintf('Bro World task request %d', $index + 1);
+                    $description = sprintf(
+                        'Deliver the implementation package for "%s" with tests and documentation.',
+                        $task->getTitle(),
+                    );
+                    $status = match ($task->getStatus()) {
+                        TaskStatus::DONE => TaskRequestStatus::DONE,
+                        TaskStatus::IN_PROGRESS => TaskRequestStatus::PROGRESS,
+                        TaskStatus::BLOCKED => TaskRequestStatus::REJECTED,
+                        default => TaskRequestStatus::PENDING,
+                    };
+                    $taskDueAt = $task->getDueAt();
+                    if ($taskDueAt instanceof DateTimeImmutable) {
+                        $requestedAt = $taskDueAt->modify(sprintf('-%d days', 5 - min(4, $index)));
+                    }
+                    $plannedHours = (float)(8 + ($index * 4));
+                }
                 $taskRequest = (new TaskRequest())
                     ->setTask($task)
                     ->setRepository($repository)
-                    ->setTitle($faker->sentence(6))
-                    ->setDescription($faker->paragraph())
+                    ->setTitle($title)
+                    ->setDescription($description)
                     ->setStatus($status)
-                    ->setPlannedHours((float)$faker->randomElement([4, 8, 12, 16, 20, 24, 32]));
+                    ->setRequestedAt($requestedAt)
+                    ->setPlannedHours($plannedHours);
 
                 $assignedEmployee = $assignableEmployees !== []
                     ? $faker->randomElement($assignableEmployees)
                     : null;
+                if ($this->isBroWorldProject($task->getProject()) && $assignableEmployees !== []) {
+                    $assignedEmployee = $assignableEmployees[$index % count($assignableEmployees)];
+                }
                 if ($assignedEmployee instanceof Employee && $assignedEmployee->getUser() instanceof User) {
                     $taskRequest->addAssignee($assignedEmployee->getUser());
                 }
@@ -583,7 +650,11 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                 ));
 
                 if (in_array($status, [TaskRequestStatus::APPROVED, TaskRequestStatus::DONE, TaskRequestStatus::REJECTED], true)) {
-                    $taskRequest->setResolvedAt(DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-2 weeks', 'now')));
+                    $resolvedAt = DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-2 weeks', 'now'));
+                    if ($this->isBroWorldProject($task->getProject())) {
+                        $resolvedAt = $requestedAt->modify('+3 days');
+                    }
+                    $taskRequest->setResolvedAt($resolvedAt);
                 }
 
                 if (
@@ -648,6 +719,70 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
             $employees,
             static fn (Employee $employee): bool => $employee->getUser() instanceof User,
         ));
+    }
+
+    /**
+     * @return array<int, Sprint>
+     */
+    private function generateBroWorldSprints(ObjectManager $manager, Project $project, int $count): array
+    {
+        $sprints = [];
+        $effectiveCount = max(2, $count);
+        $currentWeekStart = (new DateTimeImmutable('monday this week'))->setTime(0, 0);
+
+        for ($index = 0; $index < $effectiveCount; $index++) {
+            if ($index === $effectiveCount - 1) {
+                $startDate = $currentWeekStart;
+                $endDate = $currentWeekStart->modify('+13 days');
+                $status = SprintStatus::ACTIVE;
+            } else {
+                $monthsAgo = 4 - min(1, $index);
+                $startDate = $currentWeekStart
+                    ->modify(sprintf('-%d months', $monthsAgo))
+                    ->modify(sprintf('+%d days', $index * 14));
+                $endDate = $startDate->modify('+13 days');
+                $status = SprintStatus::CLOSED;
+            }
+
+            $sprint = (new Sprint())
+                ->setProject($project)
+                ->setName(sprintf('Sprint %d - Bro World Delivery Wave', $index + 1))
+                ->setGoal(sprintf('Deliver Bro World objectives for iteration %d with stable milestone outcomes.', $index + 1))
+                ->setStatus($status)
+                ->setStartDate($startDate)
+                ->setEndDate($endDate);
+
+            foreach ($this->getCanonicalUsers() as $assignee) {
+                $sprint->addAssignee($assignee);
+            }
+
+            $manager->persist($sprint);
+            $sprints[] = $sprint;
+        }
+
+        return $sprints;
+    }
+
+    private function isBroWorldProject(?Project $project): bool
+    {
+        if (!$project instanceof Project) {
+            return false;
+        }
+
+        return $project->getCode() === 'PRJ-BRO' || $project->getName() === 'Bro World';
+    }
+
+    /**
+     * @return array<int, User>
+     */
+    private function getCanonicalUsers(): array
+    {
+        return [
+            $this->getReference('User-john-root', User::class),
+            $this->getReference('User-john-admin', User::class),
+            $this->getReference('User-john-user', User::class),
+            $this->getReference('User-john-api', User::class),
+        ];
     }
 
     private function generateBillings(ObjectManager $manager, Generator $faker, Company $company, int $count): void
