@@ -4,10 +4,18 @@ declare(strict_types=1);
 
 namespace App\Crm\Infrastructure\DataFixtures\ORM;
 
+use App\Calendar\Domain\Entity\Calendar;
+use App\Calendar\Domain\Entity\Event;
+use App\Calendar\Domain\Enum\EventStatus;
+use App\Calendar\Domain\Enum\EventVisibility;
 use App\Blog\Domain\Entity\Blog;
 use App\Blog\Domain\Entity\BlogComment;
 use App\Blog\Domain\Entity\BlogPost;
 use App\Blog\Domain\Enum\BlogType;
+use App\Chat\Domain\Entity\Chat;
+use App\Chat\Domain\Entity\Conversation;
+use App\Chat\Domain\Entity\ConversationParticipant;
+use App\Chat\Domain\Enum\ConversationType;
 use App\Crm\Domain\Entity\Billing;
 use App\Crm\Domain\Entity\Company;
 use App\Crm\Domain\Entity\Contact;
@@ -288,6 +296,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 
             // Employees
             $this->generateEmployees($manager, $crm);
+            $this->ensureCrmGeneralChatAndCalendarScenario($manager, $crm, $application);
 
             foreach ($companies as $companyIndex => $company) {
                 // Contacts
@@ -456,6 +465,185 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 
             $manager->persist($employee);
         }
+    }
+
+    private function ensureCrmGeneralChatAndCalendarScenario(ObjectManager $manager, Crm $crm, Application $application): void
+    {
+        if ($application->getSlug() !== 'crm-general-core') {
+            return;
+        }
+
+        $chat = $this->ensureChat($manager, $application);
+        $conversation = $this->ensureGeneralGroupConversation($manager, $chat);
+        $this->ensureCrmEmployeeParticipants($manager, $crm, $conversation);
+
+        $calendar = $this->ensureCalendar($manager, $application);
+        $this->ensureCrmGeneralCalendarEvents($manager, $crm, $calendar);
+    }
+
+    private function ensureChat(ObjectManager $manager, Application $application): Chat
+    {
+        /** @var Chat|null $chat */
+        $chat = $manager->getRepository(Chat::class)->findOneBy([
+            'application' => $application,
+        ]);
+
+        if ($chat instanceof Chat) {
+            return $chat;
+        }
+
+        $application->ensureGeneratedSlug();
+        $chat = (new Chat())
+            ->setApplication($application)
+            ->setApplicationSlug($application->getSlug());
+
+        $manager->persist($chat);
+
+        return $chat;
+    }
+
+    private function ensureGeneralGroupConversation(ObjectManager $manager, Chat $chat): Conversation
+    {
+        /** @var Conversation|null $conversation */
+        $conversation = $manager->getRepository(Conversation::class)->findOneBy([
+            'chat' => $chat,
+            'type' => ConversationType::GROUP,
+            'title' => 'General Group',
+        ]);
+
+        if ($conversation instanceof Conversation) {
+            return $conversation;
+        }
+
+        $conversation = (new Conversation())
+            ->setChat($chat)
+            ->setType(ConversationType::GROUP)
+            ->setTitle('General Group');
+
+        $manager->persist($conversation);
+
+        return $conversation;
+    }
+
+    private function ensureCrmEmployeeParticipants(ObjectManager $manager, Crm $crm, Conversation $conversation): void
+    {
+        /** @var array<int, Employee> $employees */
+        $employees = $manager->getRepository(Employee::class)->findBy([
+            'crm' => $crm,
+        ]);
+
+        foreach ($employees as $employee) {
+            $user = $employee->getUser();
+            if (!$user instanceof User) {
+                continue;
+            }
+
+            $existing = $manager->getRepository(ConversationParticipant::class)->findOneBy([
+                'conversation' => $conversation,
+                'user' => $user,
+            ]);
+            if ($existing instanceof ConversationParticipant) {
+                continue;
+            }
+
+            $participant = (new ConversationParticipant())
+                ->setConversation($conversation)
+                ->setUser($user);
+
+            $manager->persist($participant);
+        }
+    }
+
+    private function ensureCalendar(ObjectManager $manager, Application $application): Calendar
+    {
+        /** @var Calendar|null $calendar */
+        $calendar = $manager->getRepository(Calendar::class)->findOneBy([
+            'application' => $application,
+        ]);
+
+        if ($calendar instanceof Calendar) {
+            return $calendar;
+        }
+
+        $calendar = (new Calendar())
+            ->setApplication($application)
+            ->setUser($application->getUser())
+            ->setTitle('CRM General Calendar');
+
+        $manager->persist($calendar);
+
+        return $calendar;
+    }
+
+    private function ensureCrmGeneralCalendarEvents(ObjectManager $manager, Crm $crm, Calendar $calendar): void
+    {
+        /** @var User|null $calendarOwner */
+        $calendarOwner = $calendar->getUser();
+        $this->ensureCalendarEvent(
+            $manager,
+            $calendar,
+            'CRM General - Application Creation',
+            'Milestone fixture for CRM General application creation.',
+            $calendarOwner,
+            2,
+        );
+
+        /** @var array<int, Employee> $employees */
+        $employees = $manager->getRepository(Employee::class)->findBy([
+            'crm' => $crm,
+        ]);
+
+        $dayOffset = 3;
+        foreach ($employees as $employee) {
+            $employeeUser = $employee->getUser();
+            if (!$employeeUser instanceof User) {
+                continue;
+            }
+
+            $this->ensureCalendarEvent(
+                $manager,
+                $calendar,
+                sprintf('CRM General - %s %s Employee Start', $employee->getFirstName(), $employee->getLastName()),
+                sprintf('%s %s commencement event as Employee for CRM General.', $employee->getFirstName(), $employee->getLastName()),
+                $employeeUser,
+                $dayOffset,
+            );
+            ++$dayOffset;
+        }
+    }
+
+    private function ensureCalendarEvent(
+        ObjectManager $manager,
+        Calendar $calendar,
+        string $title,
+        string $description,
+        ?User $user,
+        int $dayOffset,
+    ): void {
+        $existing = $manager->getRepository(Event::class)->findOneBy([
+            'calendar' => $calendar,
+            'title' => $title,
+        ]);
+        if ($existing instanceof Event) {
+            return;
+        }
+
+        $startAt = (new DateTimeImmutable(sprintf('+%d day', $dayOffset)))->setTime(9, 0);
+        $event = (new Event())
+            ->setCalendar($calendar)
+            ->setUser($user)
+            ->setTitle($title)
+            ->setDescription($description)
+            ->setStartAt($startAt)
+            ->setEndAt($startAt->modify('+1 hour'))
+            ->setStatus(EventStatus::CONFIRMED)
+            ->setVisibility(EventVisibility::PRIVATE)
+            ->setLocation('CRM General HQ')
+            ->setTimezone('Europe/Paris')
+            ->setOrganizerName('CRM General')
+            ->setOrganizerEmail('crm-general@example.test');
+
+        $manager->persist($event);
     }
 
     private function isBlank(string $value): bool

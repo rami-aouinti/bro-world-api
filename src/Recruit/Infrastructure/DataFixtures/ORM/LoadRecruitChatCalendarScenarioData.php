@@ -65,6 +65,10 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         foreach ($chatEnabledApplications as $application) {
             $chat = $this->ensureChat($manager, $application);
             $this->ensureApplicationChatScenario($manager, $application, $chat);
+            if ($application->getSlug() === 'crm-general-core') {
+                $crmGeneralCalendar = $this->ensureCalendar($manager, $application);
+                $this->ensureCrmGeneralEmployeeEvents($manager, $application, $crmGeneralCalendar);
+            }
 
             if ($application->getTitle() === 'Recruit Talent Hub') {
                 $calendar = $this->ensureCalendar($manager, $application);
@@ -348,7 +352,7 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
         if ($application->getSlug() === 'crm-general-core') {
             $conversation
                 ->setType(ConversationType::GROUP)
-                ->setTitle('General');
+                ->setTitle('General Group');
         }
 
         $this->ensureParticipant($manager, $conversation, $johnRoot);
@@ -542,26 +546,37 @@ final class LoadRecruitChatCalendarScenarioData extends Fixture implements Order
             return;
         }
 
-        /** @var User $johnRoot */
-        $johnRoot = $this->getReference('User-john-root', User::class);
-
         $this->ensureEvent(
             $manager,
             $calendar,
-            $johnRoot,
-            'CRM General - John Root assigned planning',
+            $application->getUser() ?? $calendar->getUser(),
+            'CRM General - Application created',
             5,
-            'Event fixture assigné à john-root dans CRM General.',
+            'Milestone fixture marking CRM General application creation.',
         );
 
-        $this->ensureEvent(
-            $manager,
-            $calendar,
-            $johnRoot,
-            'CRM General - John Root delivery sync',
-            6,
-            'Event fixture de synchronisation delivery pour john-root.',
-        );
+        $employeeStartEvents = [
+            'User-john-root' => 'John Root',
+            'User-john-admin' => 'John Admin',
+            'User-john-user' => 'John User',
+            'User-john-api' => 'John Api',
+        ];
+
+        $dayOffset = 6;
+        foreach ($employeeStartEvents as $userReference => $employeeName) {
+            /** @var User $employeeUser */
+            $employeeUser = $this->getReference($userReference, User::class);
+
+            $this->ensureEvent(
+                $manager,
+                $calendar,
+                $employeeUser,
+                sprintf('CRM General - %s employee start', $employeeName),
+                $dayOffset,
+                sprintf('%s commencement as Employee in CRM General.', $employeeName),
+            );
+            ++$dayOffset;
+        }
     }
 
     private function ensureStandaloneEvent(
