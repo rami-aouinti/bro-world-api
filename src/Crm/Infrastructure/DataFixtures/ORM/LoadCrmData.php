@@ -42,8 +42,6 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 {
     private const int FAKER_SEED = 14021991;
 
-    private const string DEFAULT_VOLUME = 'medium';
-
     /**
      * @var array<int, array{
      *     userReference: non-empty-string,
@@ -123,82 +121,155 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     ];
 
     /**
-     * @var array<non-empty-string, array<int, non-empty-string>>
+     * @var array<int, array{
+     *     name: non-empty-string,
+     *     goal: non-empty-string,
+     *     status: SprintStatus,
+     *     startOffset: non-empty-string,
+     *     durationDays: int
+     * }>
      */
-    private const array APPLICATION_KEYS_BY_PLATFORM = [
-        PlatformKey::CRM->value => [
-            'crm-sales-hub',
-            'crm-pipeline-pro',
-            'crm-support-desk',
-            'crm-general-core',
+    private const array BRO_WORLD_SPRINTS = [
+        [
+            'name' => 'Sprint 1 - Platform Foundations',
+            'goal' => 'Stabilize CRM General architecture and baseline delivery pipeline for Bro World.',
+            'status' => SprintStatus::CLOSED,
+            'startOffset' => '-4 months',
+            'durationDays' => 14,
+        ],
+        [
+            'name' => 'Sprint 2 - Product Integration',
+            'goal' => 'Deliver integration milestones between CRM modules and business workflows.',
+            'status' => SprintStatus::CLOSED,
+            'startOffset' => '-3 months',
+            'durationDays' => 14,
+        ],
+        [
+            'name' => 'Sprint 3 - Current Delivery Week',
+            'goal' => 'Finalize current week commitments and prepare production readiness checks.',
+            'status' => SprintStatus::ACTIVE,
+            'startOffset' => 'monday this week',
+            'durationDays' => 14,
         ],
     ];
 
     /**
-     * @var array<non-empty-string, array{
-     *     companies:int,
-     *     contactsPerCompany:int,
-     *     employeesPerCompany:int,
-     *     projectsPerCompany:int,
-     *     sprintsPerProject:int,
-     *     tasksPerSprint:int,
-     *     taskRequestsPerTask:int,
-     *     billingsPerCompany:int,
-     *     projectAttachments:int,
-     *     taskAttachments:int,
-     *     wikiPagesPerProject:int
-     * }>
+     * @var array<non-empty-string, array<int, array{
+     *     title: non-empty-string,
+     *     description: non-empty-string,
+     *     status: TaskStatus,
+     *     priority: TaskPriority,
+     *     estimatedHours: float
+     * }>>
      */
-    private const array VOLUME_PROFILES = [
-        'small' => [
-            'companies' => 2,
-            'contactsPerCompany' => 1,
-            'employeesPerCompany' => 1,
-            'projectsPerCompany' => 1,
-            'sprintsPerProject' => 1,
-            'tasksPerSprint' => 2,
-            'taskRequestsPerTask' => 1,
-            'billingsPerCompany' => 1,
-            'projectAttachments' => 1,
-            'taskAttachments' => 1,
-            'wikiPagesPerProject' => 1,
+    private const array BRO_WORLD_TASKS_BY_SPRINT = [
+        'Sprint 1 - Platform Foundations' => [
+            [
+                'title' => 'Define CRM General domain boundaries and API contracts',
+                'description' => 'Document entities, relations, payload schemas and acceptance criteria for the first release.',
+                'status' => TaskStatus::DONE,
+                'priority' => TaskPriority::CRITICAL,
+                'estimatedHours' => 18.0,
+            ],
+            [
+                'title' => 'Implement project and sprint seed orchestration',
+                'description' => 'Create deterministic fixture generation for projects and sprint planning in CRM General.',
+                'status' => TaskStatus::DONE,
+                'priority' => TaskPriority::HIGH,
+                'estimatedHours' => 14.0,
+            ],
+            [
+                'title' => 'Setup CI quality gates for CRM endpoints',
+                'description' => 'Add static checks and baseline endpoint validation for CRM general controllers.',
+                'status' => TaskStatus::DONE,
+                'priority' => TaskPriority::MEDIUM,
+                'estimatedHours' => 10.0,
+            ],
+            [
+                'title' => 'Publish delivery runbook for engineering onboarding',
+                'description' => 'Provide onboarding and release checklist to ensure repeatable sprint execution.',
+                'status' => TaskStatus::DONE,
+                'priority' => TaskPriority::LOW,
+                'estimatedHours' => 8.0,
+            ],
         ],
-        'medium' => [
-            'companies' => 4,
-            'contactsPerCompany' => 2,
-            'employeesPerCompany' => 2,
-            'projectsPerCompany' => 2,
-            'sprintsPerProject' => 2,
-            'tasksPerSprint' => 3,
-            'taskRequestsPerTask' => 2,
-            'billingsPerCompany' => 2,
-            'projectAttachments' => 2,
-            'taskAttachments' => 2,
-            'wikiPagesPerProject' => 2,
+        'Sprint 2 - Product Integration' => [
+            [
+                'title' => 'Integrate task request workflow with repository metadata',
+                'description' => 'Link task requests to project repositories and normalize sync metadata handling.',
+                'status' => TaskStatus::DONE,
+                'priority' => TaskPriority::CRITICAL,
+                'estimatedHours' => 16.0,
+            ],
+            [
+                'title' => 'Build generalized reporting payload for CRM dashboard',
+                'description' => 'Expose report structures for KPI panels and management summaries.',
+                'status' => TaskStatus::IN_PROGRESS,
+                'priority' => TaskPriority::HIGH,
+                'estimatedHours' => 12.0,
+            ],
+            [
+                'title' => 'Add assignment rules for owner and delivery team',
+                'description' => 'Ensure John owner/admin/user/api assignment logic is applied across sprint tasks.',
+                'status' => TaskStatus::IN_PROGRESS,
+                'priority' => TaskPriority::MEDIUM,
+                'estimatedHours' => 11.0,
+            ],
+            [
+                'title' => 'Review API response consistency for frontend stores',
+                'description' => 'Validate list/detail payloads used by Nuxt stores and ensure stable keys.',
+                'status' => TaskStatus::TODO,
+                'priority' => TaskPriority::LOW,
+                'estimatedHours' => 7.0,
+            ],
         ],
-        'large' => [
-            'companies' => 8,
-            'contactsPerCompany' => 4,
-            'employeesPerCompany' => 3,
-            'projectsPerCompany' => 3,
-            'sprintsPerProject' => 3,
-            'tasksPerSprint' => 5,
-            'taskRequestsPerTask' => 3,
-            'billingsPerCompany' => 3,
-            'projectAttachments' => 3,
-            'taskAttachments' => 3,
-            'wikiPagesPerProject' => 4,
+        'Sprint 3 - Current Delivery Week' => [
+            [
+                'title' => 'Finalize Bro World sprint board data for this week',
+                'description' => 'Publish the current delivery board with status, assignees, and due dates for demo.',
+                'status' => TaskStatus::IN_PROGRESS,
+                'priority' => TaskPriority::CRITICAL,
+                'estimatedHours' => 9.0,
+            ],
+            [
+                'title' => 'Deliver task request timeline and worklog visibility',
+                'description' => 'Expose request lifecycle and consumed/planned hours for operational follow-up.',
+                'status' => TaskStatus::TODO,
+                'priority' => TaskPriority::HIGH,
+                'estimatedHours' => 12.0,
+            ],
+            [
+                'title' => 'Run end-to-end smoke tests for CRM General flows',
+                'description' => 'Validate create/update/list flow of projects, sprints, tasks, and task requests.',
+                'status' => TaskStatus::TODO,
+                'priority' => TaskPriority::MEDIUM,
+                'estimatedHours' => 8.0,
+            ],
+            [
+                'title' => 'Prepare stakeholder release summary in English',
+                'description' => 'Provide release summary with delivered scope, risks, and next-step actions.',
+                'status' => TaskStatus::TODO,
+                'priority' => TaskPriority::LOW,
+                'estimatedHours' => 6.0,
+            ],
+        ],
+    ];
+
+    /**
+     * @var array<non-empty-string, array<int, non-empty-string>>
+     */
+    private const array APPLICATION_KEYS_BY_PLATFORM = [
+        PlatformKey::CRM->value => [
+            'crm-general-core',
         ],
     ];
 
     #[Override]
     public function load(ObjectManager $manager): void
     {
-        $faker = Factory::create('fr_FR');
+        $faker = Factory::create('en_US');
         $faker->seed(self::FAKER_SEED);
         $generalOwner = $this->getReference('User-john-root', User::class);
-
-        $profile = self::VOLUME_PROFILES[$this->resolveVolume()] ?? self::VOLUME_PROFILES[self::DEFAULT_VOLUME];
 
         foreach ($this->getApplicationsByPlatform(PlatformKey::CRM) as $application) {
             $applicationHasBlogPlugin = $this->applicationHasBlogPlugin($manager, $application);
@@ -210,7 +281,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
             }
 
             // Companies
-            $companies = $this->generateCompanies($manager, $faker, $crm, $application, $profile['companies']);
+            $companies = $this->generateCompanies($manager, $faker, $crm, $application, 1);
             if ($companies !== []) {
                 $this->addReference('Crm-Company-' . $applicationKey . '-1', $companies[0]);
             }
@@ -220,7 +291,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 
             foreach ($companies as $companyIndex => $company) {
                 // Contacts
-                $this->generateContacts($manager, $faker, $crm, $company, $profile['contactsPerCompany']);
+                $this->generateContacts($manager, $faker, $crm, $company, 2);
 
                 // Projects
                 $projects = $this->generateProjects(
@@ -229,9 +300,9 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                     $company,
                     $application,
                     $companyIndex,
-                    $profile['projectsPerCompany'],
-                    $profile['projectAttachments'],
-                    $profile['wikiPagesPerProject'],
+                    count(self::BASE_PROJECTS),
+                    1,
+                    1,
                 );
                 if ($projects !== []) {
                     $this->addReference('Crm-Project-' . $applicationKey . '-' . ($companyIndex + 1) . '-1', $projects[0]);
@@ -239,7 +310,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
 
                 foreach ($projects as $project) {
                     // Sprints
-                    $sprints = $this->generateSprints($manager, $faker, $project, $profile['sprintsPerProject']);
+                    $sprints = $this->generateSprints($manager, $faker, $project, 3);
 
                     foreach ($sprints as $sprintIndex => $sprint) {
                         // Tasks
@@ -249,8 +320,8 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                             $application,
                             $project,
                             $sprint,
-                            $profile['tasksPerSprint'],
-                            $profile['taskAttachments'],
+                            4,
+                            1,
                             $applicationHasBlogPlugin,
                         );
                         if ($tasks !== []) {
@@ -261,12 +332,12 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                         }
 
                         // Task requests
-                        $this->generateTaskRequests($manager, $faker, $application, $tasks, $profile['taskRequestsPerTask']);
+                        $this->generateTaskRequests($manager, $faker, $application, $tasks, 2);
                     }
                 }
 
                 // Billings
-                $this->generateBillings($manager, $faker, $company, $profile['billingsPerCompany']);
+                $this->generateBillings($manager, $faker, $company, 1);
             }
         }
 
@@ -325,9 +396,12 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         $companies = [];
 
         for ($index = 0; $index < $count; $index++) {
+            $companyName = $index === 0
+                ? 'Bro World Group'
+                : sprintf('%s - %s', $application->getTitle(), $faker->company());
             $company = (new Company())
                 ->setCrm($crm)
-                ->setName(sprintf('%s - %s', $application->getTitle(), $faker->company()))
+                ->setName($companyName)
                 ->setIndustry($faker->randomElement(['SaaS', 'Consulting', 'Retail', 'Finance', 'Healthcare', 'Education']))
                 ->setWebsite($faker->url())
                 ->setContactEmail($faker->companyEmail())
@@ -361,17 +435,32 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     private function generateEmployees(ObjectManager $manager, Crm $crm): void
     {
         foreach (self::DETERMINISTIC_EMPLOYEES as $employeeData) {
+            $user = $this->getReference($employeeData['userReference'], User::class);
+            $firstName = $employeeData['firstName'];
+            $lastName = $employeeData['lastName'];
+            if ($this->isBlank($firstName) && !$this->isBlank($user->getFirstName())) {
+                $firstName = $user->getFirstName();
+            }
+            if ($this->isBlank($lastName) && !$this->isBlank($user->getLastName())) {
+                $lastName = $user->getLastName();
+            }
+
             $employee = (new Employee())
                 ->setCrm($crm)
-                ->setUser($this->getReference($employeeData['userReference'], User::class))
-                ->setFirstName($employeeData['firstName'])
-                ->setLastName($employeeData['lastName'])
+                ->setUser($user)
+                ->setFirstName($firstName)
+                ->setLastName($lastName)
                 ->setEmail($employeeData['email'])
                 ->setPositionName($employeeData['positionName'])
                 ->setRoleName($employeeData['roleName']);
 
             $manager->persist($employee);
         }
+    }
+
+    private function isBlank(string $value): bool
+    {
+        return trim($value) === '';
     }
 
     /**
@@ -494,34 +583,37 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         bool $applicationHasBlogPlugin,
     ): array {
         $tasks = [];
-        $broWorldAssignees = $this->isBroWorldProject($project) ? $this->getCanonicalUsers() : [];
+        $isBroWorld = $this->isBroWorldProject($project);
+        $broWorldAssignees = $isBroWorld ? $this->getCanonicalUsers() : [];
+        $broWorldBlueprints = $isBroWorld ? (self::BRO_WORLD_TASKS_BY_SPRINT[$sprint->getName()] ?? []) : [];
+        $effectiveCount = $broWorldBlueprints !== [] ? count($broWorldBlueprints) : $count;
         $sprintStartDate = $sprint->getStartDate();
         $sprintEndDate = $sprint->getEndDate();
 
-        for ($index = 0; $index < $count; $index++) {
+        for ($index = 0; $index < $effectiveCount; $index++) {
             $taskStatus = $faker->randomElement(TaskStatus::cases());
             $taskPriority = $faker->randomElement(TaskPriority::cases());
             $taskTitle = $faker->sentence(5);
             $taskDescription = $faker->paragraph(2);
             $dueAt = DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-1 week', '+2 months'));
-            if ($this->isBroWorldProject($project)) {
-                $taskStatus = match (true) {
-                    $sprint->getStatus() === SprintStatus::CLOSED => $index === $count - 1 ? TaskStatus::DONE : TaskStatus::IN_PROGRESS,
-                    $sprint->getStatus() === SprintStatus::ACTIVE => $index === 0 ? TaskStatus::IN_PROGRESS : TaskStatus::TODO,
-                    default => TaskStatus::TODO,
-                };
-                $taskPriority = match ($index % 4) {
-                    0 => TaskPriority::CRITICAL,
-                    1 => TaskPriority::HIGH,
-                    2 => TaskPriority::MEDIUM,
-                    default => TaskPriority::LOW,
-                };
-                $taskTitle = sprintf('Bro World - %s task %d', $sprint->getName(), $index + 1);
-                $taskDescription = sprintf(
-                    'Implement and validate %s task %d for Bro World with clear acceptance criteria.',
-                    $sprint->getName(),
-                    $index + 1,
-                );
+            $estimatedHours = (float)$faker->randomFloat(1, 2, 30);
+            if ($isBroWorld) {
+                /** @var array{
+                 *     title: non-empty-string,
+                 *     description: non-empty-string,
+                 *     status: TaskStatus,
+                 *     priority: TaskPriority,
+                 *     estimatedHours: float
+                 * }|null $taskBlueprint
+                 */
+                $taskBlueprint = $broWorldBlueprints[$index] ?? null;
+                if (is_array($taskBlueprint)) {
+                    $taskStatus = $taskBlueprint['status'];
+                    $taskPriority = $taskBlueprint['priority'];
+                    $taskTitle = $taskBlueprint['title'];
+                    $taskDescription = $taskBlueprint['description'];
+                    $estimatedHours = $taskBlueprint['estimatedHours'];
+                }
                 if ($sprintStartDate instanceof DateTimeImmutable && $sprintEndDate instanceof DateTimeImmutable) {
                     $dueAt = $sprintStartDate->modify(sprintf('+%d days', min(12, ($index + 1) * 3)));
                     if ($dueAt > $sprintEndDate) {
@@ -538,7 +630,7 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                 ->setStatus($taskStatus)
                 ->setPriority($taskPriority)
                 ->setDueAt($dueAt)
-                ->setEstimatedHours((float)$faker->randomFloat(1, 2, 30));
+                ->setEstimatedHours($estimatedHours);
 
             if ($broWorldAssignees !== []) {
                 $task->addAssignee($broWorldAssignees[$index % count($broWorldAssignees)]);
@@ -604,22 +696,24 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                 $description = $faker->paragraph();
                 $plannedHours = (float)$faker->randomElement([4, 8, 12, 16, 20, 24, 32]);
                 if ($this->isBroWorldProject($task->getProject())) {
-                    $title = sprintf('Bro World task request %d', $index + 1);
-                    $description = sprintf(
-                        'Deliver the implementation package for "%s" with tests and documentation.',
-                        $task->getTitle(),
-                    );
-                    $status = match ($task->getStatus()) {
-                        TaskStatus::DONE => TaskRequestStatus::DONE,
-                        TaskStatus::IN_PROGRESS => TaskRequestStatus::PROGRESS,
-                        TaskStatus::BLOCKED => TaskRequestStatus::REJECTED,
+                    $title = $index === 0
+                        ? sprintf('Implementation package - %s', $task->getTitle())
+                        : sprintf('QA and acceptance package - %s', $task->getTitle());
+                    $description = $index === 0
+                        ? 'Backend and frontend implementation ready for reviewer validation.'
+                        : 'Validation report including tests, edge cases, and release checklist.';
+                    $status = match (true) {
+                        $index === 0 && $task->getStatus() === TaskStatus::DONE => TaskRequestStatus::DONE,
+                        $index === 0 && $task->getStatus() === TaskStatus::IN_PROGRESS => TaskRequestStatus::PROGRESS,
+                        $index === 1 && $task->getStatus() === TaskStatus::DONE => TaskRequestStatus::APPROVED,
+                        $index === 1 && $task->getStatus() === TaskStatus::IN_PROGRESS => TaskRequestStatus::PENDING,
                         default => TaskRequestStatus::PENDING,
                     };
                     $taskDueAt = $task->getDueAt();
                     if ($taskDueAt instanceof DateTimeImmutable) {
                         $requestedAt = $taskDueAt->modify(sprintf('-%d days', 5 - min(4, $index)));
                     }
-                    $plannedHours = (float)(8 + ($index * 4));
+                    $plannedHours = $index === 0 ? 12.0 : 6.0;
                 }
                 $taskRequest = (new TaskRequest())
                     ->setTask($task)
@@ -727,28 +821,16 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     private function generateBroWorldSprints(ObjectManager $manager, Project $project, int $count): array
     {
         $sprints = [];
-        $effectiveCount = max(2, $count);
-        $currentWeekStart = (new DateTimeImmutable('monday this week'))->setTime(0, 0);
-
+        $effectiveCount = max(1, min($count, count(self::BRO_WORLD_SPRINTS)));
         for ($index = 0; $index < $effectiveCount; $index++) {
-            if ($index === $effectiveCount - 1) {
-                $startDate = $currentWeekStart;
-                $endDate = $currentWeekStart->modify('+13 days');
-                $status = SprintStatus::ACTIVE;
-            } else {
-                $monthsAgo = 4 - min(1, $index);
-                $startDate = $currentWeekStart
-                    ->modify(sprintf('-%d months', $monthsAgo))
-                    ->modify(sprintf('+%d days', $index * 14));
-                $endDate = $startDate->modify('+13 days');
-                $status = SprintStatus::CLOSED;
-            }
-
+            $sprintBlueprint = self::BRO_WORLD_SPRINTS[$index];
+            $startDate = (new DateTimeImmutable($sprintBlueprint['startOffset']))->setTime(0, 0);
+            $endDate = $startDate->modify(sprintf('+%d days', $sprintBlueprint['durationDays'] - 1));
             $sprint = (new Sprint())
                 ->setProject($project)
-                ->setName(sprintf('Sprint %d - Bro World Delivery Wave', $index + 1))
-                ->setGoal(sprintf('Deliver Bro World objectives for iteration %d with stable milestone outcomes.', $index + 1))
-                ->setStatus($status)
+                ->setName($sprintBlueprint['name'])
+                ->setGoal($sprintBlueprint['goal'])
+                ->setStatus($sprintBlueprint['status'])
                 ->setStartDate($startDate)
                 ->setEndDate($endDate);
 
@@ -837,13 +919,6 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
             'content' => $faker->paragraphs(3, true),
             'createdAt' => DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-4 months', 'now'))->format(DATE_ATOM),
         ];
-    }
-
-    private function resolveVolume(): string
-    {
-        $volume = strtolower((string)($_ENV['CRM_FIXTURE_VOLUME'] ?? $_SERVER['CRM_FIXTURE_VOLUME'] ?? getenv('CRM_FIXTURE_VOLUME') ?: self::DEFAULT_VOLUME));
-
-        return array_key_exists($volume, self::VOLUME_PROFILES) ? $volume : self::DEFAULT_VOLUME;
     }
 
     private function applicationHasBlogPlugin(ObjectManager $manager, Application $application): bool
