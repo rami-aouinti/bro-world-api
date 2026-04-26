@@ -30,7 +30,7 @@ final readonly class GetQuizAttemptsByApplicationController
     ) {
     }
 
-    #[Route('/v1/quiz/attempts', methods: [Request::METHOD_GET])]
+    #[Route('/v1/quiz/applications/{applicationSlug}/attempts', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'List current user quiz attempts by application', tags: ['Quiz'])]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {

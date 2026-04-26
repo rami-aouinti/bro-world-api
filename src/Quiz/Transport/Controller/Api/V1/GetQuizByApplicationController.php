@@ -24,7 +24,7 @@ final class GetQuizByApplicationController
     ) {
     }
 
-    #[Route('/v1/quiz', methods: [Request::METHOD_GET])]
+    #[Route('/v1/quiz/applications/{applicationSlug}', methods: [Request::METHOD_GET])]
     public function __invoke(Request $request, QuizReadService $quizReadService): JsonResponse
     {
         $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);

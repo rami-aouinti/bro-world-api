@@ -19,11 +19,10 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
-#[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
+#[IsGranted('ROLE_ROOT')]
 #[OA\Tag(name: 'Quiz')]
 final class CreateQuizQuestionController
 {
@@ -36,7 +35,7 @@ final class CreateQuizQuestionController
      * @throws ExceptionInterface
      * @throws JsonException
      */
-    #[Route('/v1/quiz/questions', methods: [Request::METHOD_POST])]
+    #[Route('/v1/quiz/applications/{applicationSlug}/questions', methods: [Request::METHOD_POST])]
     #[OA\Post(summary: 'POST /v1/quiz/questions', tags: ['Quiz'])]
     public function __invoke(Request $request, MessageBusInterface $messageBus, User $loggedInUser, ApplicationRepository $applicationRepository, QuizRepository $quizRepository, QuizEditorAccessService $accessService): JsonResponse
     {

@@ -15,6 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[OA\Tag(name: 'Quiz')]
 final readonly class GetPublicGeneralQuizLeaderboardController
 {
+    #[Route('/v1/public/quiz/general/leaderboard', methods: [Request::METHOD_GET])]
     #[OA\Get(
         summary: 'Get top 3 users for general quiz weighted score',
         security: [],
