@@ -7,6 +7,7 @@ namespace App\Crm\Application\Service;
 use App\Crm\Domain\Entity\Task;
 use App\Crm\Domain\Entity\TaskRequest;
 use App\Crm\Domain\Entity\TaskRequestGithubBranch;
+use App\Crm\Infrastructure\Repository\EmployeeRepository;
 use App\User\Domain\Entity\User;
 use DateTimeInterface;
 
@@ -22,6 +23,7 @@ final readonly class CrmApiNormalizer
     public function __construct(
         private CrmBlogNormalizer $crmBlogNormalizer,
         private TaskRequestWorklogReadService $taskRequestWorklogReadService,
+        private EmployeeRepository $employeeRepository,
     ) {
     }
 
@@ -238,12 +240,16 @@ final readonly class CrmApiNormalizer
      */
     private function normalizeAssignee(User $user): array
     {
+        $employee = $this->employeeRepository->findOneBy([
+            'user' => $user]
+        );
         return [
             'id' => $user->getId(),
             'username' => $user->getUsername(),
             'firstName' => $user->getFirstName(),
             'lastName' => $user->getLastName(),
             'photo' => $user->getPhoto(),
+            'employeeId' => $employee?->getId(),
         ];
     }
 
@@ -279,12 +285,18 @@ final readonly class CrmApiNormalizer
                 continue;
             }
 
+            $this->mapUserAssignees($assignee);
+            $employee = $this->employeeRepository->findOneBy([
+                    'user' => $assignee['id'] ]
+            );
+
             $normalizedAssignees[] = [
                 'id' => $assignee['id'] ?? null,
                 'username' => $assignee['username'] ?? $assignee['email'] ?? null,
                 'firstName' => $assignee['firstName'] ?? null,
                 'lastName' => $assignee['lastName'] ?? null,
                 'photo' => $assignee['photo'] ?? null,
+                'employeeId' => $employee?->getId(),
             ];
         }
 

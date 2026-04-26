@@ -73,13 +73,13 @@ final readonly class CreateProjectController
                     properties: [
                         new OA\Property(property: 'id', type: 'string', format: 'uuid', example: 'ebf77366-d60c-4ac4-b204-9f91a7f7ee12'),
                         new OA\Property(property: 'blogId', type: 'string', format: 'uuid', nullable: true, example: '1d2f3a4b-5c6d-7e8f-9012-3456789abcde'),
-                        new OA\Property(property: 'provisioning', type: 'object', properties: [
+                        new OA\Property(property: 'provisioning', properties: [
                             new OA\Property(property: 'state', type: 'string', enum: ['pending', 'provisioned', 'failed'], example: 'pending'),
                             new OA\Property(property: 'error', type: 'object', nullable: true, properties: [
                                 new OA\Property(property: 'code', type: 'string', example: 'github_provisioning_failed'),
                                 new OA\Property(property: 'message', type: 'string', example: 'Unable to provision GitHub resources for this project.'),
                             ]),
-                        ]),
+                        ], type: 'object'),
                         new OA\Property(property: 'githubResourceIds', type: 'object'),
                     ],
                 ),
@@ -179,7 +179,7 @@ final readonly class CreateProjectController
             ->setGithubResourceIds([]);
 
         if (is_string($input->companyId)) {
-            $company = $this->companyRepository->findOneScopedById($input->companyId, $crm->getId());
+            $company = $this->companyRepository->findById($input->companyId);
             if ($company === null) {
                 return $this->errorResponseFactory->notFoundReference('companyId');
             }
@@ -211,15 +211,32 @@ final readonly class CreateProjectController
 
     private function parseDate(?string $value, string $field): DateTimeImmutable|JsonResponse|null
     {
-        if ($value === null) {
+        if ($value === null || trim($value) === '') {
             return null;
         }
 
-        $date = DateTimeImmutable::createFromFormat(DateTimeInterface::ATOM, $value);
-        if ($date === false) {
-            return $this->errorResponseFactory->invalidDate($field);
+        $value = trim($value);
+
+        $formats = [
+            DateTimeInterface::ATOM,
+            'Y-m-d\TH:i:sP',
+            'Y-m-d\TH:i:s',
+            'Y-m-d H:i:s',
+            'Y-m-d',
+        ];
+
+        foreach ($formats as $format) {
+            $date = DateTimeImmutable::createFromFormat($format, $value);
+            if ($date !== false) {
+                return $date;
+            }
         }
 
-        return $date;
+        // fallback intelligent (très utile en prod)
+        try {
+            return new DateTimeImmutable($value);
+        } catch (\Exception) {
+            return $this->errorResponseFactory->invalidDate($field);
+        }
     }
 }

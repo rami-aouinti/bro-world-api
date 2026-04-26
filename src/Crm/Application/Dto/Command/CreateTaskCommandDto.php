@@ -23,7 +23,6 @@ final class CreateTaskCommandDto
     #[Assert\Choice(callback: [self::class, 'priorityChoices'])]
     public ?string $priority = null;
 
-    #[Assert\DateTime]
     public ?string $dueAt = null;
 
     #[Assert\Type(type: 'numeric')]

@@ -7,6 +7,8 @@ namespace App\Crm\Infrastructure\Repository;
 use App\Crm\Domain\Entity\Company as Entity;
 use App\General\Infrastructure\Repository\BaseRepository;
 use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 
@@ -27,6 +29,17 @@ class CompanyRepository extends BaseRepository
     public function __construct(
         protected ManagerRegistry $managerRegistry
     ) {
+    }
+
+    public function findById(string $id): ?Entity
+    {
+        $entity = $this->createQueryBuilder('company')
+            ->andWhere('company.id = :id')
+            ->setParameter('id', $id, UuidBinaryOrderedTimeType::NAME)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $entity instanceof Entity ? $entity : null;
     }
 
     public function findOneScopedById(string $id, string $crmId): ?Entity
@@ -90,7 +103,11 @@ class CompanyRepository extends BaseRepository
     }
 
     /**
+     * @param string $crmId
      * @param array{q?:string} $filters
+     * @return int
+     * @throws NoResultException
+     * @throws NonUniqueResultException
      */
     public function countScopedByCrm(string $crmId, array $filters = []): int
     {

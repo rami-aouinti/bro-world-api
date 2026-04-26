@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Crm\Transport\Controller\Api\V1\General;
 
 use App\Crm\Application\Service\TaskRequestWorklogReadService;
+use App\Crm\Domain\Entity\Employee;
+use App\Crm\Domain\Entity\TaskRequest;
 use App\Crm\Domain\Entity\TaskRequestWorklog;
 use App\Crm\Infrastructure\Repository\EmployeeRepository;
 use App\Crm\Infrastructure\Repository\TaskRequestRepository;
@@ -37,7 +39,7 @@ final readonly class PostGeneralTaskRequestWorklogController
     ) {
     }
 
-    #[Route('/v1/crm/general/task-requests/{id}/worklogs', methods: [Request::METHOD_POST])]
+    #[Route('/v1/crm/general/task-requests/{taskRequest}/worklogs', methods: [Request::METHOD_POST])]
     #[OA\Post(
         summary: 'General - Log work on a task request',
         requestBody: new OA\RequestBody(
@@ -49,7 +51,7 @@ final readonly class PostGeneralTaskRequestWorklogController
             new OA\Response(response: JsonResponse::HTTP_FORBIDDEN, description: 'User is not allowed to log time for this task request'),
         ]
     )]
-    public function __invoke(string $id, Request $request, User $loggedInUser): JsonResponse
+    public function __invoke(TaskRequest $taskRequest, Request $request, User $loggedInUser): JsonResponse
     {
         $payload = $this->decodePayload($request);
         if ($payload instanceof JsonResponse) {
@@ -63,19 +65,30 @@ final readonly class PostGeneralTaskRequestWorklogController
             return $this->badRequest('Fields "employeeId" (uuid) and "hours" (> 0) are required.');
         }
 
-        $taskRequest = $this->taskRequestRepository->find($id);
-        if ($taskRequest === null) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Task request not found.');
-        }
-
         $crmId = $taskRequest->getTask()?->getProject()?->getCompany()?->getCrm()?->getId();
+
         if (!is_string($crmId) || $crmId === '') {
             throw new HttpException(JsonResponse::HTTP_CONFLICT, 'Task request has no CRM scope.');
         }
 
         $employee = $this->employeeRepository->findOneScopedById($employeeId, $crmId);
+
+
         if ($employee === null) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Employee not found in crm-general-core scope.');
+
+            $employee = $this->employeeRepository->findOneBy([
+                'user' => $loggedInUser,
+            ]);
+            if ($employee === null) {
+                $employee = new Employee();
+                $employee->setUser($loggedInUser);
+                $employee->setCrm($taskRequest->getTask()?->getProject()?->getCompany()?->getCrm());
+                $this->entityManager->persist($employee);
+                $this->entityManager->flush();
+                if ($employee === null) {
+                    throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Employee not found in crm-general-core scope.');
+                }
+            }
         }
 
         $isPrivileged = $this->authorizationChecker->isGranted(Role::ROOT->value)
@@ -93,7 +106,7 @@ final readonly class PostGeneralTaskRequestWorklogController
             throw new HttpException(JsonResponse::HTTP_FORBIDDEN, 'You can only log work with your own employee profile.');
         }
 
-        $worklog = (new TaskRequestWorklog())
+        $worklog = new TaskRequestWorklog()
             ->setTaskRequest($taskRequest)
             ->setEmployee($employee)
             ->setHours((float) $hours)

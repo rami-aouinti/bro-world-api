@@ -22,10 +22,8 @@ final class CreateProjectRequest
     #[Assert\Choice(callback: [self::class, 'statusChoices'])]
     public ?string $status = null;
 
-    #[Assert\DateTime]
     public ?string $startedAt = null;
 
-    #[Assert\DateTime]
     public ?string $dueAt = null;
 
     #[Assert\NotBlank]
