@@ -295,8 +295,8 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
             }
 
             // Employees
-            $this->generateEmployees($manager, $crm);
-            $this->ensureCrmGeneralChatAndCalendarScenario($manager, $crm, $application);
+            $employees = $this->generateEmployees($manager, $crm);
+            $this->ensureCrmGeneralChatAndCalendarScenario($manager, $crm, $application, $employees);
 
             foreach ($companies as $companyIndex => $company) {
                 // Contacts
@@ -441,8 +441,12 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         }
     }
 
-    private function generateEmployees(ObjectManager $manager, Crm $crm): void
+    /**
+     * @return array<int, Employee>
+     */
+    private function generateEmployees(ObjectManager $manager, Crm $crm): array
     {
+        $employees = [];
         foreach (self::DETERMINISTIC_EMPLOYEES as $employeeData) {
             $user = $this->getReference($employeeData['userReference'], User::class);
             $firstName = $employeeData['firstName'];
@@ -464,21 +468,28 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                 ->setRoleName($employeeData['roleName']);
 
             $manager->persist($employee);
+            $employees[] = $employee;
         }
+
+        return $employees;
     }
 
-    private function ensureCrmGeneralChatAndCalendarScenario(ObjectManager $manager, Crm $crm, Application $application): void
+    /**
+     * @param array<int, Employee> $employees
+     */
+    private function ensureCrmGeneralChatAndCalendarScenario(ObjectManager $manager, Crm $crm, Application $application, array $employees): void
     {
-        if ($application->getSlug() !== 'crm-general-core') {
+        $application->ensureGeneratedSlug();
+        if ($application->getSlug() !== 'crm-general-core' && $application->getTitle() !== 'CRM General Core') {
             return;
         }
 
         $chat = $this->ensureChat($manager, $application);
         $conversation = $this->ensureGeneralGroupConversation($manager, $chat);
-        $this->ensureCrmEmployeeParticipants($manager, $crm, $conversation);
+        $this->ensureCrmEmployeeParticipants($manager, $crm, $conversation, $employees);
 
         $calendar = $this->ensureCalendar($manager, $application);
-        $this->ensureCrmGeneralCalendarEvents($manager, $crm, $calendar);
+        $this->ensureCrmGeneralCalendarEvents($manager, $crm, $calendar, $employees);
     }
 
     private function ensureChat(ObjectManager $manager, Application $application): Chat
@@ -525,12 +536,17 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         return $conversation;
     }
 
-    private function ensureCrmEmployeeParticipants(ObjectManager $manager, Crm $crm, Conversation $conversation): void
+    /**
+     * @param array<int, Employee> $employees
+     */
+    private function ensureCrmEmployeeParticipants(ObjectManager $manager, Crm $crm, Conversation $conversation, array $employees): void
     {
-        /** @var array<int, Employee> $employees */
-        $employees = $manager->getRepository(Employee::class)->findBy([
-            'crm' => $crm,
-        ]);
+        if ($employees === []) {
+            /** @var array<int, Employee> $employees */
+            $employees = $manager->getRepository(Employee::class)->findBy([
+                'crm' => $crm,
+            ]);
+        }
 
         foreach ($employees as $employee) {
             $user = $employee->getUser();
@@ -575,7 +591,10 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         return $calendar;
     }
 
-    private function ensureCrmGeneralCalendarEvents(ObjectManager $manager, Crm $crm, Calendar $calendar): void
+    /**
+     * @param array<int, Employee> $employees
+     */
+    private function ensureCrmGeneralCalendarEvents(ObjectManager $manager, Crm $crm, Calendar $calendar, array $employees): void
     {
         /** @var User|null $calendarOwner */
         $calendarOwner = $calendar->getUser();
@@ -588,10 +607,12 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
             2,
         );
 
-        /** @var array<int, Employee> $employees */
-        $employees = $manager->getRepository(Employee::class)->findBy([
-            'crm' => $crm,
-        ]);
+        if ($employees === []) {
+            /** @var array<int, Employee> $employees */
+            $employees = $manager->getRepository(Employee::class)->findBy([
+                'crm' => $crm,
+            ]);
+        }
 
         $dayOffset = 3;
         foreach ($employees as $employee) {
