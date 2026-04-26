@@ -11,6 +11,8 @@ use App\General\Infrastructure\Repository\BaseRepository;
 use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
@@ -37,6 +39,9 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
     }
 
 
+    /**
+     * @throws NonUniqueResultException
+     */
     public function findOneByGoogleEventIdAndUserId(string $googleEventId, string $userId): ?Entity
     {
         /** @var Entity|null $event */
@@ -79,6 +84,10 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
             ->getResult();
     }
 
+    /**
+     * @throws NonUniqueResultException
+     * @throws NoResultException
+     */
     public function countByUser(
         User $user,
         array $filters = [],
@@ -115,6 +124,10 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
             ->getResult();
     }
 
+    /**
+     * @throws NonUniqueResultException
+     * @throws NoResultException
+     */
     public function countByApplicationSlug(string $applicationSlug, array $filters = [], ?array $esIds = null): int
     {
         return (int)$this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds)
@@ -142,6 +155,10 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
             ->getResult();
     }
 
+    /**
+     * @throws NonUniqueResultException
+     * @throws NoResultException
+     */
     public function countAllByApplicationSlug(string $applicationSlug, array $filters = [], ?array $esIds = null): int
     {
         return (int)$this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds)
@@ -168,6 +185,10 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
             ->getResult();
     }
 
+    /**
+     * @throws NonUniqueResultException
+     * @throws NoResultException
+     */
     public function countByApplicationSlugAndUser(string $applicationSlug, User $user, array $filters = [], ?array $esIds = null): int
     {
         return (int)$this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds)

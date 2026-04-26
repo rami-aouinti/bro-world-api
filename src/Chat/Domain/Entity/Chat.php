@@ -18,7 +18,7 @@ use Ramsey\Uuid\UuidInterface;
 #[ORM\Entity]
 #[ORM\Table(name: 'chat')]
 #[ORM\UniqueConstraint(name: 'uq_chat_application_slug', columns: ['application_slug'])]
-#[ORM\Index(name: 'idx_chat_application_slug', columns: ['application_slug'])]
+#[ORM\Index(columns: ['application_slug'], name: 'idx_chat_application_slug')]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 class Chat implements EntityInterface
 {
@@ -39,7 +39,7 @@ class Chat implements EntityInterface
     /**
      * @var Collection<int, Conversation>
      */
-    #[ORM\OneToMany(targetEntity: Conversation::class, mappedBy: 'chat')]
+    #[ORM\OneToMany(mappedBy: 'chat', targetEntity: Conversation::class)]
     private Collection $conversations;
 
     public function __construct()

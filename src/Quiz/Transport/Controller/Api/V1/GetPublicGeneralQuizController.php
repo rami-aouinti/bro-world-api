@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[OA\Tag(name: 'Quiz')]
 final readonly class GetPublicGeneralQuizController
 {
-    private const GENERAL_APPLICATION_SLUG = 'general';
+    private const string GENERAL_APPLICATION_SLUG = 'general';
 
     #[Route('/v1/public/quiz/general', methods: [Request::METHOD_GET])]
     #[OA\Get(summary: 'Get general quiz (public)', security: [], tags: ['Quiz'])]

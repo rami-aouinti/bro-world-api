@@ -6,6 +6,7 @@ namespace App\Calendar\Transport\Controller\Api\V1\Event;
 
 use App\Calendar\Application\Service\CalendarApplicationAccessService;
 use App\Calendar\Application\Service\EventListService;
+use App\General\Application\Service\ApplicationScopeResolver;
 use App\User\Domain\Entity\User;
 use JsonException;
 use OpenApi\Attributes as OA;
@@ -35,11 +36,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
     ]
 )]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
-class ApplicationEmployeeAssignedEventListController
+readonly class ApplicationEmployeeAssignedEventListController
 {
     public function __construct(
-        public readonly EventListService $eventListService,
-        public readonly CalendarApplicationAccessService $calendarApplicationAccessService,
+        public EventListService                 $eventListService,
+        public CalendarApplicationAccessService $calendarApplicationAccessService,
+        private ApplicationScopeResolver $applicationScopeResolver,
     ) {
     }
 
@@ -48,9 +50,11 @@ class ApplicationEmployeeAssignedEventListController
      * @throws JsonException
      */
     #[Route(path: '/v1/calendar/events/employee-assigned', methods: [Request::METHOD_GET])]
-    public function __invoke(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
+    public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        $this->calendarApplicationAccessService->requireEmployee($applicationSlug, $loggedInUser);
+        $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);
+
+        //$this->calendarApplicationAccessService->requireEmployee($applicationSlug, $loggedInUser);
 
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));

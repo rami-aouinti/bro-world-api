@@ -51,6 +51,11 @@ final readonly class BlogNotificationService
         $this->mercurePublisher->publish('/blogs/' . $blog->getId() . '/posts/' . $post->getId() . '/events', $payload);
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     * @throws JsonException
+     */
     public function notifyCommentCreated(BlogComment $comment): void
     {
         $actor = $comment->getAuthor();

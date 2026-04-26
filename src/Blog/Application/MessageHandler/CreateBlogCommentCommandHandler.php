@@ -36,6 +36,7 @@ final readonly class CreateBlogCommentCommandHandler
     /**
      * @throws OptimisticLockException
      * @throws ORMException
+     * @throws \JsonException
      */
     public function __invoke(CreateBlogCommentCommand $command): string
     {
@@ -54,7 +55,7 @@ final readonly class CreateBlogCommentCommandHandler
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Comment requires content and/or filePath.');
         }
 
-        $comment = (new BlogComment())
+        $comment = new BlogComment()
             ->setPost($post)
             ->setAuthor($user)
             ->setContent($command->content)

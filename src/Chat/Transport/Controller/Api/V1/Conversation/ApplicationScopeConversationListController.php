@@ -58,6 +58,7 @@ readonly class ApplicationScopeConversationListController
         $chat = $this->chatRepository->findOneBy([
             'applicationSlug' => $applicationSlug,
         ]);
+
         if ($chat === null) {
             throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Chat not found for this application scope.');
         }

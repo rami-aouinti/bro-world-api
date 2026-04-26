@@ -88,7 +88,7 @@ class EmployeeRepository extends BaseRepository
             ->andWhere('application.slug = :applicationSlug')
             ->andWhere('employee.user = :user')
             ->setParameter('applicationSlug', $applicationSlug)
-            ->setParameter('user', $user)
+            ->setParameter('user', $user->getId(), UuidBinaryOrderedTimeType::NAME )
             ->getQuery()
             ->getSingleScalarResult();
 
