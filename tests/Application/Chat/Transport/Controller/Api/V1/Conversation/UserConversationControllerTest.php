@@ -167,6 +167,26 @@ final class UserConversationControllerTest extends WebTestCase
     /**
      * @throws Throwable
      */
+    #[TestDox('GET application scoped conversations returns CRM General conversation with all CRM employees')]
+    public function testListByApplicationScopeReturnsCrmGeneralConversation(): void
+    {
+        $client = $this->getTestClient('john-root', 'password-root');
+        $client->request('GET', self::API_URL_PREFIX . '/v1/chat/crm-general-core/private/applications/conversations');
+
+        self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $content = $client->getResponse()->getContent();
+        self::assertNotFalse($content);
+        $payload = JSON::decode($content, true);
+
+        self::assertNotEmpty($payload['items']);
+        self::assertSame('General', $payload['items'][0]['title'] ?? null);
+        self::assertGreaterThanOrEqual(4, count($payload['items'][0]['participants'] ?? []));
+    }
+
+    /**
+     * @throws Throwable
+     */
     #[TestDox('PATCH and DELETE conversation endpoints accept for participant and hide unauthorized conversation')]
     public function testPatchDeleteAndUnauthorizedFindOrCreate(): void
     {
