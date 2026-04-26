@@ -45,6 +45,51 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     private const string DEFAULT_VOLUME = 'medium';
 
     /**
+     * @var array<int, array{
+     *     userReference: non-empty-string,
+     *     firstName: non-empty-string,
+     *     lastName: non-empty-string,
+     *     email: non-empty-string,
+     *     positionName: non-empty-string,
+     *     roleName: non-empty-string
+     * }>
+     */
+    private const array DETERMINISTIC_EMPLOYEES = [
+        [
+            'userReference' => 'User-john-root',
+            'firstName' => 'John',
+            'lastName' => 'Root',
+            'email' => 'john-root@crm.example.test',
+            'positionName' => 'Owner',
+            'roleName' => 'owner',
+        ],
+        [
+            'userReference' => 'User-john-admin',
+            'firstName' => 'John',
+            'lastName' => 'Admin',
+            'email' => 'john-admin@crm.example.test',
+            'positionName' => 'CRM Administrator',
+            'roleName' => 'admin',
+        ],
+        [
+            'userReference' => 'User-john-user',
+            'firstName' => 'John',
+            'lastName' => 'User',
+            'email' => 'john-user@crm.example.test',
+            'positionName' => 'Sales Representative',
+            'roleName' => 'sales',
+        ],
+        [
+            'userReference' => 'User-john-api',
+            'firstName' => 'John',
+            'lastName' => 'Api',
+            'email' => 'john-api@crm.example.test',
+            'positionName' => 'API Operator',
+            'roleName' => 'api',
+        ],
+    ];
+
+    /**
      * @var array<non-empty-string, array<int, non-empty-string>>
      */
     private const array APPLICATION_KEYS_BY_PLATFORM = [
@@ -121,7 +166,6 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         $generalOwner = $this->getReference('User-john-root', User::class);
 
         $profile = self::VOLUME_PROFILES[$this->resolveVolume()] ?? self::VOLUME_PROFILES[self::DEFAULT_VOLUME];
-        $crmUsers = $this->getCrmUsers($manager);
 
         foreach ($this->getApplicationsByPlatform(PlatformKey::CRM) as $application) {
             $applicationHasBlogPlugin = $this->applicationHasBlogPlugin($manager, $application);
@@ -138,12 +182,12 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
                 $this->addReference('Crm-Company-' . $applicationKey . '-1', $companies[0]);
             }
 
+            // Employees
+            $this->generateEmployees($manager, $crm);
+
             foreach ($companies as $companyIndex => $company) {
                 // Contacts
                 $this->generateContacts($manager, $faker, $crm, $company, $profile['contactsPerCompany']);
-
-                // Employees
-                $this->generateEmployees($manager, $faker, $crm, $profile['employeesPerCompany'], $crmUsers);
 
                 // Projects
                 $projects = $this->generateProjects(
@@ -281,25 +325,17 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         }
     }
 
-    /**
-     * @param array<int, User> $crmUsers
-     */
-    private function generateEmployees(ObjectManager $manager, Generator $faker, Crm $crm, int $count, array $crmUsers): void
+    private function generateEmployees(ObjectManager $manager, Crm $crm): void
     {
-        $crmUserCount = count($crmUsers);
-
-        for ($index = 0; $index < $count; $index++) {
+        foreach (self::DETERMINISTIC_EMPLOYEES as $employeeData) {
             $employee = (new Employee())
                 ->setCrm($crm)
-                ->setFirstName($faker->firstName())
-                ->setLastName($faker->lastName())
-                ->setEmail($faker->companyEmail())
-                ->setPositionName($faker->jobTitle())
-                ->setRoleName($faker->randomElement(['sales', 'support', 'manager', 'finance']));
-
-            if ($crmUserCount > 0) {
-                $employee->setUser($crmUsers[$index % $crmUserCount]);
-            }
+                ->setUser($this->getReference($employeeData['userReference'], User::class))
+                ->setFirstName($employeeData['firstName'])
+                ->setLastName($employeeData['lastName'])
+                ->setEmail($employeeData['email'])
+                ->setPositionName($employeeData['positionName'])
+                ->setRoleName($employeeData['roleName']);
 
             $manager->persist($employee);
         }
@@ -614,25 +650,6 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
             'content' => $faker->paragraphs(3, true),
             'createdAt' => DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-4 months', 'now'))->format(DATE_ATOM),
         ];
-    }
-
-    /**
-     * @return array<int, User>
-     */
-    private function getCrmUsers(ObjectManager $manager): array
-    {
-        /** @var array<int, User> $users */
-        $users = $manager->getRepository(User::class)->createQueryBuilder('u')
-            ->select('DISTINCT u')
-            ->innerJoin('u.userGroups', 'ug')
-            ->innerJoin('ug.role', 'r')
-            ->where('r.id LIKE :crmPrefix')
-            ->setParameter('crmPrefix', 'ROLE_CRM_%')
-            ->orderBy('u.username', 'ASC')
-            ->getQuery()
-            ->getResult();
-
-        return $users;
     }
 
     private function resolveVolume(): string
