@@ -122,13 +122,12 @@ final readonly class CreateTaskRequestController
 
             $taskRequest->setTask($task);
         }
-        if (is_string($input->repositoryId)) {
+        if (is_string($input->repositoryId) && !empty($input->repositoryId)) {
             $repository = $this->crmProjectRepositoryRepository->findOneScopedById($input->repositoryId, $crm->getId());
-            if ($repository === null) {
-                return $this->errorResponseFactory->notFoundReference('repositoryId');
-            }
 
-            $taskRequest->setRepository($repository);
+            if($repository) {
+                $taskRequest->setRepository($repository);
+            }
         }
 
         if (is_array($input->assigneeIds)) {

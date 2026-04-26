@@ -36,7 +36,7 @@ class ProjectRepository extends BaseRepository
             ->leftJoin('project.company', 'company')
             ->andWhere('project.id = :id')
             ->andWhere('company.crm = :crmId')
-            ->setParameter('id', $id)
+            ->setParameter('id', $id, UuidBinaryOrderedTimeType::NAME)
             ->setParameter('crmId', $crmId, UuidBinaryOrderedTimeType::NAME)
             ->getQuery()
             ->getOneOrNullResult();

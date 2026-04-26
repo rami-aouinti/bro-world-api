@@ -177,15 +177,14 @@ final readonly class CreateSprintController
 
     private function parseDate(?string $value, string $field): DateTimeImmutable|JsonResponse|null
     {
-        if ($value === null) {
+        if ($value === null || trim($value) === '') {
             return null;
         }
 
-        $date = DateTimeImmutable::createFromFormat(DateTimeInterface::ATOM, $value);
-        if ($date === false) {
+        try {
+            return new DateTimeImmutable(trim($value));
+        } catch (\Exception) {
             return $this->errorResponseFactory->invalidDate($field);
         }
-
-        return $date;
     }
 }

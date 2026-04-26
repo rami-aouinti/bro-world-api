@@ -46,7 +46,7 @@ class TaskRequest implements EntityInterface
     private ?Task $task = null;
 
     #[ORM\ManyToOne(targetEntity: CrmRepository::class)]
-    #[ORM\JoinColumn(name: 'repository_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'repository_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     #[Assert\NotNull]
     private ?CrmRepository $repository = null;
 

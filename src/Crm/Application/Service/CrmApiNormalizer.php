@@ -176,8 +176,7 @@ final readonly class CrmApiNormalizer
             'name' => (string)($item['name'] ?? ''),
             'status' => ($item['status'] ?? ''),
             'startDate' => $this->normalizeDateValue($item['startDate'] ?? null),
-            'endDate' => $this->normalizeDateValue($item['endDate'] ?? null),
-            'blogId' => $item['blogId'] ?? null,
+            'endDate' => $this->normalizeDateValue($item['endDate'] ?? null)
         ];
     }
 

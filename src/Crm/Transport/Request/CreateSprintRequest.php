@@ -19,10 +19,8 @@ final class CreateSprintRequest
     #[Assert\Choice(callback: [self::class, 'statusChoices'])]
     public ?string $status = null;
 
-    #[Assert\DateTime]
     public ?string $startDate = null;
 
-    #[Assert\DateTime]
     public ?string $endDate = null;
 
     #[Assert\NotBlank]

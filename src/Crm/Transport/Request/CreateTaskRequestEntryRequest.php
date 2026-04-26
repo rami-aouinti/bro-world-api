@@ -27,8 +27,6 @@ final class CreateTaskRequestEntryRequest
     #[Assert\Uuid]
     public ?string $taskId = null;
 
-    #[Assert\NotBlank]
-    #[Assert\NotNull]
     #[Assert\Uuid]
     public ?string $repositoryId = null;
 
