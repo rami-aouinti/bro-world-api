@@ -128,6 +128,30 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
             ->getSingleScalarResult();
     }
 
+    public function findAllByApplicationSlug(string $applicationSlug, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array
+    {
+        $offset = max(0, ($page - 1) * $limit);
+
+        return $this->applyListFilters($this->createBaseQueryBuilder(), $filters, $esIds)
+            ->andWhere('application.slug = :applicationSlug')
+            ->setParameter('applicationSlug', $applicationSlug)
+            ->orderBy('event.startAt', 'ASC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function countAllByApplicationSlug(string $applicationSlug, array $filters = [], ?array $esIds = null): int
+    {
+        return (int)$this->applyListFilters($this->createCountQueryBuilder(), $filters, $esIds)
+            ->innerJoin('calendar.application', 'application')
+            ->andWhere('application.slug = :applicationSlug')
+            ->setParameter('applicationSlug', $applicationSlug)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function findByApplicationSlugAndUser(string $applicationSlug, User $user, array $filters = [], int $page = 1, int $limit = 20, ?array $esIds = null): array
     {
         $offset = max(0, ($page - 1) * $limit);

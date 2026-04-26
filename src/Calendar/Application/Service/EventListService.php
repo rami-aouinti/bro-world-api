@@ -90,6 +90,18 @@ final readonly class EventListService
     }
 
     /**
+     * @param array<string, string> $filters
+     *
+     * @return array<string, mixed>
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     */
+    public function getByApplicationSlugForOwner(string $applicationSlug, array $filters = [], int $page = 1, int $limit = 20): array
+    {
+        return $this->getList('application_owner', $filters, $page, $limit, null, $applicationSlug);
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     public function getUpcoming(User $user, ?string $applicationSlug = null, int $limit = 3): array
@@ -170,6 +182,9 @@ final readonly class EventListService
             if ($accessContext === 'user') {
                 $events = $this->eventRepository->findByUser($user, $filters, $page, $limit, $esIds, $startAtFrom, $startAtTo);
                 $totalItems = $this->eventRepository->countByUser($user, $filters, $esIds, $startAtFrom, $startAtTo);
+            } elseif ($accessContext === 'application_owner') {
+                $events = $this->eventRepository->findAllByApplicationSlug($applicationSlug, $filters, $page, $limit, $esIds);
+                $totalItems = $this->eventRepository->countAllByApplicationSlug($applicationSlug, $filters, $esIds);
             } elseif ($accessContext === 'application_private') {
                 $events = $this->eventRepository->findByApplicationSlugAndUser($applicationSlug, $user, $filters, $page, $limit, $esIds);
                 $totalItems = $this->eventRepository->countByApplicationSlugAndUser($applicationSlug, $user, $filters, $esIds);

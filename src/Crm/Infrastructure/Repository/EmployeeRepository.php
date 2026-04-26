@@ -79,6 +79,22 @@ class EmployeeRepository extends BaseRepository
         return $users;
     }
 
+    public function existsByApplicationSlugAndUser(string $applicationSlug, User $user): bool
+    {
+        $count = (int)$this->createQueryBuilder('employee')
+            ->select('COUNT(employee.id)')
+            ->innerJoin('employee.crm', 'crm')
+            ->innerJoin('crm.application', 'application')
+            ->andWhere('application.slug = :applicationSlug')
+            ->andWhere('employee.user = :user')
+            ->setParameter('applicationSlug', $applicationSlug)
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $count > 0;
+    }
+
     /**
      * @param array{q?:string,ids?:list<string>|null} $filters
      * @return list<array<string,mixed>>
