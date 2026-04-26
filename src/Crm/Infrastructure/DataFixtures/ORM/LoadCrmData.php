@@ -90,6 +90,39 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
     ];
 
     /**
+     * @var array<int, array{
+     *     name: non-empty-string,
+     *     code: non-empty-string,
+     *     slug: non-empty-string,
+     *     status: ProjectStatus,
+     *     assignees: array<int, non-empty-string>
+     * }>
+     */
+    private const array BASE_PROJECTS = [
+        [
+            'name' => 'Bro World',
+            'code' => 'PRJ-BRO',
+            'slug' => 'bro-world',
+            'status' => ProjectStatus::ACTIVE,
+            'assignees' => ['User-john-root', 'User-john-admin', 'User-john-user'],
+        ],
+        [
+            'name' => 'Shopware World',
+            'code' => 'PRJ-SHOP',
+            'slug' => 'shopware-world',
+            'status' => ProjectStatus::PLANNED,
+            'assignees' => ['User-john-root', 'User-john-admin', 'User-john-api'],
+        ],
+        [
+            'name' => 'Oro World',
+            'code' => 'PRJ-ORO',
+            'slug' => 'oro-world',
+            'status' => ProjectStatus::ON_HOLD,
+            'assignees' => ['User-john-root', 'User-john-user', 'User-john-api'],
+        ],
+    ];
+
+    /**
      * @var array<non-empty-string, array<int, non-empty-string>>
      */
     private const array APPLICATION_KEYS_BY_PLATFORM = [
@@ -355,34 +388,53 @@ final class LoadCrmData extends Fixture implements OrderedFixtureInterface
         int $wikiPageCount,
     ): array {
         $projects = [];
+        $useBaseProjects = $application->getSlug() === 'crm-general-core' && $companyIndex === 0;
+        $effectiveProjectCount = $useBaseProjects ? max($projectCount, count(self::BASE_PROJECTS)) : $projectCount;
 
-        for ($index = 0; $index < $projectCount; $index++) {
+        for ($index = 0; $index < $effectiveProjectCount; $index++) {
             $startedAt = $faker->dateTimeBetween('-3 months', '-2 weeks');
             $dueAt = $faker->dateTimeBetween($startedAt, '+4 months');
             $projectSlug = trim(strtolower((string)preg_replace('/[^a-z0-9]+/i', '-', $faker->words(2, true))), '-');
             if ($projectSlug === '') {
                 $projectSlug = sprintf('project-%d-%d', $companyIndex + 1, $index + 1);
             }
+            $projectName = sprintf('%s - %s', $application->getTitle(), ucfirst($faker->words(3, true)));
+            $projectCode = sprintf('PRJ-%d-%02d', $companyIndex + 1, $index + 1);
+            $projectStatus = $faker->randomElement(ProjectStatus::cases());
+            $projectAssignees = [];
+
+            if ($useBaseProjects && isset(self::BASE_PROJECTS[$index])) {
+                $baseProject = self::BASE_PROJECTS[$index];
+                $projectSlug = $baseProject['slug'];
+                $projectName = $baseProject['name'];
+                $projectCode = $baseProject['code'];
+                $projectStatus = $baseProject['status'];
+                $projectAssignees = $baseProject['assignees'];
+            }
 
             $project = (new Project())
                 ->setCompany($company)
-                ->setName(sprintf('%s - %s', $application->getTitle(), ucfirst($faker->words(3, true))))
-                ->setCode(sprintf('PRJ-%d-%02d', $companyIndex + 1, $index + 1))
+                ->setName($projectName)
+                ->setCode($projectCode)
                 ->setDescription($faker->paragraph(2))
-                ->setStatus($faker->randomElement(ProjectStatus::cases()))
+                ->setStatus($projectStatus)
                 ->setStartedAt(DateTimeImmutable::createFromMutable($startedAt))
                 ->setDueAt(DateTimeImmutable::createFromMutable($dueAt))
                 ->setGithubToken('ghp_john_root_fake_token')
                 ->setGithubRepositories([
                     [
-                        'fullName' => sprintf('rami-aouinti/%s-api', $projectSlug),
+                        'fullName' => sprintf('john-root/%s-api', $projectSlug),
                         'defaultBranch' => 'main',
                     ],
                     [
-                        'fullName' => sprintf('rami-aouinti/%s-web', $projectSlug),
+                        'fullName' => sprintf('john-root/%s-web', $projectSlug),
                         'defaultBranch' => 'develop',
                     ],
                 ]);
+
+            foreach ($projectAssignees as $projectAssigneeReference) {
+                $project->addAssignee($this->getReference($projectAssigneeReference, User::class));
+            }
 
             for ($attachmentIndex = 0; $attachmentIndex < $attachmentCount; $attachmentIndex++) {
                 $project->addAttachment($this->generateAttachment($faker, '/uploads/crm/projects/', $project->getId()));
