@@ -32,6 +32,7 @@ final readonly class ApplicationScopeResolver
             'slug' => $resolvedSlug,
         ]);
 
+
         if (!$application instanceof Application) {
             throw self::createInvalidApplicationSlugException();
         }

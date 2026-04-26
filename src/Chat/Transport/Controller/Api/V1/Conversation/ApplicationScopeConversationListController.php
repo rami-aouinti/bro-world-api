@@ -54,9 +54,8 @@ readonly class ApplicationScopeConversationListController
     #[Route(path: '/v1/chat/private/applications/conversations', methods: [Request::METHOD_GET])]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);
         $chat = $this->chatRepository->findOneBy([
-            'applicationSlug' => $applicationSlug,
+            'applicationSlug' => $request->request->get('applicationSlug'),
         ]);
 
         if ($chat === null) {

@@ -52,9 +52,8 @@ readonly class ApplicationEmployeeAssignedEventListController
     #[Route(path: '/v1/calendar/events/employee-assigned', methods: [Request::METHOD_GET])]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);
 
-        //$this->calendarApplicationAccessService->requireEmployee($applicationSlug, $loggedInUser);
+        $this->calendarApplicationAccessService->requireEmployee($request->request->get('applicationSlug'), $loggedInUser);
 
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
@@ -64,6 +63,6 @@ readonly class ApplicationEmployeeAssignedEventListController
             'location' => trim((string)$request->query->get('location', '')),
         ];
 
-        return new JsonResponse($this->eventListService->getByApplicationSlugAndUser($applicationSlug, $loggedInUser, $filters, $page, $limit));
+        return new JsonResponse($this->eventListService->getByApplicationSlugAndUser($request->request->get('applicationSlug'), $loggedInUser, $filters, $page, $limit));
     }
 }

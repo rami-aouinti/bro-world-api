@@ -37,8 +37,7 @@ readonly class ApplicationConversationListController
 {
     public function __construct(
         private ConversationListService $conversationListService,
-        private ChatApplicationScopeValidator $chatApplicationScopeValidator,
-        private ApplicationScopeResolver $applicationScopeResolver,
+        private ChatApplicationScopeValidator $chatApplicationScopeValidator
     ) {
     }
 
@@ -49,8 +48,7 @@ readonly class ApplicationConversationListController
     #[Route(path: '/v1/chat/chats/{chat}/conversations', methods: [Request::METHOD_GET])]
     public function __invoke(Chat $chat, Request $request): JsonResponse
     {
-        $applicationSlug = $this->applicationScopeResolver->resolveFromRequest($request);
-        $this->chatApplicationScopeValidator->validate($chat->getId(), $applicationSlug);
+        $this->chatApplicationScopeValidator->validate($chat->getId(), $request->request->get('applicationSlug'));
 
         $page = max(1, $request->query->getInt('page', 1));
         $limit = max(1, min(100, $request->query->getInt('limit', 20)));
