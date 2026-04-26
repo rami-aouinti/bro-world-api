@@ -6,6 +6,8 @@ namespace App\Crm\Infrastructure\Repository;
 
 use App\Crm\Domain\Entity\Employee as Entity;
 use App\General\Infrastructure\Repository\BaseRepository;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use Ramsey\Uuid\Doctrine\UuidBinaryOrderedTimeType;
 
@@ -64,7 +66,7 @@ class EmployeeRepository extends BaseRepository
     public function findScopedProjection(string $crmId, int $limit, int $offset, array $filters = []): array
     {
         $qb = $this->createQueryBuilder('employee')
-            ->select('employee.id, employee.firstName, employee.lastName, employee.email, user.id AS userId , employee.positionName, employee.roleName, employee.createdAt, employee.updatedAt, user.photo AS photo')
+            ->select('employee.id, employee.firstName, employee.lastName, employee.email, user.id AS userId , user.firstName AS userFirstName , user.lastName AS userLastName , employee.positionName, employee.roleName, employee.createdAt, employee.updatedAt, user.photo AS photo')
             ->leftJoin('employee.user', 'user')
             ->andWhere('employee.crm = :crmId')
             ->setParameter('crmId', $crmId, UuidBinaryOrderedTimeType::NAME)
@@ -93,7 +95,11 @@ class EmployeeRepository extends BaseRepository
     }
 
     /**
+     * @param string $crmId
      * @param array{q?:string,ids?:list<string>|null} $filters
+     * @return int
+     * @throws NoResultException
+     * @throws NonUniqueResultException
      */
     public function countScopedByCrm(string $crmId, array $filters = []): int
     {
