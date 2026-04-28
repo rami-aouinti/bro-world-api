@@ -850,20 +850,16 @@ GRAPHQL, [
                     'X-GitHub-Api-Version' => '2022-11-28',
                 ],
             ]);
-
             $statusCode = $response->getStatusCode();
             $data = $response->toArray(false);
 
-            if ($statusCode >= 400) {
-                throw $this->mapToCrmException($statusCode, is_array($data) ? $data : []);
-            }
-
-            return [
+            return $statusCode >= 400 ? throw $this->mapToCrmException($statusCode, is_array($data) ? $data : []) : [
                 'data' => is_array($data) ? $data : [],
                 'meta' => [
                     'link' => $response->getHeaders(false)['link'][0] ?? null,
                 ],
             ];
+
         } catch (CrmGithubApiException $exception) {
             throw $exception;
         } catch (ExceptionInterface $exception) {
