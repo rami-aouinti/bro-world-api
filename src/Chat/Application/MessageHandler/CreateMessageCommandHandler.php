@@ -16,8 +16,6 @@ use App\General\Application\Service\MercurePublisher;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Repository\UserRepository;
 use DateTimeImmutable;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler]
@@ -39,14 +37,17 @@ final readonly class CreateMessageCommandHandler
      */
     public function __invoke(CreateMessageCommand $command): string
     {
-        /** @var array{chatId: string, message: ChatMessage} $result */
-        $result = $this->messageRepository->getEntityManager()->getConnection()->transactional(function () use ($command): array {
+        /** @var array{chatId: string, message: ChatMessage}|null $result */
+        $result = $this->messageRepository->getEntityManager()->getConnection()->transactional(function () use ($command): ?array {
             $actor = $this->userRepository->find($command->actorUserId);
             if (!$actor instanceof User) {
-                throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'User not found.');
+                return null;
             }
 
             $conversation = $this->findParticipantConversation($command->conversationId, $actor);
+            if (!$conversation instanceof Conversation) {
+                return null;
+            }
 
             $message = new ChatMessage()
                 ->setConversation($conversation)
@@ -66,6 +67,10 @@ final readonly class CreateMessageCommandHandler
             ];
         });
 
+        if (null === $result) {
+            return '';
+        }
+
         $this->cacheInvalidationService->invalidateConversationCaches($result['chatId'], $command->actorUserId);
 
         $this->mercurePublisher->publish('/conversations/' . $command->conversationId . '/messages', [
@@ -81,15 +86,15 @@ final readonly class CreateMessageCommandHandler
         return $result['message']->getId();
     }
 
-    private function findParticipantConversation(string $conversationId, User $actor): Conversation
+    private function findParticipantConversation(string $conversationId, User $actor): ?Conversation
     {
         $conversation = $this->conversationRepository->find($conversationId);
         if (!$conversation instanceof Conversation) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Conversation not found.');
+            return null;
         }
 
         if (!$this->participantRepository->findOneByConversationAndUser($conversation, $actor) instanceof ConversationParticipant) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Conversation not found.');
+            return null;
         }
 
         return $conversation;

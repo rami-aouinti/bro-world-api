@@ -10,8 +10,6 @@ use App\Chat\Domain\Entity\ConversationParticipant;
 use App\Chat\Infrastructure\Repository\ConversationParticipantRepository;
 use App\Chat\Infrastructure\Repository\ConversationRepository;
 use App\General\Application\Service\CacheInvalidationService;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler]
@@ -26,7 +24,12 @@ final readonly class MarkConversationMessagesAsReadCommandHandler
 
     public function __invoke(MarkConversationMessagesAsReadCommand $command): void
     {
-        [$conversation, $participant] = $this->findParticipantConversation($command->conversationId, $command->actorUserId);
+        $result = $this->findParticipantConversation($command->conversationId, $command->actorUserId);
+        if (null === $result) {
+            return;
+        }
+
+        [$conversation, $participant] = $result;
 
         $participant->setLastReadMessageAt(new \DateTimeImmutable());
         $this->participantRepository->save($participant);
@@ -34,13 +37,13 @@ final readonly class MarkConversationMessagesAsReadCommandHandler
     }
 
     /**
-     * @return array{Conversation, ConversationParticipant}
+     * @return array{Conversation, ConversationParticipant}|null
      */
-    private function findParticipantConversation(string $conversationId, string $actorUserId): array
+    private function findParticipantConversation(string $conversationId, string $actorUserId): ?array
     {
         $conversation = $this->conversationRepository->find($conversationId);
         if (!$conversation instanceof Conversation) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Conversation not found.');
+            return null;
         }
 
         $participant = $this->participantRepository->findOneBy([
@@ -48,7 +51,7 @@ final readonly class MarkConversationMessagesAsReadCommandHandler
             'user' => $actorUserId,
         ]);
         if (!$participant instanceof ConversationParticipant) {
-            throw new HttpException(JsonResponse::HTTP_NOT_FOUND, 'Conversation not found.');
+            return null;
         }
 
         return [$conversation, $participant];
