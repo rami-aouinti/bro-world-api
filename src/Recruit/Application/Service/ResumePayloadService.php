@@ -125,6 +125,10 @@ class ResumePayloadService
         $resume->setInformationHomepage($this->nullableTrimmedString($input['homepage'] ?? null));
         $resume->setInformationRepoProfile($this->nullableTrimmedString($input['repo_profile'] ?? null));
         $resume->setInformationAddress($this->nullableTrimmedString($input['adresse'] ?? null) ?? $profile?->getLocation());
+        $resume->setInformationBirthDate($this->nullableDate($input['birthDate'] ?? null, 'birthDate'));
+        $resume->setInformationBirthPlace($this->nullableTrimmedString($input['birthPlace'] ?? null));
+        $resume->setInformationProfileText($this->nullableTrimmedString($input['profileText'] ?? null));
+        $resume->setInformationTitle($this->nullableTrimmedString($input['title'] ?? null));
     }
 
     /**
@@ -154,6 +158,18 @@ class ResumePayloadService
         }
         if (array_key_exists('adresse', $input)) {
             $resume->setInformationAddress($this->nullableTrimmedString($input['adresse']));
+        }
+        if (array_key_exists('birthDate', $input)) {
+            $resume->setInformationBirthDate($this->nullableDate($input['birthDate'], 'birthDate'));
+        }
+        if (array_key_exists('birthPlace', $input)) {
+            $resume->setInformationBirthPlace($this->nullableTrimmedString($input['birthPlace']));
+        }
+        if (array_key_exists('profileText', $input)) {
+            $resume->setInformationProfileText($this->nullableTrimmedString($input['profileText']));
+        }
+        if (array_key_exists('title', $input)) {
+            $resume->setInformationTitle($this->nullableTrimmedString($input['title']));
         }
     }
 
@@ -220,6 +236,9 @@ class ResumePayloadService
             if ($field === 'projects' && $section instanceof Project) {
                 $section->setAttachments($this->normalizeStringArray($item['attachments'] ?? null, 'attachments'));
                 $section->setHomePage($this->nullableTrimmedString($item['home_page'] ?? null));
+            }
+            if ($field === 'skills' && $section instanceof Skill) {
+                $section->setLevel($this->nullableTrimmedString($item['level'] ?? null));
             }
 
             if ($field === 'educations' && $section instanceof Education) {
