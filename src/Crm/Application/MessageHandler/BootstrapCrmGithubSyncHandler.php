@@ -7,7 +7,11 @@ namespace App\Crm\Application\MessageHandler;
 use App\Crm\Application\Message\BootstrapCrmGithubSync;
 use App\Crm\Application\Service\CrmGithubBootstrapSyncService;
 use App\Crm\Infrastructure\Repository\CrmGithubSyncJobRepository;
+use DateMalformedStringException;
 use DateTimeImmutable;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
+use Doctrine\ORM\TransactionRequiredException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Throwable;
@@ -24,6 +28,13 @@ final readonly class BootstrapCrmGithubSyncHandler
     ) {
     }
 
+    /**
+     * @throws ORMException
+     * @throws OptimisticLockException
+     * @throws DateMalformedStringException
+     * @throws Throwable
+     * @throws TransactionRequiredException
+     */
     public function __invoke(BootstrapCrmGithubSync $message): void
     {
         $job = $this->syncJobRepository->find($message->jobId);
