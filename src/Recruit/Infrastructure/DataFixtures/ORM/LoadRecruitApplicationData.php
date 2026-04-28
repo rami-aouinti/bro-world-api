@@ -219,11 +219,21 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
     private function createApplicantWithResume(User $owner, string $key, string $coverLetter): Applicant
     {
         $resume = (new Resume())->setOwner($owner);
-        $resume
-            ->setInformationFullName($owner->getFirstName() . ' ' . $owner->getLastName())
-            ->setInformationEmail($owner->getEmail())
-            ->setInformationPhone($owner->getProfile()?->getPhone())
-            ->setInformationAddress($owner->getProfile()?->getLocation());
+
+        if ($key === 'john-root') {
+            $resume
+                ->setInformationFullName('Rami Aouinti')
+                ->setInformationEmail('rami.aouinti@gmail.com')
+                ->setInformationPhone('0049 176/35587613')
+                ->setInformationAddress("25.08.1989 in Tunesien\nWiddersdorfer Landstr.11\n50589 Köln Germany");
+        } else {
+            $resume
+                ->setInformationFullName($owner->getFirstName() . ' ' . $owner->getLastName())
+                ->setInformationEmail($owner->getEmail())
+                ->setInformationPhone($owner->getProfile()?->getPhone())
+                ->setInformationAddress($owner->getProfile()?->getLocation());
+        }
+
         $resume
             ->addExperience((new Experience())->setTitle('Senior Developer')->setDescription('8+ ans en développement web et API.')->setCompany('Bro World')->setStartDate(new \DateTimeImmutable('2018-01-01'))->setEndDate(new \DateTimeImmutable('2021-12-31')))
             ->addExperience((new Experience())->setTitle('Lead Projet')->setDescription('Pilotage technique, mentoring et revue de code.')->setCompany('Bro World Labs')->setStartDate(new \DateTimeImmutable('2022-01-01')))
@@ -241,6 +251,27 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
             ->addReference((new ResumeReference())->setTitle('Product Owner')->setDescription('Référence orientée collaboration produit.'))
             ->addHobby((new Hobby())->setTitle('Open source')->setDescription('Contributions régulières sur des libs PHP.'))
             ->addHobby((new Hobby())->setTitle('Course à pied')->setDescription('Discipline et constance en entraînement.'));
+
+        if ($key === 'john-root') {
+            $resume
+                ->addEducation((new Education())->setTitle('Master Telekommunikation und Informationstechnik')->setDescription('Beuth Hoch-schule für Technik, Berlin')->setSchool('Beuth Hoch-schule für Technik, Berlin')->setStartDate(new \DateTimeImmutable('2016-10-01'))->setEndDate(new \DateTimeImmutable('2018-08-31'))->setLocation('Berlin'))
+                ->addEducation((new Education())->setTitle('Ingenieur Computernetzwerke und Telekommunikation')->setDescription('Universität INSAT, Tunis')->setSchool('Universität INSAT, Tunis')->setStartDate(new \DateTimeImmutable('2008-09-01'))->setEndDate(new \DateTimeImmutable('2013-01-31'))->setLocation('Tunis'))
+                ->addExperience((new Experience())->setTitle('Backend Developer')->setDescription('Entwicklung anspruchsvoller Backend-Lösungen mit Symfony 6, RESTful APIs und Microservices.')->setCompany('TKDeutschland GmbH')->setStartDate(new \DateTimeImmutable('2024-02-01')))
+                ->addExperience((new Experience())->setTitle('Senior Full Stack Entwickler E-Commerce und Web-Applikationen')->setDescription('Analyse und technische Umsetzung funktionaler Anforderungen, API-Integrationen und Performance-Optimierung.')->setCompany('Hinke GmbH')->setStartDate(new \DateTimeImmutable('2021-11-01'))->setEndDate(new \DateTimeImmutable('2024-01-31')))
+                ->addExperience((new Experience())->setTitle('Junior Full Stack Web Entwickler E-Commerce')->setDescription('Entwicklung komplexer E-Commerce-Lösungen, RESTful APIs und Frontend-Funktionen mit Vue.js.')->setCompany('Wizmo GmbH')->setStartDate(new \DateTimeImmutable('2018-08-01'))->setEndDate(new \DateTimeImmutable('2021-04-30')))
+                ->addLanguage((new Language())->setTitle('Deutsch')->setDescription('fließend')->setLevel('c1'))
+                ->addLanguage((new Language())->setTitle('Englisch')->setDescription('fließend')->setLevel('c1'))
+                ->addLanguage((new Language())->setTitle('Französisch')->setDescription('Muttersprache')->setLevel('native'))
+                ->addSkill((new Skill())->setTitle('PHP 8')->setDescription('Backend-Entwicklung'))
+                ->addSkill((new Skill())->setTitle('JavaScript, jQuery, TypeScript')->setDescription('Webentwicklung und Frontend-Integration'))
+                ->addSkill((new Skill())->setTitle('Vue.js, Vuetify 3')->setDescription('Frontend-Frameworks'))
+                ->addSkill((new Skill())->setTitle('HTML5, XML, CSS3')->setDescription('Frontend-Basics und Markup'))
+                ->addSkill((new Skill())->setTitle('Symfony 6')->setDescription('Framework'))
+                ->addSkill((new Skill())->setTitle('Laravel 6 & 8')->setDescription('Framework'))
+                ->addSkill((new Skill())->setTitle('ZendFramework 2')->setDescription('Framework'))
+                ->addSkill((new Skill())->setTitle('Oxid eSales Shop 6, Shopware 5.6 & 6, Drupal, Typo3, WordPress')->setDescription('CMS'))
+                ->addSkill((new Skill())->setTitle('SQL, DQL, MongoDB, Redis')->setDescription('Database'));
+        }
 
         $applicant = (new Applicant())
             ->setUser($owner)
