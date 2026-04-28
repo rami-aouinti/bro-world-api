@@ -55,6 +55,15 @@ class Resume implements EntityInterface
     #[ORM\Column(name: 'information_address', type: 'string', length: 255, nullable: true)]
     private ?string $informationAddress = null;
 
+    #[ORM\Column(name: 'information_birth_date', type: 'date_immutable', nullable: true)]
+    private ?\DateTimeImmutable $informationBirthDate = null;
+
+    #[ORM\Column(name: 'information_birth_place', type: 'string', length: 255, nullable: true)]
+    private ?string $informationBirthPlace = null;
+
+    #[ORM\Column(name: 'information_profile_text', type: 'text', nullable: true)]
+    private ?string $informationProfileText = null;
+
     /** @var Collection<int, Experience>|ArrayCollection<int, Experience> */
     #[ORM\OneToMany(targetEntity: Experience::class, mappedBy: 'resume', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection|ArrayCollection $experiences;
@@ -186,6 +195,36 @@ class Resume implements EntityInterface
     public function setInformationAddress(?string $informationAddress): self
     {
         $this->informationAddress = $informationAddress;
+
+        return $this;
+    }
+    public function getInformationBirthDate(): ?\DateTimeImmutable
+    {
+        return $this->informationBirthDate;
+    }
+    public function setInformationBirthDate(?\DateTimeImmutable $informationBirthDate): self
+    {
+        $this->informationBirthDate = $informationBirthDate;
+
+        return $this;
+    }
+    public function getInformationBirthPlace(): ?string
+    {
+        return $this->informationBirthPlace;
+    }
+    public function setInformationBirthPlace(?string $informationBirthPlace): self
+    {
+        $this->informationBirthPlace = $informationBirthPlace;
+
+        return $this;
+    }
+    public function getInformationProfileText(): ?string
+    {
+        return $this->informationProfileText;
+    }
+    public function setInformationProfileText(?string $informationProfileText): self
+    {
+        $this->informationProfileText = $informationProfileText;
 
         return $this;
     }

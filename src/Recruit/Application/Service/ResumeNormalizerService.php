@@ -10,6 +10,7 @@ use App\Recruit\Domain\Entity\Experience;
 use App\Recruit\Domain\Entity\Language;
 use App\Recruit\Domain\Entity\Project;
 use App\Recruit\Domain\Entity\Resume;
+use App\Recruit\Domain\Entity\Skill;
 
 class ResumeNormalizerService
 {
@@ -38,6 +39,9 @@ class ResumeNormalizerService
                 'homepage' => $resume->getInformationHomepage(),
                 'repo_profile' => $resume->getInformationRepoProfile(),
                 'adresse' => $resume->getInformationAddress(),
+                'birthDate' => $resume->getInformationBirthDate()?->format('Y-m-d'),
+                'birthPlace' => $resume->getInformationBirthPlace(),
+                'profileText' => $resume->getInformationProfileText(),
             ],
             'experiences' => $this->normalizeSections($resume->getExperiences()->toArray()),
             'educations' => $this->normalizeSections($resume->getEducations()->toArray()),
@@ -65,6 +69,9 @@ class ResumeNormalizerService
             ];
 
             if ($section instanceof Language) {
+                $payload['level'] = $section->getLevel();
+            }
+            if ($section instanceof Skill) {
                 $payload['level'] = $section->getLevel();
             }
 
