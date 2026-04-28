@@ -39,6 +39,9 @@ class Skill implements EntityInterface
     ])]
     private string $description = '';
 
+    #[ORM\Column(name: 'level', type: Types::STRING, length: 10, nullable: true)]
+    private ?string $level = null;
+
     public function __construct()
     {
         $this->id = $this->createUuid();
@@ -76,6 +79,16 @@ class Skill implements EntityInterface
     public function setDescription(string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+    public function getLevel(): ?string
+    {
+        return $this->level;
+    }
+    public function setLevel(?string $level): self
+    {
+        $this->level = $level;
 
         return $this;
     }

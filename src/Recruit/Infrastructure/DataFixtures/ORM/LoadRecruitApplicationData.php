@@ -225,7 +225,12 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
                 ->setInformationFullName('Rami Aouinti')
                 ->setInformationEmail('rami.aouinti@gmail.com')
                 ->setInformationPhone('0049 176/35587613')
-                ->setInformationAddress("25.08.1989 in Tunesien\nWiddersdorfer Landstr.11\n50589 Köln Germany");
+                ->setInformationHomepage('https://www.ramy-aouinti.com')
+                ->setInformationRepoProfile('https://github.com/rami-aouinti')
+                ->setInformationAddress("Widdersdorfer Landstr.11\n50589 Köln Germany")
+                ->setInformationBirthDate(new \DateTimeImmutable('1989-08-25'))
+                ->setInformationBirthPlace('Tunesien')
+                ->setInformationProfileText("Softwareentwickler mit Schwerpunkt PHP/Web und Symfony, spezialisiert auf die Entwicklung robuster, skalierbarer und wartbarer Webanwendungen.\nIch arbeite hauptsächlich an der Erstellung von APIs, Backend-Architekturen, Service-Integrationen und Performance-Optimierung.\nStrukturiert, selbstständig und qualitätsorientiert entwickle ich zuverlässige Lösungen, die auf fachliche Anforderungen zugeschnitten sind.");
         } else {
             $resume
                 ->setInformationFullName($owner->getFirstName() . ' ' . $owner->getLastName())
@@ -262,15 +267,16 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
                 ->addLanguage((new Language())->setTitle('Deutsch')->setDescription('fließend')->setLevel('c1'))
                 ->addLanguage((new Language())->setTitle('Englisch')->setDescription('fließend')->setLevel('c1'))
                 ->addLanguage((new Language())->setTitle('Französisch')->setDescription('Muttersprache')->setLevel('native'))
-                ->addSkill((new Skill())->setTitle('PHP 8')->setDescription('Backend-Entwicklung'))
-                ->addSkill((new Skill())->setTitle('JavaScript, jQuery, TypeScript')->setDescription('Webentwicklung und Frontend-Integration'))
-                ->addSkill((new Skill())->setTitle('Vue.js, Vuetify 3')->setDescription('Frontend-Frameworks'))
-                ->addSkill((new Skill())->setTitle('HTML5, XML, CSS3')->setDescription('Frontend-Basics und Markup'))
-                ->addSkill((new Skill())->setTitle('Symfony 6')->setDescription('Framework'))
-                ->addSkill((new Skill())->setTitle('Laravel 6 & 8')->setDescription('Framework'))
-                ->addSkill((new Skill())->setTitle('ZendFramework 2')->setDescription('Framework'))
-                ->addSkill((new Skill())->setTitle('Oxid eSales Shop 6, Shopware 5.6 & 6, Drupal, Typo3, WordPress')->setDescription('CMS'))
-                ->addSkill((new Skill())->setTitle('SQL, DQL, MongoDB, Redis')->setDescription('Database'));
+                ->addSkill((new Skill())->setTitle('PHP 8')->setDescription('Backend-Entwicklung')->setLevel('5/5'))
+                ->addSkill((new Skill())->setTitle('JavaScript, jQuery, TypeScript')->setDescription('Webentwicklung und Frontend-Integration')->setLevel('4/5'))
+                ->addSkill((new Skill())->setTitle('Vue.js, Vuetify 3')->setDescription('Frontend-Frameworks')->setLevel('4/5'))
+                ->addSkill((new Skill())->setTitle('HTML5, XML, CSS3')->setDescription('Frontend-Basics und Markup')->setLevel('5/5'))
+                ->addSkill((new Skill())->setTitle('Symfony 6')->setDescription('Framework')->setLevel('5/5'))
+                ->addSkill((new Skill())->setTitle('Laravel 6 & 8')->setDescription('Framework')->setLevel('4/5'))
+                ->addSkill((new Skill())->setTitle('ZendFramework 2')->setDescription('Framework')->setLevel('4/5'))
+                ->addSkill((new Skill())->setTitle('Oxid eSales Shop 6, Shopware 5.6 & 6, Drupal, Typo3, WordPress')->setDescription('CMS')->setLevel('4/5'))
+                ->addSkill((new Skill())->setTitle('SQL, DQL, MongoDB, Redis')->setDescription('Database')->setLevel('5/5'))
+                ->addProject((new Project())->setTitle('Bro World Space')->setDescription('Community and collaboration platform project.')->setHomePage('https://github.com/rami-aouinti/bro-world-api')->setAttachments(['https://bro-world.org/img/social-bro-world.png']));
         }
 
         $applicant = (new Applicant())
