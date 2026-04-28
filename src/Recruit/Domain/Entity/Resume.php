@@ -64,6 +64,9 @@ class Resume implements EntityInterface
     #[ORM\Column(name: 'information_profile_text', type: 'text', nullable: true)]
     private ?string $informationProfileText = null;
 
+    #[ORM\Column(name: 'information_title', type: 'string', length: 255, nullable: true)]
+    private ?string $informationTitle = null;
+
     /** @var Collection<int, Experience>|ArrayCollection<int, Experience> */
     #[ORM\OneToMany(targetEntity: Experience::class, mappedBy: 'resume', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection|ArrayCollection $experiences;
@@ -225,6 +228,16 @@ class Resume implements EntityInterface
     public function setInformationProfileText(?string $informationProfileText): self
     {
         $this->informationProfileText = $informationProfileText;
+
+        return $this;
+    }
+    public function getInformationTitle(): ?string
+    {
+        return $this->informationTitle;
+    }
+    public function setInformationTitle(?string $informationTitle): self
+    {
+        $this->informationTitle = $informationTitle;
 
         return $this;
     }

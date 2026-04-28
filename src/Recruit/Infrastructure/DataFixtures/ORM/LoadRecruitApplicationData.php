@@ -227,10 +227,11 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
                 ->setInformationPhone('0049 176/35587613')
                 ->setInformationHomepage('https://www.ramy-aouinti.com')
                 ->setInformationRepoProfile('https://github.com/rami-aouinti')
-                ->setInformationAddress("Widdersdorfer Landstr.11\n50589 Köln Germany")
+                ->setInformationAddress('50589 Köln Germany')
                 ->setInformationBirthDate(new \DateTimeImmutable('1989-08-25'))
                 ->setInformationBirthPlace('Tunesien')
-                ->setInformationProfileText("Softwareentwickler mit Schwerpunkt PHP/Web und Symfony, spezialisiert auf die Entwicklung robuster, skalierbarer und wartbarer Webanwendungen.\nIch arbeite hauptsächlich an der Erstellung von APIs, Backend-Architekturen, Service-Integrationen und Performance-Optimierung.\nStrukturiert, selbstständig und qualitätsorientiert entwickle ich zuverlässige Lösungen, die auf fachliche Anforderungen zugeschnitten sind.");
+                ->setInformationProfileText("Softwareentwickler mit Schwerpunkt PHP/Web und Symfony, spezialisiert auf die Entwicklung robuster, skalierbarer und wartbarer Webanwendungen.\nIch arbeite hauptsächlich an der Erstellung von APIs, Backend-Architekturen, Service-Integrationen und Performance-Optimierung.\nStrukturiert, selbstständig und qualitätsorientiert entwickle ich zuverlässige Lösungen, die auf fachliche Anforderungen zugeschnitten sind.")
+                ->setInformationTitle('Software Entwickler');
         } else {
             $resume
                 ->setInformationFullName($owner->getFirstName() . ' ' . $owner->getLastName())

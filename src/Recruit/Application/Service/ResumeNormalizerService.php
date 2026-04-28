@@ -42,6 +42,7 @@ class ResumeNormalizerService
                 'birthDate' => $resume->getInformationBirthDate()?->format('Y-m-d'),
                 'birthPlace' => $resume->getInformationBirthPlace(),
                 'profileText' => $resume->getInformationProfileText(),
+                'title' => $resume->getInformationTitle(),
             ],
             'experiences' => $this->normalizeSections($resume->getExperiences()->toArray()),
             'educations' => $this->normalizeSections($resume->getEducations()->toArray()),

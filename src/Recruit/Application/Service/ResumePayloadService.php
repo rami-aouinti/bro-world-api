@@ -128,6 +128,7 @@ class ResumePayloadService
         $resume->setInformationBirthDate($this->nullableDate($input['birthDate'] ?? null, 'birthDate'));
         $resume->setInformationBirthPlace($this->nullableTrimmedString($input['birthPlace'] ?? null));
         $resume->setInformationProfileText($this->nullableTrimmedString($input['profileText'] ?? null));
+        $resume->setInformationTitle($this->nullableTrimmedString($input['title'] ?? null));
     }
 
     /**
@@ -166,6 +167,9 @@ class ResumePayloadService
         }
         if (array_key_exists('profileText', $input)) {
             $resume->setInformationProfileText($this->nullableTrimmedString($input['profileText']));
+        }
+        if (array_key_exists('title', $input)) {
+            $resume->setInformationTitle($this->nullableTrimmedString($input['title']));
         }
     }
 
