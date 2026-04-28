@@ -30,6 +30,7 @@ use function trim;
 
 class ResumePayloadService
 {
+    private const string INTERESTS_FIELD = 'interests';
     /**
      * @var list<string>
      */
@@ -89,10 +90,15 @@ class ResumePayloadService
                 $payload[$field] = $decoded;
             }
 
+            $this->mapInterestsAlias($payload);
+
             return $payload;
         }
 
-        return $request->toArray();
+        $payload = $request->toArray();
+        $this->mapInterestsAlias($payload);
+
+        return $payload;
     }
 
     /**
@@ -206,9 +212,7 @@ class ResumePayloadService
     private function appendSections(Resume $resume, string $field, array $input): void
     {
         foreach ($input as $index => $item) {
-            if (!is_array($item)) {
-                throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Section at index ' . $index . ' must be an object.');
-            }
+            $item = $this->normalizeSectionItem($field, $item, $index);
 
             $title = $item['title'] ?? null;
             $description = $item['description'] ?? '';
@@ -256,6 +260,55 @@ class ResumePayloadService
 
             $this->addSection($resume, $field, $section);
         }
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function mapInterestsAlias(array &$payload): void
+    {
+        if (array_key_exists('hobbies', $payload)) {
+            return;
+        }
+
+        if (array_key_exists(self::INTERESTS_FIELD, $payload)) {
+            $payload['hobbies'] = $payload[self::INTERESTS_FIELD];
+        }
+    }
+
+    /**
+     * @param mixed $item
+     * @return array<string, mixed>
+     */
+    private function normalizeSectionItem(string $field, mixed $item, int $index): array
+    {
+        if ($field === 'languages') {
+            if (is_string($item)) {
+                return ['title' => $item, 'description' => '', 'level' => null];
+            }
+
+            if (is_array($item) && is_string($item['name'] ?? null) && !array_key_exists('title', $item)) {
+                return [
+                    'title' => $item['name'],
+                    'description' => '',
+                    'level' => $item['level'] ?? null,
+                ];
+            }
+        }
+
+        if ($field === 'skills' && is_string($item)) {
+            return ['title' => $item, 'description' => '', 'level' => null];
+        }
+
+        if ($field === 'hobbies' && is_string($item)) {
+            return ['title' => $item, 'description' => ''];
+        }
+
+        if (!is_array($item)) {
+            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Section at index ' . $index . ' must be an object.');
+        }
+
+        return $item;
     }
 
     private function clearSections(Resume $resume, string $field): void

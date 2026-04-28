@@ -29,6 +29,8 @@ class ResumeNormalizerService
      */
     public function normalize(Resume $resume): array
     {
+        $hobbies = $this->normalizeSections($resume->getHobbies()->toArray());
+
         return [
             'id' => $resume->getId(),
             'documentUrl' => $resume->getDocumentUrl(),
@@ -51,7 +53,8 @@ class ResumeNormalizerService
             'certifications' => $this->normalizeSections($resume->getCertifications()->toArray()),
             'projects' => $this->normalizeSections($resume->getProjects()->toArray()),
             'references' => $this->normalizeSections($resume->getReferences()->toArray()),
-            'hobbies' => $this->normalizeSections($resume->getHobbies()->toArray()),
+            'hobbies' => $hobbies,
+            'interests' => $hobbies,
         ];
     }
 
