@@ -47,12 +47,50 @@ class ResumeNormalizerService
             'experiences' => $this->normalizeSections($resume->getExperiences()->toArray()),
             'educations' => $this->normalizeSections($resume->getEducations()->toArray()),
             'skills' => $this->normalizeSections($resume->getSkills()->toArray()),
-            'languages' => $this->normalizeSections($resume->getLanguages()->toArray()),
+            'languages' => $this->normalizeLanguages($resume->getLanguages()->toArray()),
             'certifications' => $this->normalizeSections($resume->getCertifications()->toArray()),
             'projects' => $this->normalizeSections($resume->getProjects()->toArray()),
             'references' => $this->normalizeSections($resume->getReferences()->toArray()),
             'hobbies' => $this->normalizeSections($resume->getHobbies()->toArray()),
         ];
+    }
+
+
+    /**
+     * @param array<int, Language> $languages
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    private function normalizeLanguages(array $languages): array
+    {
+        return array_map(function (Language $language): array {
+            $countryCode = strtoupper(trim($language->getDescription()));
+            if ($countryCode === '') {
+                $countryCode = null;
+            }
+
+            return [
+                'name' => $language->getTitle(),
+                'countryCode' => $countryCode,
+                'flag' => $this->countryCodeToFlag($countryCode),
+            ];
+        }, $languages);
+    }
+
+    private function countryCodeToFlag(?string $countryCode): ?string
+    {
+        if ($countryCode === null || strlen($countryCode) !== 2) {
+            return null;
+        }
+
+        $first = ord($countryCode[0]);
+        $second = ord($countryCode[1]);
+
+        if ($first < 65 || $first > 90 || $second < 65 || $second > 90) {
+            return null;
+        }
+
+        return mb_chr(0x1F1E6 + ($first - 65), 'UTF-8') . mb_chr(0x1F1E6 + ($second - 65), 'UTF-8');
     }
 
     /**
