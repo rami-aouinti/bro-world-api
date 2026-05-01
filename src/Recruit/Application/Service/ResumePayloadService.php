@@ -129,6 +129,7 @@ class ResumePayloadService
         $resume->setInformationBirthPlace($this->nullableTrimmedString($input['birthPlace'] ?? null));
         $resume->setInformationProfileText($this->nullableTrimmedString($input['profileText'] ?? null));
         $resume->setInformationTitle($this->nullableTrimmedString($input['title'] ?? null));
+        $resume->setInformationPhoto($this->nullableTrimmedString($input['photo'] ?? null));
     }
 
     /**
@@ -171,6 +172,9 @@ class ResumePayloadService
         if (array_key_exists('title', $input)) {
             $resume->setInformationTitle($this->nullableTrimmedString($input['title']));
         }
+        if (array_key_exists('photo', $input)) {
+            $resume->setInformationPhoto($this->nullableTrimmedString($input['photo']));
+        }
     }
 
     /**
@@ -212,6 +216,15 @@ class ResumePayloadService
 
             $title = $item['title'] ?? null;
             $description = $item['description'] ?? '';
+            if ($field === 'skills' && $title === null) {
+                $title = $item['name'] ?? null;
+            }
+            if ($field === 'languages' && $title === null) {
+                $title = $item['name'] ?? null;
+            }
+            if ($field === 'languages' && ($item['description'] ?? null) === null && is_string($item['countryCode'] ?? null)) {
+                $description = $item['countryCode'];
+            }
 
             if (!is_string($title) || trim($title) === '') {
                 throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "title" must be a non-empty string.');
