@@ -43,10 +43,11 @@ class ResumeNormalizerService
                 'birthPlace' => $resume->getInformationBirthPlace(),
                 'profileText' => $resume->getInformationProfileText(),
                 'title' => $resume->getInformationTitle(),
+                'photo' => $resume->getInformationPhoto(),
             ],
             'experiences' => $this->normalizeSections($resume->getExperiences()->toArray()),
             'educations' => $this->normalizeSections($resume->getEducations()->toArray()),
-            'skills' => $this->normalizeSections($resume->getSkills()->toArray()),
+            'skills' => $this->normalizeSkills($resume->getSkills()->toArray()),
             'languages' => $this->normalizeLanguages($resume->getLanguages()->toArray()),
             'certifications' => $this->normalizeSections($resume->getCertifications()->toArray()),
             'projects' => $this->normalizeSections($resume->getProjects()->toArray()),
@@ -59,7 +60,7 @@ class ResumeNormalizerService
     /**
      * @param array<int, Language> $languages
      *
-     * @return array<int, array<string, string|null>>
+     * @return array<int, array{name: string, level: int, countryCode: string|null, flag: string|null}>
      */
     private function normalizeLanguages(array $languages): array
     {
@@ -71,10 +72,54 @@ class ResumeNormalizerService
 
             return [
                 'name' => $language->getTitle(),
+                'level' => $this->normalizeLevelToPercent($language->getLevel()),
                 'countryCode' => $countryCode,
                 'flag' => $this->countryCodeToFlag($countryCode),
             ];
         }, $languages);
+    }
+
+    /**
+     * @param array<int, Skill> $skills
+     *
+     * @return array<int, array{name: string, level: int}>
+     */
+    private function normalizeSkills(array $skills): array
+    {
+        return array_map(
+            fn (Skill $skill): array => [
+                'name' => $skill->getTitle(),
+                'level' => $this->normalizeLevelToPercent($skill->getLevel()),
+            ],
+            $skills,
+        );
+    }
+
+    private function normalizeLevelToPercent(?string $level): int
+    {
+        if ($level === null) {
+            return 100;
+        }
+
+        if (preg_match('/^(\\d{1,3})\\/(\\d{1,3})$/', $level, $matches) === 1) {
+            $value = (int) $matches[1];
+            $max = max(1, (int) $matches[2]);
+
+            return (int) max(0, min(100, round(($value / $max) * 100)));
+        }
+
+        if (preg_match('/^\\d{1,3}$/', $level) === 1) {
+            return (int) max(0, min(100, (int) $level));
+        }
+
+        return match (strtolower(trim($level))) {
+            'native', 'natif', 'muttersprache' => 100,
+            'c2', 'c1', 'fließend', 'fliessend', 'fluent' => 90,
+            'b2', 'professionnel', 'professional' => 80,
+            'b1', 'intermediate' => 60,
+            'a2', 'a1', 'basic' => 40,
+            default => 100,
+        };
     }
 
     private function countryCodeToFlag(?string $countryCode): ?string
