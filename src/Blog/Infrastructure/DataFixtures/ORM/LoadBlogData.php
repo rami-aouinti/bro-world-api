@@ -90,12 +90,7 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
                     ->setTitle($postData['title'] ?? sprintf('Post fixture %d', $postIndex))
                     ->setSlug($postData['slug'] ?? sprintf('fixture-%d-%d-root', $blogIndex + 1, $postIndex))
                     ->setContent($postData !== []
-                        ? sprintf(
-                            "Description:\n%s\n\nMeta Title: %s\nMeta Description: %s",
-                            $postData['description'],
-                            $postData['metaTitle'],
-                            $postData['metaDescription'],
-                        )
+                        ? $this->buildPostContent($postData)
                         : sprintf('Fixture post %d for %s', $postIndex, $blog->getTitle()))
                     ->setIsPinned($postIndex === 1);
 
@@ -243,6 +238,66 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
                 'description' => 'The Shop page delivers an intuitive e-commerce journey inside the platform. With product categories, detailed listings, filters, and featured items, users can browse efficiently and make informed decisions. The experience is optimized for clarity, speed, and conversion from discovery to checkout.',
                 'metaTitle' => 'Bro World Shop | Product Discovery & Seamless Checkout',
                 'metaDescription' => 'Browse the Bro World Shop for a smooth e-commerce experience with product categories, filters, detailed listings, and a fast purchase flow.',
+                'translations' => [
+                    'en' => [
+                        'title' => 'World Shop Module',
+                        'description' => 'The /world/shop page presents the Shop module exactly like CRM, Job, and Learning pages: a clear module overview, key capabilities, and a direct path to action.',
+                        'metaTitle' => 'Bro World Shop | Module Overview',
+                        'metaDescription' => 'Explore the /world/shop page to understand the Shop module, checkout flow, and product discovery experience.',
+                    ],
+                    'ru' => [
+                        'title' => 'Модуль World Shop',
+                        'description' => 'Страница /world/shop представляет модуль Shop по тому же принципу, что CRM, Job и Learning: обзор модуля, ключевые возможности и быстрый переход к действиям.',
+                        'metaTitle' => 'Bro World Shop | Обзор модуля',
+                        'metaDescription' => 'Откройте страницу /world/shop, чтобы понять модуль Shop, процесс покупки и удобный просмотр товаров.',
+                    ],
+                    'ua' => [
+                        'title' => 'Модуль World Shop',
+                        'description' => 'Сторінка /world/shop описує модуль Shop за тим самим принципом, що CRM, Job і Learning: огляд модуля, ключові можливості та швидкий перехід до дій.',
+                        'metaTitle' => 'Bro World Shop | Огляд модуля',
+                        'metaDescription' => 'Перегляньте сторінку /world/shop, щоб зрозуміти модуль Shop, процес оформлення замовлення та пошук товарів.',
+                    ],
+                    'fi' => [
+                        'title' => 'World Shop -moduuli',
+                        'description' => '/world/shop-sivu kuvaa Shop-moduulin samalla periaatteella kuin CRM-, Job- ja Learning-sivut: moduulin yleiskuva, tärkeimmät ominaisuudet ja suora toimintopolku.',
+                        'metaTitle' => 'Bro World Shop | Moduulin yleiskuva',
+                        'metaDescription' => 'Tutustu /world/shop-sivuun ja ymmärrä Shop-moduuli, ostopolku ja tuotteiden selailukokemus.',
+                    ],
+                ],
+                'mediaUrls' => ['https://bro-world.org/uploads/blog/general/blog4.png'],
+            ],
+            [
+                'title' => 'Products Catalog: Explore Every Product in One Place',
+                'slug' => 'products',
+                'description' => 'The Products page centralizes the full catalog so users can view all available products in a single, structured grid. It supports discovery with filters, category grouping, and clear product cards to speed up comparison and selection.',
+                'metaTitle' => 'Bro World Products | Full Product Catalog',
+                'metaDescription' => 'View all products in Bro World from a dedicated page with catalog filters, category navigation, and actionable product details.',
+                'translations' => [
+                    'en' => [
+                        'title' => 'Products Catalog',
+                        'description' => 'The /world/products page displays all products in one place with filters and category navigation for fast discovery.',
+                        'metaTitle' => 'Bro World Products | All Products',
+                        'metaDescription' => 'Browse /world/products to access the complete catalog and compare items quickly.',
+                    ],
+                    'ru' => [
+                        'title' => 'Каталог товаров',
+                        'description' => 'Страница /world/products показывает все товары в одном месте с фильтрами и навигацией по категориям для быстрого поиска.',
+                        'metaTitle' => 'Bro World Products | Все товары',
+                        'metaDescription' => 'Откройте /world/products, чтобы просмотреть полный каталог и быстро сравнить позиции.',
+                    ],
+                    'ua' => [
+                        'title' => 'Каталог товарів',
+                        'description' => 'Сторінка /world/products показує всі товари в одному місці з фільтрами та навігацією за категоріями для швидкого пошуку.',
+                        'metaTitle' => 'Bro World Products | Усі товари',
+                        'metaDescription' => 'Перейдіть на /world/products, щоб переглянути повний каталог і швидко порівняти позиції.',
+                    ],
+                    'fi' => [
+                        'title' => 'Tuotekatalogi',
+                        'description' => '/world/products-sivu näyttää kaikki tuotteet yhdessä näkymässä suodattimilla ja kategorianavigoinnilla nopeaa hakua varten.',
+                        'metaTitle' => 'Bro World Products | Kaikki tuotteet',
+                        'metaDescription' => 'Avaa /world/products ja selaa koko katalogia sekä vertaile tuotteita nopeasti.',
+                    ],
+                ],
                 'mediaUrls' => ['https://bro-world.org/uploads/blog/general/blog4.png'],
             ],
             [
@@ -285,5 +340,44 @@ final class LoadBlogData extends Fixture implements OrderedFixtureInterface
                 ],
             ],
         ];
+    }
+
+    /**
+     * @param array{
+     *     title: string,
+     *     slug: string,
+     *     description: string,
+     *     metaTitle: string,
+     *     metaDescription: string,
+     *     mediaUrls: list<string>,
+     *     translations?: array<string, array{title: string, description: string, metaTitle: string, metaDescription: string}>
+     * } $postData
+     */
+    private function buildPostContent(array $postData): string
+    {
+        $content = sprintf(
+            "Description:\n%s\n\nMeta Title: %s\nMeta Description: %s",
+            $postData['description'],
+            $postData['metaTitle'],
+            $postData['metaDescription'],
+        );
+
+        if (!array_key_exists('translations', $postData) || !is_array($postData['translations'])) {
+            return $content;
+        }
+
+        $translatedBlocks = [];
+        foreach ($postData['translations'] as $locale => $translated) {
+            $translatedBlocks[] = sprintf(
+                "[%s]\nTitle: %s\nDescription: %s\nMeta Title: %s\nMeta Description: %s",
+                $locale,
+                $translated['title'],
+                $translated['description'],
+                $translated['metaTitle'],
+                $translated['metaDescription'],
+            );
+        }
+
+        return $content . "\n\nTranslations:\n" . implode("\n\n", $translatedBlocks);
     }
 }
