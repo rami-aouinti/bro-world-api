@@ -49,6 +49,7 @@ readonly class ResumeCreateController
                         new OA\Property(property: 'projects', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
                         new OA\Property(property: 'references', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
                         new OA\Property(property: 'hobbies', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
+                        new OA\Property(property: 'templateId', type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440100'),
                     ],
                     type: 'object',
                     example: [
@@ -76,6 +77,7 @@ readonly class ResumeCreateController
                         new OA\Property(property: 'projects', description: 'JSON stringifié', type: 'string'),
                         new OA\Property(property: 'references', description: 'JSON stringifié', type: 'string'),
                         new OA\Property(property: 'hobbies', description: 'JSON stringifié', type: 'string'),
+                        new OA\Property(property: 'templateId', description: 'UUID d’un template de type resume.', type: 'string', format: 'uuid'),
                     ],
                     type: 'object',
                 ),
