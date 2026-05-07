@@ -114,29 +114,16 @@ readonly class ResumeAiParsingService
             throw new HttpException(Response::HTTP_BAD_REQUEST, 'Invalid resume payload for matching.');
         }
 
-        $raw = $this->generateTextResponse($this->buildOfferResumeMatchPrompt($normalizedOffer, $resumeJson));
-        $normalizedRaw = $this->stripCodeFence($raw);
-
-        try {
-            /** @var array<string, mixed> $decoded */
-            $decoded = json_decode($normalizedRaw, true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException) {
-            return [
-                'percentage' => 0,
-                'note' => 'Unable to compute match from AI response.',
-            ];
-        }
-
-        $percentage = (int) ($decoded['percentage'] ?? 0);
-        if ($percentage < 0) {
-            $percentage = 0;
-        } elseif ($percentage > 100) {
-            $percentage = 100;
+        $percentage = $this->computeKeywordMatchPercentage($normalizedOffer, $resumeData);
+        $raw = $this->generateTextResponse($this->buildOfferResumeMatchPrompt($normalizedOffer, $resumeJson, $percentage));
+        $note = trim($this->stripCodeFence($raw));
+        if ($note === '') {
+            $note = 'Correspondance estimée à ' . $percentage . '% sur la base des compétences, expériences et études du CV par rapport à l’offre.';
         }
 
         return [
             'percentage' => $percentage,
-            'note' => trim((string) ($decoded['note'] ?? 'No details returned by AI.')),
+            'note' => $note,
         ];
     }
 
@@ -499,28 +486,89 @@ PROMPT
             . "\n" . $inputText;
     }
 
-    private function buildOfferResumeMatchPrompt(string $offerText, string $resumeJson): string
+    private function buildOfferResumeMatchPrompt(string $offerText, string $resumeJson, int $percentage): string
     {
         return <<<'PROMPT'
 You are an expert recruiter.
 
-Evaluate the fit between:
+Explain in FRENCH the fit between:
 1) a job offer text
-2) a candidate resume summary (education, experiences, skills)
+2) a candidate resume summary (education, experiences, skills).
 
-Return ONLY valid JSON with this exact schema:
-{"percentage":0,"note":""}
+IMPORTANT:
+- The computed match percentage is already fixed. Do NOT change it.
+- Write only the explanation note in French, plain text.
+- No JSON, no markdown, no code fences.
 
-Rules:
-- percentage must be an integer from 0 to 100
-- note must be a detailed explanation in plain text
-- no markdown, no extra keys, no code fence
+Given percentage: 
+PROMPT
+            . ' ' . (string) $percentage . "%\n\n"
+            . <<<'PROMPT'
 
 Job offer:
 PROMPT
             . "\n" . $offerText
             . "\n\nResume data:\n"
             . $resumeJson;
+    }
+
+    /**
+     * @param array<string, mixed> $resumeData
+     */
+    private function computeKeywordMatchPercentage(string $offerText, array $resumeData): int
+    {
+        $offerKeywords = $this->extractKeywords($offerText);
+        if ($offerKeywords === []) {
+            return 0;
+        }
+
+        $resumeText = json_encode($resumeData, JSON_UNESCAPED_UNICODE);
+        $resumeKeywords = $this->extractKeywords(is_string($resumeText) ? $resumeText : '');
+        if ($resumeKeywords === []) {
+            return 0;
+        }
+
+        $matched = 0;
+        foreach ($offerKeywords as $keyword) {
+            if (in_array($keyword, $resumeKeywords, true)) {
+                $matched++;
+            }
+        }
+
+        $ratio = $matched / count($offerKeywords);
+        $percentage = (int) round($ratio * 100);
+
+        if ($percentage < 0) {
+            return 0;
+        }
+        if ($percentage > 100) {
+            return 100;
+        }
+
+        return $percentage;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function extractKeywords(string $text): array
+    {
+        $normalized = mb_strtolower($text);
+        $normalized = (string) preg_replace('/[^\\p{L}\\p{N}\\s]/u', ' ', $normalized);
+        $parts = preg_split('/\\s+/', $normalized) ?: [];
+
+        $stop = ['le','la','les','de','des','du','un','une','et','ou','pour','avec','dans','sur','the','a','an','to','of','in','is','are','recherche'];
+        $keywords = [];
+        foreach ($parts as $part) {
+            $token = trim((string) $part);
+            if (mb_strlen($token) < 3 || in_array($token, $stop, true)) {
+                continue;
+            }
+
+            $keywords[] = $token;
+        }
+
+        return array_values(array_unique($keywords));
     }
 
     private function sanitizeCoverLetterOutput(string $content, string $inputText): string
