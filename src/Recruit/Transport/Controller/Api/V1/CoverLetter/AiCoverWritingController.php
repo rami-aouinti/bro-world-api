@@ -30,8 +30,8 @@ readonly class AiCoverWritingController
             properties: [
                 new OA\Property(
                     property: 'text',
-                    type: 'string',
                     description: 'Texte source : soit un profil utilisateur, soit une description de poste.',
+                    type: 'string',
                     example: 'Développeur backend PHP avec 5 ans d’expérience sur Symfony, APIs REST, Docker et CI/CD. Passionné par la qualité logicielle et l’optimisation des performances.',
                 ),
             ],
@@ -80,8 +80,8 @@ readonly class AiCoverWritingController
             properties: [
                 new OA\Property(
                     property: 'text',
-                    type: 'string',
                     description: 'Texte source contenant une offre, un contexte entreprise, ou un brief de candidature.',
+                    type: 'string',
                     example: 'TechNova recherche un backend engineer pour renforcer sa plateforme SaaS. Besoins: forte maîtrise Symfony, PostgreSQL, architecture microservices, communication cross-team et ownership des sujets de performance.',
                 ),
             ],
