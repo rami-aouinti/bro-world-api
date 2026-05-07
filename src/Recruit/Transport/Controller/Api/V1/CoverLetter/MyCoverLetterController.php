@@ -125,7 +125,7 @@ final readonly class MyCoverLetterController
     {
         return [
             'id' => $entity->getId(),
-            'templateId' => $entity->getTemplate()?->getId(),
+            'template' => $entity->getTemplate() !== null ? ['id' => $entity->getTemplate()?->getId(),'name' => $entity->getTemplate()?->getName(),'type' => $entity->getTemplate()?->getType(),'version' => $entity->getTemplate()?->getVersion(),'layout' => $entity->getTemplate()?->getLayout(),'structure' => $entity->getTemplate()?->getStructure(),'sections' => $entity->getTemplate()?->getSections(),'theme' => $entity->getTemplate()?->getTheme(),'aside' => $entity->getTemplate()?->getAside(),'photo' => $entity->getTemplate()?->getPhoto(),'decor' => $entity->getTemplate()?->getDecor(),'layoutOptions' => $entity->getTemplate()?->getLayoutOptions(),'decorOptions' => $entity->getTemplate()?->getDecorOptions(),'sectionTitleStyle' => $entity->getTemplate()?->getSectionTitleStyle(),'headerType' => $entity->getTemplate()?->getHeaderType(),'fakeData' => $entity->getTemplate()?->getFakeData(),'textStyles' => $entity->getTemplate()?->getTextStyles(),'typography' => $entity->getTemplate()?->getTypography(),'sectionBar' => $entity->getTemplate()?->getSectionBar(),'items' => $entity->getTemplate()?->getItems()] : null,
             'fullName' => $entity->getFullName(),
             'role' => $entity->getRole(),
             'photo' => $entity->getPhoto(),
