@@ -75,6 +75,26 @@ readonly class ResumeAiParsingService
         return $this->normalizeAiStructuredResumePayload($content);
     }
 
+    public function generateAboutMeForCoverPage(string $inputText): string
+    {
+        $normalizedInput = trim($inputText);
+        if ($normalizedInput === '') {
+            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Field "text" must not be empty.');
+        }
+
+        return $this->generateTextResponse($this->buildAboutMePrompt($normalizedInput));
+    }
+
+    public function generateCoverLetterFromJobText(string $inputText): string
+    {
+        $normalizedInput = trim($inputText);
+        if ($normalizedInput === '') {
+            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Field "text" must not be empty.');
+        }
+
+        return $this->generateTextResponse($this->buildCoverLetterPrompt($normalizedInput));
+    }
+
     private function cleanResumeText(string $text): string
     {
         if ($text === '') {
@@ -379,6 +399,53 @@ Rules:
 Resume text:
 PROMPT
             . "\n" . $rawText;
+    }
+
+    private function buildAboutMePrompt(string $inputText): string
+    {
+        return <<<'PROMPT'
+You are an expert career writer.
+
+Generate ONLY one polished "About Me" paragraph for a cover page.
+Return plain text only (no markdown, no title, no JSON, no bullet points).
+
+Rules:
+- Input can be either a user profile or a job description.
+- If it is a job description, infer the ideal candidate voice and adapt it.
+- Keep it concise (90 to 140 words).
+- Professional, confident, concrete, and human tone.
+- Avoid placeholders and avoid hallucinated facts that are not implied by the input.
+
+Input text:
+PROMPT
+            . "\n" . $inputText;
+    }
+
+    private function buildCoverLetterPrompt(string $inputText): string
+    {
+        return <<<'PROMPT'
+You are an expert recruiter and cover letter writer.
+
+Task:
+1) Detect the company context and its likely needs from the input text.
+2) Write a tailored cover letter text area in plain text.
+
+Output format:
+- Return plain text only.
+- No markdown, no JSON, no labels.
+- 3 short paragraphs max.
+- 160 to 260 words.
+
+Writing rules:
+- Mention the company naturally when possible.
+- Explicitly connect candidate strengths to inferred company needs.
+- Keep a professional and persuasive tone.
+- End with a short call to action.
+- Do not invent precise facts that are not supported by input.
+
+Input text:
+PROMPT
+            . "\n" . $inputText;
     }
 
     private function generateTextResponse(string $prompt): string
