@@ -8,6 +8,7 @@ use App\Recruit\Domain\Entity\Template;
 use App\Recruit\Infrastructure\Repository\CoverLetterRepository;
 use App\Recruit\Infrastructure\Repository\TemplateRepository;
 use App\User\Domain\Entity\User;
+use OpenApi\Attributes as OA;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,6 +19,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
+#[OA\Tag(name: 'Recruit Cover Letter')]
 #[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 final readonly class MyCoverLetterController
 {
@@ -36,6 +38,9 @@ final readonly class MyCoverLetterController
     }
 
     #[Route(path: '/v1/recruit/private/me/cover-letters', methods: [Request::METHOD_POST])]
+    #[OA\Post(summary: 'Créer une cover letter personnelle.')]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(required: ['fullName'], properties: [new OA\Property(property: 'fullName', type: 'string', example: 'John Doe'), new OA\Property(property: 'role', type: 'string', example: 'Backend Engineer'), new OA\Property(property: 'location', type: 'string', example: 'Paris'), new OA\Property(property: 'header', type: 'string', example: 'Motivation Letter'), new OA\Property(property: 'description1', type: 'string', example: 'I am excited to apply...'), new OA\Property(property: 'description2', type: 'string', example: 'Thank you for your consideration.'), new OA\Property(property: 'templateId', type: 'string', format: 'uuid')], type: 'object'))]
+    #[OA\Response(response: 201, description: 'Cover letter créée.')]
     public function create(Request $request, User $loggedInUser): JsonResponse
     {
         $p = $request->toArray();
@@ -57,6 +62,10 @@ final readonly class MyCoverLetterController
     }
 
     #[Route(path: '/v1/recruit/private/me/cover-letters/{id}', methods: [Request::METHOD_PATCH])]
+    #[OA\Patch(summary: 'Modifier partiellement une cover letter personnelle.')]
+    #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(properties: [new OA\Property(property: 'fullName', type: 'string', example: 'John Doe Updated'), new OA\Property(property: 'description1', type: 'string', example: 'Updated intro paragraph.'), new OA\Property(property: 'templateId', type: 'string', format: 'uuid')], type: 'object'))]
+    #[OA\Response(response: 200, description: 'Cover letter mise à jour.')]
     public function patch(string $id, Request $request, User $loggedInUser): JsonResponse
     {
         if (!Uuid::isValid($id)) {
@@ -89,6 +98,9 @@ final readonly class MyCoverLetterController
     }
 
     #[Route(path: '/v1/recruit/private/me/cover-letters/{id}', methods: [Request::METHOD_DELETE])]
+    #[OA\Delete(summary: 'Supprimer une cover letter personnelle.')]
+    #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+    #[OA\Response(response: 204, description: 'Cover letter supprimée.')]
     public function delete(string $id, User $loggedInUser): JsonResponse
     {
         $entity = $this->repo->find($id);

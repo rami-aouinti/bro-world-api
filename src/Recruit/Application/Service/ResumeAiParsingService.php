@@ -75,6 +75,54 @@ readonly class ResumeAiParsingService
         return $this->normalizeAiStructuredResumePayload($content);
     }
 
+    public function generateAboutMeForCoverPage(string $inputText): string
+    {
+        $normalizedInput = trim($inputText);
+        if ($normalizedInput === '') {
+            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Field "text" must not be empty.');
+        }
+
+        return $this->generateTextResponse($this->buildAboutMePrompt($normalizedInput));
+    }
+
+    public function generateCoverLetterFromJobText(string $inputText): string
+    {
+        $normalizedInput = trim($inputText);
+        if ($normalizedInput === '') {
+            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Field "text" must not be empty.');
+        }
+
+        $raw = $this->generateTextResponse($this->buildCoverLetterPrompt($normalizedInput));
+
+        return $this->sanitizeCoverLetterOutput($raw, $normalizedInput);
+    }
+
+    /**
+     * @param array<string, mixed> $resumeData
+     * @return array{percentage:int,note:string}
+     */
+    public function computeOfferResumeMatch(string $offerText, array $resumeData): array
+    {
+        $normalizedOffer = trim($offerText);
+        if ($normalizedOffer === '') {
+            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Field "offerText" must not be empty.');
+        }
+
+        $analysis = $this->analyzeOfferResumeMatch($normalizedOffer, $resumeData);
+        $percentage = $analysis['percentage'];
+        $note = $this->buildProfessionalMatchNote(
+            $percentage,
+            $analysis['matched'],
+            $analysis['missing'],
+            $analysis['offerKeywords'],
+        );
+
+        return [
+            'percentage' => $percentage,
+            'note' => $note,
+        ];
+    }
+
     private function cleanResumeText(string $text): string
     {
         if ($text === '') {
@@ -379,6 +427,196 @@ Rules:
 Resume text:
 PROMPT
             . "\n" . $rawText;
+    }
+
+    private function buildAboutMePrompt(string $inputText): string
+    {
+        return <<<'PROMPT'
+You are an expert career writer.
+
+Generate ONLY one polished "About Me" paragraph for a cover page.
+Return plain text only (no markdown, no title, no JSON, no bullet points).
+
+Rules:
+- Input can be either a user profile or a job description.
+- If it is a job description, infer the ideal candidate voice and adapt it.
+- Keep it concise (90 to 140 words).
+- Professional, confident, concrete, and human tone.
+- Avoid placeholders and avoid hallucinated facts that are not implied by the input.
+
+Input text:
+PROMPT
+            . "\n" . $inputText;
+    }
+
+    private function buildCoverLetterPrompt(string $inputText): string
+    {
+        return <<<'PROMPT'
+You are an expert recruiter and cover letter writer.
+
+Task:
+Write ONLY the final cover letter text.
+
+Output format:
+- Return plain text only.
+- No markdown, no JSON, no labels, no headings.
+- Never output section titles like "Company Context", "Cover Letter", "Analysis", etc.
+- 2 short paragraphs max.
+- 60 to 120 words.
+
+Writing rules:
+- Mention the company naturally when possible.
+- Explicitly connect candidate strengths to inferred company needs.
+- Keep a professional and persuasive tone.
+- End with a short call to action.
+- Do not invent precise facts that are not supported by input.
+- Never use placeholders like [Hiring Manager], [Your Name], <name>, etc.
+- Do not include greeting ("Dear ...") and do not include signature.
+- Output must start directly with the first sentence of the letter.
+- Write strictly from the candidate perspective with first person ("I", "my").
+- Never write as the company ("we are looking", "TechNova is seeking", etc.).
+- Include a final sentence thanking the reviewer.
+
+Input text:
+PROMPT
+            . "\n" . $inputText;
+    }
+
+    /**
+     * @param array<string, mixed> $resumeData
+     * @return array{percentage:int, matched:array<int,string>, missing:array<int,string>, offerKeywords:array<int,string>}
+     */
+    private function analyzeOfferResumeMatch(string $offerText, array $resumeData): array
+    {
+        $offerKeywords = $this->extractKeywords($offerText);
+        if ($offerKeywords === []) {
+            return ['percentage' => 0, 'matched' => [], 'missing' => [], 'offerKeywords' => []];
+        }
+
+        $resumeText = json_encode($resumeData, JSON_UNESCAPED_UNICODE);
+        $resumeKeywords = $this->extractKeywords(is_string($resumeText) ? $resumeText : '');
+        if ($resumeKeywords === []) {
+            return ['percentage' => 0, 'matched' => [], 'missing' => $offerKeywords, 'offerKeywords' => $offerKeywords];
+        }
+
+        $matchedCount = 0;
+        $matchedKeywords = [];
+        $missingKeywords = [];
+        foreach ($offerKeywords as $keyword) {
+            if (in_array($keyword, $resumeKeywords, true)) {
+                $matchedCount++;
+                $matchedKeywords[] = $keyword;
+            } else {
+                $missingKeywords[] = $keyword;
+            }
+        }
+
+        $ratio = $matchedCount / count($offerKeywords);
+        $percentage = (int) round($ratio * 100);
+
+        if ($percentage < 0) {
+            $percentage = 0;
+        }
+        if ($percentage > 100) {
+            $percentage = 100;
+        }
+
+        return [
+            'percentage' => $percentage,
+            'matched' => $matchedKeywords,
+            'missing' => $missingKeywords,
+            'offerKeywords' => $offerKeywords,
+        ];
+    }
+
+    /**
+     * @param array<int, string> $matched
+     * @param array<int, string> $missing
+     * @param array<int, string> $offerKeywords
+     */
+    private function buildProfessionalMatchNote(int $percentage, array $matched, array $missing, array $offerKeywords): string
+    {
+        $matchPreview = $matched === [] ? 'Aucune compétence-clé de l’offre n’a été détectée clairement dans le CV.' : implode(', ', array_slice($matched, 0, 8));
+        $missingPreview = $missing === [] ? 'Aucun écart majeur détecté sur les mots-clés principaux.' : implode(', ', array_slice($missing, 0, 8));
+
+        $level = 'faible';
+        if ($percentage >= 75) {
+            $level = 'élevée';
+        } elseif ($percentage >= 45) {
+            $level = 'moyenne';
+        }
+
+        return 'Correspondance globale: ' . $percentage . "% (adéquation $level).\n\n"
+            . 'Analyse des points alignés: ' . $matchPreview . ".\n"
+            . 'Analyse des écarts: ' . $missingPreview . ".\n\n"
+            . 'Interprétation: ce score est calculé à partir du recouvrement entre les exigences de l’offre et les éléments présents dans le CV (expériences, formations, compétences). '
+            . 'Plus le nombre d’exigences couvertes est élevé, plus le pourcentage augmente. '
+            . 'Pour améliorer le score, il faut renforcer les compétences manquantes et expliciter des expériences concrètes liées aux attentes de l’offre.';
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function extractKeywords(string $text): array
+    {
+        $normalized = mb_strtolower($text);
+        $normalized = (string) preg_replace('/[^\\p{L}\\p{N}\\s]/u', ' ', $normalized);
+        $parts = preg_split('/\\s+/', $normalized) ?: [];
+
+        $stop = ['le','la','les','de','des','du','un','une','et','ou','pour','avec','dans','sur','the','a','an','to','of','in','is','are','recherche'];
+        $keywords = [];
+        foreach ($parts as $part) {
+            $token = trim((string) $part);
+            if (mb_strlen($token) < 3 || in_array($token, $stop, true)) {
+                continue;
+            }
+
+            $keywords[] = $token;
+        }
+
+        return array_values(array_unique($keywords));
+    }
+
+    private function sanitizeCoverLetterOutput(string $content, string $inputText): string
+    {
+        $clean = trim($content);
+        $clean = $this->stripCodeFence($clean);
+
+        // Remove common markdown headings and labels sometimes produced by small models
+        $clean = (string) preg_replace('/^#{1,6}\s.*$/m', '', $clean);
+        $clean = (string) preg_replace('/^\s*(Company Context|Cover Letter(Text)?|Analysis)\s*:?\s*$/mi', '', $clean);
+        $clean = (string) preg_replace('/^\s*(Dear\s+\[[^\]]+\].*)$/mi', '', $clean);
+        $clean = (string) preg_replace('/\[(Hiring Manager|Your Name|Name)\]/i', '', $clean);
+        $clean = (string) preg_replace('/^\s*(Sincerely|Best regards|Regards)\s*,?\s*$/mi', '', $clean);
+        $clean = (string) preg_replace('/\b(we are looking|is seeking|we seek|we are hiring)\b/i', '', $clean);
+
+        // Collapse excessive blank lines
+        $clean = (string) preg_replace('/\n{3,}/', "\n\n", $clean);
+        $clean = trim($clean);
+
+        // If output is still not in candidate voice, force a ready-to-use candidate letter
+        if (
+            $clean === ''
+            || str_contains($clean, '##')
+            || preg_match('/\b(is seeking|we are hiring|our team)\b/i', $clean) === 1
+            || preg_match('/\bI\b/i', $clean) !== 1
+        ) {
+            $company = $this->extractCompanyName($inputText);
+            $clean = 'I am excited to apply for the position at ' . $company . '. My experience includes building reliable backend services with Symfony and PostgreSQL, designing scalable architectures, and collaborating effectively across teams to deliver strong product outcomes.'
+                . "\n\n"
+                . 'Thank you for reviewing my application. I would be glad to discuss how I can support ' . $company . '\'s goals.';
+        }
+
+        return $clean;
+    }
+
+    private function extractCompanyName(string $inputText): string
+    {
+        if (preg_match('/^\s*([A-Za-z0-9][A-Za-z0-9 .&\\-]{1,50})\s+(recherche|cherche|hiring|is looking|is seeking)\b/ui', $inputText, $matches) === 1) {
+            return trim((string) ($matches[1] ?? 'your company'));
+        }
+
+        return 'your company';
     }
 
     private function generateTextResponse(string $prompt): string
