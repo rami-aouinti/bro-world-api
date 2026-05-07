@@ -246,7 +246,7 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
 
     private function createApplicantWithResume(User $owner, string $key, string $coverLetter): Applicant
     {
-        $resume = (new Resume())->setOwner($owner);
+        $resume = (new Resume())->setOwner($owner)->setIsActive($key === 'john-root');
 
         if ($key === 'john-root') {
             $resume

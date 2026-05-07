@@ -32,6 +32,7 @@ class ResumeNormalizerService
         return [
             'id' => $resume->getId(),
             'documentUrl' => $resume->getDocumentUrl(),
+            'active' => $resume->isActive(),
             'template' => $resume->getTemplate() !== null ? [
                 'id' => $resume->getTemplate()?->getId(),
                 'name' => $resume->getTemplate()?->getName(),
