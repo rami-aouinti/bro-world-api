@@ -16,7 +16,7 @@ $this->addSql('CREATE INDEX IDX_B8B20E35DA0FB8 ON recruit_resume (template_id)')
 public function down(Schema $schema): void {
 $this->addSql('ALTER TABLE recruit_resume DROP FOREIGN KEY FK_B8B20E35DA0FB8');
 $this->addSql('DROP INDEX IDX_B8B20E35DA0FB8 ON recruit_resume');
-$this->addSql('ALTER TABLE recruit_resume DROP template_id');
+$this->addSql('ALTER TABLE recruit_resume DROP template_id, DROP is_active');
 $this->addSql('ALTER TABLE recruit_cover_page DROP FOREIGN KEY FK_7E02A15A5DA0FB8');
 $this->addSql('ALTER TABLE recruit_cover_letter DROP FOREIGN KEY FK_D867F1A85DA0FB8');
 $this->addSql('DROP TABLE recruit_cover_page'); $this->addSql('DROP TABLE recruit_cover_letter'); $this->addSql('DROP TABLE recruit_template'); }}
