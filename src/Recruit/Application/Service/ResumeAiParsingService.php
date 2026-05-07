@@ -83,7 +83,9 @@ readonly class ResumeAiParsingService
             throw new HttpException(Response::HTTP_BAD_REQUEST, 'Field "text" must not be empty.');
         }
 
-        return $this->generateTextResponse($this->buildAboutMePrompt($normalizedInput));
+        $response = $this->generateTextResponse($this->buildAboutMePrompt($normalizedInput));
+
+        return trim($this->stripCodeFence($response));
     }
 
     public function generateCoverLetterFromJobText(string $inputText): string
@@ -446,6 +448,7 @@ Rules:
 - Keep it concise (90 to 140 words).
 - Professional, confident, concrete, and human tone.
 - Avoid placeholders and avoid hallucinated facts that are not implied by the input.
+- Write the output in the SAME language as the input text.
 
 Input text:
 PROMPT
@@ -479,6 +482,7 @@ Writing rules:
 - Write strictly from the candidate perspective with first person ("I", "my").
 - Never write as the company ("we are looking", "TechNova is seeking", etc.).
 - Include a final sentence thanking the reviewer.
+- Write the output in the SAME language as the input text.
 
 Input text:
 PROMPT
@@ -632,9 +636,8 @@ PROMPT
             || preg_match('/\bI\b/i', $clean) !== 1
         ) {
             $company = $this->extractCompanyName($inputText);
-            $clean = 'I am excited to apply for the position at ' . $company . '. My experience includes building reliable backend services with Symfony and PostgreSQL, designing scalable architectures, and collaborating effectively across teams to deliver strong product outcomes.'
-                . "\n\n"
-                . 'Thank you for reviewing my application. I would be glad to discuss how I can support ' . $company . '\'s goals.';
+            $language = $this->detectPrimaryLanguage($inputText);
+            $clean = $this->buildCoverLetterFallback($language, $company);
         }
 
         return $clean;
@@ -647,6 +650,25 @@ PROMPT
         }
 
         return 'your company';
+    }
+
+    private function buildCoverLetterFallback(string $language, string $company): string
+    {
+        if ($language === 'de') {
+            return 'Ich freue mich sehr, mich für die Position bei ' . $company . ' zu bewerben. Ich bringe fundierte Erfahrung in der Entwicklung zuverlässiger Backend-Services, sauberer Architektur und teamübergreifender Zusammenarbeit mit, um skalierbare und wartbare Lösungen mit messbarem Mehrwert zu liefern.'
+                . "\n\n"
+                . 'Vielen Dank für die Prüfung meiner Bewerbung. Gerne erläutere ich in einem Gespräch, wie ich die Ziele von ' . $company . ' unterstützen kann.';
+        }
+
+        if ($language === 'fr') {
+            return 'Je suis très motivé(e) à l’idée de rejoindre ' . $company . '. Mon expérience en développement backend, en architecture logicielle et en collaboration transverse me permet de livrer des solutions robustes, maintenables et orientées impact.'
+                . "\n\n"
+                . 'Merci pour l’attention portée à ma candidature. Je serais ravi(e) d’échanger sur la manière dont je peux contribuer aux objectifs de ' . $company . '.';
+        }
+
+        return 'I am excited to apply for the position at ' . $company . '. My experience includes building reliable backend services, designing maintainable architectures, and collaborating across teams to deliver scalable solutions with measurable impact.'
+            . "\n\n"
+            . 'Thank you for reviewing my application. I would be glad to discuss how I can support ' . $company . '\'s goals.';
     }
 
     private function generateTextResponse(string $prompt): string
