@@ -31,6 +31,7 @@ use function str_replace;
 use function str_starts_with;
 use function strlen;
 use function substr;
+use function preg_replace_callback;
 use function trim;
 
 readonly class ResumeAiParsingService
