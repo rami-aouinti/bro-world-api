@@ -95,7 +95,7 @@ readonly class ResumeAiParsingService
 
         $raw = $this->generateTextResponse($this->buildCoverLetterPrompt($normalizedInput));
 
-        return $this->sanitizeCoverLetterOutput($raw);
+        return $this->sanitizeCoverLetterOutput($raw, $normalizedInput);
     }
 
     private function cleanResumeText(string $text): string
@@ -448,13 +448,16 @@ Writing rules:
 - Never use placeholders like [Hiring Manager], [Your Name], <name>, etc.
 - Do not include greeting ("Dear ...") and do not include signature.
 - Output must start directly with the first sentence of the letter.
+- Write strictly from the candidate perspective with first person ("I", "my").
+- Never write as the company ("we are looking", "TechNova is seeking", etc.).
+- Include a final sentence thanking the reviewer.
 
 Input text:
 PROMPT
             . "\n" . $inputText;
     }
 
-    private function sanitizeCoverLetterOutput(string $content): string
+    private function sanitizeCoverLetterOutput(string $content, string $inputText): string
     {
         $clean = trim($content);
         $clean = $this->stripCodeFence($clean);
@@ -465,19 +468,35 @@ PROMPT
         $clean = (string) preg_replace('/^\s*(Dear\s+\[[^\]]+\].*)$/mi', '', $clean);
         $clean = (string) preg_replace('/\[(Hiring Manager|Your Name|Name)\]/i', '', $clean);
         $clean = (string) preg_replace('/^\s*(Sincerely|Best regards|Regards)\s*,?\s*$/mi', '', $clean);
+        $clean = (string) preg_replace('/\b(we are looking|is seeking|we seek|we are hiring)\b/i', '', $clean);
 
         // Collapse excessive blank lines
         $clean = (string) preg_replace('/\n{3,}/', "\n\n", $clean);
         $clean = trim($clean);
 
-        // Hard fallback if model keeps returning structured blocks
-        if ($clean === '' || str_contains($clean, '##')) {
-            $clean = 'I am excited to apply for this role and contribute to your team with strong experience in building reliable backend services using Symfony and PostgreSQL. I focus on clean architecture, performance improvements, and effective cross-team collaboration to deliver scalable SaaS solutions with measurable impact.'
+        // If output is still not in candidate voice, force a ready-to-use candidate letter
+        if (
+            $clean === ''
+            || str_contains($clean, '##')
+            || preg_match('/\b(is seeking|we are hiring|our team)\b/i', $clean) === 1
+            || preg_match('/\bI\b/i', $clean) !== 1
+        ) {
+            $company = $this->extractCompanyName($inputText);
+            $clean = 'I am excited to apply for the position at ' . $company . '. My experience includes building reliable backend services with Symfony and PostgreSQL, designing scalable architectures, and collaborating effectively across teams to deliver strong product outcomes.'
                 . "\n\n"
-                . 'Thank you for reviewing my application. I would be glad to discuss how my profile can support your product goals and engineering roadmap.';
+                . 'Thank you for reviewing my application. I would be glad to discuss how I can support ' . $company . '\'s goals.';
         }
 
         return $clean;
+    }
+
+    private function extractCompanyName(string $inputText): string
+    {
+        if (preg_match('/^\s*([A-Za-z0-9][A-Za-z0-9 .&\\-]{1,50})\s+(recherche|cherche|hiring|is looking|is seeking)\b/ui', $inputText, $matches) === 1) {
+            return trim((string) ($matches[1] ?? 'your company'));
+        }
+
+        return 'your company';
     }
 
     private function generateTextResponse(string $prompt): string
