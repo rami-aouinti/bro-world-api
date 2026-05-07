@@ -98,6 +98,48 @@ readonly class ResumeAiParsingService
         return $this->sanitizeCoverLetterOutput($raw, $normalizedInput);
     }
 
+    /**
+     * @param array<string, mixed> $resumeData
+     * @return array{percentage:int,note:string}
+     */
+    public function computeOfferResumeMatch(string $offerText, array $resumeData): array
+    {
+        $normalizedOffer = trim($offerText);
+        if ($normalizedOffer === '') {
+            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Field "offerText" must not be empty.');
+        }
+
+        $resumeJson = json_encode($resumeData, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+        if (!is_string($resumeJson) || $resumeJson === '') {
+            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Invalid resume payload for matching.');
+        }
+
+        $raw = $this->generateTextResponse($this->buildOfferResumeMatchPrompt($normalizedOffer, $resumeJson));
+        $normalizedRaw = $this->stripCodeFence($raw);
+
+        try {
+            /** @var array<string, mixed> $decoded */
+            $decoded = json_decode($normalizedRaw, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            return [
+                'percentage' => 0,
+                'note' => 'Unable to compute match from AI response.',
+            ];
+        }
+
+        $percentage = (int) ($decoded['percentage'] ?? 0);
+        if ($percentage < 0) {
+            $percentage = 0;
+        } elseif ($percentage > 100) {
+            $percentage = 100;
+        }
+
+        return [
+            'percentage' => $percentage,
+            'note' => trim((string) ($decoded['note'] ?? 'No details returned by AI.')),
+        ];
+    }
+
     private function cleanResumeText(string $text): string
     {
         if ($text === '') {
@@ -455,6 +497,30 @@ Writing rules:
 Input text:
 PROMPT
             . "\n" . $inputText;
+    }
+
+    private function buildOfferResumeMatchPrompt(string $offerText, string $resumeJson): string
+    {
+        return <<<'PROMPT'
+You are an expert recruiter.
+
+Evaluate the fit between:
+1) a job offer text
+2) a candidate resume summary (education, experiences, skills)
+
+Return ONLY valid JSON with this exact schema:
+{"percentage":0,"note":""}
+
+Rules:
+- percentage must be an integer from 0 to 100
+- note must be a detailed explanation in plain text
+- no markdown, no extra keys, no code fence
+
+Job offer:
+PROMPT
+            . "\n" . $offerText
+            . "\n\nResume data:\n"
+            . $resumeJson;
     }
 
     private function sanitizeCoverLetterOutput(string $content, string $inputText): string

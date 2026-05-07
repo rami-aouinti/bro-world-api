@@ -11,12 +11,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[AsController]
 #[OA\Tag(name: 'Recruit Cover AI')]
-#[IsGranted(AuthenticatedVoter::IS_AUTHENTICATED_FULLY)]
 readonly class AiCoverWritingController
 {
     public function __construct(
