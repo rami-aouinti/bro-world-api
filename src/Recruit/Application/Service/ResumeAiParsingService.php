@@ -111,11 +111,13 @@ readonly class ResumeAiParsingService
 
         $analysis = $this->analyzeOfferResumeMatch($normalizedOffer, $resumeData);
         $percentage = $analysis['percentage'];
+        $language = $this->detectPrimaryLanguage($normalizedOffer);
         $note = $this->buildProfessionalMatchNote(
             $percentage,
             $analysis['matched'],
             $analysis['missing'],
             $analysis['offerKeywords'],
+            $language,
         );
 
         return [
@@ -535,24 +537,51 @@ PROMPT
      * @param array<int, string> $missing
      * @param array<int, string> $offerKeywords
      */
-    private function buildProfessionalMatchNote(int $percentage, array $matched, array $missing, array $offerKeywords): string
+    private function buildProfessionalMatchNote(int $percentage, array $matched, array $missing, array $offerKeywords, string $language): string
     {
-        $matchPreview = $matched === [] ? 'Aucune compétence-clé de l’offre n’a été détectée clairement dans le CV.' : implode(', ', array_slice($matched, 0, 8));
-        $missingPreview = $missing === [] ? 'Aucun écart majeur détecté sur les mots-clés principaux.' : implode(', ', array_slice($missing, 0, 8));
+        $matchPreview = $matched === [] ? '-' : implode(', ', array_slice($matched, 0, 10));
+        $missingPreview = $missing === [] ? '-' : implode(', ', array_slice($missing, 0, 10));
 
-        $level = 'faible';
-        if ($percentage >= 75) {
-            $level = 'élevée';
-        } elseif ($percentage >= 45) {
-            $level = 'moyenne';
+        if ($language === 'de') {
+            $level = $percentage >= 75 ? 'hoch' : ($percentage >= 45 ? 'mittel' : 'niedrig');
+
+            return 'Gesamtübereinstimmung: ' . $percentage . "% (Niveau: $level).\n\n"
+                . 'Abgedeckte Anforderungen: ' . ($matchPreview === '-' ? 'Keine klaren Schlüsselanforderungen wurden im Lebenslauf gefunden.' : $matchPreview) . ".\n"
+                . 'Fehlende oder schwache Punkte: ' . ($missingPreview === '-' ? 'Keine wesentlichen Lücken in den Hauptanforderungen erkannt.' : $missingPreview) . ".\n\n"
+                . 'Erläuterung: Die Bewertung berücksichtigt die Übereinstimmung zwischen Stellenanforderungen und Lebenslaufinhalten (Erfahrung, Ausbildung, Skills, Projekte, Sprachen). '
+                . 'Je mehr zentrale Anforderungen klar belegt sind, desto höher ist der Score. ';
         }
 
+        if ($language === 'en') {
+            $level = $percentage >= 75 ? 'high' : ($percentage >= 45 ? 'medium' : 'low');
+
+            return 'Overall match: ' . $percentage . "% ($level fit).\n\n"
+                . 'Aligned requirements: ' . ($matchPreview === '-' ? 'No clear key requirement from the offer was found in the resume.' : $matchPreview) . ".\n"
+                . 'Missing or weak points: ' . ($missingPreview === '-' ? 'No major gap detected on primary requirements.' : $missingPreview) . ".\n\n"
+                . 'Explanation: This score compares the offer requirements with resume evidence (experience, education, skills, projects, languages). '
+                . 'The more core requirements are clearly supported, the higher the percentage. ';
+        }
+
+        $level = $percentage >= 75 ? 'élevée' : ($percentage >= 45 ? 'moyenne' : 'faible');
+
         return 'Correspondance globale: ' . $percentage . "% (adéquation $level).\n\n"
-            . 'Analyse des points alignés: ' . $matchPreview . ".\n"
-            . 'Analyse des écarts: ' . $missingPreview . ".\n\n"
-            . 'Interprétation: ce score est calculé à partir du recouvrement entre les exigences de l’offre et les éléments présents dans le CV (expériences, formations, compétences). '
-            . 'Plus le nombre d’exigences couvertes est élevé, plus le pourcentage augmente. '
-            . 'Pour améliorer le score, il faut renforcer les compétences manquantes et expliciter des expériences concrètes liées aux attentes de l’offre.';
+            . 'Points alignés: ' . ($matchPreview === '-' ? 'Aucune exigence-clé de l’offre n’a été trouvée clairement dans le CV.' : $matchPreview) . ".\n"
+            . 'Points manquants ou faibles: ' . ($missingPreview === '-' ? 'Aucun écart majeur détecté sur les exigences principales.' : $missingPreview) . ".\n\n"
+            . 'Explication: ce score compare les exigences de l’offre avec les preuves du CV (expériences, formations, compétences, projets, langues). '
+            . 'Plus les exigences clés sont démontrées, plus le pourcentage augmente.';
+    }
+
+    private function detectPrimaryLanguage(string $text): string
+    {
+        $lower = mb_strtolower($text);
+        if (preg_match('/\b(und|mit|entwicklung|anforderungen|wartbarkeit|weiterentwicklung)\b/u', $lower) === 1) {
+            return 'de';
+        }
+        if (preg_match('/\b(and|with|development|requirements|maintainability|experience)\b/u', $lower) === 1) {
+            return 'en';
+        }
+
+        return 'fr';
     }
 
     /**

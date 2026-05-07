@@ -9,6 +9,8 @@ use App\Recruit\Domain\Entity\Education;
 use App\Recruit\Domain\Entity\Experience;
 use App\Recruit\Domain\Entity\Resume;
 use App\Recruit\Domain\Entity\Skill;
+use App\Recruit\Domain\Entity\Project;
+use App\Recruit\Domain\Entity\Language;
 use App\Recruit\Infrastructure\Repository\ResumeRepository;
 use App\User\Domain\Entity\User;
 use OpenApi\Attributes as OA;
@@ -112,6 +114,15 @@ readonly class ResumeOfferMatchController
                 'description' => $skill->getDescription(),
                 'level' => $skill->getLevel(),
             ], $resume->getSkills()->toArray()),
+            'projects' => array_map(static fn (Project $project): array => [
+                'title' => $project->getTitle(),
+                'description' => $project->getDescription(),
+            ], $resume->getProjects()->toArray()),
+            'languages' => array_map(static fn (Language $language): array => [
+                'title' => $language->getTitle(),
+                'description' => $language->getDescription(),
+                'level' => $language->getLevel(),
+            ], $resume->getLanguages()->toArray()),
         ];
     }
 }
