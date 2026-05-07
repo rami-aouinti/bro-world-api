@@ -12,6 +12,7 @@ use App\Recruit\Domain\Entity\Job;
 use App\Recruit\Domain\Entity\Recruit;
 use App\Recruit\Domain\Entity\Salary;
 use App\Recruit\Domain\Entity\Tag;
+use App\Recruit\Domain\Entity\Template;
 use App\Recruit\Domain\Enum\ContractType;
 use App\Recruit\Domain\Enum\ExperienceLevel;
 use App\Recruit\Domain\Enum\Schedule;
@@ -86,6 +87,52 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
         'Remote Friendly',
     ];
 
+
+    /** @var array<int, array<string, mixed>> */
+    private const array TEMPLATES = [
+        [
+            'id' => 'tpl-001','name' => 'aside-structure-1','type' => 'resume','version' => 1,'layout' => 'aside','structure' => 'structure-1',
+            'sections' => ['experience'=>'classic','education'=>'list','skills'=>'classic','languages'=>'dots','languagesLabel'=>'cards','certifications'=>'classic','references'=>'list','projects'=>'dot','interests'=>'dot','contact'=>'icons','profile'=>'classic'],
+            'theme' => ['palette'=>['primary'=>'#1D4ED8','secondary'=>'#93C5FD','text'=>'#0F172A','muted'=>'#64748B','pageBackground'=>'#F8FAFC'],'line'=>'soft','density'=>'comfortable','textStyle'=>'roman','showIcon'=>true],
+            'aside' => ['width'=>'720','height'=>'220px','radius'=>'18px'],
+            'photo' => ['position'=>'left','size'=>'92px','shape'=>'circle','border'=>'2px solid #1F2937','photoType'=>'circle','photoSize'=>'92px','photoBorderRadius'=>'999px','photoBorderColor'=>'#1F2937'],
+            'decor' => ['corners'=>[['shape'=>'circle','size'=>'280px','color'=>'#93C5FD','x'=>'top-right','y'=>'0'],['shape'=>'square','size'=>'220px','color'=>'#1D4ED8','x'=>'bottom-left','y'=>'0']]],
+            'layoutOptions' => ['asideStartsAtTop'=>true],'decorOptions'=>['enabled'=>true,'preset'=>'geo-duo'],'sectionTitleStyle'=>['underline'=>'thin'],'headerType'=>'header-left',
+        ],
+        [
+            'id' => 'tpl-002','name' => 'aside-structure-2','type' => 'resume','version' => 1,'layout' => 'aside','structure' => 'structure-2',
+            'sections' => ['experience'=>'list','education'=>'dot','skills'=>'stars','languages'=>'progress-line','languagesLabel'=>'cards','certifications'=>'list','references'=>'dot','projects'=>'timeline','interests'=>'cards','contact'=>'icons','profile'=>'classic'],
+            'theme' => ['palette'=>['primary'=>'#7C3AED','secondary'=>'#C4B5FD','text'=>'#1F2937','muted'=>'#6B7280','pageBackground'=>'#FAF5FF'],'line'=>'strong','density'=>'compact','textStyle'=>'roman','showIcon'=>true],
+            'aside' => ['width'=>'720','height'=>'220px','radius'=>'18px'],'layoutOptions' => ['asideStartsAtTop'=>true],'decorOptions'=>['enabled'=>true,'preset'=>'abstract-duo'],'sectionTitleStyle'=>['underline'=>'thick'],'headerType'=>'header-right',
+        ],
+        [
+            'id'=>'cpage-001','name'=>'cover-page-hero-01','type'=>'cover_page','version'=>1,'layout'=>'layout-left','structure'=>'cover-structure-1',
+            'theme'=>['palette'=>['primary'=>'#0F4C81','secondary'=>'#5FA8D3','text'=>'#111827','muted'=>'#6B7280','pageBackground'=>'#F8FAFC'],'density'=>'airy','textStyle'=>'sans'],
+            'sections'=>['hero'=>['alignment'=>'left','showPhoto'=>true,'accent'=>'bar','accentIntensity'=>'medium','photoPosition'=>'left']],
+            'layoutOptions'=>['sectionSpacing'=>'normal','titleCase'=>'upper','contentWidth'=>'normal','photoShape'=>'rounded'],
+            'decorOptions'=>['designTokens'=>['borderRadius'=>'sm','shadowDepth'=>'soft','gradientStyle'=>'linear-soft','patternOverlay'=>'dots','typographyScale'=>'balanced']],
+        ],
+        [
+            'id'=>'cpage-002','name'=>'cover-page-editorial-02','type'=>'cover_page','version'=>1,'layout'=>'layout-left','structure'=>'cover-structure-2',
+            'theme'=>['palette'=>['primary'=>'#7C3AED','secondary'=>'#C4B5FD','text'=>'#111827','muted'=>'#6B7280','pageBackground'=>'#FAF5FF'],'density'=>'comfortable','textStyle'=>'roman'],
+            'sections'=>['hero'=>['alignment'=>'center','showPhoto'=>false,'accent'=>'shape','accentIntensity'=>'bold','photoPosition'=>'right']],
+            'layoutOptions'=>['sectionSpacing'=>'relaxed','titleCase'=>'normal','contentWidth'=>'wide','photoShape'=>'square'],
+            'decorOptions'=>['designTokens'=>['borderRadius'=>'md','shadowDepth'=>'medium','gradientStyle'=>'linear-vivid','patternOverlay'=>'grid','typographyScale'=>'spacious']],
+        ],
+        [
+            'id'=>'cletter-001','name'=>'cover-letter-classic-01','type'=>'cover_letter','version'=>1,'layout'=>'layout-left','structure'=>'letter-structure-1',
+            'theme'=>['palette'=>['primary'=>'#BE123C','secondary'=>'#FDA4AF','text'=>'#0F172A','muted'=>'#64748B','pageBackground'=>'#FFF1F2'],'density'=>'comfortable','textStyle'=>'roman'],
+            'sections'=>['header'=>'minimal','body'=>'narrative','signature'=>'simple','calloutStyle'=>'quote','photoPosition'=>'left'],
+            'layoutOptions'=>['paragraphSpacing'=>'normal','showDivider'=>true,'signatureAlign'=>'center','headerAlignment'=>'center'],
+        ],
+        [
+            'id'=>'cletter-002','name'=>'cover-letter-modern-02','type'=>'cover_letter','version'=>1,'layout'=>'layout-left','structure'=>'letter-structure-2',
+            'theme'=>['palette'=>['primary'=>'#065F46','secondary'=>'#6EE7B7','text'=>'#0F172A','muted'=>'#64748B','pageBackground'=>'#ECFDF5'],'density'=>'compact','textStyle'=>'sans'],
+            'sections'=>['header'=>'detailed','body'=>'bullet-mix','signature'=>'formal','calloutStyle'=>'highlight-box','photoPosition'=>'right'],
+            'layoutOptions'=>['paragraphSpacing'=>'wide','showDivider'=>false,'signatureAlign'=>'right','headerAlignment'=>'left'],
+        ],
+    ];
+
     /**
      * @var array<int, string>
      */
@@ -152,6 +199,8 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
         if ($badges !== []) {
             $this->addReference('Recruit-Badge-1', $badges[0]);
         }
+
+        $this->createTemplates($manager);
 
         $recruitApplications = $manager->getRepository(Application::class)
             ->createQueryBuilder('application')
@@ -275,6 +324,31 @@ final class LoadRecruitData extends Fixture implements OrderedFixtureInterface
         }
 
         $manager->flush();
+    }
+
+
+    private function createTemplates(ObjectManager $manager): void
+    {
+        foreach (self::TEMPLATES as $item) {
+            $template = (new Template())
+                ->setName($item['name'])
+                ->setType($item['type'])
+                ->setVersion($item['version'])
+                ->setLayout($item['layout'])
+                ->setStructure($item['structure'])
+                ->setSections($item['sections'] ?? null)
+                ->setTheme($item['theme'] ?? null)
+                ->setAside($item['aside'] ?? null)
+                ->setPhoto($item['photo'] ?? null)
+                ->setDecor($item['decor'] ?? null)
+                ->setLayoutOptions($item['layoutOptions'] ?? null)
+                ->setDecorOptions($item['decorOptions'] ?? null)
+                ->setSectionTitleStyle($item['sectionTitleStyle'] ?? null)
+                ->setHeaderType($item['headerType'] ?? null);
+
+            $manager->persist($template);
+            $this->addReference('Recruit-Template-' . $item['id'], $template);
+        }
     }
 
     #[Override]
