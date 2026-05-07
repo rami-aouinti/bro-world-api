@@ -13,6 +13,8 @@ use App\Recruit\Domain\Entity\Project;
 use App\Recruit\Domain\Entity\Reference;
 use App\Recruit\Domain\Entity\Resume;
 use App\Recruit\Domain\Entity\Skill;
+use App\Recruit\Domain\Entity\Template;
+use App\Recruit\Infrastructure\Repository\TemplateRepository;
 use App\User\Domain\Entity\User;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
@@ -46,6 +48,7 @@ class ResumePayloadService
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
+        private readonly TemplateRepository $templateRepository,
     ) {
     }
 
@@ -130,6 +133,15 @@ class ResumePayloadService
         $resume->setInformationProfileText($this->nullableTrimmedString($input['profileText'] ?? null));
         $resume->setInformationTitle($this->nullableTrimmedString($input['title'] ?? null));
         $resume->setInformationPhoto($this->nullableTrimmedString($input['photo'] ?? null));
+
+        if (is_string($payload['templateId'] ?? null) && trim($payload['templateId']) !== '') {
+            $template = $this->templateRepository->find(trim($payload['templateId']));
+            if (!$template instanceof Template || $template->getType() !== 'resume') {
+                throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "templateId" must reference an existing resume template.');
+            }
+
+            $resume->setTemplate($template);
+        }
     }
 
     /**
