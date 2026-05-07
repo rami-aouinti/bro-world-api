@@ -6,8 +6,6 @@ namespace App\General\Domain\Utils;
 
 use JsonException;
 
-use function str_contains;
-use function str_replace;
 use function json_decode;
 use function json_encode;
 
@@ -60,22 +58,6 @@ class JSON
         $depth ??= 512;
         $options ??= 0;
 
-        try {
-            return json_decode($json, $assoc, $depth, JSON_THROW_ON_ERROR | $options);
-        } catch (JsonException $exception) {
-            // Fallback for malformed payloads containing raw control characters in string values
-            // (commonly raw newlines copied directly in cURL -d bodies).
-            if (!str_contains($exception->getMessage(), 'Control character error')) {
-                throw $exception;
-            }
-
-            $sanitized = str_replace(
-                ["\r\n", "\r", "\n", "\t"],
-                ['\\n', '\\n', '\\n', '\\t'],
-                $json,
-            );
-
-            return json_decode($sanitized, $assoc, $depth, JSON_THROW_ON_ERROR | $options);
-        }
+        return json_decode($json, $assoc, $depth, JSON_THROW_ON_ERROR | $options);
     }
 }

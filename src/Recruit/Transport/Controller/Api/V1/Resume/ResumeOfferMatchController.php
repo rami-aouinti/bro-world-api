@@ -35,13 +35,28 @@ readonly class ResumeOfferMatchController
     #[OA\Post(summary: 'Calcule la correspondance (%) entre une offre et le CV actif du user connecté.')]
     #[OA\RequestBody(
         required: true,
-        content: new OA\JsonContent(
-            required: ['offerText'],
-            properties: [
-                new OA\Property(property: 'offerText', type: 'string', example: 'TechNova recherche un backend engineer Symfony avec PostgreSQL et microservices.'),
-            ],
-            type: 'object',
-        ),
+        content: [
+            new OA\MediaType(
+                mediaType: 'application/json',
+                schema: new OA\Schema(
+                    required: ['offerText'],
+                    properties: [
+                        new OA\Property(property: 'offerText', type: 'string', example: 'TechNova recherche un backend engineer Symfony avec PostgreSQL et microservices.'),
+                    ],
+                    type: 'object',
+                ),
+            ),
+            new OA\MediaType(
+                mediaType: 'application/x-www-form-urlencoded',
+                schema: new OA\Schema(
+                    required: ['offerText'],
+                    properties: [
+                        new OA\Property(property: 'offerText', type: 'string', example: 'Entwicklung und Weiterentwicklung von modernen, skalierbaren Backend-Services in TypeScript ...'),
+                    ],
+                    type: 'object',
+                ),
+            ),
+        ],
     )]
     #[OA\Response(
         response: 200,
@@ -56,9 +71,12 @@ readonly class ResumeOfferMatchController
     )]
     public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        /** @var array<string, mixed> $payload */
-        $payload = $request->toArray();
-        $offerText = trim((string) ($payload['offerText'] ?? ''));
+        $offerText = trim((string) $request->request->get('offerText', ''));
+        if ($offerText === '') {
+            /** @var array<string, mixed> $payload */
+            $payload = $request->toArray();
+            $offerText = trim((string) ($payload['offerText'] ?? ''));
+        }
         if ($offerText === '') {
             throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Field "offerText" is required and must be non-empty.');
         }
