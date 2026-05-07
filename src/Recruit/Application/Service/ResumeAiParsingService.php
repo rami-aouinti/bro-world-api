@@ -109,17 +109,14 @@ readonly class ResumeAiParsingService
             throw new HttpException(Response::HTTP_BAD_REQUEST, 'Field "offerText" must not be empty.');
         }
 
-        $resumeJson = json_encode($resumeData, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
-        if (!is_string($resumeJson) || $resumeJson === '') {
-            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Invalid resume payload for matching.');
-        }
-
-        $percentage = $this->computeKeywordMatchPercentage($normalizedOffer, $resumeData);
-        $raw = $this->generateTextResponse($this->buildOfferResumeMatchPrompt($normalizedOffer, $resumeJson, $percentage));
-        $note = trim($this->stripCodeFence($raw));
-        if ($note === '') {
-            $note = 'Correspondance estimée à ' . $percentage . '% sur la base des compétences, expériences et études du CV par rapport à l’offre.';
-        }
+        $analysis = $this->analyzeOfferResumeMatch($normalizedOffer, $resumeData);
+        $percentage = $analysis['percentage'];
+        $note = $this->buildProfessionalMatchNote(
+            $percentage,
+            $analysis['matched'],
+            $analysis['missing'],
+            $analysis['offerKeywords'],
+        );
 
         return [
             'percentage' => $percentage,
@@ -486,66 +483,76 @@ PROMPT
             . "\n" . $inputText;
     }
 
-    private function buildOfferResumeMatchPrompt(string $offerText, string $resumeJson, int $percentage): string
-    {
-        return <<<'PROMPT'
-You are an expert recruiter.
-
-Explain in FRENCH the fit between:
-1) a job offer text
-2) a candidate resume summary (education, experiences, skills).
-
-IMPORTANT:
-- The computed match percentage is already fixed. Do NOT change it.
-- Write only the explanation note in French, plain text.
-- No JSON, no markdown, no code fences.
-
-Given percentage: 
-PROMPT
-            . ' ' . (string) $percentage . "%\n\n"
-            . <<<'PROMPT'
-
-Job offer:
-PROMPT
-            . "\n" . $offerText
-            . "\n\nResume data:\n"
-            . $resumeJson;
-    }
-
     /**
      * @param array<string, mixed> $resumeData
+     * @return array{percentage:int, matched:array<int,string>, missing:array<int,string>, offerKeywords:array<int,string>}
      */
-    private function computeKeywordMatchPercentage(string $offerText, array $resumeData): int
+    private function analyzeOfferResumeMatch(string $offerText, array $resumeData): array
     {
         $offerKeywords = $this->extractKeywords($offerText);
         if ($offerKeywords === []) {
-            return 0;
+            return ['percentage' => 0, 'matched' => [], 'missing' => [], 'offerKeywords' => []];
         }
 
         $resumeText = json_encode($resumeData, JSON_UNESCAPED_UNICODE);
         $resumeKeywords = $this->extractKeywords(is_string($resumeText) ? $resumeText : '');
         if ($resumeKeywords === []) {
-            return 0;
+            return ['percentage' => 0, 'matched' => [], 'missing' => $offerKeywords, 'offerKeywords' => $offerKeywords];
         }
 
-        $matched = 0;
+        $matchedCount = 0;
+        $matchedKeywords = [];
+        $missingKeywords = [];
         foreach ($offerKeywords as $keyword) {
             if (in_array($keyword, $resumeKeywords, true)) {
-                $matched++;
+                $matchedCount++;
+                $matchedKeywords[] = $keyword;
+            } else {
+                $missingKeywords[] = $keyword;
             }
         }
 
-        $ratio = $matched / count($offerKeywords);
+        $ratio = $matchedCount / count($offerKeywords);
         $percentage = (int) round($ratio * 100);
 
         if ($percentage < 0) {
-            return 0;
+            $percentage = 0;
         }
         if ($percentage > 100) {
-            return 100;
+            $percentage = 100;
         }
 
-        return $percentage;
+        return [
+            'percentage' => $percentage,
+            'matched' => $matchedKeywords,
+            'missing' => $missingKeywords,
+            'offerKeywords' => $offerKeywords,
+        ];
+    }
+
+    /**
+     * @param array<int, string> $matched
+     * @param array<int, string> $missing
+     * @param array<int, string> $offerKeywords
+     */
+    private function buildProfessionalMatchNote(int $percentage, array $matched, array $missing, array $offerKeywords): string
+    {
+        $matchPreview = $matched === [] ? 'Aucune compétence-clé de l’offre n’a été détectée clairement dans le CV.' : implode(', ', array_slice($matched, 0, 8));
+        $missingPreview = $missing === [] ? 'Aucun écart majeur détecté sur les mots-clés principaux.' : implode(', ', array_slice($missing, 0, 8));
+
+        $level = 'faible';
+        if ($percentage >= 75) {
+            $level = 'élevée';
+        } elseif ($percentage >= 45) {
+            $level = 'moyenne';
+        }
+
+        return 'Correspondance globale: ' . $percentage . "% (adéquation $level).\n\n"
+            . 'Analyse des points alignés: ' . $matchPreview . ".\n"
+            . 'Analyse des écarts: ' . $missingPreview . ".\n\n"
+            . 'Interprétation: ce score est calculé à partir du recouvrement entre les exigences de l’offre et les éléments présents dans le CV (expériences, formations, compétences). '
+            . 'Plus le nombre d’exigences couvertes est élevé, plus le pourcentage augmente. '
+            . 'Pour améliorer le score, il faut renforcer les compétences manquantes et expliciter des expériences concrètes liées aux attentes de l’offre.';
     }
 
     /**
