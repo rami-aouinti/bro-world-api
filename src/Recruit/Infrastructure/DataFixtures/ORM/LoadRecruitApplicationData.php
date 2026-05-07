@@ -8,6 +8,9 @@ use App\Recruit\Domain\Entity\Applicant;
 use App\Recruit\Domain\Entity\Application;
 use App\Recruit\Domain\Entity\ApplicationStatusHistory;
 use App\Recruit\Domain\Entity\Certification;
+use App\Recruit\Domain\Entity\CoverLetter;
+use App\Recruit\Domain\Entity\CoverPage;
+use App\Recruit\Domain\Entity\Template;
 use App\Recruit\Domain\Entity\Education;
 use App\Recruit\Domain\Entity\Experience;
 use App\Recruit\Domain\Entity\Hobby;
@@ -72,6 +75,31 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
             key: 'alice',
             coverLetter: 'Candidate orientée coordination d\'entretiens et expérience candidat.'
         );
+
+        $resumeTemplate = $this->getReference('Recruit-Template-tpl-001', Template::class);
+        $johnRootApplicant->getResume()->setTemplate($resumeTemplate);
+
+        $johnRootCoverPage = (new CoverPage())
+            ->setOwner($this->getReference('User-john-root', User::class))
+            ->setTemplate($this->getReference('Recruit-Template-cpage-001', Template::class))
+            ->setFullName('Rami Aouinti')
+            ->setRole('Software Entwickler')
+            ->setDescription('Profil orienté API et architecture.')
+            ->setEmail('rami.aouinti@gmail.com')
+            ->setPhone('0049 176/35587613');
+
+        $johnRootCoverLetter = (new CoverLetter())
+            ->setOwner($this->getReference('User-john-root', User::class))
+            ->setTemplate($this->getReference('Recruit-Template-cletter-001', Template::class))
+            ->setFullName('Rami Aouinti')
+            ->setRole('Software Entwickler')
+            ->setSenderDate(new \DateTimeImmutable('2026-05-07'))
+            ->setLocation('Köln, Germany')
+            ->setDescription1('Motivé à contribuer sur des architectures robustes.')
+            ->setDescription2('Disponible pour échange technique rapide.');
+
+        $manager->persist($johnRootCoverPage);
+        $manager->persist($johnRootCoverLetter);
 
         foreach ([$johnRootApplicant, $johnAdminApplicant, $johnUserApplicant, $johnApiApplicant, $johnLoggedApplicant, $aliceApplicant] as $entity) {
             $manager->persist($entity->getResume());
@@ -218,7 +246,7 @@ final class LoadRecruitApplicationData extends Fixture implements OrderedFixture
 
     private function createApplicantWithResume(User $owner, string $key, string $coverLetter): Applicant
     {
-        $resume = (new Resume())->setOwner($owner);
+        $resume = (new Resume())->setOwner($owner)->setIsActive($key === 'john-root');
 
         if ($key === 'john-root') {
             $resume

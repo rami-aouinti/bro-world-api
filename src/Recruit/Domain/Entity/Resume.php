@@ -37,6 +37,13 @@ class Resume implements EntityInterface
     #[ORM\Column(name: 'document_url', type: 'string', length: 255, nullable: true)]
     private ?string $documentUrl = null;
 
+    #[ORM\Column(name: 'is_active', type: 'boolean', options: ['default' => false])]
+    private bool $isActive = false;
+
+    #[ORM\ManyToOne(targetEntity: Template::class)]
+    #[ORM\JoinColumn(name: 'template_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?Template $template = null;
+
     #[ORM\Column(name: 'information_full_name', type: 'string', length: 255, nullable: true)]
     private ?string $informationFullName = null;
 
@@ -134,9 +141,29 @@ class Resume implements EntityInterface
     {
         return $this->applicant;
     }
+    public function getTemplate(): ?Template
+    {
+        return $this->template;
+    }
+    public function setTemplate(?Template $template): self
+    {
+        $this->template = $template;
+
+        return $this;
+    }
     public function getDocumentUrl(): ?string
     {
         return $this->documentUrl;
+    }
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+    public function setIsActive(bool $isActive): self
+    {
+        $this->isActive = $isActive;
+
+        return $this;
     }
     public function setDocumentUrl(?string $documentUrl): self
     {
