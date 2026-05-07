@@ -10,7 +10,10 @@ use App\Recruit\Application\Service\ResumePayloadService;
 use App\Recruit\Domain\Entity\Resume;
 use App\Recruit\Infrastructure\Repository\ResumeRepository;
 use App\User\Domain\Entity\User;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use OpenApi\Attributes as OA;
+use Random\RandomException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,6 +35,12 @@ readonly class ResumeCreateController
     ) {
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws RandomException
+     * @throws ORMException
+     * @throws \JsonException
+     */
     #[Route(path: '/v1/recruit/resumes', methods: [Request::METHOD_POST])]
         #[OA\Post(summary: 'Crée un CV et permet l’upload optionnel d’un PDF.')]
     #[OA\RequestBody(
@@ -41,14 +50,14 @@ readonly class ResumeCreateController
                 mediaType: 'application/json',
                 schema: new OA\Schema(
                     properties: [
-                        new OA\Property(property: 'experiences', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
-                        new OA\Property(property: 'educations', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
-                        new OA\Property(property: 'skills', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
-                        new OA\Property(property: 'languages', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
-                        new OA\Property(property: 'certifications', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
-                        new OA\Property(property: 'projects', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
-                        new OA\Property(property: 'references', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
-                        new OA\Property(property: 'hobbies', type: 'array', items: new OA\Items(type: 'object', required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')])),
+                        new OA\Property(property: 'experiences', type: 'array', items: new OA\Items(required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')], type: 'object')),
+                        new OA\Property(property: 'educations', type: 'array', items: new OA\Items(required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')], type: 'object')),
+                        new OA\Property(property: 'skills', type: 'array', items: new OA\Items(required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')], type: 'object')),
+                        new OA\Property(property: 'languages', type: 'array', items: new OA\Items(required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')], type: 'object')),
+                        new OA\Property(property: 'certifications', type: 'array', items: new OA\Items(required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')], type: 'object')),
+                        new OA\Property(property: 'projects', type: 'array', items: new OA\Items(required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')], type: 'object')),
+                        new OA\Property(property: 'references', type: 'array', items: new OA\Items(required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')], type: 'object')),
+                        new OA\Property(property: 'hobbies', type: 'array', items: new OA\Items(required: ['title'], properties: [new OA\Property(property: 'title', type: 'string'), new OA\Property(property: 'description', type: 'string')], type: 'object')),
                         new OA\Property(property: 'templateId', type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440100'),
                     ],
                     type: 'object',
@@ -101,9 +110,8 @@ readonly class ResumeCreateController
     )]
     #[OA\Response(response: 400, description: 'Invalid payload or file format')]
     #[OA\Response(response: 401, description: 'Authentication required')]
-    public function __invoke(string $applicationSlug, Request $request, User $loggedInUser): JsonResponse
+    public function __invoke(Request $request, User $loggedInUser): JsonResponse
     {
-        $request->attributes->set('applicationSlug', $applicationSlug);
         $payload = $this->resumePayloadService->extractPayload($request);
 
         $resume = new Resume()->setOwner($loggedInUser);
