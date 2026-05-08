@@ -331,6 +331,7 @@ class ResumePayloadService
 
     /**
      * @param mixed $value
+     * @return string|null
      */
     private function nullableTrimmedString(mixed $value): ?string
     {
@@ -339,16 +340,17 @@ class ResumePayloadService
         }
 
         if (!is_string($value)) {
-            throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, 'Expected a string or null value.');
+            $trimmed = trim(strval($value));
+        } else {
+            $trimmed = trim($value);
         }
-
-        $trimmed = trim($value);
 
         return $trimmed === '' ? null : $trimmed;
     }
 
     /**
      * @param mixed $value
+     * @param string $field
      * @return list<string>|null
      */
     private function normalizeStringArray(mixed $value, string $field): ?array
