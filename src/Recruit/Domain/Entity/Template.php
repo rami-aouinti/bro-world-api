@@ -33,6 +33,15 @@ class Template implements EntityInterface { use Timestampable; use Uuid;
 #[ORM\Column(name: 'typography', type: 'json', nullable: true)] private ?array $typography = null;
 #[ORM\Column(name: 'section_bar', type: 'json', nullable: true)] private ?array $sectionBar = null;
 #[ORM\Column(name: 'items', type: 'json', nullable: true)] private ?array $items = null;
+#[ORM\Column(name: 'photo_options', type: 'json', nullable: true)] private ?array $photoOptions = null;
+#[ORM\Column(name: 'level_style', type: 'json', nullable: true)] private ?array $levelStyle = null;
+#[ORM\Column(name: 'section_order', type: 'json', nullable: true)] private ?array $sectionOrder = null;
+#[ORM\Column(name: 'section_types', type: 'json', nullable: true)] private ?array $sectionTypes = null;
+#[ORM\Column(name: 'hero', type: 'json', nullable: true)] private ?array $hero = null;
+#[ORM\Column(name: 'design_tokens', type: 'json', nullable: true)] private ?array $designTokens = null;
+#[ORM\Column(name: 'design_config', type: 'json', nullable: true)] private ?array $designConfig = null;
+#[ORM\Column(name: 'default_values', type: 'json', nullable: true)] private ?array $defaultValues = null;
+
 public function __construct(){ $this->id = $this->createUuid(); }
 #[Override] public function getId(): string { return $this->id->toString(); }
 public function getName(): string { return $this->name; } public function setName(string $name): self { $this->name = $name; return $this; }
@@ -54,4 +63,14 @@ public function getTextStyles(): ?array { return $this->textStyles; } public fun
 public function getTypography(): ?array { return $this->typography; } public function setTypography(?array $typography): self { $this->typography = $typography; return $this; }
 public function getSectionBar(): ?array { return $this->sectionBar; } public function setSectionBar(?array $sectionBar): self { $this->sectionBar = $sectionBar; return $this; }
 public function getItems(): ?array { return $this->items; } public function setItems(?array $items): self { $this->items = $items; return $this; }
+
+public function getPhotoOptions(): ?array { return $this->photoOptions; } public function setPhotoOptions(?array $photoOptions): self { $this->photoOptions = $photoOptions; return $this; }
+public function getLevelStyle(): ?array { return $this->levelStyle; } public function setLevelStyle(?array $levelStyle): self { $this->levelStyle = $levelStyle; return $this; }
+public function getSectionOrder(): ?array { return $this->sectionOrder; } public function setSectionOrder(?array $sectionOrder): self { $this->sectionOrder = $sectionOrder; return $this; }
+public function getSectionTypes(): ?array { return $this->sectionTypes; } public function setSectionTypes(?array $sectionTypes): self { $this->sectionTypes = $sectionTypes; return $this; }
+public function getHero(): ?array { return $this->hero; } public function setHero(?array $hero): self { $this->hero = $hero; return $this; }
+public function getDesignTokens(): ?array { return $this->designTokens; } public function setDesignTokens(?array $designTokens): self { $this->designTokens = $designTokens; return $this; }
+public function getDesignConfig(): ?array { return $this->designConfig; } public function setDesignConfig(?array $designConfig): self { $this->designConfig = $designConfig; return $this; }
+public function getDefaultValues(): ?array { return $this->defaultValues; } public function setDefaultValues(?array $defaultValues): self { $this->defaultValues = $defaultValues; return $this; }
 }
+
