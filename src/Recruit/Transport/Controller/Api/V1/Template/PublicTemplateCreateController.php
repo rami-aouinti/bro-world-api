@@ -77,7 +77,15 @@ readonly class PublicTemplateCreateController
             ->setTextStyles(is_array($payload['textStyles'] ?? null) ? $payload['textStyles'] : null)
             ->setTypography(is_array($payload['typography'] ?? null) ? $payload['typography'] : null)
             ->setSectionBar(is_array($payload['sectionBar'] ?? null) ? $payload['sectionBar'] : null)
-            ->setItems(is_array($payload['items'] ?? null) ? $payload['items'] : null);
+            ->setItems(is_array($payload['items'] ?? null) ? $payload['items'] : null)
+            ->setPhotoOptions(is_array($payload['photoOptions'] ?? null) ? $payload['photoOptions'] : null)
+            ->setLevelStyle(is_array($payload['levelStyle'] ?? null) ? $payload['levelStyle'] : null)
+            ->setSectionOrder(is_array($payload['sectionOrder'] ?? null) ? $payload['sectionOrder'] : null)
+            ->setSectionTypes(is_array($payload['sectionTypes'] ?? null) ? $payload['sectionTypes'] : null)
+            ->setHero(is_array($payload['hero'] ?? null) ? $payload['hero'] : null)
+            ->setDesignTokens(is_array($payload['designTokens'] ?? null) ? $payload['designTokens'] : null)
+            ->setDesignConfig(is_array($payload['designConfig'] ?? null) ? $payload['designConfig'] : null)
+            ->setDefaultValues(is_array($payload['defaultValues'] ?? null) ? $payload['defaultValues'] : null);
 
         $this->templateRepository->save($template);
 
